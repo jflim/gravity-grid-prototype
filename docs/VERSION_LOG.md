@@ -9,6 +9,7 @@ Status: local commit checkpoint.
 Highlights:
 - Added project build plan and iteration cadence.
 - Added version log for committed playable checkpoints.
+- Added Git workflow and GitHub remote setup notes.
 - Added Git ignore rules for generated dependencies and build output.
 - Current prototype includes tight gameplay sprites, separated portrait art, round logic, improved command panel, visual aim arrow, movement range meter, launch-power meter, wind, timer, and terrain destruction.
 
@@ -51,4 +52,3 @@ Highlights:
 
 Verification:
 - `npm run build` passed.
-

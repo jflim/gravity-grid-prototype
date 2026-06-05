@@ -54,6 +54,7 @@ dist/index.html
 
 - Build/iteration plan: [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md)
 - Version log: [docs/VERSION_LOG.md](docs/VERSION_LOG.md)
+- Git workflow: [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md)
 
 ## Controls
 
