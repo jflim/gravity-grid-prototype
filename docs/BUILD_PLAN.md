@@ -6,6 +6,8 @@ This plan is meant to keep the game moving through playable iterations instead o
 
 Build a browser-based online multiplayer artillery game with anime character/vehicle identity, terrain destruction, team tactics, collectible cosmetics, and room-based play.
 
+Canonical design reference: [GAME_DESIGN_SPEC.md](GAME_DESIGN_SPEC.md)
+
 ## Current Definition Of The Prototype
 
 The current build is a local-feel prototype. It should prove that turn flow, aiming, movement, readable characters, terrain destruction, knockback, and round resets are fun before multiplayer architecture expands.
@@ -14,9 +16,9 @@ The current build is a local-feel prototype. It should prove that turn flow, aim
 
 - Ship in small versions.
 - Each version needs one clear gameplay or planning goal.
-- Each version should end with a build check.
+- Each code version should end with a build check.
 - Each version should be committed with a descriptive message.
-- Do not start full account, economy, gacha, matchmaking, or production art pipelines until the local combat loop feels worth playing repeatedly.
+- Add reward/cosmetic flavor early, but do not build full economy, gacha, matchmaking, or production art pipelines until the online combat loop works.
 
 ## Terms
 
@@ -51,46 +53,56 @@ Next:
 Exit criteria:
 - A new player can understand whose turn it is, where they are aiming, how much they can move, how much power they are charging, and why a round ended.
 
-## Phase 1: Local 2v2 Rules Prototype
+## Phase 1: Online 1v1 Plus Cosmetic Unlock Sandbox
 
-Goal: validate team chaos and strategy before networking.
+Goal: prove the real online foundation while adding a small reward/unlock taste early.
 
 Scope:
-- Four vehicles in turn order.
-- Team win when one team has no alive vehicles.
-- Per-class weapon differences.
+- Private room creation.
+- Join by room code.
+- Two browser clients connect.
+- Server-authoritative room, round, turn, movement, aim, fire, projectile, terrain, HP, KOs, and round result.
+- Guest display names.
+- Post-round placeholder reward grant.
+- Tiny cosmetic unlock sandbox: test token/capsule, reveal one placeholder cosmetic, inventory view, and equip one visible cosmetic.
+
+Exit criteria:
+- Two remote players can complete a 1v1 round without desync.
+- Server owns combat results and reward grants.
+- A completed round gives a small cosmetic/reward moment.
+
+## Phase 2: Online 2v2 And Four Classes
+
+Goal: validate team chaos, strategy, and class synergy.
+
+Scope:
+- Four player slots.
+- Team selection.
+- Four classes with one primary weapon and one class weapon each.
+- Interleaved team turn order.
 - Better spawn placement.
-- Round summary screen or short result overlay.
+- Round summary screen.
 
 Exit criteria:
+- Four remote players can complete a 2v2 match.
+- Each class has a recognizable role.
 - 2v2 feels more fun than 1v1 without making turns confusing.
-
-## Phase 2: Online Private Rooms
-
-Goal: make private-room online multiplayer work before global lobby complexity.
-
-Scope:
-- Server-authoritative room state.
-- Player join/rejoin.
-- Private room code/link.
-- Turn input validation.
-- Deterministic or server-owned projectile resolution.
-- Basic lobby/room chat decision.
-
-Exit criteria:
-- Two remote players can complete rounds without desync.
 
 ## Phase 3: Accounts And Progression
 
 Goal: support persistent identity without overbuilding.
 
 Scope:
+- Supabase auth.
 - Guest play.
-- Google login or email login.
+- Google login.
+- Email Magic Link.
 - Username/profile.
 - Soft currency ledger.
+- Profile points and rank titles.
 - Collection shelf.
 - Equipped cosmetics visible in-game.
+- Claim current-session guest rewards after registering.
 
 Exit criteria:
 - Players can play quickly, then register to save progress.
@@ -105,6 +117,8 @@ Scope:
 - Cosmetic-only gacha.
 - Shop rotation.
 - Collection/equipment UI.
+- Visible rarity odds.
+- Duplicate shards.
 
 Exit criteria:
 - Cosmetics are desirable and visible, but combat stays fair.
@@ -116,7 +130,9 @@ Goal: bring back the old web-game lobby feeling after rooms are stable.
 Scope:
 - Public lobby list.
 - Create/join room flow.
-- Optional lobby chat with stricter guest filtering.
+- Public lobby chat with stricter guest filtering.
+- Room chat.
+- Mute/block/report-ready safety scaffolding.
 - Leaderboard and visible rank.
 
 Exit criteria:
@@ -133,4 +149,3 @@ Recommended loop:
 5. Commit with a descriptive message.
 6. Push to GitHub.
 7. Decide the next version goal.
-

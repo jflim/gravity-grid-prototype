@@ -52,6 +52,7 @@ dist/index.html
 
 ## Planning
 
+- Canonical game design spec: [docs/GAME_DESIGN_SPEC.md](docs/GAME_DESIGN_SPEC.md)
 - Build/iteration plan: [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md)
 - Version log: [docs/VERSION_LOG.md](docs/VERSION_LOG.md)
 - Git workflow: [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md)

@@ -7,6 +7,9 @@ Use this as the human-readable checkpoint history. Every meaningful commit shoul
 Highlights:
 - Clarified Git workflow with branch strategy, quality gates, commit cadence, and push cadence.
 - Updated GitHub management notes now that the private remote and GitHub CLI are configured.
+- Added canonical game design spec with 95% confidence direction for the next build milestone.
+- Updated build plan so Phase 1 is online 1v1 plus a lightweight cosmetic unlock sandbox.
+- Clarified art tone: premium anime arcade with a decent amount of tasteful adult fan service.
 
 ## v0.4.0 - Planning, Git, And Readability Checkpoint
 
