@@ -4,11 +4,73 @@ This repo should be treated as a sequence of playable checkpoints, not a forever
 
 ## Commit Rules
 
-- Commit after each coherent iteration.
+- Commit after each coherent iteration or reviewable documentation update.
 - Keep commits descriptive and scoped.
-- Update `docs/VERSION_LOG.md` for every meaningful playable checkpoint.
 - Run `npm run build` before committing gameplay/code changes.
 - Keep generated folders out of Git: `node_modules/` and `dist/` are ignored.
+- Prefer one focused purpose per commit.
+- Do not commit exploratory throwaway changes unless they have become the chosen direction.
+
+## Branch And Push Strategy
+
+Use `main` as the stable playable branch. Work should usually happen in a short-lived feature branch, then merge back into `main` after the quality gate passes.
+
+Recommended branch names:
+
+```text
+feature/local-2v2
+tune/bunger-terrain
+fix/round-reset
+docs/iteration-workflow
+```
+
+Default flow:
+
+```powershell
+git switch -c feature/example-change
+# work, test, update docs if needed
+git add .
+git commit -m "feat: describe the focused change"
+git switch main
+git merge feature/example-change
+git push
+```
+
+For tiny docs-only changes, committing directly to `main` is acceptable.
+
+## Quality Gate Before Pushing
+
+Before pushing code changes:
+
+- Run `npm run build`.
+- Refresh/play the local prototype when the change is visual or gameplay-facing.
+- Update docs when terminology, controls, rules, assets, or planning changed.
+- Update `docs/VERSION_LOG.md` for playable checkpoints or meaningful project-management changes.
+- Check `git status --short` so only intended files are included.
+
+Docs-only commits do not require `npm run build`, but should still be reviewed for accuracy.
+
+## How Often To Commit
+
+Commit when the work reaches a stable checkpoint:
+
+- A feature works end to end.
+- A bug is fixed and verified.
+- A tuning pass is coherent enough to compare against the previous state.
+- A planning/doc update changes how we will manage the project.
+
+Avoid committing every tiny experiment. If an experiment is messy but useful, keep it local until it is either cleaned up into a checkpoint or deliberately discarded.
+
+## How Often To Push
+
+Push after a commit passes the quality gate. Good default cadence:
+
+- Push at the end of each working session.
+- Push after each playable checkpoint.
+- Push before switching to a new major task.
+- Push immediately after tags.
+
+Do not push broken code to `main` unless the commit explicitly documents a known blocked state and we have agreed that preserving it is more important than playability.
 
 ## Commit Message Style
 
@@ -37,45 +99,34 @@ chore: tag v0.5.0 checkpoint
 3. Run `npm run build`.
 4. Update `docs/VERSION_LOG.md`.
 5. Commit with a descriptive message.
-6. Tag meaningful playable checkpoints, for example:
+6. Merge to `main` if the work happened on a feature branch.
+7. Tag meaningful playable checkpoints, for example:
 
 ```powershell
 git tag v0.5.0
 ```
 
-7. Push commits and tags:
+8. Push commits and tags:
 
 ```powershell
 git push
 git push --tags
 ```
 
-## GitHub Remote Setup
+## GitHub Management
 
-The current environment has `git`, but does not have GitHub CLI (`gh`), `winget`, `choco`, or `scoop`, so remote repo creation cannot be completed from here unless GitHub CLI or another authenticated GitHub tool is installed.
+GitHub CLI is installed locally at `C:\Users\jflim\Documents\Codex\tools\gh.cmd`, and the remote repo is `https://github.com/jflim/gravity-grid-prototype`.
 
-Recommended GitHub setup:
-
-1. Create a private empty GitHub repository named `gravity-grid-prototype`.
-2. Do not initialize it with a README, license, or gitignore.
-3. From this project directory, run:
+Use GitHub CLI for repo checks when helpful:
 
 ```powershell
-git remote add origin https://github.com/<your-github-username>/gravity-grid-prototype.git
-git push -u origin main
-git push --tags
-```
-
-Alternative if GitHub CLI is installed later:
-
-```powershell
-gh repo create gravity-grid-prototype --private --source=. --remote=origin --push
-git push --tags
+gh repo view jflim/gravity-grid-prototype
+gh pr status
 ```
 
 ## Current Local Repo
 
 - Branch: `main`
+- Remote: `origin`
 - First checkpoint commit: `chore: establish gravity grid prototype checkpoint`
-- Current intended tag: `v0.4.0`
-
+- Current checkpoint tag: `v0.4.0`

@@ -2,6 +2,12 @@
 
 Use this as the human-readable checkpoint history. Every meaningful commit should add an entry.
 
+## Unreleased
+
+Highlights:
+- Clarified Git workflow with branch strategy, quality gates, commit cadence, and push cadence.
+- Updated GitHub management notes now that the private remote and GitHub CLI are configured.
+
 ## v0.4.0 - Planning, Git, And Readability Checkpoint
 
 Status: local commit checkpoint.
