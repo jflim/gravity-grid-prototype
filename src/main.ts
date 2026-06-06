@@ -35,6 +35,27 @@ interface ProjectileState {
   trail: Phaser.Math.Vector2[];
 }
 
+interface ProjectileCollision {
+  x: number;
+  y: number;
+  directHitId?: string;
+}
+
+interface ImpactPreview {
+  x: number;
+  y: number;
+  craterRadius: number;
+  damageRadius: number;
+  isBungerShot: boolean;
+  timeLeft: number;
+}
+
+interface SettleOptions {
+  changedX: number;
+  changedRadius: number;
+  forceIds?: Set<string>;
+}
+
 const WORLD_WIDTH = 2400;
 const WORLD_HEIGHT = 900;
 const TERRAIN_STEP = 4;
@@ -53,9 +74,11 @@ const SHOT_SPEED_MAX = 780;
 const WIND_FORCE = 34;
 const CRATER_RADIUS = 76;
 const BUNGER_CRATER_RADIUS = 124;
-const DAMAGE_RADIUS = 148;
-const BUNGER_DAMAGE_RADIUS = 178;
+const DAMAGE_RADIUS = 112;
+const BUNGER_DAMAGE_RADIUS = 156;
 const BUNGER_KNOCKBACK = 150;
+const DIRECT_HIT_RADIUS = VEHICLE_RADIUS + 9;
+const IMPACT_PREVIEW_SECONDS = 1.25;
 const TURN_SECONDS = 30;
 const COMMAND_PANEL_HEIGHT = 184;
 
@@ -67,6 +90,8 @@ class GravityGridScene extends Phaser.Scene {
   private wind = 0;
   private turnTime = TURN_SECONDS;
   private projectile?: ProjectileState;
+  private impactPreview?: ImpactPreview;
+  private turnCommitted = false;
   private charging = false;
   private charge = 0;
   private shotResult = "";
@@ -82,6 +107,8 @@ class GravityGridScene extends Phaser.Scene {
   private projectileGfx!: Phaser.GameObjects.Graphics;
   private hudGfx!: Phaser.GameObjects.Graphics;
   private aimGfx!: Phaser.GameObjects.Graphics;
+  private impactGfx!: Phaser.GameObjects.Graphics;
+  private koGfx!: Phaser.GameObjects.Graphics;
   private vehicleLabels: Phaser.GameObjects.Text[] = [];
   private vehicleSprites = new Map<string, Phaser.GameObjects.Image>();
   private hudText!: Phaser.GameObjects.Text;
@@ -117,8 +144,10 @@ class GravityGridScene extends Phaser.Scene {
     this.createBackground();
     this.terrainGfx = this.add.graphics();
     this.aimGfx = this.add.graphics();
+    this.impactGfx = this.add.graphics().setDepth(9);
     this.vehicleGfx = this.add.graphics();
     this.projectileGfx = this.add.graphics();
+    this.koGfx = this.add.graphics().setDepth(14);
     this.hudGfx = this.add.graphics().setScrollFactor(0).setDepth(50);
 
     const textStyle: Phaser.Types.GameObjects.Text.TextStyle = {
@@ -229,6 +258,7 @@ class GravityGridScene extends Phaser.Scene {
 
   update(_: number, deltaMs: number): void {
     const dt = Math.min(deltaMs / 1000, 0.033);
+    this.updateImpactPreview(dt);
 
     if (this.resetKey && Phaser.Input.Keyboard.JustDown(this.resetKey)) {
       this.startRound();
@@ -241,6 +271,11 @@ class GravityGridScene extends Phaser.Scene {
 
     if (this.projectile) {
       this.updateProjectile(dt);
+      this.drawWorld();
+      return;
+    }
+
+    if (this.turnCommitted) {
       this.drawWorld();
       return;
     }
@@ -258,8 +293,13 @@ class GravityGridScene extends Phaser.Scene {
       return;
     }
 
-    this.handleVehicleInput(active, dt);
     this.handleChargeInput(active, dt);
+    if (this.turnCommitted || this.projectile) {
+      this.drawWorld();
+      return;
+    }
+
+    this.handleVehicleInput(active, dt);
     this.drawWorld();
   }
 
@@ -326,6 +366,8 @@ class GravityGridScene extends Phaser.Scene {
     this.turnOrder = ["red-1", "blue-1"];
     this.turnIndex = 0;
     this.projectile = undefined;
+    this.impactPreview = undefined;
+    this.turnCommitted = false;
     this.charge = 0;
     this.charging = false;
     this.shotResult = "Round started.";
@@ -374,6 +416,8 @@ class GravityGridScene extends Phaser.Scene {
     this.turnTime = TURN_SECONDS;
     this.charge = 0;
     this.charging = false;
+    this.turnCommitted = false;
+    this.impactPreview = undefined;
     this.wind = Phaser.Math.FloatBetween(-1, 1);
     this.cameras.main.stopFollow();
     this.frameBattlefield(450);
@@ -462,6 +506,7 @@ class GravityGridScene extends Phaser.Scene {
   private fire(active: VehicleState, power: number): void {
     this.charging = false;
     this.charge = 0;
+    this.turnCommitted = true;
     const radians = Phaser.Math.DegToRad(active.angle);
     const speed = Phaser.Math.Linear(SHOT_SPEED_MIN, SHOT_SPEED_MAX, power / MAX_POWER);
     const muzzleX = active.x + Math.cos(radians) * 48;
@@ -490,24 +535,26 @@ class GravityGridScene extends Phaser.Scene {
       p.trail.shift();
     }
 
+    const startX = p.x;
+    const startY = p.y;
     p.vx += this.wind * WIND_FORCE * dt;
     p.vy += GRAVITY * dt;
-    p.x += p.vx * dt;
-    p.y += p.vy * dt;
+    const nextX = p.x + p.vx * dt;
+    const nextY = p.y + p.vy * dt;
 
-    this.cameras.main.centerOn(p.x, p.y);
-
-    const hitVehicle = this.vehicles.find((vehicle) => {
-      if (!vehicle.alive || vehicle.id === p.shooterId) {
-        return false;
-      }
-      return Phaser.Math.Distance.Between(p.x, p.y, vehicle.x, vehicle.y) < VEHICLE_RADIUS + 9;
-    });
-
-    if (hitVehicle) {
-      this.resolveImpact(p.x, p.y, hitVehicle.id);
+    const collision = this.findProjectileCollision(p, startX, startY, nextX, nextY);
+    if (collision) {
+      p.x = collision.x;
+      p.y = collision.y;
+      this.cameras.main.centerOn(p.x, p.y);
+      this.resolveImpact(collision.x, collision.y, collision.directHitId);
       return;
     }
+
+    p.x = nextX;
+    p.y = nextY;
+
+    this.cameras.main.centerOn(p.x, p.y);
 
     if (p.x < 0 || p.x > WORLD_WIDTH || p.y > WORLD_HEIGHT + 120 || p.y < -220) {
       this.shotResult = "Shot flew out of bounds.";
@@ -515,10 +562,43 @@ class GravityGridScene extends Phaser.Scene {
       this.queueRoundEvent(700, () => this.advanceTurn());
       return;
     }
+  }
 
-    if (p.y >= this.surfaceAt(p.x)) {
-      this.resolveImpact(p.x, this.surfaceAt(p.x));
+  private findProjectileCollision(
+    projectile: ProjectileState,
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number,
+  ): ProjectileCollision | undefined {
+    const distance = Phaser.Math.Distance.Between(startX, startY, endX, endY);
+    const steps = Math.max(4, Math.ceil(distance / 22));
+
+    for (let i = 1; i <= steps; i += 1) {
+      const t = i / steps;
+      const x = Phaser.Math.Linear(startX, endX, t);
+      const y = Phaser.Math.Linear(startY, endY, t);
+
+      const hitVehicle = this.vehicles.find((vehicle) => {
+        if (!vehicle.alive || vehicle.id === projectile.shooterId) {
+          return false;
+        }
+        return Phaser.Math.Distance.Between(x, y, vehicle.x, vehicle.y) < DIRECT_HIT_RADIUS;
+      });
+
+      if (hitVehicle) {
+        return { x, y, directHitId: hitVehicle.id };
+      }
+
+      if (x >= 0 && x <= WORLD_WIDTH) {
+        const surface = this.surfaceAt(x);
+        if (y >= surface) {
+          return { x, y: surface };
+        }
+      }
     }
+
+    return undefined;
   }
 
   private resolveImpact(x: number, y: number, directHitId?: string): void {
@@ -526,18 +606,36 @@ class GravityGridScene extends Phaser.Scene {
     const isBungerShot = shooter?.classId === "bunger";
     const craterRadius = isBungerShot ? BUNGER_CRATER_RADIUS : CRATER_RADIUS;
     const damageRadius = isBungerShot ? BUNGER_DAMAGE_RADIUS : DAMAGE_RADIUS;
+    this.impactPreview = {
+      x,
+      y,
+      craterRadius,
+      damageRadius,
+      isBungerShot,
+      timeLeft: IMPACT_PREVIEW_SECONDS,
+    };
     this.makeCrater(x, y, craterRadius, isBungerShot ? 1.62 : 0.74);
     const damaged: string[] = [];
     const bungeEvents: string[] = [];
+    const affectedVehicleIds = new Set<string>();
+    if (directHitId) {
+      affectedVehicleIds.add(directHitId);
+    }
 
     for (const vehicle of this.vehicles) {
       if (!vehicle.alive || vehicle.id === shooter?.id) {
         continue;
       }
       const d = Phaser.Math.Distance.Between(x, y, vehicle.x, vehicle.y);
-      if (d <= damageRadius || vehicle.id === directHitId) {
-        const splash = Math.max(0, Math.round((isBungerShot ? 30 : 46) * (1 - d / damageRadius)));
+      const directHit = vehicle.id === directHitId;
+      const splashFactor = Phaser.Math.Clamp(1 - d / damageRadius, 0, 1);
+      if (splashFactor > 0 || directHit) {
+        const splash = Math.round((isBungerShot ? 30 : 46) * splashFactor);
         const damage = vehicle.id === directHitId ? Math.max(isBungerShot ? 24 : 38, splash) : splash;
+        if (damage <= 0) {
+          continue;
+        }
+        affectedVehicleIds.add(vehicle.id);
         vehicle.hp = Math.max(0, vehicle.hp - damage);
         damaged.push(`${vehicle.username} -${damage}`);
         if (vehicle.hp <= 0) {
@@ -545,10 +643,11 @@ class GravityGridScene extends Phaser.Scene {
         }
         if (isBungerShot && vehicle.alive) {
           const beforeX = vehicle.x;
-          const knockStrength = Math.max(0, 1 - d / damageRadius);
+          const knockStrength = splashFactor;
           const direction = vehicle.x >= x ? 1 : -1;
           vehicle.x = Phaser.Math.Clamp(vehicle.x + direction * BUNGER_KNOCKBACK * knockStrength, 24, WORLD_WIDTH - 24);
           if (Math.abs(vehicle.x - beforeX) > 12) {
+            affectedVehicleIds.add(vehicle.id);
             bungeEvents.push(`${vehicle.username} shoved`);
           }
         }
@@ -556,7 +655,11 @@ class GravityGridScene extends Phaser.Scene {
     }
 
     this.projectile = undefined;
-    const fallEvents = this.settleVehicles();
+    const fallEvents = this.settleVehicles({
+      changedX: x,
+      changedRadius: Math.max(craterRadius, damageRadius),
+      forceIds: affectedVehicleIds,
+    });
     this.shotResult = damaged.length > 0 ? damaged.join(" / ") : "Terrain carved.";
     if (bungeEvents.length > 0) {
       this.shotResult += ` / ${bungeEvents.join(" / ")}`;
@@ -588,21 +691,28 @@ class GravityGridScene extends Phaser.Scene {
     }
   }
 
-  private settleVehicles(): string[] {
+  private settleVehicles(options?: SettleOptions): string[] {
     const fallEvents: string[] = [];
     for (const vehicle of this.vehicles) {
       if (!vehicle.alive) {
         continue;
       }
-      for (let i = 0; i < 14; i += 1) {
-        const left = this.surfaceAt(vehicle.x - 18);
-        const right = this.surfaceAt(vehicle.x + 18);
-        const slope = right - left;
-        if (Math.abs(slope) < 18) {
-          break;
+      const forceSettle = options?.forceIds?.has(vehicle.id) ?? false;
+      const terrainMayHaveChanged =
+        !options || Math.abs(vehicle.x - options.changedX) <= options.changedRadius + VEHICLE_HALF_WIDTH + 42;
+
+      if (terrainMayHaveChanged || forceSettle) {
+        for (let i = 0; i < 14; i += 1) {
+          const left = this.surfaceAt(vehicle.x - 18);
+          const right = this.surfaceAt(vehicle.x + 18);
+          const slope = right - left;
+          if (Math.abs(slope) < 18) {
+            break;
+          }
+          vehicle.x = Phaser.Math.Clamp(vehicle.x + Math.sign(slope) * 7, 24, WORLD_WIDTH - 24);
         }
-        vehicle.x = Phaser.Math.Clamp(vehicle.x + Math.sign(slope) * 7, 24, WORLD_WIDTH - 24);
       }
+
       const surface = this.surfaceAt(vehicle.x);
       vehicle.y = surface - VEHICLE_HALF_HEIGHT;
       if (surface > WORLD_HEIGHT - 70 || vehicle.x <= 28 || vehicle.x >= WORLD_WIDTH - 28) {
@@ -622,6 +732,7 @@ class GravityGridScene extends Phaser.Scene {
     this.projectile = undefined;
     this.charging = false;
     this.charge = 0;
+    this.turnCommitted = false;
 
     if (this.aliveTeams().size <= 1) {
       this.endRound();
@@ -668,6 +779,7 @@ class GravityGridScene extends Phaser.Scene {
     this.projectile = undefined;
     this.charging = false;
     this.charge = 0;
+    this.turnCommitted = true;
 
     const winner = this.winningTeam();
     this.shotResult = winner
@@ -725,9 +837,21 @@ class GravityGridScene extends Phaser.Scene {
     return this.terrain[index] ?? WORLD_HEIGHT - 90;
   }
 
+  private updateImpactPreview(dt: number): void {
+    if (!this.impactPreview) {
+      return;
+    }
+
+    this.impactPreview.timeLeft -= dt;
+    if (this.impactPreview.timeLeft <= 0) {
+      this.impactPreview = undefined;
+    }
+  }
+
   private drawWorld(): void {
     this.drawTerrain();
     this.drawAim();
+    this.drawImpactPreview();
     this.drawVehicles();
     this.drawProjectile();
     this.drawHud();
@@ -760,7 +884,7 @@ class GravityGridScene extends Phaser.Scene {
   private drawAim(): void {
     this.aimGfx.clear();
     const active = this.activeVehicle();
-    if (!active || !this.isMovable(active) || this.projectile || this.roundOver) {
+    if (!active || !this.isMovable(active) || this.projectile || this.roundOver || this.turnCommitted) {
       return;
     }
 
@@ -829,9 +953,31 @@ class GravityGridScene extends Phaser.Scene {
     this.aimGfx.strokePath();
   }
 
+  private drawImpactPreview(): void {
+    const gfx = this.impactGfx;
+    gfx.clear();
+    const preview = this.impactPreview;
+    if (!preview) {
+      return;
+    }
+
+    const alpha = Phaser.Math.Clamp(preview.timeLeft / IMPACT_PREVIEW_SECONDS, 0, 1);
+    gfx.fillStyle(0xfff4c2, 0.08 * alpha);
+    gfx.fillCircle(preview.x, preview.y, preview.damageRadius);
+    gfx.lineStyle(4, 0xfff4c2, 0.62 * alpha);
+    gfx.strokeCircle(preview.x, preview.y, preview.damageRadius);
+
+    const craterColor = preview.isBungerShot ? 0xff7a5c : 0x8be9ff;
+    gfx.fillStyle(craterColor, 0.1 * alpha);
+    gfx.fillCircle(preview.x, preview.y, preview.craterRadius);
+    gfx.lineStyle(3, craterColor, 0.86 * alpha);
+    gfx.strokeCircle(preview.x, preview.y, preview.craterRadius);
+  }
+
   private drawVehicles(): void {
     const gfx = this.vehicleGfx;
     gfx.clear();
+    this.koGfx.clear();
 
     for (const label of this.vehicleLabels) {
       label.destroy();
@@ -839,8 +985,13 @@ class GravityGridScene extends Phaser.Scene {
     this.vehicleLabels = [];
 
     for (const vehicle of this.vehicles) {
-      const alpha = vehicle.alive ? 1 : 0.45;
-      const active = this.activeVehicle()?.id === vehicle.id && !this.projectile && !this.roundOver && this.isMovable(vehicle);
+      const alpha = vehicle.alive ? 1 : 0.72;
+      const active =
+        this.activeVehicle()?.id === vehicle.id &&
+        !this.projectile &&
+        !this.roundOver &&
+        !this.turnCommitted &&
+        this.isMovable(vehicle);
       const sprite = this.vehicleSprites.get(vehicle.id) ?? this.add.image(vehicle.x, vehicle.y, vehicle.spriteKey);
       if (!this.vehicleSprites.has(vehicle.id)) {
         sprite.setDepth(11);
@@ -852,7 +1003,14 @@ class GravityGridScene extends Phaser.Scene {
         .setPosition(vehicle.x, vehicle.y + 18)
         .setDisplaySize(238, 178)
         .setFlipX(vehicle.facing !== vehicle.spriteFaces)
-        .setAlpha(alpha);
+        .setAlpha(alpha)
+        .setAngle(vehicle.alive ? 0 : vehicle.team === "red" ? -7 : 7);
+
+      if (vehicle.alive) {
+        sprite.clearTint();
+      } else {
+        sprite.setTint(0xb7bed3);
+      }
 
       gfx.lineStyle(active ? 4 : 2, active ? 0xffffff : vehicle.accent, active ? 0.95 : 0.5);
       gfx.strokeRoundedRect(vehicle.x - 108, vehicle.y - 98, 216, 130, 18);
@@ -871,7 +1029,8 @@ class GravityGridScene extends Phaser.Scene {
           stroke: "#10131b",
           strokeThickness: 5,
         })
-        .setOrigin(0.5);
+        .setOrigin(0.5)
+        .setDepth(16);
       this.vehicleLabels.push(label);
 
       const classLabel = this.add
@@ -882,8 +1041,25 @@ class GravityGridScene extends Phaser.Scene {
           stroke: "#10131b",
           strokeThickness: 4,
         })
-        .setOrigin(0.5);
+        .setOrigin(0.5)
+        .setDepth(16);
       this.vehicleLabels.push(classLabel);
+
+      if (!vehicle.alive) {
+        this.drawKnockoutFace(vehicle);
+        const koTag = this.add
+          .text(vehicle.x, vehicle.y - 174, "KO", {
+            fontFamily: "Inter, Arial, sans-serif",
+            fontSize: "18px",
+            fontStyle: "700",
+            color: "#fff4c2",
+            stroke: "#10131b",
+            strokeThickness: 5,
+          })
+          .setOrigin(0.5)
+          .setDepth(16);
+        this.vehicleLabels.push(koTag);
+      }
 
       if (active) {
         const timerY = vehicle.y - 178;
@@ -901,7 +1077,8 @@ class GravityGridScene extends Phaser.Scene {
             stroke: "#10131b",
             strokeThickness: 6,
           })
-          .setOrigin(0.5);
+          .setOrigin(0.5)
+          .setDepth(16);
         this.vehicleLabels.push(timerTag);
 
         const turnTag = this.add
@@ -913,10 +1090,43 @@ class GravityGridScene extends Phaser.Scene {
             stroke: "#10131b",
             strokeThickness: 4,
           })
-          .setOrigin(0.5);
+          .setOrigin(0.5)
+          .setDepth(16);
         this.vehicleLabels.push(turnTag);
       }
     }
+  }
+
+  private drawKnockoutFace(vehicle: VehicleState): void {
+    const gfx = this.koGfx;
+    const x = vehicle.x;
+    const y = vehicle.y - 58;
+
+    gfx.fillStyle(0xfff4c2, 0.96);
+    gfx.fillCircle(x, y, 26);
+    gfx.lineStyle(3, 0x10131b, 1);
+    gfx.strokeCircle(x, y, 26);
+
+    gfx.lineStyle(4, 0x10131b, 1);
+    this.drawFaceX(gfx, x - 10, y - 6, 7);
+    this.drawFaceX(gfx, x + 10, y - 6, 7);
+
+    gfx.lineStyle(3, 0x10131b, 1);
+    gfx.beginPath();
+    gfx.arc(x, y + 10, 10, Math.PI * 1.05, Math.PI * 1.95, false);
+    gfx.strokePath();
+    gfx.fillStyle(0xff7a9e, 0.95);
+    gfx.fillEllipse(x + 3, y + 15, 12, 8);
+
+    gfx.fillStyle(0x0b1020, 0.88);
+    gfx.fillRoundedRect(x - 27, y - 57, 54, 24, 8);
+    gfx.lineStyle(2, 0xfff4c2, 0.62);
+    gfx.strokeRoundedRect(x - 27, y - 57, 54, 24, 8);
+  }
+
+  private drawFaceX(gfx: Phaser.GameObjects.Graphics, x: number, y: number, size: number): void {
+    gfx.lineBetween(x - size, y - size, x + size, y + size);
+    gfx.lineBetween(x + size, y - size, x - size, y + size);
   }
 
   private drawProjectile(): void {
@@ -947,7 +1157,10 @@ class GravityGridScene extends Phaser.Scene {
     const winner = this.winningTeam();
     const roundComplete = this.roundOver || this.aliveTeams().size <= 1;
 
-    this.drawControlPanel(active && !roundComplete ? active : undefined, roundComplete || Boolean(winner));
+    this.drawControlPanel(
+      active && !roundComplete && !this.turnCommitted ? active : undefined,
+      roundComplete || Boolean(winner),
+    );
     return;
 
     this.hudGfx.clear();

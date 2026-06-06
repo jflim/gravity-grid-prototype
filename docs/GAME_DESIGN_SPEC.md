@@ -2,7 +2,7 @@
 
 Canonical source of truth for the current product direction.
 
-Last updated: 2026-06-05
+Last updated: 2026-06-06
 Confidence: 95% for the next build milestone, with later milestone details intentionally left flexible.
 
 Working title: Gravity Canyon.
@@ -71,6 +71,9 @@ Current result:
 - Local 1v1 prototype exists.
 - Tight gameplay sprites and high-detail portraits are separated.
 - Command deck, launch power, movement range, timer, wind, aim arrow, and terrain effects are playable.
+- A shot commits the turn immediately; the shooter cannot move during projectile flight or impact resolution.
+- Projectile collision now checks along the shot path, and post-impact settling is localized to nearby or affected vehicles.
+- Impact readability includes temporary crater/splash radius rings and KO/faint feedback for destroyed vehicles.
 - Colyseus online foundation exists for room creation, player presence, ready checks, and placeholder cosmetic rewards.
 - Browser client loads a vendored Colyseus browser SDK bundle while the server uses the installed Colyseus packages.
 
@@ -217,6 +220,7 @@ Default round rules:
 - 100 HP per vehicle.
 - Limited movement range per turn.
 - One shot per turn.
+- Releasing a shot commits the turn immediately.
 - Wind changes each turn.
 - KO by HP reaching 0 or falling below the death plane.
 - Fallen vehicles are set to 0 HP and not alive.
@@ -243,6 +247,8 @@ Combat UX requirements:
 - Timer and wind are shared round information.
 - Active player needs clear angle, movement range, launch power, HP, and weapon info.
 - Aim should show direction without giving a full landing prediction.
+- Impact feedback should briefly show crater/terrain range and splash damage range.
+- Disabled vehicles should read as fainted/knocked out, not only desaturated.
 - Projectile camera should follow shots and preserve impact context.
 - Large character banners do not belong in the live match screen.
 
@@ -404,6 +410,8 @@ Terrain:
 
 - Current prototype uses a heightmap for speed.
 - Online MVP should begin with deterministic, serializable terrain.
+- Every weapon should affect terrain; Bunger-class weapons affect terrain the most.
+- Post-impact vehicle settling should be driven by the changed terrain area and directly affected vehicles, not by unrelated distant slopes.
 - Pixel-mask terrain can replace heightmap when performance and sync complexity are justified.
 
 ## 12. Immediate Next Build Recommendation

@@ -44,6 +44,10 @@ Done:
 - Tight gameplay sprites separate from portrait art.
 - Command panel with movement range, launch power, aim, active identity, timer, and wind.
 - Working title updated to Gravity Canyon.
+- Turn commits immediately when a shot is fired, with no post-shot movement window.
+- Swept projectile collision and localized post-impact settling make hits and falls more predictable.
+- Temporary crater/splash radius rings make impact ranges visible.
+- Destroyed vehicles now use a fainted/KO overlay instead of only gray model feedback.
 - Colyseus server added.
 - Online panel can create/join private rooms, show player slots, ready state, placeholder rewards, and equipped nameplates.
 - Colyseus browser SDK is vendored as a static browser bundle for stable Vite dev behavior on Windows.
@@ -51,7 +55,7 @@ Done:
 Next:
 - Improve battlefield readability at common viewport sizes.
 - Tune vehicle scale, camera framing, and UI spacing.
-- Add clear hit, damage, KO, and round-end feedback.
+- Continue tuning hit, damage, KO, and round-end feedback.
 - Decide whether 1v1 local prototype should expand to 2v2 local before online multiplayer.
 - Wire server-authoritative combat state into the Phaser match scene.
 

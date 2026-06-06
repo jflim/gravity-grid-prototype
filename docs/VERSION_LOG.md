@@ -15,6 +15,13 @@ Highlights:
 - Added canonical game design spec with 95% confidence direction for the next build milestone.
 - Updated build plan so Phase 1 is online 1v1 plus a lightweight cosmetic unlock sandbox.
 - Clarified art tone: premium anime arcade with a decent amount of tasteful adult fan service.
+- Fixed turn commitment so firing immediately ends the active vehicle's movement window.
+- Added swept projectile collision checks, tighter splash radii, and localized post-impact vehicle settling.
+- Added temporary impact rings for crater and splash damage readability.
+- Added fainted/KO visual feedback for destroyed vehicles.
+
+Verification:
+- `npm run build` passed.
 
 ## v0.4.0 - Planning, Git, And Readability Checkpoint
 

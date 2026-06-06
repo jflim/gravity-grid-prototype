@@ -18,9 +18,14 @@ First playable local artillery prototype for Gravity Canyon.
 - Projectile physics with gravity and turn-based wind.
 - Full-battlefield aiming camera so both players are visible before firing.
 - Projectile camera follow after firing.
+- Firing commits the turn immediately, so the active vehicle cannot move during projectile flight or impact resolution.
+- Swept projectile collision checks to make fast shots hit terrain/vehicles more predictably.
 - Crater deformation on impact.
+- Temporary impact rings showing crater size and splash damage range.
 - Prototype Bunger shot behavior: larger/deeper excavation, knockback, slope sliding, and fall/bunge KOs.
+- Localized post-impact vehicle settling so distant vehicles are not randomly displaced by unrelated craters.
 - Splash/direct damage, HP bars, turn switching, timeout, round win detection, and automatic round reset.
+- Fainted/KO overlay for destroyed vehicles instead of only graying out the model.
 - Style B 2v2 concept art used as a faint backdrop reference.
 - High-detail anime vehicle/pilot portraits plus tight-cropped gameplay sprites for Nova and Vesper.
 - First Colyseus online foundation:
@@ -105,6 +110,8 @@ dist/index.html
 - There is no predicted trajectory line. The muzzle arrow shows current direction, but shot landing is still based on angle, power, wind, and memory.
 - Every weapon affects terrain. Bunger weapons are tuned to affect terrain the most.
 - Nova is currently set up as the prototype Bunger class so terrain knock-off play can be tested.
+- Impact rings are temporary debugging/readability feedback: inner ring is crater/terrain effect, outer ring is splash damage range.
+- After a shot, the turn is committed immediately. There is intentionally no post-shot movement window.
 - A round ends when one team has no alive vehicles left. In this prototype, alive means `alive = true` and HP above 0.
 - Finished rounds show the result briefly, then start a fresh round automatically. R still restarts immediately.
 - Timer and wind are global round information, shown outside the active-player panel.
