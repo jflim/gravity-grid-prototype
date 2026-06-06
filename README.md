@@ -29,9 +29,10 @@ First playable local artillery prototype for Gravity Canyon.
 - Prototype Bunger shot behavior: larger/deeper excavation, knockback, slope sliding, and fall/bunge KOs, now tuned toward precise 2-3 shot ring-outs.
 - Localized post-impact vehicle settling so distant vehicles are not randomly displaced by unrelated craters.
 - Splash/direct damage, HP bars, turn switching, timeout, round win detection, and automatic round reset.
-- Character-specific KO sprite variants for Nova and Vesper instead of a generic KO face overlay.
+- Layered gameplay sprites: one standalone vehicle sprite plus one standalone playable-character sprite.
+- Generated character sprite states for Nova and Vesper: default, KO, and intense shooting.
 - Style B 2v2 concept art used as a faint backdrop reference.
-- High-detail anime vehicle/pilot portraits plus tight-cropped gameplay sprites for Nova and Vesper.
+- High-detail anime vehicle/pilot portraits plus standalone generated gameplay sprites for Nova and Vesper.
 - First Colyseus online foundation:
   - local multiplayer server,
   - private room create/join by room id,
@@ -128,4 +129,7 @@ dist/index.html
 - Active player also gets a world-space aim arrow, turn timer badge, and ground movement range rail so movement decisions can be read without covering the character art.
 - The game camera reserves space above the command deck so the playable battlefield does not sit underneath detached UI.
 - Current sprites are first-pass generated assets, not final production sprites.
+- Gameplay rendering uses separate layers for vehicle and playable character sprites.
+- Each playable character currently needs three generated gameplay states: default, KO, and intense shooting.
+- Character states should be integrated artwork, not code-drawn facial overlays on top of default art.
 - Gameplay sprites are separate from portrait art so battlefield readability can be tuned without losing high-detail character art.

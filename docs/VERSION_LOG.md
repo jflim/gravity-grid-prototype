@@ -29,6 +29,10 @@ Highlights:
 - Raised the command panel with a bottom safe margin for better viewport visibility.
 - Updated the void background treatment so exposed holes read as empty air beneath the terrain.
 - Reduced crater, splash, and Bunger knockback radii so knock-off KOs require more precise setup.
+- Reworked gameplay assets into separate vehicle and playable-character sprite layers.
+- Generated standalone Nova and Vesper vehicle sprites.
+- Generated standalone Nova and Vesper character sprites for default, KO, and intense shooting states.
+- Removed the old combined gameplay sprites and derived KO sprites from the active asset set.
 
 Verification:
 - `npm run build` passed.
@@ -42,7 +46,7 @@ Highlights:
 - Added version log for committed playable checkpoints.
 - Added Git workflow and GitHub remote setup notes.
 - Added Git ignore rules for generated dependencies and build output.
-- Current prototype includes tight gameplay sprites, separated portrait art, round logic, improved command panel, visual aim arrow, movement range meter, launch-power meter, wind, timer, and terrain destruction.
+- Current prototype includes layered vehicle/character gameplay sprites, separated portrait art, round logic, improved command panel, visual aim arrow, movement range meter, launch-power meter, wind, timer, and terrain destruction.
 
 Verification:
 - `npm run build` should pass before this version is committed.

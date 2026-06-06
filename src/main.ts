@@ -4,6 +4,24 @@ import "./styles.css";
 
 type TeamId = "red" | "blue";
 type ClassId = "bunger" | "glitch";
+type CharacterPose = "default" | "ko" | "intense";
+
+interface SpriteDisplaySize {
+  width: number;
+  height: number;
+}
+
+interface CharacterSpriteSet {
+  default: string;
+  ko: string;
+  intense: string;
+}
+
+interface CharacterDisplaySet {
+  default: SpriteDisplaySize;
+  ko: SpriteDisplaySize;
+  intense: SpriteDisplaySize;
+}
 
 interface VehicleState {
   id: string;
@@ -20,10 +38,15 @@ interface VehicleState {
   alive: boolean;
   color: number;
   accent: number;
-  spriteKey: string;
-  koSpriteKey: string;
+  vehicleSpriteKey: string;
+  vehicleSpriteFaces: 1 | -1;
+  vehicleDisplay: SpriteDisplaySize;
+  characterSpriteKeys: CharacterSpriteSet;
+  characterSpriteFaces: 1 | -1;
+  characterDisplays: CharacterDisplaySet;
+  characterOffsetX: number;
+  characterOffsetY: number;
   portraitKey: string;
-  spriteFaces: 1 | -1;
 }
 
 interface ProjectileState {
@@ -119,6 +142,7 @@ class GravityGridScene extends Phaser.Scene {
   private impactGfx!: Phaser.GameObjects.Graphics;
   private vehicleLabels: Phaser.GameObjects.Text[] = [];
   private vehicleSprites = new Map<string, Phaser.GameObjects.Image>();
+  private characterSprites = new Map<string, Phaser.GameObjects.Image>();
   private hudText!: Phaser.GameObjects.Text;
   private rosterText!: Phaser.GameObjects.Text;
   private eventText!: Phaser.GameObjects.Text;
@@ -137,11 +161,15 @@ class GravityGridScene extends Phaser.Scene {
   preload(): void {
     this.load.image("style-reference", "assets/style-b-2v2-reference.png");
     this.load.image("nova-vehicle", "assets/nova-vehicle.png");
-    this.load.image("nova-gameplay", "assets/nova-gameplay.png");
-    this.load.image("nova-gameplay-ko", "assets/nova-gameplay-ko.png");
+    this.load.image("nova-vehicle-sprite", "assets/nova-vehicle-sprite.png");
+    this.load.image("nova-character-default", "assets/nova-character-default.png");
+    this.load.image("nova-character-ko", "assets/nova-character-ko.png");
+    this.load.image("nova-character-intense", "assets/nova-character-intense.png");
     this.load.image("vesper-vehicle", "assets/vesper-vehicle.png");
-    this.load.image("vesper-gameplay", "assets/vesper-gameplay.png");
-    this.load.image("vesper-gameplay-ko", "assets/vesper-gameplay-ko.png");
+    this.load.image("vesper-vehicle-sprite", "assets/vesper-vehicle-sprite.png");
+    this.load.image("vesper-character-default", "assets/vesper-character-default.png");
+    this.load.image("vesper-character-ko", "assets/vesper-character-ko.png");
+    this.load.image("vesper-character-intense", "assets/vesper-character-intense.png");
   }
 
   create(): void {
@@ -369,10 +397,23 @@ class GravityGridScene extends Phaser.Scene {
         alive: true,
         color: 0xff4d5d,
         accent: 0xffd166,
-        spriteKey: "nova-gameplay",
-        koSpriteKey: "nova-gameplay-ko",
+        vehicleSpriteKey: "nova-vehicle-sprite",
+        vehicleSpriteFaces: 1,
+        vehicleDisplay: { width: 254, height: 155 },
+        characterSpriteKeys: {
+          default: "nova-character-default",
+          ko: "nova-character-ko",
+          intense: "nova-character-intense",
+        },
+        characterSpriteFaces: 1,
+        characterDisplays: {
+          default: { width: 112, height: 150 },
+          ko: { width: 142, height: 152 },
+          intense: { width: 166, height: 148 },
+        },
+        characterOffsetX: -36,
+        characterOffsetY: -62,
         portraitKey: "nova-vehicle",
-        spriteFaces: 1,
       },
       {
         id: "blue-1",
@@ -389,10 +430,23 @@ class GravityGridScene extends Phaser.Scene {
         alive: true,
         color: 0x4cc9f0,
         accent: 0xb8f7ff,
-        spriteKey: "vesper-gameplay",
-        koSpriteKey: "vesper-gameplay-ko",
+        vehicleSpriteKey: "vesper-vehicle-sprite",
+        vehicleSpriteFaces: -1,
+        vehicleDisplay: { width: 250, height: 160 },
+        characterSpriteKeys: {
+          default: "vesper-character-default",
+          ko: "vesper-character-ko",
+          intense: "vesper-character-intense",
+        },
+        characterSpriteFaces: -1,
+        characterDisplays: {
+          default: { width: 108, height: 151 },
+          ko: { width: 142, height: 150 },
+          intense: { width: 139, height: 150 },
+        },
+        characterOffsetX: 54,
+        characterOffsetY: -62,
         portraitKey: "vesper-vehicle",
-        spriteFaces: -1,
       },
     ];
     this.turnOrder = ["red-1", "blue-1"];
@@ -1072,6 +1126,18 @@ class GravityGridScene extends Phaser.Scene {
     gfx.strokeCircle(preview.x, preview.y, preview.craterRadius);
   }
 
+  private characterPoseFor(vehicle: VehicleState, active: boolean): CharacterPose {
+    if (!vehicle.alive) {
+      return "ko";
+    }
+
+    return active && this.charging ? "intense" : "default";
+  }
+
+  private orientedOffset(vehicle: VehicleState, offset: number, nativeFacing: 1 | -1): number {
+    return vehicle.facing === nativeFacing ? offset : -offset;
+  }
+
   private drawVehicles(): void {
     const gfx = this.vehicleGfx;
     gfx.clear();
@@ -1089,31 +1155,48 @@ class GravityGridScene extends Phaser.Scene {
         !this.roundOver &&
         !this.turnCommitted &&
         this.isMovable(vehicle);
-      const spriteKey = vehicle.alive ? vehicle.spriteKey : vehicle.koSpriteKey;
       const slopeAngle = this.terrainAngleAt(vehicle.x);
       const koTilt = vehicle.alive ? 0 : vehicle.team === "red" ? -8 : 8;
-      const sprite = this.vehicleSprites.get(vehicle.id) ?? this.add.image(vehicle.x, vehicle.y, spriteKey);
+      const vehicleSprite =
+        this.vehicleSprites.get(vehicle.id) ?? this.add.image(vehicle.x, vehicle.y, vehicle.vehicleSpriteKey);
       if (!this.vehicleSprites.has(vehicle.id)) {
-        sprite.setDepth(11);
-        this.vehicleSprites.set(vehicle.id, sprite);
+        vehicleSprite.setDepth(11);
+        this.vehicleSprites.set(vehicle.id, vehicleSprite);
       }
-      sprite
-        .setTexture(spriteKey)
+      vehicleSprite
+        .setTexture(vehicle.vehicleSpriteKey)
         .setOrigin(0.5, 0.86)
-        .setPosition(vehicle.x, vehicle.y + 18)
-        .setDisplaySize(238, 178)
-        .setFlipX(vehicle.facing !== vehicle.spriteFaces)
-        .setAlpha(alpha)
+        .setPosition(vehicle.x, vehicle.y + 20)
+        .setDisplaySize(vehicle.vehicleDisplay.width, vehicle.vehicleDisplay.height)
+        .setFlipX(vehicle.facing !== vehicle.vehicleSpriteFaces)
+        .setAlpha(vehicle.alive ? 1 : 0.82)
         .setAngle(slopeAngle + koTilt);
 
-      if (vehicle.alive) {
-        sprite.clearTint();
-      } else {
-        sprite.clearTint();
+      vehicleSprite.clearTint();
+
+      const characterPose = this.characterPoseFor(vehicle, active);
+      const characterKey = vehicle.characterSpriteKeys[characterPose];
+      const characterDisplay = vehicle.characterDisplays[characterPose];
+      const characterX =
+        vehicle.x + this.orientedOffset(vehicle, vehicle.characterOffsetX, vehicle.characterSpriteFaces);
+      const characterSprite =
+        this.characterSprites.get(vehicle.id) ?? this.add.image(characterX, vehicle.y, characterKey);
+      if (!this.characterSprites.has(vehicle.id)) {
+        characterSprite.setDepth(12);
+        this.characterSprites.set(vehicle.id, characterSprite);
       }
+      characterSprite
+        .setTexture(characterKey)
+        .setOrigin(0.5, 0.88)
+        .setPosition(characterX, vehicle.y + vehicle.characterOffsetY)
+        .setDisplaySize(characterDisplay.width, characterDisplay.height)
+        .setFlipX(vehicle.facing !== vehicle.characterSpriteFaces)
+        .setAlpha(alpha)
+        .setAngle(slopeAngle + koTilt);
+      characterSprite.clearTint();
 
       gfx.lineStyle(active ? 4 : 2, active ? 0xffffff : vehicle.accent, active ? 0.95 : 0.5);
-      gfx.strokeRoundedRect(vehicle.x - 108, vehicle.y - 98, 216, 130, 18);
+      gfx.strokeRoundedRect(vehicle.x - 116, vehicle.y - 106, 232, 138, 18);
 
       gfx.fillStyle(0x0f172a, 0.88);
       gfx.fillRoundedRect(vehicle.x - 44, vehicle.y - 76, 88, 14, 5);

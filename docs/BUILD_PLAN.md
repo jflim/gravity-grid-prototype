@@ -43,7 +43,9 @@ Done:
 - Destructible heightmap terrain.
 - Bunger knockback and fall/bunge KOs.
 - Round win condition and automatic reset.
-- Tight gameplay sprites separate from portrait art.
+- Gameplay sprites separate from portrait art.
+- Layered gameplay rendering with one vehicle sprite and one playable-character sprite.
+- Generated Nova and Vesper character state sprites: default, KO, and intense shooting.
 - Command panel with movement range, launch power, aim, active identity, timer, and wind.
 - Working title updated to Gravity Canyon.
 - Turn commits immediately when a shot is fired, with no post-shot movement window.
@@ -51,7 +53,7 @@ Done:
 - Temporary crater/splash radius rings make impact ranges visible.
 - Terrain can be punched through into the visible void beneath the stage.
 - Crater, splash, and Bunger knockback radii are smaller so ring-outs require more precise setup.
-- Destroyed vehicles now use character-specific KO sprite variants instead of only gray model feedback.
+- Destroyed vehicles now use character-specific generated KO character sprites instead of overlay effects.
 - Command panel is raised with a bottom safe margin so gameplay controls remain visible.
 - Colyseus server added.
 - Online panel can create/join private rooms, show player slots, ready state, placeholder rewards, and equipped nameplates.
@@ -61,7 +63,7 @@ Next:
 - Improve battlefield readability at common viewport sizes.
 - Tune vehicle scale, camera framing, and UI spacing.
 - Continue tuning hit, damage, KO, and round-end feedback.
-- Replace derived KO sprite variants with production per-character KO sprite states.
+- Replace first-pass generated gameplay sprites with production per-character and per-vehicle sprite sets.
 - Decide whether 1v1 local prototype should expand to 2v2 local before online multiplayer.
 - Wire server-authoritative combat state into the Phaser match scene.
 

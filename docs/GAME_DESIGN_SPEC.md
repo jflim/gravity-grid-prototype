@@ -69,7 +69,9 @@ Goal:
 Current result:
 
 - Local 1v1 prototype exists.
-- Tight gameplay sprites and high-detail portraits are separated.
+- Gameplay sprites and high-detail portraits are separated.
+- Gameplay rendering layers a standalone vehicle sprite under a standalone playable-character sprite.
+- Nova and Vesper now have generated character gameplay states for default, KO, and intense shooting.
 - Command deck, launch power, movement range, timer, wind, aim arrow, and terrain effects are playable.
 - A shot commits the turn immediately; the shooter cannot move during projectile flight or impact resolution.
 - Projectile collision now checks along the shot path, and post-impact settling is localized to nearby or affected vehicles.
@@ -258,7 +260,7 @@ Combat UX requirements:
 - Aim should show direction without giving a full landing prediction.
 - Impact feedback should briefly show crater/terrain range and splash damage range.
 - Disabled vehicles should read as fainted/knocked out, not only desaturated.
-- KO expressions should be character-specific, not a universal generic face.
+- KO and intense shooting expressions should be character-specific generated art, not universal generic faces or code-drawn overlays.
 - Opened terrain should expose a readable void/background beneath the stage.
 - Projectile camera should follow shots and preserve impact context.
 - Large character banners do not belong in the live match screen.
@@ -311,7 +313,11 @@ Fan-service boundary:
 
 Asset split:
 
-- Gameplay sprite: compact, tight-cropped, outlined, readable.
+- Vehicle gameplay sprite: one standalone vehicle sprite per vehicle look, with no pilot baked in.
+- Character gameplay sprite set: one standalone playable-character sprite per state.
+- Required first character states: default, KO, and intense shooting.
+- Gameplay sprites should be compact, tight-cropped, outlined, and readable.
+- Character states must be generated/painted as integrated artwork rather than drawn on top of the default sprite in code.
 - Portrait/card art: higher detail and more character-forward.
 - Gacha reveal art: most expressive and premium.
 - Equipment screen: show both pilot and vehicle.
