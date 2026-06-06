@@ -73,7 +73,9 @@ Current result:
 - Command deck, launch power, movement range, timer, wind, aim arrow, and terrain effects are playable.
 - A shot commits the turn immediately; the shooter cannot move during projectile flight or impact resolution.
 - Projectile collision now checks along the shot path, and post-impact settling is localized to nearby or affected vehicles.
-- Impact readability includes temporary crater/splash radius rings and KO/faint feedback for destroyed vehicles.
+- Impact readability includes temporary crater/splash radius rings and character-specific KO/faint feedback for destroyed vehicles.
+- Movement allows downhill travel and falling, while steep uphill movement is limited by a climb-angle rule.
+- Terrain can now be punched through into a visible void below the stage.
 - Colyseus online foundation exists for room creation, player presence, ready checks, and placeholder cosmetic rewards.
 - Browser client loads a vendored Colyseus browser SDK bundle while the server uses the installed Colyseus packages.
 
@@ -219,11 +221,14 @@ Default round rules:
 - 30 second turn timer.
 - 100 HP per vehicle.
 - Limited movement range per turn.
+- Downhill and falling movement is allowed within movement range.
+- Uphill movement is blocked when the terrain is steeper than the climb limit.
 - One shot per turn.
 - Releasing a shot commits the turn immediately.
 - Wind changes each turn.
 - KO by HP reaching 0 or falling below the death plane.
 - Fallen vehicles are set to 0 HP and not alive.
+- Players can intentionally drive into holes or off the stage; this is a valid self-KO.
 
 Stalemate protection target:
 
@@ -249,6 +254,8 @@ Combat UX requirements:
 - Aim should show direction without giving a full landing prediction.
 - Impact feedback should briefly show crater/terrain range and splash damage range.
 - Disabled vehicles should read as fainted/knocked out, not only desaturated.
+- KO expressions should be character-specific, not a universal generic face.
+- Opened terrain should expose a readable void/background beneath the stage.
 - Projectile camera should follow shots and preserve impact context.
 - Large character banners do not belong in the live match screen.
 
@@ -411,6 +418,8 @@ Terrain:
 - Current prototype uses a heightmap for speed.
 - Online MVP should begin with deterministic, serializable terrain.
 - Every weapon should affect terrain; Bunger-class weapons affect terrain the most.
+- Terrain should be fully destroyable vertically; deep enough craters open into the void rather than stopping at a safe floor.
+- Void/fall-through areas should be visually readable under the battlefield.
 - Post-impact vehicle settling should be driven by the changed terrain area and directly affected vehicles, not by unrelated distant slopes.
 - Pixel-mask terrain can replace heightmap when performance and sync complexity are justified.
 

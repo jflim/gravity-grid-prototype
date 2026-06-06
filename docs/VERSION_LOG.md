@@ -19,6 +19,10 @@ Highlights:
 - Added swept projectile collision checks, tighter splash radii, and localized post-impact vehicle settling.
 - Added temporary impact rings for crater and splash damage readability.
 - Added fainted/KO visual feedback for destroyed vehicles.
+- Changed terrain movement so downhill/falling is allowed, while steep uphill movement is blocked by a climb-angle rule.
+- Allowed vehicles to intentionally drive into holes or off the map and self-KO.
+- Allowed deep crater cuts to punch through into a visible void beneath the terrain.
+- Replaced the generic KO face with character-specific prototype KO expression overlays.
 
 Verification:
 - `npm run build` passed.

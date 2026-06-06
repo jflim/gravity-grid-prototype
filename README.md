@@ -11,6 +11,7 @@ First playable local artillery prototype for Gravity Canyon.
 - Keyboard movement, 5-90 degree elevation aiming, and hold/release shot power.
 - Left/Right input turns the vehicle, character, and aim direction before moving.
 - Facing-aware aim controls so each side's Up/Down input feels consistent.
+- Terrain movement allows downhill travel and falling, while steep uphill climbs are blocked by a climb-angle limit.
 - Global round-status strip with large timer and wind visible to everyone.
 - Docked bottom command deck with active vehicle portrait, aim dial, movement range meter, and a prominent launch-power meter.
 - Turn timer badge above the active vehicle.
@@ -21,11 +22,12 @@ First playable local artillery prototype for Gravity Canyon.
 - Firing commits the turn immediately, so the active vehicle cannot move during projectile flight or impact resolution.
 - Swept projectile collision checks to make fast shots hit terrain/vehicles more predictably.
 - Crater deformation on impact.
+- Terrain can be blasted through into a visible void beneath the stage.
 - Temporary impact rings showing crater size and splash damage range.
 - Prototype Bunger shot behavior: larger/deeper excavation, knockback, slope sliding, and fall/bunge KOs.
 - Localized post-impact vehicle settling so distant vehicles are not randomly displaced by unrelated craters.
 - Splash/direct damage, HP bars, turn switching, timeout, round win detection, and automatic round reset.
-- Fainted/KO overlay for destroyed vehicles instead of only graying out the model.
+- Character-specific prototype KO expressions for destroyed vehicles instead of a generic KO face.
 - Style B 2v2 concept art used as a faint backdrop reference.
 - High-detail anime vehicle/pilot portraits plus tight-cropped gameplay sprites for Nova and Vesper.
 - First Colyseus online foundation:
@@ -108,8 +110,11 @@ dist/index.html
 - The multiplayer architecture is now scaffolded, but live combat is still local-only until server-authoritative simulation is wired into the match scene.
 - Terrain uses a heightmap for speed. Pixel-mask terrain can replace it later if needed.
 - There is no predicted trajectory line. The muzzle arrow shows current direction, but shot landing is still based on angle, power, wind, and memory.
+- Movement treats downhill and falling as allowed traversal; only steep uphill movement is blocked.
+- Players can intentionally drive into holes or off the map, which sets that vehicle to 0 HP.
 - Every weapon affects terrain. Bunger weapons are tuned to affect terrain the most.
 - Nova is currently set up as the prototype Bunger class so terrain knock-off play can be tested.
+- Deep enough craters expose the void under the terrain instead of stopping at a safe floor.
 - Impact rings are temporary debugging/readability feedback: inner ring is crater/terrain effect, outer ring is splash damage range.
 - After a shot, the turn is committed immediately. There is intentionally no post-shot movement window.
 - A round ends when one team has no alive vehicles left. In this prototype, alive means `alive = true` and HP above 0.

@@ -67,6 +67,10 @@ const MIN_ELEVATION_DEG = 5;
 const MAX_ELEVATION_DEG = 90;
 const MAX_MOVE_UNITS = 10;
 const MOVE_PIXELS_PER_UNIT = 16;
+const MOVE_MIN_X = -72;
+const MOVE_MAX_X = WORLD_WIDTH + 72;
+const CLIMB_MAX_ANGLE_DEG = 34;
+const MAX_CLIMB_SLOPE = Math.tan((CLIMB_MAX_ANGLE_DEG * Math.PI) / 180);
 const MAX_POWER = 100;
 const GRAVITY = 440;
 const SHOT_SPEED_MIN = 240;
@@ -81,6 +85,8 @@ const DIRECT_HIT_RADIUS = VEHICLE_RADIUS + 9;
 const IMPACT_PREVIEW_SECONDS = 1.25;
 const TURN_SECONDS = 30;
 const COMMAND_PANEL_HEIGHT = 184;
+const VOID_SURFACE_Y = WORLD_HEIGHT + 260;
+const DEATH_SURFACE_Y = WORLD_HEIGHT - 6;
 
 class GravityGridScene extends Phaser.Scene {
   private terrain: number[] = [];
@@ -316,6 +322,18 @@ class GravityGridScene extends Phaser.Scene {
     horizon.fillRect(0, 390, WORLD_WIDTH, WORLD_HEIGHT - 390);
     horizon.lineStyle(3, 0x42d9ff, 0.2);
     horizon.lineBetween(0, 390, WORLD_WIDTH, 390);
+
+    const voidLayer = this.add.graphics();
+    voidLayer.fillStyle(0x050817, 0.9);
+    voidLayer.fillRect(0, 560, WORLD_WIDTH, WORLD_HEIGHT - 560);
+    voidLayer.lineStyle(2, 0x42d9ff, 0.12);
+    for (let y = 590; y < WORLD_HEIGHT; y += 34) {
+      voidLayer.lineBetween(0, y, WORLD_WIDTH, y + Math.sin(y * 0.025) * 10);
+    }
+    voidLayer.lineStyle(2, 0xff4d5d, 0.08);
+    for (let x = 120; x < WORLD_WIDTH; x += 220) {
+      voidLayer.lineBetween(x, 620, x + 76, WORLD_HEIGHT);
+    }
   }
 
   private startRound(): void {
@@ -460,16 +478,23 @@ class GravityGridScene extends Phaser.Scene {
     const direction = movingLeft ? -1 : 1;
     const maxStepDistance = active.moveUnits * MOVE_PIXELS_PER_UNIT;
     const stepDistance = Math.min(moveSpeed * dt, maxStepDistance);
-    const proposedX = Phaser.Math.Clamp(active.x + direction * stepDistance, 70, WORLD_WIDTH - 70);
+    const proposedX = Phaser.Math.Clamp(active.x + direction * stepDistance, MOVE_MIN_X, MOVE_MAX_X);
     const oldSurface = this.surfaceAt(active.x);
     const newSurface = this.surfaceAt(proposedX);
-    const slope = Math.abs(newSurface - oldSurface) / Math.max(Math.abs(proposedX - active.x), 1);
+    const distanceMoved = Math.abs(proposedX - active.x);
+    const surfaceDelta = newSurface - oldSurface;
+    const uphillSlope = Math.max(0, -surfaceDelta) / Math.max(distanceMoved, 1);
+    const canTraverse = surfaceDelta >= 0 || uphillSlope <= MAX_CLIMB_SLOPE;
 
-    if (slope < 0.78) {
-      const distanceMoved = Math.abs(proposedX - active.x);
+    if (canTraverse) {
       active.x = proposedX;
-      active.y = newSurface - VEHICLE_HALF_HEIGHT;
+      this.placeVehicleOnSurface(active);
       active.moveUnits = Math.max(0, active.moveUnits - distanceMoved / MOVE_PIXELS_PER_UNIT);
+      if (!active.alive) {
+        this.shotResult = `${active.username} drove into the void.`;
+        this.charging = false;
+        this.charge = 0;
+      }
       this.frameBattlefield(0);
     }
   }
@@ -614,7 +639,7 @@ class GravityGridScene extends Phaser.Scene {
       isBungerShot,
       timeLeft: IMPACT_PREVIEW_SECONDS,
     };
-    this.makeCrater(x, y, craterRadius, isBungerShot ? 1.62 : 0.74);
+    this.makeCrater(x, y, craterRadius, isBungerShot ? 2.35 : 0.9);
     const damaged: string[] = [];
     const bungeEvents: string[] = [];
     const affectedVehicleIds = new Set<string>();
@@ -645,7 +670,7 @@ class GravityGridScene extends Phaser.Scene {
           const beforeX = vehicle.x;
           const knockStrength = splashFactor;
           const direction = vehicle.x >= x ? 1 : -1;
-          vehicle.x = Phaser.Math.Clamp(vehicle.x + direction * BUNGER_KNOCKBACK * knockStrength, 24, WORLD_WIDTH - 24);
+          vehicle.x = Phaser.Math.Clamp(vehicle.x + direction * BUNGER_KNOCKBACK * knockStrength, MOVE_MIN_X, MOVE_MAX_X);
           if (Math.abs(vehicle.x - beforeX) > 12) {
             affectedVehicleIds.add(vehicle.id);
             bungeEvents.push(`${vehicle.username} shoved`);
@@ -687,7 +712,10 @@ class GravityGridScene extends Phaser.Scene {
         continue;
       }
       const carvedSurface = centerY + Math.sqrt(inside) * depthFactor;
-      this.terrain[x] = Math.min(WORLD_HEIGHT - 40, Math.max(this.terrain[x], carvedSurface));
+      const breaksThrough = carvedSurface >= WORLD_HEIGHT - 36;
+      this.terrain[x] = breaksThrough
+        ? VOID_SURFACE_Y
+        : Math.min(VOID_SURFACE_Y, Math.max(this.terrain[x], carvedSurface));
     }
   }
 
@@ -709,15 +737,11 @@ class GravityGridScene extends Phaser.Scene {
           if (Math.abs(slope) < 18) {
             break;
           }
-          vehicle.x = Phaser.Math.Clamp(vehicle.x + Math.sign(slope) * 7, 24, WORLD_WIDTH - 24);
+          vehicle.x = Phaser.Math.Clamp(vehicle.x + Math.sign(slope) * 7, MOVE_MIN_X, MOVE_MAX_X);
         }
       }
 
-      const surface = this.surfaceAt(vehicle.x);
-      vehicle.y = surface - VEHICLE_HALF_HEIGHT;
-      if (surface > WORLD_HEIGHT - 70 || vehicle.x <= 28 || vehicle.x >= WORLD_WIDTH - 28) {
-        vehicle.alive = false;
-        vehicle.hp = 0;
+      if (this.placeVehicleOnSurface(vehicle)) {
         fallEvents.push(`${vehicle.username} bunged out`);
       }
     }
@@ -833,8 +857,25 @@ class GravityGridScene extends Phaser.Scene {
   }
 
   private surfaceAt(x: number): number {
+    if (x < 0 || x > WORLD_WIDTH) {
+      return VOID_SURFACE_Y;
+    }
+
     const index = Phaser.Math.Clamp(Math.round(x), 0, WORLD_WIDTH);
-    return this.terrain[index] ?? WORLD_HEIGHT - 90;
+    return this.terrain[index] ?? VOID_SURFACE_Y;
+  }
+
+  private placeVehicleOnSurface(vehicle: VehicleState): boolean {
+    const surface = this.surfaceAt(vehicle.x);
+    vehicle.y = surface - VEHICLE_HALF_HEIGHT;
+
+    if (surface >= DEATH_SURFACE_Y) {
+      vehicle.alive = false;
+      vehicle.hp = 0;
+      return true;
+    }
+
+    return false;
   }
 
   private updateImpactPreview(dt: number): void {
@@ -861,24 +902,44 @@ class GravityGridScene extends Phaser.Scene {
     const gfx = this.terrainGfx;
     gfx.clear();
 
-    gfx.fillStyle(0x3c2f2f, 1);
-    gfx.beginPath();
-    gfx.moveTo(0, WORLD_HEIGHT);
+    let segment: Array<{ x: number; y: number }> = [];
+    const flushSegment = () => {
+      if (segment.length < 2) {
+        segment = [];
+        return;
+      }
+
+      const first = segment[0];
+      const last = segment[segment.length - 1];
+      gfx.fillStyle(0x3c2f2f, 1);
+      gfx.beginPath();
+      gfx.moveTo(first.x, WORLD_HEIGHT);
+      for (const point of segment) {
+        gfx.lineTo(point.x, point.y);
+      }
+      gfx.lineTo(last.x, WORLD_HEIGHT);
+      gfx.closePath();
+      gfx.fillPath();
+
+      gfx.lineStyle(12, 0x92e676, 1);
+      gfx.beginPath();
+      gfx.moveTo(first.x, first.y);
+      for (const point of segment.slice(1)) {
+        gfx.lineTo(point.x, point.y);
+      }
+      gfx.strokePath();
+      segment = [];
+    };
+
     for (let x = 0; x <= WORLD_WIDTH; x += TERRAIN_STEP) {
-      gfx.lineTo(x, this.surfaceAt(x));
+      const surface = this.surfaceAt(x);
+      if (surface >= WORLD_HEIGHT) {
+        flushSegment();
+        continue;
+      }
+      segment.push({ x, y: surface });
     }
-    gfx.lineTo(WORLD_WIDTH, WORLD_HEIGHT);
-    gfx.closePath();
-    gfx.fillPath();
-
-    gfx.lineStyle(12, 0x92e676, 1);
-    gfx.beginPath();
-    gfx.moveTo(0, this.surfaceAt(0));
-    for (let x = TERRAIN_STEP; x <= WORLD_WIDTH; x += TERRAIN_STEP) {
-      gfx.lineTo(x, this.surfaceAt(x));
-    }
-    gfx.strokePath();
-
+    flushSegment();
   }
 
   private drawAim(): void {
@@ -926,8 +987,8 @@ class GravityGridScene extends Phaser.Scene {
       return;
     }
 
-    const leftX = Phaser.Math.Clamp(active.x - maxDistance, 70, WORLD_WIDTH - 70);
-    const rightX = Phaser.Math.Clamp(active.x + maxDistance, 70, WORLD_WIDTH - 70);
+    const leftX = Phaser.Math.Clamp(active.x - maxDistance, MOVE_MIN_X, MOVE_MAX_X);
+    const rightX = Phaser.Math.Clamp(active.x + maxDistance, MOVE_MIN_X, MOVE_MAX_X);
 
     this.aimGfx.lineStyle(7, 0x0b1020, 0.5);
     this.drawTerrainRangeLine(leftX, rightX, 10);
@@ -939,17 +1000,29 @@ class GravityGridScene extends Phaser.Scene {
     for (let i = 0; i <= tickCount; i += 1) {
       const x = leftX + i * MOVE_PIXELS_PER_UNIT;
       const y = this.surfaceAt(x) - 10;
+      if (y >= WORLD_HEIGHT) {
+        continue;
+      }
       this.aimGfx.lineBetween(x, y - 6, x, y + 6);
     }
   }
 
   private drawTerrainRangeLine(startX: number, endX: number, yOffset: number): void {
+    let drawing = false;
     this.aimGfx.beginPath();
-    this.aimGfx.moveTo(startX, this.surfaceAt(startX) - yOffset);
     for (let x = startX + 8; x <= endX; x += 8) {
-      this.aimGfx.lineTo(x, this.surfaceAt(x) - yOffset);
+      const y = this.surfaceAt(x) - yOffset;
+      if (y >= WORLD_HEIGHT) {
+        drawing = false;
+        continue;
+      }
+      if (!drawing) {
+        this.aimGfx.moveTo(x, y);
+        drawing = true;
+      } else {
+        this.aimGfx.lineTo(x, y);
+      }
     }
-    this.aimGfx.lineTo(endX, this.surfaceAt(endX) - yOffset);
     this.aimGfx.strokePath();
   }
 
@@ -1046,19 +1119,7 @@ class GravityGridScene extends Phaser.Scene {
       this.vehicleLabels.push(classLabel);
 
       if (!vehicle.alive) {
-        this.drawKnockoutFace(vehicle);
-        const koTag = this.add
-          .text(vehicle.x, vehicle.y - 174, "KO", {
-            fontFamily: "Inter, Arial, sans-serif",
-            fontSize: "18px",
-            fontStyle: "700",
-            color: "#fff4c2",
-            stroke: "#10131b",
-            strokeThickness: 5,
-          })
-          .setOrigin(0.5)
-          .setDepth(16);
-        this.vehicleLabels.push(koTag);
+        this.drawCharacterKoExpression(vehicle);
       }
 
       if (active) {
@@ -1097,36 +1158,75 @@ class GravityGridScene extends Phaser.Scene {
     }
   }
 
-  private drawKnockoutFace(vehicle: VehicleState): void {
+  private drawCharacterKoExpression(vehicle: VehicleState): void {
     const gfx = this.koGfx;
-    const x = vehicle.x;
-    const y = vehicle.y - 58;
+    const headX = vehicle.x + this.facingOffset(vehicle, vehicle.id === "red-1" ? -40 : -4);
+    const headY = vehicle.y - 86;
 
-    gfx.fillStyle(0xfff4c2, 0.96);
-    gfx.fillCircle(x, y, 26);
-    gfx.lineStyle(3, 0x10131b, 1);
-    gfx.strokeCircle(x, y, 26);
+    if (vehicle.id === "red-1") {
+      this.drawNovaKoExpression(headX, headY);
+      return;
+    }
 
-    gfx.lineStyle(4, 0x10131b, 1);
-    this.drawFaceX(gfx, x - 10, y - 6, 7);
-    this.drawFaceX(gfx, x + 10, y - 6, 7);
-
-    gfx.lineStyle(3, 0x10131b, 1);
-    gfx.beginPath();
-    gfx.arc(x, y + 10, 10, Math.PI * 1.05, Math.PI * 1.95, false);
-    gfx.strokePath();
-    gfx.fillStyle(0xff7a9e, 0.95);
-    gfx.fillEllipse(x + 3, y + 15, 12, 8);
-
-    gfx.fillStyle(0x0b1020, 0.88);
-    gfx.fillRoundedRect(x - 27, y - 57, 54, 24, 8);
-    gfx.lineStyle(2, 0xfff4c2, 0.62);
-    gfx.strokeRoundedRect(x - 27, y - 57, 54, 24, 8);
+    this.drawVesperKoExpression(headX, headY);
   }
 
-  private drawFaceX(gfx: Phaser.GameObjects.Graphics, x: number, y: number, size: number): void {
-    gfx.lineBetween(x - size, y - size, x + size, y + size);
-    gfx.lineBetween(x + size, y - size, x - size, y + size);
+  private facingOffset(vehicle: VehicleState, defaultFacingOffset: number): number {
+    return vehicle.facing === vehicle.spriteFaces ? defaultFacingOffset : -defaultFacingOffset;
+  }
+
+  private drawNovaKoExpression(x: number, y: number): void {
+    const gfx = this.koGfx;
+    gfx.fillStyle(0xfff4c2, 0.96);
+    gfx.fillEllipse(x - 8, y, 13, 11);
+    gfx.fillEllipse(x + 9, y, 13, 11);
+    gfx.lineStyle(2, 0x10131b, 1);
+    gfx.strokeEllipse(x - 8, y, 13, 11);
+    gfx.strokeEllipse(x + 9, y, 13, 11);
+    gfx.fillStyle(0xff4d5d, 1);
+    gfx.fillCircle(x - 8, y - 4, 3);
+    gfx.fillCircle(x + 9, y - 4, 3);
+    gfx.lineStyle(2, 0xffd166, 0.95);
+    gfx.strokeCircle(x - 8, y, 6);
+    gfx.strokeCircle(x + 9, y, 6);
+    gfx.lineStyle(3, 0x10131b, 1);
+    gfx.beginPath();
+    gfx.arc(x + 1, y + 12, 8, Math.PI * 1.08, Math.PI * 1.9, false);
+    gfx.strokePath();
+    this.drawDizzySpark(x - 19, y - 24, 0xffd166);
+    this.drawDizzySpark(x + 19, y - 23, 0xff4d5d);
+  }
+
+  private drawVesperKoExpression(x: number, y: number): void {
+    const gfx = this.koGfx;
+    gfx.fillStyle(0xe8fbff, 0.96);
+    gfx.fillRoundedRect(x - 20, y - 6, 15, 12, 3);
+    gfx.fillRoundedRect(x + 5, y - 6, 15, 12, 3);
+    gfx.lineStyle(2, 0x10131b, 1);
+    gfx.strokeRoundedRect(x - 20, y - 6, 15, 12, 3);
+    gfx.strokeRoundedRect(x + 5, y - 6, 15, 12, 3);
+    gfx.fillStyle(0x10131b, 1);
+    gfx.fillCircle(x - 13, y - 3, 2);
+    gfx.fillCircle(x + 12, y - 3, 2);
+    gfx.lineStyle(3, 0x4cc9f0, 0.95);
+    gfx.lineBetween(x - 24, y - 12, x - 5, y - 9);
+    gfx.lineBetween(x + 3, y + 9, x + 24, y + 6);
+    gfx.lineStyle(2, 0xff4dba, 0.78);
+    gfx.lineBetween(x - 18, y + 15, x + 16, y + 13);
+    gfx.lineStyle(3, 0x10131b, 1);
+    gfx.beginPath();
+    gfx.arc(x, y + 12, 7, Math.PI * 1.1, Math.PI * 1.9, false);
+    gfx.strokePath();
+  }
+
+  private drawDizzySpark(x: number, y: number, color: number): void {
+    const gfx = this.koGfx;
+    gfx.lineStyle(3, color, 0.96);
+    gfx.lineBetween(x - 7, y, x + 7, y);
+    gfx.lineBetween(x, y - 7, x, y + 7);
+    gfx.lineStyle(2, 0xffffff, 0.8);
+    gfx.lineBetween(x - 4, y - 4, x + 4, y + 4);
+    gfx.lineBetween(x + 4, y - 4, x - 4, y + 4);
   }
 
   private drawProjectile(): void {
