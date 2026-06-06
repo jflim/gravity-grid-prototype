@@ -50,7 +50,7 @@ export function mountOnlineLobby() {
     <div class="online-panel__header">
       <div>
         <p class="online-panel__eyebrow">Online Alpha</p>
-        <h1>Arch Canyon</h1>
+        <h1>Gravity Canyon</h1>
       </div>
       <span class="online-panel__badge" data-status-badge>Offline</span>
     </div>
@@ -107,7 +107,7 @@ export function mountOnlineLobby() {
   const rewardLog = panel.querySelector<HTMLElement>("[data-reward-log]");
 
   createButton?.addEventListener("click", async () => {
-    await connect(() => client.create("arch_canyon", { displayName: displayNameInput?.value }));
+    await connect(() => client.create("gravity_canyon", { displayName: displayNameInput?.value }));
   });
 
   joinButton?.addEventListener("click", async () => {

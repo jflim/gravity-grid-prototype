@@ -1,11 +1,11 @@
-# Arch Canyon Prototype
+# Gravity Canyon Prototype
 
-First playable local artillery prototype for Arch Canyon.
+First playable local artillery prototype for Gravity Canyon.
 
 ## What Is Built
 
 - Browser-based Phaser prototype.
-- Working title updated to Arch Canyon.
+- Working title updated to Gravity Canyon.
 - Two local vehicles, one red and one blue.
 - Procedural heightmap terrain.
 - Keyboard movement, 5-90 degree elevation aiming, and hold/release shot power.

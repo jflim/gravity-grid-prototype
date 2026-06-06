@@ -1,4 +1,4 @@
-# Arch Canyon Build Plan
+# Gravity Canyon Build Plan
 
 This plan is meant to keep the game moving through playable iterations instead of chasing a perfect v1.
 
@@ -43,7 +43,7 @@ Done:
 - Round win condition and automatic reset.
 - Tight gameplay sprites separate from portrait art.
 - Command panel with movement range, launch power, aim, active identity, timer, and wind.
-- Working title updated to Arch Canyon.
+- Working title updated to Gravity Canyon.
 - Colyseus server added.
 - Online panel can create/join private rooms, show player slots, ready state, placeholder rewards, and equipped nameplates.
 - Colyseus browser SDK is vendored as a static browser bundle for stable Vite dev behavior on Windows.

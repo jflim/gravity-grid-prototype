@@ -1,5 +1,5 @@
 import { Server } from "colyseus";
-import { ArchCanyonRoom } from "./rooms/ArchCanyonRoom.js";
+import { GravityCanyonRoom } from "./rooms/GravityCanyonRoom.js";
 
 const port = Number(process.env.PORT ?? 2567);
 const gameServer = new Server({
@@ -7,14 +7,14 @@ const gameServer = new Server({
     app.get("/healthz", (_request, response) => {
       response.json({
         ok: true,
-        service: "arch-canyon-server",
-        rooms: ["arch_canyon"],
+        service: "gravity-canyon-server",
+        rooms: ["gravity_canyon"],
       });
     });
   },
 });
 
-gameServer.define("arch_canyon", ArchCanyonRoom);
+gameServer.define("gravity_canyon", GravityCanyonRoom);
 
 await gameServer.listen(port, "127.0.0.1");
-console.log(`Arch Canyon server listening on ws://127.0.0.1:${port}`);
+console.log(`Gravity Canyon server listening on ws://127.0.0.1:${port}`);

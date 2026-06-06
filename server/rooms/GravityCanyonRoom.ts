@@ -1,6 +1,6 @@
 import { ArraySchema } from "@colyseus/schema";
 import { Client, Room } from "colyseus";
-import { ArchCanyonState, PlayerState } from "../schema/ArchCanyonState.js";
+import { GravityCanyonState, PlayerState } from "../schema/GravityCanyonState.js";
 
 type JoinOptions = {
   displayName?: string;
@@ -22,11 +22,11 @@ const cosmeticPool = [
   "Cloudline Champ",
 ];
 
-export class ArchCanyonRoom extends Room<{ state: ArchCanyonState }> {
+export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
   maxClients = 2;
 
   onCreate() {
-    this.setState(new ArchCanyonState());
+    this.setState(new GravityCanyonState());
     this.state.roomCode = this.roomId;
 
     this.onMessage("setDisplayName", (client, displayName: string) => {

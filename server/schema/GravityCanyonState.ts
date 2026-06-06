@@ -24,7 +24,7 @@ export class PlayerState extends Schema {
   }
 }
 
-export class ArchCanyonState extends Schema {
+export class GravityCanyonState extends Schema {
   declare workingTitle: string;
   declare roomCode: string;
   declare phase: RoomPhase;
@@ -36,7 +36,7 @@ export class ArchCanyonState extends Schema {
 
   constructor() {
     super();
-    this.workingTitle = "Arch Canyon";
+    this.workingTitle = "Gravity Canyon";
     this.roomCode = "";
     this.phase = "lobby";
     this.status = "Waiting for players.";
@@ -57,7 +57,7 @@ defineTypes(PlayerState, {
   inventory: { array: "string" },
 });
 
-defineTypes(ArchCanyonState, {
+defineTypes(GravityCanyonState, {
   workingTitle: "string",
   roomCode: "string",
   phase: "string",

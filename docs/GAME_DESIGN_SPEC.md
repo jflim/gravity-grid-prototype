@@ -1,15 +1,15 @@
-# Arch Canyon Game Design Spec
+# Gravity Canyon Game Design Spec
 
 Canonical source of truth for the current product direction.
 
 Last updated: 2026-06-05
 Confidence: 95% for the next build milestone, with later milestone details intentionally left flexible.
 
-Working title: Arch Canyon.
+Working title: Gravity Canyon.
 
 ## 1. Product North Star
 
-Arch Canyon is a desktop browser, turn-based artillery game with anime arcade style, readable vehicle combat, destructible terrain, team tactics, and cosmetic collection.
+Gravity Canyon is a desktop browser, turn-based artillery game with anime arcade style, readable vehicle combat, destructible terrain, team tactics, and cosmetic collection.
 
 The player promise:
 
@@ -21,8 +21,9 @@ The player promise:
 
 Current lore seed:
 
-- Arch Canyon is the first named battle region and working product title.
-- The world is made of fractured canyon chains, arch fields, shelves, and suspended terrain.
+- Gravity Canyon is the first named battle region and working product title.
+- The world is made of fractured canyon chains, gravity shelves, arch fields, and suspended terrain.
+- Gravity anomalies are part of the core fantasy: shots arc through unstable fields, terrain shelves hang in the air, and knockback/falls feel tied to the world instead of only to arcade rules.
 - "Sparks" can be used as the early energy/reward term without requiring final lore yet.
 
 ## 2. Build Philosophy

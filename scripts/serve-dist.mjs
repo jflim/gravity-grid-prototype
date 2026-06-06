@@ -38,5 +38,5 @@ createServer((req, res) => {
   });
   createReadStream(filePath).pipe(res);
 }).listen(port, "127.0.0.1", () => {
-  console.log(`Gravity Grid prototype listening on http://127.0.0.1:${port}`);
+  console.log(`Gravity Canyon prototype listening on http://127.0.0.1:${port}`);
 });
