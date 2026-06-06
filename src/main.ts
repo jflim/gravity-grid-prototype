@@ -21,6 +21,7 @@ interface VehicleState {
   color: number;
   accent: number;
   spriteKey: string;
+  koSpriteKey: string;
   portraitKey: string;
   spriteFaces: 1 | -1;
 }
@@ -76,17 +77,19 @@ const GRAVITY = 440;
 const SHOT_SPEED_MIN = 240;
 const SHOT_SPEED_MAX = 780;
 const WIND_FORCE = 34;
-const CRATER_RADIUS = 76;
-const BUNGER_CRATER_RADIUS = 124;
-const DAMAGE_RADIUS = 112;
-const BUNGER_DAMAGE_RADIUS = 156;
-const BUNGER_KNOCKBACK = 150;
+const CRATER_RADIUS = 64;
+const BUNGER_CRATER_RADIUS = 112;
+const DAMAGE_RADIUS = 92;
+const BUNGER_DAMAGE_RADIUS = 132;
+const BUNGER_KNOCKBACK = 118;
 const DIRECT_HIT_RADIUS = VEHICLE_RADIUS + 9;
 const IMPACT_PREVIEW_SECONDS = 1.25;
 const TURN_SECONDS = 30;
-const COMMAND_PANEL_HEIGHT = 184;
+const COMMAND_PANEL_HEIGHT = 176;
+const COMMAND_PANEL_BOTTOM_MARGIN = 24;
 const VOID_SURFACE_Y = WORLD_HEIGHT + 260;
 const DEATH_SURFACE_Y = WORLD_HEIGHT - 6;
+const MAX_TERRAIN_SPRITE_TILT_DEG = 20;
 
 class GravityGridScene extends Phaser.Scene {
   private terrain: number[] = [];
@@ -114,7 +117,6 @@ class GravityGridScene extends Phaser.Scene {
   private hudGfx!: Phaser.GameObjects.Graphics;
   private aimGfx!: Phaser.GameObjects.Graphics;
   private impactGfx!: Phaser.GameObjects.Graphics;
-  private koGfx!: Phaser.GameObjects.Graphics;
   private vehicleLabels: Phaser.GameObjects.Text[] = [];
   private vehicleSprites = new Map<string, Phaser.GameObjects.Image>();
   private hudText!: Phaser.GameObjects.Text;
@@ -136,8 +138,10 @@ class GravityGridScene extends Phaser.Scene {
     this.load.image("style-reference", "assets/style-b-2v2-reference.png");
     this.load.image("nova-vehicle", "assets/nova-vehicle.png");
     this.load.image("nova-gameplay", "assets/nova-gameplay.png");
+    this.load.image("nova-gameplay-ko", "assets/nova-gameplay-ko.png");
     this.load.image("vesper-vehicle", "assets/vesper-vehicle.png");
     this.load.image("vesper-gameplay", "assets/vesper-gameplay.png");
+    this.load.image("vesper-gameplay-ko", "assets/vesper-gameplay-ko.png");
   }
 
   create(): void {
@@ -153,7 +157,6 @@ class GravityGridScene extends Phaser.Scene {
     this.impactGfx = this.add.graphics().setDepth(9);
     this.vehicleGfx = this.add.graphics();
     this.projectileGfx = this.add.graphics();
-    this.koGfx = this.add.graphics().setDepth(14);
     this.hudGfx = this.add.graphics().setScrollFactor(0).setDepth(50);
 
     const textStyle: Phaser.Types.GameObjects.Text.TextStyle = {
@@ -324,15 +327,24 @@ class GravityGridScene extends Phaser.Scene {
     horizon.lineBetween(0, 390, WORLD_WIDTH, 390);
 
     const voidLayer = this.add.graphics();
-    voidLayer.fillStyle(0x050817, 0.9);
-    voidLayer.fillRect(0, 560, WORLD_WIDTH, WORLD_HEIGHT - 560);
-    voidLayer.lineStyle(2, 0x42d9ff, 0.12);
-    for (let y = 590; y < WORLD_HEIGHT; y += 34) {
-      voidLayer.lineBetween(0, y, WORLD_WIDTH, y + Math.sin(y * 0.025) * 10);
+    voidLayer.fillStyle(0x071326, 0.96);
+    voidLayer.fillRect(0, 520, WORLD_WIDTH, WORLD_HEIGHT - 520);
+    voidLayer.fillStyle(0x123152, 0.22);
+    for (let y = 548; y < WORLD_HEIGHT; y += 46) {
+      voidLayer.fillRect(0, y, WORLD_WIDTH, 16);
     }
-    voidLayer.lineStyle(2, 0xff4d5d, 0.08);
-    for (let x = 120; x < WORLD_WIDTH; x += 220) {
-      voidLayer.lineBetween(x, 620, x + 76, WORLD_HEIGHT);
+    voidLayer.lineStyle(3, 0x8be9ff, 0.14);
+    for (let y = 548; y < WORLD_HEIGHT; y += 38) {
+      voidLayer.lineBetween(0, y, WORLD_WIDTH, y + Math.sin(y * 0.023) * 18);
+    }
+    voidLayer.lineStyle(2, 0xffd166, 0.1);
+    for (let x = 80; x < WORLD_WIDTH; x += 170) {
+      voidLayer.lineBetween(x, 540, x - 90, WORLD_HEIGHT);
+    }
+    voidLayer.fillStyle(0xdff9ff, 0.28);
+    for (let x = 52; x < WORLD_WIDTH; x += 137) {
+      const y = 575 + ((x * 37) % 260);
+      voidLayer.fillRect(x, y, 4, 18);
     }
   }
 
@@ -358,6 +370,7 @@ class GravityGridScene extends Phaser.Scene {
         color: 0xff4d5d,
         accent: 0xffd166,
         spriteKey: "nova-gameplay",
+        koSpriteKey: "nova-gameplay-ko",
         portraitKey: "nova-vehicle",
         spriteFaces: 1,
       },
@@ -377,6 +390,7 @@ class GravityGridScene extends Phaser.Scene {
         color: 0x4cc9f0,
         accent: 0xb8f7ff,
         spriteKey: "vesper-gameplay",
+        koSpriteKey: "vesper-gameplay-ko",
         portraitKey: "vesper-vehicle",
         spriteFaces: -1,
       },
@@ -639,7 +653,7 @@ class GravityGridScene extends Phaser.Scene {
       isBungerShot,
       timeLeft: IMPACT_PREVIEW_SECONDS,
     };
-    this.makeCrater(x, y, craterRadius, isBungerShot ? 2.35 : 0.9);
+    this.makeCrater(x, y, craterRadius, isBungerShot ? 2.05 : 0.78);
     const damaged: string[] = [];
     const bungeEvents: string[] = [];
     const affectedVehicleIds = new Set<string>();
@@ -827,7 +841,7 @@ class GravityGridScene extends Phaser.Scene {
   }
 
   private playfieldHeight(): number {
-    return Math.max(420, this.scale.height - COMMAND_PANEL_HEIGHT);
+    return Math.max(420, this.scale.height - COMMAND_PANEL_HEIGHT - COMMAND_PANEL_BOTTOM_MARGIN);
   }
 
   private frameBattlefield(duration = 0): void {
@@ -876,6 +890,17 @@ class GravityGridScene extends Phaser.Scene {
     }
 
     return false;
+  }
+
+  private terrainAngleAt(x: number): number {
+    const left = this.surfaceAt(x - VEHICLE_HALF_WIDTH);
+    const right = this.surfaceAt(x + VEHICLE_HALF_WIDTH);
+    if (left >= DEATH_SURFACE_Y || right >= DEATH_SURFACE_Y) {
+      return 0;
+    }
+
+    const angle = Phaser.Math.RadToDeg(Math.atan2(right - left, VEHICLE_HALF_WIDTH * 2));
+    return Phaser.Math.Clamp(angle, -MAX_TERRAIN_SPRITE_TILT_DEG, MAX_TERRAIN_SPRITE_TILT_DEG);
   }
 
   private updateImpactPreview(dt: number): void {
@@ -1050,7 +1075,6 @@ class GravityGridScene extends Phaser.Scene {
   private drawVehicles(): void {
     const gfx = this.vehicleGfx;
     gfx.clear();
-    this.koGfx.clear();
 
     for (const label of this.vehicleLabels) {
       label.destroy();
@@ -1065,24 +1089,27 @@ class GravityGridScene extends Phaser.Scene {
         !this.roundOver &&
         !this.turnCommitted &&
         this.isMovable(vehicle);
-      const sprite = this.vehicleSprites.get(vehicle.id) ?? this.add.image(vehicle.x, vehicle.y, vehicle.spriteKey);
+      const spriteKey = vehicle.alive ? vehicle.spriteKey : vehicle.koSpriteKey;
+      const slopeAngle = this.terrainAngleAt(vehicle.x);
+      const koTilt = vehicle.alive ? 0 : vehicle.team === "red" ? -8 : 8;
+      const sprite = this.vehicleSprites.get(vehicle.id) ?? this.add.image(vehicle.x, vehicle.y, spriteKey);
       if (!this.vehicleSprites.has(vehicle.id)) {
         sprite.setDepth(11);
         this.vehicleSprites.set(vehicle.id, sprite);
       }
       sprite
-        .setTexture(vehicle.spriteKey)
+        .setTexture(spriteKey)
         .setOrigin(0.5, 0.86)
         .setPosition(vehicle.x, vehicle.y + 18)
         .setDisplaySize(238, 178)
         .setFlipX(vehicle.facing !== vehicle.spriteFaces)
         .setAlpha(alpha)
-        .setAngle(vehicle.alive ? 0 : vehicle.team === "red" ? -7 : 7);
+        .setAngle(slopeAngle + koTilt);
 
       if (vehicle.alive) {
         sprite.clearTint();
       } else {
-        sprite.setTint(0xb7bed3);
+        sprite.clearTint();
       }
 
       gfx.lineStyle(active ? 4 : 2, active ? 0xffffff : vehicle.accent, active ? 0.95 : 0.5);
@@ -1118,10 +1145,6 @@ class GravityGridScene extends Phaser.Scene {
         .setDepth(16);
       this.vehicleLabels.push(classLabel);
 
-      if (!vehicle.alive) {
-        this.drawCharacterKoExpression(vehicle);
-      }
-
       if (active) {
         const timerY = vehicle.y - 178;
         gfx.fillStyle(0x0b1020, 0.88);
@@ -1156,77 +1179,6 @@ class GravityGridScene extends Phaser.Scene {
         this.vehicleLabels.push(turnTag);
       }
     }
-  }
-
-  private drawCharacterKoExpression(vehicle: VehicleState): void {
-    const gfx = this.koGfx;
-    const headX = vehicle.x + this.facingOffset(vehicle, vehicle.id === "red-1" ? -40 : -4);
-    const headY = vehicle.y - 86;
-
-    if (vehicle.id === "red-1") {
-      this.drawNovaKoExpression(headX, headY);
-      return;
-    }
-
-    this.drawVesperKoExpression(headX, headY);
-  }
-
-  private facingOffset(vehicle: VehicleState, defaultFacingOffset: number): number {
-    return vehicle.facing === vehicle.spriteFaces ? defaultFacingOffset : -defaultFacingOffset;
-  }
-
-  private drawNovaKoExpression(x: number, y: number): void {
-    const gfx = this.koGfx;
-    gfx.fillStyle(0xfff4c2, 0.96);
-    gfx.fillEllipse(x - 8, y, 13, 11);
-    gfx.fillEllipse(x + 9, y, 13, 11);
-    gfx.lineStyle(2, 0x10131b, 1);
-    gfx.strokeEllipse(x - 8, y, 13, 11);
-    gfx.strokeEllipse(x + 9, y, 13, 11);
-    gfx.fillStyle(0xff4d5d, 1);
-    gfx.fillCircle(x - 8, y - 4, 3);
-    gfx.fillCircle(x + 9, y - 4, 3);
-    gfx.lineStyle(2, 0xffd166, 0.95);
-    gfx.strokeCircle(x - 8, y, 6);
-    gfx.strokeCircle(x + 9, y, 6);
-    gfx.lineStyle(3, 0x10131b, 1);
-    gfx.beginPath();
-    gfx.arc(x + 1, y + 12, 8, Math.PI * 1.08, Math.PI * 1.9, false);
-    gfx.strokePath();
-    this.drawDizzySpark(x - 19, y - 24, 0xffd166);
-    this.drawDizzySpark(x + 19, y - 23, 0xff4d5d);
-  }
-
-  private drawVesperKoExpression(x: number, y: number): void {
-    const gfx = this.koGfx;
-    gfx.fillStyle(0xe8fbff, 0.96);
-    gfx.fillRoundedRect(x - 20, y - 6, 15, 12, 3);
-    gfx.fillRoundedRect(x + 5, y - 6, 15, 12, 3);
-    gfx.lineStyle(2, 0x10131b, 1);
-    gfx.strokeRoundedRect(x - 20, y - 6, 15, 12, 3);
-    gfx.strokeRoundedRect(x + 5, y - 6, 15, 12, 3);
-    gfx.fillStyle(0x10131b, 1);
-    gfx.fillCircle(x - 13, y - 3, 2);
-    gfx.fillCircle(x + 12, y - 3, 2);
-    gfx.lineStyle(3, 0x4cc9f0, 0.95);
-    gfx.lineBetween(x - 24, y - 12, x - 5, y - 9);
-    gfx.lineBetween(x + 3, y + 9, x + 24, y + 6);
-    gfx.lineStyle(2, 0xff4dba, 0.78);
-    gfx.lineBetween(x - 18, y + 15, x + 16, y + 13);
-    gfx.lineStyle(3, 0x10131b, 1);
-    gfx.beginPath();
-    gfx.arc(x, y + 12, 7, Math.PI * 1.1, Math.PI * 1.9, false);
-    gfx.strokePath();
-  }
-
-  private drawDizzySpark(x: number, y: number, color: number): void {
-    const gfx = this.koGfx;
-    gfx.lineStyle(3, color, 0.96);
-    gfx.lineBetween(x - 7, y, x + 7, y);
-    gfx.lineBetween(x, y - 7, x, y + 7);
-    gfx.lineStyle(2, 0xffffff, 0.8);
-    gfx.lineBetween(x - 4, y - 4, x + 4, y + 4);
-    gfx.lineBetween(x + 4, y - 4, x - 4, y + 4);
   }
 
   private drawProjectile(): void {
@@ -1366,11 +1318,14 @@ class GravityGridScene extends Phaser.Scene {
     const panelWidth = width;
     const panelHeight = COMMAND_PANEL_HEIGHT;
     const panelX = 0;
-    const panelY = height - panelHeight;
+    const panelY = height - panelHeight - COMMAND_PANEL_BOTTOM_MARGIN;
 
     this.hudGfx.clear();
+    this.timerText.setText("");
     this.hudGfx.fillStyle(0x0b1020, 0.92);
     this.hudGfx.fillRect(panelX, panelY, panelWidth, panelHeight);
+    this.hudGfx.fillStyle(0x050817, 0.96);
+    this.hudGfx.fillRect(0, panelY + panelHeight, width, COMMAND_PANEL_BOTTOM_MARGIN);
     this.hudGfx.lineStyle(4, 0x8be9ff, 0.36);
     this.hudGfx.lineBetween(0, panelY, width, panelY);
     this.hudGfx.lineStyle(1, 0xffffff, 0.08);
@@ -1460,25 +1415,8 @@ class GravityGridScene extends Phaser.Scene {
 
   private drawGlobalRoundStatus(active?: VehicleState, roundComplete = false): void {
     const width = this.scale.width;
-    const timerLabel = roundComplete ? "END" : active ? `${Math.ceil(this.turnTime)}s` : "--";
     const windLabel = `WIND ${this.windLabel()}`;
-
-    this.hudGfx.fillStyle(0x0b1020, 0.84);
-    this.hudGfx.fillRoundedRect(width / 2 - 92, 12, 184, 76, 8);
-    this.hudGfx.lineStyle(2, 0xffffff, 0.22);
-    this.hudGfx.strokeRoundedRect(width / 2 - 92, 12, 184, 76, 8);
-    this.timerText
-      .setPosition(width / 2, 17)
-      .setText(timerLabel)
-      .setStyle({
-        fontFamily: "Inter, Arial, sans-serif",
-        fontSize: "42px",
-        fontStyle: "700",
-        color: "#ffffff",
-        stroke: "#0b1020",
-        strokeThickness: 8,
-        align: "center",
-      });
+    this.timerText.setText("");
 
     this.hudGfx.fillStyle(0x0b1020, 0.78);
     this.hudGfx.fillRoundedRect(18, 16, 224, 58, 8);

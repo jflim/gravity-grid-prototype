@@ -12,9 +12,11 @@ First playable local artillery prototype for Gravity Canyon.
 - Left/Right input turns the vehicle, character, and aim direction before moving.
 - Facing-aware aim controls so each side's Up/Down input feels consistent.
 - Terrain movement allows downhill travel and falling, while steep uphill climbs are blocked by a climb-angle limit.
-- Global round-status strip with large timer and wind visible to everyone.
+- Wind strip visible to everyone; the turn timer lives above the active vehicle only.
 - Docked bottom command deck with active vehicle portrait, aim dial, movement range meter, and a prominent launch-power meter.
+- Raised command deck with a bottom safe margin so controls stay visible in the browser viewport.
 - Turn timer badge above the active vehicle.
+- Vehicle sprites tilt with terrain slope for clearer ground contact.
 - World-space muzzle aim arrow and ground movement range rail for the active player while positioning.
 - Projectile physics with gravity and turn-based wind.
 - Full-battlefield aiming camera so both players are visible before firing.
@@ -24,10 +26,10 @@ First playable local artillery prototype for Gravity Canyon.
 - Crater deformation on impact.
 - Terrain can be blasted through into a visible void beneath the stage.
 - Temporary impact rings showing crater size and splash damage range.
-- Prototype Bunger shot behavior: larger/deeper excavation, knockback, slope sliding, and fall/bunge KOs.
+- Prototype Bunger shot behavior: larger/deeper excavation, knockback, slope sliding, and fall/bunge KOs, now tuned toward precise 2-3 shot ring-outs.
 - Localized post-impact vehicle settling so distant vehicles are not randomly displaced by unrelated craters.
 - Splash/direct damage, HP bars, turn switching, timeout, round win detection, and automatic round reset.
-- Character-specific prototype KO expressions for destroyed vehicles instead of a generic KO face.
+- Character-specific KO sprite variants for Nova and Vesper instead of a generic KO face overlay.
 - Style B 2v2 concept art used as a faint backdrop reference.
 - High-detail anime vehicle/pilot portraits plus tight-cropped gameplay sprites for Nova and Vesper.
 - First Colyseus online foundation:
@@ -111,16 +113,18 @@ dist/index.html
 - Terrain uses a heightmap for speed. Pixel-mask terrain can replace it later if needed.
 - There is no predicted trajectory line. The muzzle arrow shows current direction, but shot landing is still based on angle, power, wind, and memory.
 - Movement treats downhill and falling as allowed traversal; only steep uphill movement is blocked.
+- Vehicle sprites rotate to match the local terrain slope while labels and meters stay horizontal.
 - Players can intentionally drive into holes or off the map, which sets that vehicle to 0 HP.
 - Every weapon affects terrain. Bunger weapons are tuned to affect terrain the most.
 - Nova is currently set up as the prototype Bunger class so terrain knock-off play can be tested.
 - Deep enough craters expose the void under the terrain instead of stopping at a safe floor.
+- The current crater, splash, and Bunger knockback radii are intentionally smaller so map KOs require more precision.
 - Impact rings are temporary debugging/readability feedback: inner ring is crater/terrain effect, outer ring is splash damage range.
 - After a shot, the turn is committed immediately. There is intentionally no post-shot movement window.
 - A round ends when one team has no alive vehicles left. In this prototype, alive means `alive = true` and HP above 0.
 - Finished rounds show the result briefly, then start a fresh round automatically. R still restarts immediately.
-- Timer and wind are global round information, shown outside the active-player panel.
-- Launch power, movement range, active vehicle identity, and aim angle live in a docked bottom command deck.
+- Wind is global round information; turn time is shown above the active vehicle.
+- Launch power, movement range, active vehicle identity, and aim angle live in a raised bottom command deck.
 - Active player also gets a world-space aim arrow, turn timer badge, and ground movement range rail so movement decisions can be read without covering the character art.
 - The game camera reserves space above the command deck so the playable battlefield does not sit underneath detached UI.
 - Current sprites are first-pass generated assets, not final production sprites.

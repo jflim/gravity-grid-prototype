@@ -75,7 +75,9 @@ Current result:
 - Projectile collision now checks along the shot path, and post-impact settling is localized to nearby or affected vehicles.
 - Impact readability includes temporary crater/splash radius rings and character-specific KO/faint feedback for destroyed vehicles.
 - Movement allows downhill travel and falling, while steep uphill movement is limited by a climb-angle rule.
+- Vehicle sprites tilt to match the local terrain slope while combat labels remain readable.
 - Terrain can now be punched through into a visible void below the stage.
+- Crater, splash, and Bunger knockback radii are tuned smaller so ring-outs reward precision over one-shot blast size.
 - Colyseus online foundation exists for room creation, player presence, ready checks, and placeholder cosmetic rewards.
 - Browser client loads a vendored Colyseus browser SDK bundle while the server uses the installed Colyseus packages.
 
@@ -249,8 +251,10 @@ Combat controls:
 Combat UX requirements:
 
 - Whose turn it is must be obvious.
-- Timer and wind are shared round information.
+- Wind is shared round information.
+- Turn timer should appear above the active vehicle, not as a separate floating global timer.
 - Active player needs clear angle, movement range, launch power, HP, and weapon info.
+- Command panel content must fit inside the visible browser viewport, with safe margin above the bottom edge.
 - Aim should show direction without giving a full landing prediction.
 - Impact feedback should briefly show crater/terrain range and splash damage range.
 - Disabled vehicles should read as fainted/knocked out, not only desaturated.
@@ -418,6 +422,7 @@ Terrain:
 - Current prototype uses a heightmap for speed.
 - Online MVP should begin with deterministic, serializable terrain.
 - Every weapon should affect terrain; Bunger-class weapons affect terrain the most.
+- Explosion, crater, and knockback tuning should generally require precise setup and 2-3 good shots for map KOs.
 - Terrain should be fully destroyable vertically; deep enough craters open into the void rather than stopping at a safe floor.
 - Void/fall-through areas should be visually readable under the battlefield.
 - Post-impact vehicle settling should be driven by the changed terrain area and directly affected vehicles, not by unrelated distant slopes.

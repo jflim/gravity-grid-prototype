@@ -22,7 +22,13 @@ Highlights:
 - Changed terrain movement so downhill/falling is allowed, while steep uphill movement is blocked by a climb-angle rule.
 - Allowed vehicles to intentionally drive into holes or off the map and self-KO.
 - Allowed deep crater cuts to punch through into a visible void beneath the terrain.
-- Replaced the generic KO face with character-specific prototype KO expression overlays.
+- Replaced the generic KO face with character-specific KO feedback.
+- Replaced KO expression overlays with dedicated Nova and Vesper KO sprite variants.
+- Removed the global floating turn timer; turn time now only appears above the active vehicle.
+- Added terrain-slope tilt to vehicle sprites.
+- Raised the command panel with a bottom safe margin for better viewport visibility.
+- Updated the void background treatment so exposed holes read as empty air beneath the terrain.
+- Reduced crater, splash, and Bunger knockback radii so knock-off KOs require more precise setup.
 
 Verification:
 - `npm run build` passed.

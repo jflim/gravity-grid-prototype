@@ -36,9 +36,10 @@ Done:
 - Two local vehicles.
 - Facing-aware movement and aim.
 - Downhill/fall-friendly movement with an uphill climb-angle limit.
+- Vehicle sprites tilt to match terrain slope.
 - 5-90 degree elevation aiming.
 - Hold/release launch power.
-- Wind and turn timer.
+- Wind display and active-vehicle turn timer.
 - Destructible heightmap terrain.
 - Bunger knockback and fall/bunge KOs.
 - Round win condition and automatic reset.
@@ -49,7 +50,9 @@ Done:
 - Swept projectile collision and localized post-impact settling make hits and falls more predictable.
 - Temporary crater/splash radius rings make impact ranges visible.
 - Terrain can be punched through into the visible void beneath the stage.
-- Destroyed vehicles now use character-specific prototype KO expressions instead of only gray model feedback.
+- Crater, splash, and Bunger knockback radii are smaller so ring-outs require more precise setup.
+- Destroyed vehicles now use character-specific KO sprite variants instead of only gray model feedback.
+- Command panel is raised with a bottom safe margin so gameplay controls remain visible.
 - Colyseus server added.
 - Online panel can create/join private rooms, show player slots, ready state, placeholder rewards, and equipped nameplates.
 - Colyseus browser SDK is vendored as a static browser bundle for stable Vite dev behavior on Windows.
@@ -58,7 +61,7 @@ Next:
 - Improve battlefield readability at common viewport sizes.
 - Tune vehicle scale, camera framing, and UI spacing.
 - Continue tuning hit, damage, KO, and round-end feedback.
-- Replace prototype KO expression overlays with production per-character KO sprite states.
+- Replace derived KO sprite variants with production per-character KO sprite states.
 - Decide whether 1v1 local prototype should expand to 2v2 local before online multiplayer.
 - Wire server-authoritative combat state into the Phaser match scene.
 
