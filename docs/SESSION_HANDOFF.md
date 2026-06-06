@@ -6,9 +6,10 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
 
 - GitHub remote: `https://github.com/jflim/gravity-grid-prototype.git`
 - Active branch: `feature/gravity-canyon-online-foundation`
-- Project folder: `C:\Users\jflim\OneDrive\Documents\Gravity Canyon Game`
+- Project folder: `C:\Users\jflim\Code\gravity-canyon`
+- Previous OneDrive project folder: `C:\Users\jflim\OneDrive\Documents\Gravity Canyon Game`
 - Older projectless Codex output folder: `C:\Users\jflim\Documents\Codex\2026-06-04\files-mentioned-by-the-user-pasted\outputs\gravity-grid-prototype`
-- Treat the OneDrive project folder above as the canonical local workspace for new Codex chats.
+- Treat the `C:\Users\jflim\Code\gravity-canyon` folder above as the canonical local workspace for new Codex chats.
 
 ## Current Product Direction
 
