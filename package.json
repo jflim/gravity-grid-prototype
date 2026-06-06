@@ -1,17 +1,29 @@
 {
-  "name": "gravity-grid-prototype",
+  "name": "arch-canyon-prototype",
   "version": "0.4.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
-    "build": "tsc && vite build --base=./",
+    "dev": "concurrently -k -n SERVER,CLIENT -c cyan,magenta \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:client": "vite --host 127.0.0.1",
+    "dev:server": "tsx watch server/index.ts",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "tsc -p tsconfig.json && vite build --base=./",
+    "build:server": "tsc -p tsconfig.server.json",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
+    "@colyseus/schema": "^4.0.26",
+    "@colyseus/sdk": "^0.17.42",
+    "colyseus": "^0.17.10",
+    "express": "^5.2.1",
     "phaser": "^3.90.0"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.9.2",
+    "concurrently": "^10.0.3",
+    "tsx": "^4.22.4",
     "typescript": "^5.8.3",
     "vite": "^6.3.5"
   }

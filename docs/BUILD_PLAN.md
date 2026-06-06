@@ -1,4 +1,4 @@
-# Gravity Grid Build Plan
+# Arch Canyon Build Plan
 
 This plan is meant to keep the game moving through playable iterations instead of chasing a perfect v1.
 
@@ -10,7 +10,7 @@ Canonical design reference: [GAME_DESIGN_SPEC.md](GAME_DESIGN_SPEC.md)
 
 ## Current Definition Of The Prototype
 
-The current build is a local-feel prototype. It should prove that turn flow, aiming, movement, readable characters, terrain destruction, knockback, and round resets are fun before multiplayer architecture expands.
+The current build is a local-feel prototype with the first online room foundation. It should prove that turn flow, aiming, movement, readable characters, terrain destruction, knockback, room creation, player presence, ready checks, and the first cosmetic reward loop are fun before multiplayer combat simulation expands.
 
 ## Iteration Rules
 
@@ -43,12 +43,17 @@ Done:
 - Round win condition and automatic reset.
 - Tight gameplay sprites separate from portrait art.
 - Command panel with movement range, launch power, aim, active identity, timer, and wind.
+- Working title updated to Arch Canyon.
+- Colyseus server added.
+- Online panel can create/join private rooms, show player slots, ready state, placeholder rewards, and equipped nameplates.
+- Colyseus browser SDK is vendored as a static browser bundle for stable Vite dev behavior on Windows.
 
 Next:
 - Improve battlefield readability at common viewport sizes.
 - Tune vehicle scale, camera framing, and UI spacing.
 - Add clear hit, damage, KO, and round-end feedback.
 - Decide whether 1v1 local prototype should expand to 2v2 local before online multiplayer.
+- Wire server-authoritative combat state into the Phaser match scene.
 
 Exit criteria:
 - A new player can understand whose turn it is, where they are aiming, how much they can move, how much power they are charging, and why a round ended.
@@ -58,13 +63,13 @@ Exit criteria:
 Goal: prove the real online foundation while adding a small reward/unlock taste early.
 
 Scope:
-- Private room creation.
-- Join by room code.
-- Two browser clients connect.
+- Private room creation. Started.
+- Join by room code. Started with Colyseus room id.
+- Two browser clients connect. Started.
 - Server-authoritative room, round, turn, movement, aim, fire, projectile, terrain, HP, KOs, and round result.
-- Guest display names.
-- Post-round placeholder reward grant.
-- Tiny cosmetic unlock sandbox: test token/capsule, reveal one placeholder cosmetic, inventory view, and equip one visible cosmetic.
+- Guest display names. Started.
+- Post-round placeholder reward grant. Started as a server-owned test capsule.
+- Tiny cosmetic unlock sandbox: test token/capsule, reveal one placeholder cosmetic, inventory view, and equip one visible cosmetic. Started with nameplates.
 
 Exit criteria:
 - Two remote players can complete a 1v1 round without desync.

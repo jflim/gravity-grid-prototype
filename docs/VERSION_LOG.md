@@ -1,10 +1,15 @@
-# Gravity Grid Version Log
+# Arch Canyon Version Log
 
 Use this as the human-readable checkpoint history. Every meaningful commit should add an entry.
 
 ## Unreleased
 
 Highlights:
+- Adopted Arch Canyon as the working product title.
+- Added Colyseus, Express, and TypeScript server tooling.
+- Added the Colyseus browser SDK as a vendored static browser bundle for stable local Vite development.
+- Added Arch Canyon room state with two player slots, guest display names, ready checks, and placeholder nameplate rewards.
+- Added an online alpha panel to create/join private rooms from the browser client.
 - Clarified Git workflow with branch strategy, quality gates, commit cadence, and push cadence.
 - Updated GitHub management notes now that the private remote and GitHub CLI are configured.
 - Added canonical game design spec with 95% confidence direction for the next build milestone.

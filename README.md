@@ -1,10 +1,11 @@
-# Gravity Grid Prototype
+# Arch Canyon Prototype
 
-First playable local artillery prototype for Gravity Grid.
+First playable local artillery prototype for Arch Canyon.
 
 ## What Is Built
 
 - Browser-based Phaser prototype.
+- Working title updated to Arch Canyon.
 - Two local vehicles, one red and one blue.
 - Procedural heightmap terrain.
 - Keyboard movement, 5-90 degree elevation aiming, and hold/release shot power.
@@ -22,6 +23,14 @@ First playable local artillery prototype for Gravity Grid.
 - Splash/direct damage, HP bars, turn switching, timeout, round win detection, and automatic round reset.
 - Style B 2v2 concept art used as a faint backdrop reference.
 - High-detail anime vehicle/pilot portraits plus tight-cropped gameplay sprites for Nova and Vesper.
+- First Colyseus online foundation:
+  - local multiplayer server,
+  - private room create/join by room id,
+  - two player slots,
+  - ready checks,
+  - server-owned room/player state,
+  - placeholder capsule reward and nameplate equip state.
+- Browser client uses the vendored Colyseus browser SDK at `public/vendor/colyseus.js` to keep Vite dev mode stable on Windows.
 
 ## Run
 
@@ -29,13 +38,31 @@ Development server:
 
 ```powershell
 npm install
-npm run dev -- --port 5173
+npm run dev
 ```
 
 Then open:
 
 ```text
 http://127.0.0.1:5173
+```
+
+If another Vite server is already using `5173`, Vite will print the next available port, usually:
+
+```text
+http://127.0.0.1:5174
+```
+
+The multiplayer server runs at:
+
+```text
+ws://127.0.0.1:2567
+```
+
+Client-only development:
+
+```powershell
+npm run dev:client -- --port 5173
 ```
 
 Production build:
@@ -73,6 +100,7 @@ dist/index.html
 ## Notes
 
 - This is the local feel prototype, not the multiplayer architecture yet.
+- The multiplayer architecture is now scaffolded, but live combat is still local-only until server-authoritative simulation is wired into the match scene.
 - Terrain uses a heightmap for speed. Pixel-mask terrain can replace it later if needed.
 - There is no predicted trajectory line. The muzzle arrow shows current direction, but shot landing is still based on angle, power, wind, and memory.
 - Every weapon affects terrain. Bunger weapons are tuned to affect terrain the most.

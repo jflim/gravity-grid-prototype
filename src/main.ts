@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { mountOnlineLobby } from "./onlineLobby";
 import "./styles.css";
 
 type TeamId = "red" | "blue";
@@ -1343,3 +1344,4 @@ const config: Phaser.Types.Core.GameConfig = {
 };
 
 new Phaser.Game(config);
+mountOnlineLobby();

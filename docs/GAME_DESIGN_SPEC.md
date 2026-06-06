@@ -1,13 +1,15 @@
-# Gravity Grid Game Design Spec
+# Arch Canyon Game Design Spec
 
 Canonical source of truth for the current product direction.
 
 Last updated: 2026-06-05
 Confidence: 95% for the next build milestone, with later milestone details intentionally left flexible.
 
+Working title: Arch Canyon.
+
 ## 1. Product North Star
 
-Gravity Grid is a desktop browser, turn-based artillery game with anime arcade style, readable vehicle combat, destructible terrain, team tactics, and cosmetic collection.
+Arch Canyon is a desktop browser, turn-based artillery game with anime arcade style, readable vehicle combat, destructible terrain, team tactics, and cosmetic collection.
 
 The player promise:
 
@@ -16,6 +18,12 @@ The player promise:
 - Collect expressive pilots, vehicle skins, nameplates, trails, effects, cards, and shelf items.
 - Jump in quickly as a guest, then register to preserve progress.
 - Hang out in nostalgic room/lobby spaces once the combat loop is stable.
+
+Current lore seed:
+
+- Arch Canyon is the first named battle region and working product title.
+- The world is made of fractured canyon chains, arch fields, shelves, and suspended terrain.
+- "Sparks" can be used as the early energy/reward term without requiring final lore yet.
 
 ## 2. Build Philosophy
 
@@ -62,6 +70,8 @@ Current result:
 - Local 1v1 prototype exists.
 - Tight gameplay sprites and high-detail portraits are separated.
 - Command deck, launch power, movement range, timer, wind, aim arrow, and terrain effects are playable.
+- Colyseus online foundation exists for room creation, player presence, ready checks, and placeholder cosmetic rewards.
+- Browser client loads a vendored Colyseus browser SDK bundle while the server uses the installed Colyseus packages.
 
 ### Milestone 1: Online 1v1 Plus Cosmetic Unlock Sandbox
 
@@ -71,17 +81,17 @@ Goal:
 
 Scope:
 
-- Private room creation.
-- Join by room code.
-- Two browser clients connect.
-- Server-authoritative room, round, turn, movement, aim, fire, projectile, terrain, HP, and win result.
-- Guest display names.
-- Basic post-round reward grant.
+- Private room creation. Started.
+- Join by room code. Started with Colyseus room id.
+- Two browser clients connect. Started.
+- Server-authoritative room, round, turn, movement, aim, fire, projectile, terrain, HP, and win result. Combat sync still next.
+- Guest display names. Started.
+- Basic post-round reward grant. Started as test capsule state.
 - Tiny cosmetic unlock sandbox:
-  - award test tokens or a test capsule after match completion,
-  - reveal one cosmetic from a small placeholder pool,
-  - show inventory,
-  - equip vehicle skin, pilot skin, or nameplate if available.
+  - award test tokens or a test capsule after match completion. Started manually in room alpha.
+  - reveal one cosmetic from a small placeholder pool. Started.
+  - show inventory. Started for nameplates.
+  - equip vehicle skin, pilot skin, or nameplate if available. Started for nameplates.
 - Rewards may be session-only at first, but the data model should be compatible with later Supabase persistence.
 
 Out of scope:
@@ -405,15 +415,15 @@ Milestone 1: Online 1v1 Plus Cosmetic Unlock Sandbox
 
 Recommended first implementation slices:
 
-1. Split project into client/server packages or a simple monorepo layout.
-2. Add Colyseus server with health check and room creation.
-3. Connect Phaser client to a private room.
-4. Sync two players in room lobby.
+1. Split project into client/server packages or a simple monorepo layout. Started.
+2. Add Colyseus server with health check and room creation. Started.
+3. Connect Phaser client to a private room. Started.
+4. Sync two players in room lobby. Started.
 5. Server-authoritative turn start/end.
 6. Server-authoritative fire event and projectile simulation.
 7. Server-broadcast terrain/damage/round result.
-8. Add post-round placeholder reward.
-9. Add tiny inventory/equip state.
+8. Add post-round placeholder reward. Started as test capsule state.
+9. Add tiny inventory/equip state. Started with nameplates.
 10. Push a playable checkpoint.
 
 ## 13. Open Decisions That Do Not Block Milestone 1
@@ -438,4 +448,3 @@ The current confidence is 95% for:
 - what to avoid overbuilding,
 - how cosmetics should enter early without derailing combat,
 - and what content/art boundary to target.
-
