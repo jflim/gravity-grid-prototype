@@ -8,12 +8,32 @@ type PlayerSnapshot = {
   inventory: string[];
 };
 
+type CombatVehicleSnapshot = {
+  vehicleId: string;
+  ownerSessionId: string;
+  displayName: string;
+  team: string;
+  className: string;
+  hp: number;
+  maxHp: number;
+  alive: boolean;
+  x: number;
+  y: number;
+  angle: number;
+};
+
 type RoomSnapshot = {
   roomCode: string;
   phase: string;
   status: string;
+  roundNumber: number;
+  turnNumber: number;
+  wind: number;
+  activeVehicleId: string;
+  winnerTeam: string;
   lastRewardLog: string;
   players: PlayerSnapshot[];
+  vehicles: CombatVehicleSnapshot[];
 };
 
 type OnlineRoom = {
@@ -73,6 +93,14 @@ export function mountOnlineLobby() {
       </div>
       <p class="online-panel__status" data-room-status></p>
       <div class="online-panel__players" data-player-list></div>
+      <div class="online-combat" data-combat-block hidden>
+        <div class="online-combat__meta" data-combat-meta></div>
+        <div class="online-combat__vehicles" data-vehicle-list></div>
+        <div class="online-panel__actions">
+          <button type="button" data-preview-fire>Server Shot</button>
+          <button type="button" data-next-round>Next Round</button>
+        </div>
+      </div>
       <div class="online-panel__actions">
         <button type="button" data-ready-toggle>Ready</button>
         <button type="button" data-test-capsule>Capsule</button>
@@ -98,12 +126,17 @@ export function mountOnlineLobby() {
   const joinButton = panel.querySelector<HTMLButtonElement>("[data-join-room]");
   const readyButton = panel.querySelector<HTMLButtonElement>("[data-ready-toggle]");
   const capsuleButton = panel.querySelector<HTMLButtonElement>("[data-test-capsule]");
+  const previewFireButton = panel.querySelector<HTMLButtonElement>("[data-preview-fire]");
+  const nextRoundButton = panel.querySelector<HTMLButtonElement>("[data-next-round]");
   const nameplateSelect = panel.querySelector<HTMLSelectElement>("[data-nameplate-select]");
   const roomBlock = panel.querySelector<HTMLElement>("[data-room-block]");
   const roomCodeLabel = panel.querySelector<HTMLElement>("[data-room-code]");
   const statusBadge = panel.querySelector<HTMLElement>("[data-status-badge]");
   const roomStatus = panel.querySelector<HTMLElement>("[data-room-status]");
   const playerList = panel.querySelector<HTMLElement>("[data-player-list]");
+  const combatBlock = panel.querySelector<HTMLElement>("[data-combat-block]");
+  const combatMeta = panel.querySelector<HTMLElement>("[data-combat-meta]");
+  const vehicleList = panel.querySelector<HTMLElement>("[data-vehicle-list]");
   const rewardLog = panel.querySelector<HTMLElement>("[data-reward-log]");
 
   createButton?.addEventListener("click", async () => {
@@ -138,6 +171,14 @@ export function mountOnlineLobby() {
     room?.send("equipNameplate", { nameplate: nameplateSelect.value });
   });
 
+  previewFireButton?.addEventListener("click", () => {
+    room?.send("previewFire");
+  });
+
+  nextRoundButton?.addEventListener("click", () => {
+    room?.send("startNextRound");
+  });
+
   async function connect(join: () => Promise<OnlineRoom>) {
     try {
       setBadge("Connecting", "warn");
@@ -170,9 +211,13 @@ export function mountOnlineLobby() {
     roomCodeLabel!.textContent = snapshot.roomCode || room?.roomId || "";
     roomStatus!.textContent = snapshot.status;
     rewardLog!.textContent = snapshot.lastRewardLog;
-    readyButton!.textContent = localReady ? "Unready" : "Ready";
 
     const localPlayer = snapshot.players.find((player) => player.sessionId === room?.sessionId);
+    if (localPlayer) {
+      localReady = localPlayer.ready;
+    }
+
+    readyButton!.textContent = localReady ? "Unready" : "Ready";
     if (localPlayer && nameplateSelect) {
       const currentValue = nameplateSelect.value || localPlayer.equippedNameplate;
       nameplateSelect.innerHTML = localPlayer.inventory
@@ -197,6 +242,56 @@ export function mountOnlineLobby() {
         `;
       })
       .join("");
+
+    renderCombat(snapshot);
+  }
+
+  function renderCombat(snapshot: RoomSnapshot) {
+    if (!combatBlock || !combatMeta || !vehicleList || !previewFireButton || !nextRoundButton) {
+      return;
+    }
+
+    const hasCombat = snapshot.vehicles.length > 0;
+    combatBlock.hidden = !hasCombat;
+    if (!hasCombat) {
+      return;
+    }
+
+    const activeVehicle = snapshot.vehicles.find((vehicle) => vehicle.vehicleId === snapshot.activeVehicleId);
+    const localActive = activeVehicle?.ownerSessionId === room?.sessionId;
+    const windLabel = snapshot.wind > 0 ? `+${snapshot.wind}` : String(snapshot.wind);
+    const winnerLabel = snapshot.winnerTeam ? `${capitalize(snapshot.winnerTeam)} team won` : "In progress";
+
+    combatMeta.innerHTML = `
+      <span>Round ${snapshot.roundNumber}</span>
+      <span>Turn ${snapshot.turnNumber || "-"}</span>
+      <span>Wind ${escapeHtml(windLabel)}</span>
+      <strong>${escapeHtml(activeVehicle?.displayName ?? winnerLabel)}</strong>
+    `;
+
+    vehicleList.innerHTML = snapshot.vehicles
+      .map((vehicle) => {
+        const hpRatio = vehicle.maxHp > 0 ? vehicle.hp / vehicle.maxHp : 0;
+        const active = vehicle.vehicleId === snapshot.activeVehicleId ? " online-vehicle--active" : "";
+        const ko = vehicle.alive ? "" : " online-vehicle--ko";
+        return `
+          <div class="online-vehicle online-vehicle--${vehicle.team}${active}${ko}">
+            <div>
+              <strong>${escapeHtml(vehicle.displayName)}</strong>
+              <span>${escapeHtml(vehicle.className)}</span>
+            </div>
+            <div class="online-vehicle__hp" aria-label="${vehicle.hp} HP">
+              <i style="width: ${Math.max(0, Math.min(100, hpRatio * 100))}%"></i>
+            </div>
+            <em>${vehicle.alive ? `${vehicle.hp} HP` : "KO"}</em>
+          </div>
+        `;
+      })
+      .join("");
+
+    previewFireButton.disabled = snapshot.phase !== "combat-preview" || !localActive;
+    previewFireButton.textContent = localActive ? "Server Shot" : "Waiting";
+    nextRoundButton.disabled = snapshot.phase !== "round-over";
   }
 
   function setBadge(text: string, tone: "neutral" | "ok" | "warn" | "error") {
@@ -223,15 +318,27 @@ function getSnapshot(state: unknown): RoomSnapshot {
     phase?: string;
     status?: string;
     lastRewardLog?: string;
+    roundNumber?: number;
+    turnNumber?: number;
+    wind?: number;
+    activeVehicleId?: string;
+    winnerTeam?: string;
     players?: Map<string, unknown> | Record<string, unknown>;
+    vehicles?: unknown[] | Iterable<unknown>;
   };
 
   return {
     roomCode: source.roomCode ?? "",
     phase: source.phase ?? "lobby",
     status: source.status ?? "",
+    roundNumber: source.roundNumber ?? 1,
+    turnNumber: source.turnNumber ?? 0,
+    wind: source.wind ?? 0,
+    activeVehicleId: source.activeVehicleId ?? "",
+    winnerTeam: source.winnerTeam ?? "",
     lastRewardLog: source.lastRewardLog ?? "",
     players: getPlayers(source.players),
+    vehicles: getVehicles(source.vehicles),
   };
 }
 
@@ -267,6 +374,33 @@ function getPlayers(players: RoomSnapshot["players"] | Map<string, unknown> | Re
   }
 
   return snapshots;
+}
+
+function getVehicles(vehicles: unknown[] | Iterable<unknown> | undefined) {
+  const snapshots: CombatVehicleSnapshot[] = [];
+
+  for (const vehicle of Array.from(vehicles ?? [])) {
+    const source = vehicle as Partial<CombatVehicleSnapshot>;
+    snapshots.push({
+      vehicleId: source.vehicleId ?? "",
+      ownerSessionId: source.ownerSessionId ?? "",
+      displayName: source.displayName ?? "Guest",
+      team: source.team ?? "red",
+      className: source.className ?? "Rig",
+      hp: source.hp ?? 0,
+      maxHp: source.maxHp ?? 100,
+      alive: source.alive ?? false,
+      x: source.x ?? 0,
+      y: source.y ?? 0,
+      angle: source.angle ?? 0,
+    });
+  }
+
+  return snapshots;
+}
+
+function capitalize(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 function escapeHtml(value: string) {

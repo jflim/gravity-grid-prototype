@@ -39,8 +39,10 @@ interface VehicleState {
   color: number;
   accent: number;
   vehicleSpriteKey: string;
+  vehicleDestroyedSpriteKey: string;
   vehicleSpriteFaces: 1 | -1;
   vehicleDisplay: SpriteDisplaySize;
+  vehicleDestroyedDisplay: SpriteDisplaySize;
   characterSpriteKeys: CharacterSpriteSet;
   characterSpriteFaces: 1 | -1;
   characterDisplays: CharacterDisplaySet;
@@ -162,11 +164,13 @@ class GravityGridScene extends Phaser.Scene {
     this.load.image("style-reference", "assets/style-b-2v2-reference.png");
     this.load.image("nova-vehicle", "assets/nova-vehicle.png");
     this.load.image("nova-vehicle-sprite", "assets/nova-vehicle-sprite.png");
+    this.load.image("nova-vehicle-destroyed", "assets/nova-vehicle-destroyed.png");
     this.load.image("nova-character-default", "assets/nova-character-default.png");
     this.load.image("nova-character-ko", "assets/nova-character-ko.png");
     this.load.image("nova-character-intense", "assets/nova-character-intense.png");
     this.load.image("vesper-vehicle", "assets/vesper-vehicle.png");
     this.load.image("vesper-vehicle-sprite", "assets/vesper-vehicle-sprite.png");
+    this.load.image("vesper-vehicle-destroyed", "assets/vesper-vehicle-destroyed.png");
     this.load.image("vesper-character-default", "assets/vesper-character-default.png");
     this.load.image("vesper-character-ko", "assets/vesper-character-ko.png");
     this.load.image("vesper-character-intense", "assets/vesper-character-intense.png");
@@ -398,8 +402,10 @@ class GravityGridScene extends Phaser.Scene {
         color: 0xff4d5d,
         accent: 0xffd166,
         vehicleSpriteKey: "nova-vehicle-sprite",
+        vehicleDestroyedSpriteKey: "nova-vehicle-destroyed",
         vehicleSpriteFaces: 1,
         vehicleDisplay: { width: 254, height: 155 },
+        vehicleDestroyedDisplay: { width: 260, height: 211 },
         characterSpriteKeys: {
           default: "nova-character-default",
           ko: "nova-character-ko",
@@ -408,11 +414,11 @@ class GravityGridScene extends Phaser.Scene {
         characterSpriteFaces: 1,
         characterDisplays: {
           default: { width: 112, height: 150 },
-          ko: { width: 142, height: 152 },
+          ko: { width: 250, height: 94 },
           intense: { width: 166, height: 148 },
         },
         characterOffsetX: -36,
-        characterOffsetY: -62,
+        characterOffsetY: -34,
         portraitKey: "nova-vehicle",
       },
       {
@@ -431,8 +437,10 @@ class GravityGridScene extends Phaser.Scene {
         color: 0x4cc9f0,
         accent: 0xb8f7ff,
         vehicleSpriteKey: "vesper-vehicle-sprite",
+        vehicleDestroyedSpriteKey: "vesper-vehicle-destroyed",
         vehicleSpriteFaces: -1,
         vehicleDisplay: { width: 250, height: 160 },
+        vehicleDestroyedDisplay: { width: 260, height: 169 },
         characterSpriteKeys: {
           default: "vesper-character-default",
           ko: "vesper-character-ko",
@@ -441,11 +449,11 @@ class GravityGridScene extends Phaser.Scene {
         characterSpriteFaces: -1,
         characterDisplays: {
           default: { width: 108, height: 151 },
-          ko: { width: 142, height: 150 },
+          ko: { width: 154, height: 149 },
           intense: { width: 139, height: 150 },
         },
         characterOffsetX: 54,
-        characterOffsetY: -62,
+        characterOffsetY: -34,
         portraitKey: "vesper-vehicle",
       },
     ];
@@ -1148,28 +1156,29 @@ class GravityGridScene extends Phaser.Scene {
     this.vehicleLabels = [];
 
     for (const vehicle of this.vehicles) {
-      const alpha = vehicle.alive ? 1 : 0.72;
+      const alpha = vehicle.alive ? 1 : 0.96;
       const active =
         this.activeVehicle()?.id === vehicle.id &&
         !this.projectile &&
         !this.roundOver &&
         !this.turnCommitted &&
         this.isMovable(vehicle);
+      const vehicleKey = vehicle.alive ? vehicle.vehicleSpriteKey : vehicle.vehicleDestroyedSpriteKey;
+      const vehicleDisplay = vehicle.alive ? vehicle.vehicleDisplay : vehicle.vehicleDestroyedDisplay;
       const slopeAngle = this.terrainAngleAt(vehicle.x);
       const koTilt = vehicle.alive ? 0 : vehicle.team === "red" ? -8 : 8;
-      const vehicleSprite =
-        this.vehicleSprites.get(vehicle.id) ?? this.add.image(vehicle.x, vehicle.y, vehicle.vehicleSpriteKey);
+      const vehicleSprite = this.vehicleSprites.get(vehicle.id) ?? this.add.image(vehicle.x, vehicle.y, vehicleKey);
       if (!this.vehicleSprites.has(vehicle.id)) {
         vehicleSprite.setDepth(11);
         this.vehicleSprites.set(vehicle.id, vehicleSprite);
       }
       vehicleSprite
-        .setTexture(vehicle.vehicleSpriteKey)
+        .setTexture(vehicleKey)
         .setOrigin(0.5, 0.86)
         .setPosition(vehicle.x, vehicle.y + 20)
-        .setDisplaySize(vehicle.vehicleDisplay.width, vehicle.vehicleDisplay.height)
+        .setDisplaySize(vehicleDisplay.width, vehicleDisplay.height)
         .setFlipX(vehicle.facing !== vehicle.vehicleSpriteFaces)
-        .setAlpha(vehicle.alive ? 1 : 0.82)
+        .setAlpha(vehicle.alive ? 1 : 0.96)
         .setAngle(slopeAngle + koTilt);
 
       vehicleSprite.clearTint();

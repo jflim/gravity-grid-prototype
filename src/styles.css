@@ -144,6 +144,12 @@ canvas {
   background: #b6e4ff;
 }
 
+.online-panel button:disabled {
+  color: #6f7b91;
+  background: rgba(255, 255, 255, 0.13);
+  cursor: not-allowed;
+}
+
 .online-panel__actions {
   gap: 8px;
   margin-top: 10px;
@@ -212,4 +218,91 @@ canvas {
   color: #b7c4db;
   font-size: 11px;
   font-style: normal;
+}
+
+.online-combat {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 8px;
+}
+
+.online-combat__meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  color: #d8e3f5;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.online-combat__meta strong {
+  grid-column: 1 / -1;
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.online-combat__vehicles {
+  display: grid;
+  gap: 7px;
+}
+
+.online-vehicle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 74px 38px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-left: 4px solid #ff727e;
+  border-radius: 8px;
+}
+
+.online-vehicle--blue {
+  border-left-color: #72b7ff;
+}
+
+.online-vehicle--active {
+  outline: 2px solid rgba(255, 255, 255, 0.36);
+}
+
+.online-vehicle--ko {
+  opacity: 0.64;
+}
+
+.online-vehicle strong,
+.online-vehicle span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.online-vehicle strong {
+  color: #ffffff;
+  font-size: 12px;
+}
+
+.online-vehicle span,
+.online-vehicle em {
+  color: #b7c4db;
+  font-size: 10px;
+  font-style: normal;
+}
+
+.online-vehicle__hp {
+  height: 8px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.36);
+  border-radius: 999px;
+}
+
+.online-vehicle__hp i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #8df5b2, #ffe38b);
+  border-radius: inherit;
 }

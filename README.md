@@ -31,6 +31,7 @@ First playable local artillery prototype for Gravity Canyon.
 - Splash/direct damage, HP bars, turn switching, timeout, round win detection, and automatic round reset.
 - Layered gameplay sprites: one standalone vehicle sprite plus one standalone playable-character sprite.
 - Generated character sprite states for Nova and Vesper: default, KO, and intense shooting.
+- Generated destroyed vehicle sprites pair with KO character sprites when a vehicle is no longer alive.
 - Style B 2v2 concept art used as a faint backdrop reference.
 - High-detail anime vehicle/pilot portraits plus standalone generated gameplay sprites for Nova and Vesper.
 - First Colyseus online foundation:
@@ -39,7 +40,8 @@ First playable local artillery prototype for Gravity Canyon.
   - two player slots,
   - ready checks,
   - server-owned room/player state,
-  - placeholder capsule reward and nameplate equip state.
+  - placeholder capsule reward and nameplate equip state,
+  - server-owned combat preview state with round, turn, wind, active vehicle, HP, winner, and validated preview shot actions.
 - Browser client uses the vendored Colyseus browser SDK at `public/vendor/colyseus.js` to keep Vite dev mode stable on Windows.
 
 ## Run
@@ -93,6 +95,8 @@ dist/index.html
 - Build/iteration plan: [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md)
 - Version log: [docs/VERSION_LOG.md](docs/VERSION_LOG.md)
 - Git workflow: [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md)
+- Sprite asset workflow: [docs/SPRITE_ASSET_WORKFLOW.md](docs/SPRITE_ASSET_WORKFLOW.md)
+- Session handoff: [docs/SESSION_HANDOFF.md](docs/SESSION_HANDOFF.md)
 
 ## Controls
 
@@ -111,6 +115,7 @@ dist/index.html
 
 - This is the local feel prototype, not the multiplayer architecture yet.
 - The multiplayer architecture is now scaffolded, but live combat is still local-only until server-authoritative simulation is wired into the match scene.
+- The online room now owns a lightweight combat preview model, but Phaser projectile/terrain simulation is not synced to that model yet.
 - Terrain uses a heightmap for speed. Pixel-mask terrain can replace it later if needed.
 - There is no predicted trajectory line. The muzzle arrow shows current direction, but shot landing is still based on angle, power, wind, and memory.
 - Movement treats downhill and falling as allowed traversal; only steep uphill movement is blocked.
@@ -130,6 +135,9 @@ dist/index.html
 - The game camera reserves space above the command deck so the playable battlefield does not sit underneath detached UI.
 - Current sprites are first-pass generated assets, not final production sprites.
 - Gameplay rendering uses separate layers for vehicle and playable character sprites.
+- Active runtime sprites use stable filenames in `public/assets`; versioned experiments live under `public/assets/sprite-variants`.
+- Each vehicle look currently needs a default gameplay sprite and a destroyed gameplay sprite.
 - Each playable character currently needs three generated gameplay states: default, KO, and intense shooting.
 - Character states should be integrated artwork, not code-drawn facial overlays on top of default art.
+- KO character art should use literal crossed or rolled-up eyes, not spiral/hypnotic eyes.
 - Gameplay sprites are separate from portrait art so battlefield readability can be tuned without losing high-detail character art.

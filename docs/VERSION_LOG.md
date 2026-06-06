@@ -10,6 +10,11 @@ Highlights:
 - Added the Colyseus browser SDK as a vendored static browser bundle for stable local Vite development.
 - Added Gravity Canyon room state with two player slots, guest display names, ready checks, and placeholder nameplate rewards.
 - Added an online alpha panel to create/join private rooms from the browser client.
+- Added server-owned online combat preview state for round number, turn number, wind, active vehicle, HP, winner, and validated preview shots.
+- Added an online panel combat snapshot with active turn, wind, vehicle HP rows, server-shot action, and next-round action.
+- Replaced Nova's active KO runtime sprite with the selected prone v16 KO asset.
+- Added a sprite-variant folder convention and workflow doc for frequent sprite iteration.
+- Added a session handoff document with current repo state, active branch, sprite status, Vesper KO generation prompt, next steps, and verification notes.
 - Clarified Git workflow with branch strategy, quality gates, commit cadence, and push cadence.
 - Updated GitHub management notes now that the private remote and GitHub CLI are configured.
 - Added canonical game design spec with 95% confidence direction for the next build milestone.
@@ -32,10 +37,14 @@ Highlights:
 - Reworked gameplay assets into separate vehicle and playable-character sprite layers.
 - Generated standalone Nova and Vesper vehicle sprites.
 - Generated standalone Nova and Vesper character sprites for default, KO, and intense shooting states.
+- Regenerated Nova and Vesper KO sprites with crossed/rolled-up eyes instead of spiral eyes.
+- Added destroyed vehicle sprites for Nova and Vesper and paired them with KO character rendering.
+- Lowered character seating offsets so riders sit closer to the vehicle chassis.
 - Removed the old combined gameplay sprites and derived KO sprites from the active asset set.
 
 Verification:
 - `npm run build` passed.
+- Two-client Colyseus smoke test reached `round-over`, set the losing vehicle to 0 HP, and granted the preview token reward.
 
 ## v0.4.0 - Planning, Git, And Readability Checkpoint
 

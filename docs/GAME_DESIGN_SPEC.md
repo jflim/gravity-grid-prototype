@@ -72,6 +72,7 @@ Current result:
 - Gameplay sprites and high-detail portraits are separated.
 - Gameplay rendering layers a standalone vehicle sprite under a standalone playable-character sprite.
 - Nova and Vesper now have generated character gameplay states for default, KO, and intense shooting.
+- Nova and Vesper now have destroyed vehicle gameplay sprites for dead/KO states.
 - Command deck, launch power, movement range, timer, wind, aim arrow, and terrain effects are playable.
 - A shot commits the turn immediately; the shooter cannot move during projectile flight or impact resolution.
 - Projectile collision now checks along the shot path, and post-impact settling is localized to nearby or affected vehicles.
@@ -81,6 +82,7 @@ Current result:
 - Terrain can now be punched through into a visible void below the stage.
 - Crater, splash, and Bunger knockback radii are tuned smaller so ring-outs reward precision over one-shot blast size.
 - Colyseus online foundation exists for room creation, player presence, ready checks, and placeholder cosmetic rewards.
+- Colyseus room now owns a lightweight combat preview with round, turn, wind, active vehicle, HP, winner, and validated active-player preview shots.
 - Browser client loads a vendored Colyseus browser SDK bundle while the server uses the installed Colyseus packages.
 
 ### Milestone 1: Online 1v1 Plus Cosmetic Unlock Sandbox
@@ -118,6 +120,7 @@ Exit criteria:
 
 - Two remote players can complete a 1v1 round without desync.
 - Server, not client, decides movement legality, projectile result, terrain changes, damage, KOs, rewards, and round result.
+- Current online preview already demonstrates server-owned turn, wind, HP, winner, and reward state before Phaser terrain/projectiles are synced.
 - After a completed round, players receive a small cosmetic/reward moment.
 - At least one equipped cosmetic is visible somewhere meaningful.
 
@@ -261,6 +264,8 @@ Combat UX requirements:
 - Impact feedback should briefly show crater/terrain range and splash damage range.
 - Disabled vehicles should read as fainted/knocked out, not only desaturated.
 - KO and intense shooting expressions should be character-specific generated art, not universal generic faces or code-drawn overlays.
+- KO character expressions should use literal crossed or rolled-up eyes, not spiral/hypnotic eyes.
+- Dead vehicles should pair the KO character sprite with a destroyed vehicle sprite.
 - Opened terrain should expose a readable void/background beneath the stage.
 - Projectile camera should follow shots and preserve impact context.
 - Large character banners do not belong in the live match screen.
@@ -314,10 +319,14 @@ Fan-service boundary:
 Asset split:
 
 - Vehicle gameplay sprite: one standalone vehicle sprite per vehicle look, with no pilot baked in.
+- Vehicle damage state: each vehicle look needs at least default and destroyed gameplay sprites.
 - Character gameplay sprite set: one standalone playable-character sprite per state.
 - Required first character states: default, KO, and intense shooting.
+- Active prototype sprites use stable runtime aliases in `public/assets`; generation experiments live under `public/assets/sprite-variants`.
 - Gameplay sprites should be compact, tight-cropped, outlined, and readable.
 - Character states must be generated/painted as integrated artwork rather than drawn on top of the default sprite in code.
+- KO sprites should prioritize instant facial readability at gameplay scale: rolled-up/crossed pupils, sleepy compressed white eyes, and a small tongue blep where allowed.
+- The active Nova KO direction is a wide prone defeat sprite. Vesper should get a unique glitch-overloaded KO pose instead of copying Nova's exact pose.
 - Portrait/card art: higher detail and more character-forward.
 - Gacha reveal art: most expressive and premium.
 - Equipment screen: show both pilot and vehicle.

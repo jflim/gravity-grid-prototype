@@ -46,6 +46,8 @@ Done:
 - Gameplay sprites separate from portrait art.
 - Layered gameplay rendering with one vehicle sprite and one playable-character sprite.
 - Generated Nova and Vesper character state sprites: default, KO, and intense shooting.
+- Generated Nova and Vesper destroyed vehicle sprites for KO/dead states.
+- Stable runtime sprite aliases plus versioned sprite-variant folders for faster art iteration.
 - Command panel with movement range, launch power, aim, active identity, timer, and wind.
 - Working title updated to Gravity Canyon.
 - Turn commits immediately when a shot is fired, with no post-shot movement window.
@@ -53,10 +55,12 @@ Done:
 - Temporary crater/splash radius rings make impact ranges visible.
 - Terrain can be punched through into the visible void beneath the stage.
 - Crater, splash, and Bunger knockback radii are smaller so ring-outs require more precise setup.
-- Destroyed vehicles now use character-specific generated KO character sprites instead of overlay effects.
+- Destroyed vehicles now pair destroyed vehicle sprites with character-specific generated KO character sprites instead of overlay effects.
 - Command panel is raised with a bottom safe margin so gameplay controls remain visible.
 - Colyseus server added.
 - Online panel can create/join private rooms, show player slots, ready state, placeholder rewards, and equipped nameplates.
+- Online room now starts a server-owned combat preview when both players ready.
+- Server combat preview tracks round, turn, wind, active vehicle, HP, winner, and validated active-player test shots.
 - Colyseus browser SDK is vendored as a static browser bundle for stable Vite dev behavior on Windows.
 
 Next:
@@ -79,6 +83,7 @@ Scope:
 - Join by room code. Started with Colyseus room id.
 - Two browser clients connect. Started.
 - Server-authoritative room, round, turn, movement, aim, fire, projectile, terrain, HP, KOs, and round result.
+- Server-owned combat preview round/turn/HP state. Started.
 - Guest display names. Started.
 - Post-round placeholder reward grant. Started as a server-owned test capsule.
 - Tiny cosmetic unlock sandbox: test token/capsule, reveal one placeholder cosmetic, inventory view, and equip one visible cosmetic. Started with nameplates.
