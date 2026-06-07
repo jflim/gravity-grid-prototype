@@ -68,12 +68,19 @@ Adult-anime playable sprites should not be full collection art pasted into comba
 They should use:
 
 - Adult anime proportions, but compact battlefield silhouette.
+- Tasteful adult-anime fan-service cues where they support character appeal.
 - Thick dark outline.
 - Clean cel shading.
 - Face details large enough to read at match scale.
 - Simplified clothing/gear detail compared with high-detail master art.
 - Transparent or removable chroma-key background.
 - Generous source padding before trimming, then tight final transparent bounds.
+
+## Fan-Service Boundary
+
+Tasteful adult fan service is allowed for the adult-playable probe, especially through mature proportions, confident styling, fitted arcade pilot outfits, legs/boots/silhouette, expressive faces, and stylish pose language.
+
+Combat readability still comes first. Gameplay sprites should remain compact, stream-safe, and readable at match scale. KO sprites should feel goofy, defeated, and expressive rather than eroticized, because they represent a vulnerable combat-loss state.
 
 Runtime target:
 

@@ -109,11 +109,11 @@ Subject: Nova, an adult anime arcade combat pilot with red hair, high ponytail, 
 
 Pose: compact seated/ready gameplay pose that can sit beside or on a sci-fi artillery vehicle. She should look alert, confident, and ready to aim/fire, with hands positioned as if holding compact vehicle controls. Keep the full body readable.
 
-Style/medium: mainstream adult anime game sprite, clean cel shading, crisp face details, thick dark outline, simplified costume details for gameplay readability.
+Style/medium: mainstream adult anime game sprite, clean cel shading, crisp face details, thick dark outline, simplified costume details for gameplay readability. Tasteful adult-anime fan-service cues are allowed through mature proportions, confident styling, fitted arcade pilot outfit details, legs/boots/silhouette, and expressive face language, while staying stream-safe and readable.
 
 Composition/framing: centered with generous padding, full-body readable silhouette, but designed to export as a compact battlefield sprite around 120-155 px display height.
 
-Constraints: flat uniform #00ff00 background with no shadows, gradients, texture, floor plane, or lighting variation. Character only. No vehicle. No text. No watermark. No blood. No injury. No nudity. Do not use #00ff00 anywhere in the character.
+Constraints: flat uniform #00ff00 background with no shadows, gradients, texture, floor plane, or lighting variation. Character only. No vehicle. No text. No watermark. No blood. No injury. No nudity. No explicit exposure. Do not use #00ff00 anywhere in the character.
 ```
 
 Expected: one generated image that clearly reads as adult-anime Nova in a compact playable default pose.
@@ -161,7 +161,7 @@ Pose preservation: Full-body sprawled face-down on the floor, head low, arms sla
 
 Face preservation: Heavy sleepy eyelids, dazed blush, open mouth with a small tongue blep. Eyes are thin slit-shaped white KO eyes, vertically compressed on the Y-axis. Add visible small oval pupils inside both white slit eyes. Both pupils are rolled upward toward the forehead and crossed inward, clearly inside the eye whites. Expression reads knocked out senseless, dazed, and comically defeated.
 
-Gameplay pass adjustments: Keep the core pose, face, and adult-anime identity, but simplify tiny costume details, strengthen the outer silhouette, thicken dark outline edges, reduce excess illustration density, and make the face readable at match scale. Do not change the pose into a different KO.
+Gameplay pass adjustments: Keep the core pose, face, and adult-anime identity, but simplify tiny costume details, strengthen the outer silhouette, thicken dark outline edges, reduce excess illustration density, and make the face readable at match scale. Keep the attractive adult-anime character styling, but do not eroticize the vulnerable KO state. Do not change the pose into a different KO.
 
 Style/medium: mainstream adult anime game sprite, clean cel shading, crisp face details, thick dark outline.
 
@@ -215,7 +215,7 @@ Pose: goofy glitch-overloaded collapse unique to Vesper. Limbs loose, headset sl
 
 Face: Heavy sleepy eyelids, open mouth with a small tongue blep. Eyes are thin slit-shaped white KO eyes, vertically compressed on the Y-axis. Add visible small oval pupils inside both white slit eyes. Both pupils are rolled upward toward the forehead and crossed inward, clearly inside the eye whites. Expression reads knocked out senseless, dazed, and comically defeated.
 
-Gameplay pass adjustments: Adult-anime proportions, compact battlefield silhouette, thick dark outline, simplified gear detail, crisp face readability, no high-detail collection-art density.
+Gameplay pass adjustments: Adult-anime proportions, compact battlefield silhouette, thick dark outline, simplified gear detail, crisp face readability, no high-detail collection-art density. Tasteful adult-anime fan-service cues are allowed in silhouette and styling, but the KO state should read goofy and defeated rather than eroticized.
 
 Style/medium: mainstream adult anime game sprite, clean cel shading, crisp face details, thick dark outline.
 
