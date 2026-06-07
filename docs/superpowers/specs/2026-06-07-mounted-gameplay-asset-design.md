@@ -26,13 +26,15 @@ Existing assets can continue to serve as:
 - runtime fallback,
 - style reference,
 - source identity reference,
-- KO pose/expression reference,
+- Defeated KO pose/expression reference,
 - collection-art reference,
 - comparison baseline.
 
-## Gameplay Unit Model
+## Signature Unit Model
 
-The playable unit is a vehicle plus a character mounted on or interacting with it.
+The playable unit should read as a signature character-plus-vehicle pair.
+
+Each pilot has a vehicle family that feels authored for them. Nova rides her red arcade artillery rig, Vesper rides her blue tech/glitch rig, and future pilots should have similarly coherent pair identities. This prevents the roster from feeling like separate characters and unrelated vehicles loosely composited together.
 
 Render order:
 
@@ -42,7 +44,7 @@ Render order:
 
 The vehicle remains the gameplay anchor. Hitboxes, movement, cannon behavior, and combat stats belong to the vehicle/unit rules, not the character art silhouette.
 
-Do not bake the pilot into the vehicle sprite for the default pipeline. Keeping vehicle and character art separate preserves outfit and vehicle-skin customization.
+Do not bake the pilot into the vehicle sprite for the default pipeline. Keeping vehicle and character art separate preserves outfit and vehicle-skin customization, even when the art direction treats the pair as one authored unit.
 
 ## Active-State Pose Direction
 
@@ -63,12 +65,13 @@ Pose constraints:
 - Legs may be visible when they are compact and clearly mounted on the vehicle.
 - Full standing poses beside the vehicle are not the default-state target.
 - Face, hair, and upper body must remain readable at match scale.
+- Adult anime proportions are the target for Nova and Vesper production probes. Avoid semi-chibi or super-deformed face/body proportions unless a later cosmetic set explicitly asks for that style.
 - The pose must not obscure aim feedback, HP labels, the cannon direction, or important terrain contact.
 - The character art may be attractive and stylish, but match readability comes first.
 
 ## Character And Vehicle Cosmetics
 
-Cosmetic sets may define compatible mounted poses, outfits, and vehicle skins.
+Cosmetic sets may define compatible mounted poses, outfits, and vehicle skins inside a pilot's signature vehicle family.
 
 Example:
 
@@ -83,25 +86,29 @@ Loadout slots remain separate:
 - nameplate/banner,
 - optional later effects.
 
-Mix-and-match is allowed when readable. If a specific pose only works with a specific vehicle skin, mark that pairing as a set-specific exception later.
+Mix-and-match is allowed when readable inside the signature family. If a specific pose only works with a specific vehicle skin, mark that pairing as a set-specific exception later.
 
-## KO-State Direction
+## Defeated KO-State Direction
 
-KO states can break the mounted rule when it improves readability.
+Defeated KO is the preferred asset/state term. "KO" remains the facial readability language: crossed or rolled-up pupils, sleepy compressed white eyes, and tongue blep details where appropriate.
 
-Allowed KO staging:
+Defeated KO states can break the active mounted pose when it improves readability, but the signature unit relationship should remain visible whenever possible.
 
-- pilot collapsed near the damaged vehicle,
+Allowed Defeated KO staging:
+
+- pilot collapsed over the damaged vehicle,
 - pilot slumped in front of the vehicle,
 - pilot partly draped on or against the vehicle,
-- destroyed vehicle sprite behind or under the KO character.
+- pilot collapsed near the damaged vehicle when over/on staging does not read at gameplay scale,
+- destroyed vehicle sprite behind or under the Defeated KO character.
 
-KO constraints:
+Defeated KO constraints:
 
-- Nova's current prone KO sample remains an important reference and should not be discarded casually.
-- Vesper's KO should avoid the rejected goofy/dumb glitch-collapse direction.
-- KO faces should preserve readable crossed or rolled-up pupils, sleepy compressed white eyes, and a small tongue blep where appropriate.
-- KO art must not change hitboxes or combat outcomes.
+- Nova's current prone KO sample remains an important face/eye reference and should not be discarded casually.
+- Nova's next Defeated KO direction should explore her collapsed over her damaged red signature vehicle.
+- Vesper's Defeated KO should avoid the rejected goofy/dumb glitch-collapse direction and should fit her blue tech/glitch rig.
+- Defeated KO faces should preserve readable crossed or rolled-up pupils, sleepy compressed white eyes, and a small tongue blep where appropriate.
+- Defeated KO art must not change hitboxes or combat outcomes.
 
 ## First Production Probe Recommendation
 
@@ -112,6 +119,7 @@ Create disposable probes for:
 - Nova default mounted pose: confident, readable, vehicle-interaction pose.
 - Nova intense mounted pose: same mounted anchor, more aiming/firing energy.
 - Vesper default mounted pose: cooler tech-pilot vehicle interaction, not goofy.
-- Vesper KO v2: defeated anime KO closer in tone to Nova's sample, staged with or near a damaged vehicle.
+- Nova Defeated KO over-vehicle pose: adult anime proportions, defeated face readability, collapsed over her damaged red rig.
+- Vesper Defeated KO v2: adult anime defeated pose closer in quality to Nova's sample, staged with or near/on her blue tech rig.
 
 Review should happen through direct image inspection or simple static mockups, not the Superpowers visual companion, because the browser companion proved too hard to read and click in the Codex app.

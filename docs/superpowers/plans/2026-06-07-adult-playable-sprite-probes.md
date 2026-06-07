@@ -107,9 +107,9 @@ Input images: Use the current Nova default sprite as the identity reference for 
 
 Subject: Nova, an adult anime arcade combat pilot with red hair, high ponytail, goggles, red-and-black armored arcade pilot outfit, gloves, and heavy boots.
 
-Pose: compact seated/ready gameplay pose that can sit beside or on a sci-fi artillery vehicle. She should look alert, confident, and ready to aim/fire, with hands positioned as if holding compact vehicle controls. Keep the full body readable.
+Pose: compact seated/ready gameplay pose compatible with being composited beside or on a sci-fi artillery vehicle. She should look alert, confident, and ready to aim/fire, with hands posed as if gripping imaginary compact vehicle controls. Keep the full body readable. Do not render any vehicle or control props.
 
-Style/medium: mainstream adult anime game sprite, clean cel shading, crisp face details, thick dark outline, simplified costume details for gameplay readability. Attractive adult-anime fan-service cues are allowed through mature proportions, confident styling, fitted arcade pilot outfit details, legs/boots/silhouette, and expressive face language, while staying stream-safe and readable as a match sprite.
+Style/medium: mainstream adult anime game sprite, clean cel shading, crisp face details, thick dark outline, simplified costume details for gameplay readability. Tasteful/lightly suggestive adult-anime character appeal is allowed through mature proportions, confident styling, fitted arcade pilot outfit details, legs/boots/silhouette, and expressive face language, while staying stream-safe and readable as a match sprite. Avoid pin-up framing, cleavage focus, underwear focus, or sexualized camera angles.
 
 Composition/framing: centered with generous padding, full-body readable silhouette, but designed to export as a compact battlefield sprite around 120-155 px display height.
 
@@ -157,9 +157,9 @@ Input images: Use the current Nova KO sprite as the primary pose and expression 
 
 Subject: Nova, an adult anime arcade combat pilot with red hair, high ponytail, goggles, red-and-black armored arcade pilot outfit, gloves, and heavy boots.
 
-Pose preservation: Full-body sprawled face-down on the floor, head low, arms slack, legs awkwardly collapsed, posture clearly knocked out and overwhelmed. Gear loosened from impact, straps slightly displaced, buckles dangling, goggles hanging low from the head without covering the eyes, hair messy and fallen across the forehead.
+Pose preservation: Full-body sprawled face-down in a horizontal/prone pose with no visible floor, head low, arms slack, legs awkwardly collapsed, posture clearly knocked out and overwhelmed. Gear loosened from impact, straps slightly displaced, buckles dangling, goggles hanging low from the head without covering the eyes, hair messy and fallen across the forehead while both eyes and crossed rolled-up pupils remain unobstructed and readable.
 
-Face preservation: Heavy sleepy eyelids, dazed blush, open mouth with a small tongue blep. Eyes are thin slit-shaped white KO eyes, vertically compressed on the Y-axis. Add visible small oval pupils inside both white slit eyes. Both pupils are rolled upward toward the forehead and crossed inward, clearly inside the eye whites. Expression reads knocked out senseless, dazed, and comically defeated.
+Face preservation: Heavy sleepy eyelids, comedic overheated/dazed blush that is not flirty or sensual, open mouth with a small tongue blep. Eyes are thin slit-shaped white KO eyes, vertically compressed on the Y-axis. Add visible small oval pupils inside both white slit eyes. Both pupils are rolled upward toward the forehead and crossed inward, clearly inside the eye whites. Expression reads knocked out senseless, dazed, and comically defeated.
 
 Gameplay pass adjustments: Keep the core pose, face, and adult-anime identity, but simplify tiny costume details, strengthen the outer silhouette, thicken dark outline edges, reduce excess illustration density, and make the face readable at match scale. Keep the attractive adult-anime character styling, but do not let pin-up framing or erotic detail become the primary read of the vulnerable KO state. Do not change the pose into a different KO.
 
@@ -167,7 +167,7 @@ Style/medium: mainstream adult anime game sprite, clean cel shading, crisp face 
 
 Composition/framing: centered with generous padding, full-body wide prone silhouette, intended to export as a wide KO gameplay sprite that fits inside the active unit frame.
 
-Constraints: flat uniform #00ff00 background with no shadows, gradients, texture, floor plane, or lighting variation. Character only. No vehicle. No text. No watermark. No blood. No visible injury. No nudity. Do not use #00ff00 anywhere in the character.
+Constraints: flat uniform #00ff00 background with no shadows, gradients, texture, floor plane, or lighting variation. Character only. No vehicle. No text. No watermark. No blood. No visible injury. No nudity. No explicit exposure. Do not use #00ff00 anywhere in the character.
 ```
 
 Expected: one generated image that preserves Nova's KO pose/eyes while reducing visual density for gameplay.
@@ -211,7 +211,7 @@ Input images: Use the current Vesper default sprite as the identity and style re
 
 Subject: Vesper, an adult anime arcade combat pilot.
 
-Pose: goofy glitch-overloaded collapse unique to Vesper. Limbs loose, headset slightly crooked, hair messy, and small harmless blue pixel-glitch sparks around her gear. The pose should feel silly, defeated, and instantly readable as a combat loss status sprite. Do not copy Nova's face-down prone pose.
+Pose: goofy glitch-overloaded collapse unique to Vesper. Limbs loose, headset slightly crooked, hair messy, and 2-3 tiny harmless blue pixel-glitch accents attached to her gear and kept inside the character silhouette. The pose should feel silly, defeated, and instantly readable as a combat loss status sprite. Do not copy Nova's face-down prone pose.
 
 Face: Heavy sleepy eyelids, open mouth with a small tongue blep. Eyes are thin slit-shaped white KO eyes, vertically compressed on the Y-axis. Add visible small oval pupils inside both white slit eyes. Both pupils are rolled upward toward the forehead and crossed inward, clearly inside the eye whites. Expression reads knocked out senseless, dazed, and comically defeated.
 
@@ -221,7 +221,7 @@ Style/medium: mainstream adult anime game sprite, clean cel shading, crisp face 
 
 Composition/framing: centered with generous padding, full-body readable silhouette, intended to export as a compact KO gameplay sprite that fits inside the active unit frame.
 
-Constraints: flat uniform #00ff00 background with no shadows, gradients, texture, floor plane, or lighting variation. Character only. No vehicle. No text. No watermark. No blood. No visible injury. No nudity. No explicit exposure. Do not use #00ff00 anywhere in the character.
+Constraints: flat uniform #00ff00 background with no shadows, gradients, texture, floor plane, or lighting variation. Character only, except for 2-3 tiny gear-attached blue glitch accents inside the character silhouette. No separate props. No vehicle. No text. No watermark. No blood. No visible injury. No nudity. No explicit exposure. Do not use #00ff00 anywhere in the character.
 ```
 
 Expected: one generated image that reads as Vesper in a distinct glitch-collapse KO pose.

@@ -19,6 +19,8 @@ Highlights:
 - Added adult-playable sprite probe design and implementation planning for deciding whether Nova and Vesper gameplay sprites should move beyond compact/semi-chibi style.
 - Added cosmetic set/loadout direction: themed sets can unlock matching character outfits and vehicle skins, while characters remain identity/presentation and vehicles carry gameplay mechanics.
 - Added mounted gameplay asset direction: current assets stay as the v0 baseline while future probes explore characters riding, kneeling on, leaning on, or otherwise interacting with vehicles.
+- Preserved selected paired-unit concept candidates for Nova's head-over-heels Defeated KO direction and Vesper's tech-shorts default/Defeated KO direction.
+- Added playable roster sprite direction for 10 signature pilot-plus-vehicle units, plus Kaelii and Perlah gameplay sprite prompt packs for the first new-unit generation pass.
 - Clarified Git workflow with branch strategy, quality gates, commit cadence, and push cadence.
 - Updated GitHub management notes now that the private remote and GitHub CLI are configured.
 - Added canonical game design spec with 95% confidence direction for the next build milestone.

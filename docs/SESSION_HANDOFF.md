@@ -18,6 +18,7 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
 - Local Phaser prototype proves movement, aiming, wind, destructible terrain, fall KOs, round reset, and readable HUD.
 - Online foundation uses Colyseus with private rooms, ready checks, placeholder rewards, and a server-owned combat preview.
 - Cosmetics are fun/collectible only and must not affect combat stats, hitboxes, projectile behavior, wind, movement, matchmaking, or rewards.
+- Player-facing art direction now treats each pilot and vehicle as a signature combat unit, while keeping sprites layered for customization.
 
 ## Current Implementation State
 
@@ -39,33 +40,38 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
 
 - Runtime sprites use stable filenames in `public/assets`.
 - Variant/history sprites live under `public/assets/sprite-variants`.
-- Active Nova KO sprite is:
+- Active Nova Defeated KO runtime sprite is:
   - runtime alias: `public/assets/nova-character-ko.png`
   - selected source: `public/assets/sprite-variants/characters/nova/ko/nova-character-ko-v16-marker-aligned-left-pupil.png`
 - Nova KO display size in `src/main.ts` is `250 x 94` because the active pose is wide/prone.
+- New Nova Defeated KO concept direction is adult-anime Nova tumbling head-over-heels from her mounted crouch and collapsed over her damaged red signature vehicle:
+  - `public/assets/sprite-variants/units/nova/defeated-ko/nova-unit-defeated-ko-head-over-heels-v1.png`
+- Selected Vesper paired-unit concept candidates:
+  - default mounted tech-shorts look: `public/assets/sprite-variants/units/vesper/default/vesper-unit-default-mounted-tech-shorts-v9.png`
+  - Defeated KO tech-shorts look: `public/assets/sprite-variants/units/vesper/defeated-ko/vesper-unit-defeated-ko-tech-shorts-v10.png`
 - Destroyed vehicle sprites exist for Nova and Vesper:
   - `public/assets/nova-vehicle-destroyed.png`
   - `public/assets/vesper-vehicle-destroyed.png`
-- Vesper still needs a production-quality KO replacement. Use a clean image-generation context, because the prior thread began rejecting even harmless prompts after explicit reference images were attached.
+- Vesper still needs production cleanup before runtime replacement. Use adult anime compact game-sprite proportions, not semi-chibi and not tall fashion-anime proportions.
 
 ## Next Best Step
 
-Generate Vesper KO in a clean session with only `public/assets/vesper-character-default.png` as the identity/style reference.
+Use the committed Vesper v9/v10 unit candidates as references for the next production pass. The next pass should simplify detail, preserve the light full gloves/tech shorts/chunky sneaker identity, remove the chroma key, split or size layers as needed, and only then promote runtime aliases.
 
-Recommended Vesper-safe prompt:
+Recommended Vesper direction:
 
 ```text
-Create a brand-new original 2D cel-shaded game character KO status sprite on a perfectly flat solid #00ff00 chroma-key background.
+Create a brand-new original 2D cel-shaded adult anime arcade game sprite concept on a perfectly flat solid #00ff00 chroma-key background.
 
-Use the provided base character as the identity and style reference. Preserve the cyan-blue hair, short twin-braid accents, blue headset, blue-and-black tech hoodie outfit, gloves, chunky blue-white sneakers, compact sci-fi arcade pilot silhouette, thick dark outline, and polished anime game sprite rendering.
+Depict Vesper as a cohesive character-plus-signature-vehicle unit in a Defeated KO state. Preserve the cyan-blue hair, short twin-braid accents, blue headset, blue-and-black tech outfit, gloves, chunky blue-white sneakers, thick dark outline, and polished anime game sprite rendering. Use adult anime proportions, not semi-chibi or super-deformed proportions.
 
-Depict her as an adult anime arcade combat pilot in a goofy KO status pose unique to Vesper: a glitch-overloaded collapse with limbs loose, headset slightly crooked, hair messy, and small harmless blue pixel-glitch sparks around her gear. The pose should feel silly, defeated, and readable as a combat loss status sprite.
+Vesper should be collapsed over, draped on, or slumped against her damaged blue tech/glitch hover artillery rig. Keep the character in front of/on top of the vehicle so the unit relationship is visible. The pose should feel defeated, dazed, and readable without looking dumb or like a generic goofy collapse.
 
-Face is the most important detail. Heavy sleepy eyelids, open mouth with a small tongue blep. Eyes are thin slit-shaped white KO eyes, vertically compressed on the Y-axis. Add visible small oval pupils inside both white slit eyes. Both pupils are rolled upward toward the forehead and crossed inward, clearly inside the eye whites. The expression should read as knocked out senseless, dazed, and comically defeated.
+Face is the most important detail. Heavy sleepy eyelids, open mouth with a small tongue blep. Eyes are thin slit-shaped white KO eyes, vertically compressed on the Y-axis. Add visible small oval pupils inside both white slit eyes. Both pupils are rolled upward toward the forehead and crossed inward, clearly inside the eye whites. The expression should read knocked out senseless, dazed, and comically defeated.
 
-Style: mainstream adult anime game sprite, clean cel shading, crisp face details, thick dark outline, centered with generous padding, full-body readable silhouette.
+Style: mainstream adult anime game sprite, clean cel shading, crisp face details, thick dark outline, wide full-unit silhouette with generous padding.
 
-Asset constraints: flat uniform #00ff00 background, character only, no vehicle, no text, no watermark, no blood or visible injury, no nudity, no explicit exposure.
+Asset constraints: flat uniform #00ff00 background, character and vehicle only, no text, no watermark, no blood or visible injury, no nudity, no explicit exposure.
 ```
 
 After generation:

@@ -55,7 +55,7 @@ Rules:
 - Login target: Guest, Google, Email Magic Link.
 - Art direction: premium anime arcade for collection surfaces, compact readable vehicle sprites for gameplay.
 - Tone: stylish adult anime arcade with a decent amount of fan service, but not explicit or platform-risky.
-- Character/vehicle split: characters define identity and presentation; vehicles define gameplay kit and combat attributes.
+- Character/vehicle unit model: each pilot has a signature vehicle family so the player experiences one authored combat unit, while sprites remain layered for customization and production.
 
 ## 4. Build Milestones
 
@@ -72,8 +72,8 @@ Current result:
 - Local 1v1 prototype exists.
 - Gameplay sprites and high-detail portraits are separated.
 - Gameplay rendering layers a standalone vehicle sprite under a standalone playable-character sprite.
-- Nova and Vesper now have generated character gameplay states for default, KO, and intense shooting.
-- Nova and Vesper now have destroyed vehicle gameplay sprites for dead/KO states.
+- Nova and Vesper now have generated character gameplay states for default, Defeated KO, and intense shooting.
+- Nova and Vesper now have destroyed vehicle gameplay sprites for defeated/KO states.
 - Command deck, launch power, movement range, timer, wind, aim arrow, and terrain effects are playable.
 - A shot commits the turn immediately; the shooter cannot move during projectile flight or impact resolution.
 - Projectile collision now checks along the shot path, and post-impact settling is localized to nearby or affected vehicles.
@@ -264,9 +264,9 @@ Combat UX requirements:
 - Aim should show direction without giving a full landing prediction.
 - Impact feedback should briefly show crater/terrain range and splash damage range.
 - Disabled vehicles should read as fainted/knocked out, not only desaturated.
-- KO and intense shooting expressions should be character-specific generated art, not universal generic faces or code-drawn overlays.
-- KO character expressions should use literal crossed or rolled-up eyes, not spiral/hypnotic eyes.
-- Dead vehicles should pair the KO character sprite with a destroyed vehicle sprite.
+- Defeated KO and intense shooting expressions should be character-specific generated art, not universal generic faces or code-drawn overlays.
+- Defeated KO character expressions should use literal crossed or rolled-up eyes, not spiral/hypnotic eyes.
+- Dead vehicles should pair the Defeated KO character sprite with a destroyed vehicle sprite.
 - Opened terrain should expose a readable void/background beneath the stage.
 - Projectile camera should follow shots and preserve impact context.
 - Large character banners do not belong in the live match screen.
@@ -306,7 +306,7 @@ Primary visual target:
 Roster direction:
 
 - Mixed gender roster, mostly women.
-- First production-ish wave target: 8 pilots, roughly 5 women, 2 men, 1 androgynous/customizable character.
+- First production-ish roster planning target: 10 signature pilot-plus-vehicle units, roughly 7 women, 2 men, and 1 androgynous/customizable character.
 - All characters should be original, adult, and clearly separated from existing IP.
 
 Fan-service boundary:
@@ -317,20 +317,25 @@ Fan-service boundary:
 - Avoid explicit nudity, sex acts, lingerie-only defaults, underage-coded sexuality, or poses that make the game hard to stream or market.
 - Keep combat sprites readable and not dependent on body-focused detail.
 
-Asset split:
+Signature unit asset model:
 
-- Vehicle gameplay sprite: one standalone vehicle sprite per vehicle look, with no pilot baked in.
+- Each pilot has a signature vehicle family: Nova with her red arcade artillery rig, Vesper with her blue tech/glitch rig, and future pilots with similarly authored pair identities.
+- The player-facing fantasy is a character-plus-vehicle combat unit, not two unrelated choices.
+- Runtime implementation still uses separate sprite layers so outfits, vehicle skins, and state art can be customized without baking every pair into one image.
+- Vehicle gameplay sprite: one standalone vehicle sprite per vehicle look, with no pilot baked in by default.
 - Vehicle damage state: each vehicle look needs at least default and destroyed gameplay sprites.
 - Character gameplay sprite set: one standalone playable-character sprite per state, usually designed as a mounted or vehicle-interaction pose layered in front of/on the vehicle.
-- Required first character states: default, KO, and intense shooting.
+- Required first character states: default, Defeated KO, and intense shooting.
 - Active prototype sprites use stable runtime aliases in `public/assets`; generation experiments live under `public/assets/sprite-variants`.
 - Current runtime assets are the v0 baseline; do not overwrite them during art-direction probes.
 - Gameplay sprites should be compact, tight-cropped, outlined, and readable.
 - Character states must be generated/painted as integrated artwork rather than drawn on top of the default sprite in code.
 - Active/default character poses may be seated, kneeling, crouched, leaning on the cannon, bracing behind the weapon, or otherwise clearly riding/using the vehicle.
 - The vehicle remains the gameplay anchor. Character art can show legs when compact and mounted, but full standing characters beside the vehicle are not the default-state target.
-- KO sprites should prioritize instant facial readability at gameplay scale: rolled-up/crossed pupils, sleepy compressed white eyes, and a small tongue blep where allowed.
-- The active Nova KO direction is a wide prone defeat sprite. Vesper should get a unique glitch-overloaded KO pose instead of copying Nova's exact pose.
+- Gameplay character concepts should use adult anime proportions, not semi-chibi or super-deformed face/body proportions, unless a separate cosmetic line explicitly calls for it.
+- Defeated KO sprites should prioritize instant facial readability at gameplay scale: rolled-up/crossed pupils, sleepy compressed white eyes, and a small tongue blep where allowed.
+- Defeated KO staging should usually keep the unit relationship visible, such as the pilot collapsed over, draped on, or slumped against their signature vehicle.
+- The active Nova Defeated KO direction is shifting from a standalone prone sprite toward Nova collapsed over her damaged red vehicle. Vesper should get a distinct Defeated KO pose that fits her blue tech/glitch rig instead of copying Nova's exact pose.
 - Portrait/card art: higher detail and more character-forward.
 - Gacha reveal art: most expressive and premium.
 - Equipment screen: show both pilot and vehicle.
@@ -364,10 +369,10 @@ First visible cosmetic slots:
 Cosmetic set rule:
 
 - Themed sets may unlock matching character outfits and vehicle skins together.
-- Loadout still exposes character outfit and vehicle skin as separate equip slots.
-- Characters are the identity/presentation layer; vehicles are the gameplay/mechanical layer.
-- Character choice should not affect combat stats in MVP.
-- Vehicle choice may define movement, weapon kit, cannon behavior, terrain interaction, durability, or other vehicle-class combat attributes.
+- Loadout still exposes character outfit and vehicle skin as separate equip slots within a pilot's signature vehicle family.
+- Characters and vehicles are authored as signature combat units, even though their outfit and vehicle-skin sprites remain separate implementation layers.
+- The selectable gameplay pick is the authored pilot-plus-vehicle unit. The unit may define movement, weapon kit, cannon behavior, terrain interaction, durability, or other class-readable combat attributes.
+- Pilot identity should not be separately statted apart from that authored unit, and cosmetics must remain cosmetic-only.
 
 Second wave:
 

@@ -1,0 +1,215 @@
+# Kaelii And Perlah Sprite Prompt Pack
+
+Date: 2026-06-07
+Project: Gravity Canyon
+
+## Goal
+
+Create first-pass playable sprite prompts for Kaelii and Perlah as a test pair before generating the full 10-unit roster.
+
+These prompts are for gameplay sprites, not portrait or gacha art. Portraits can later push stronger adult fantasy styling, fashion, glamour, and body language. Gameplay sprites must stay compact, readable, mounted, and streamable.
+
+## Shared Gameplay Sprite Style Prompt
+
+Use this shared style block at the start of each generation:
+
+```text
+Create a brand-new original 2D cel-shaded adult anime arcade game sprite on a perfectly flat solid #00ff00 chroma-key background.
+
+Style target: premium anime arcade artillery game, compact readable gameplay sprite, strong silhouette, thick dark outline, crisp cel shading, clean face details, saturated but controlled colors, vehicle and pilot designed as one signature combat unit.
+
+Composition target: side-view 2D browser artillery game sprite. The vehicle is the gameplay anchor. The character must be visibly mounted on, perched on, crouched on, seated on, braced against, or collapsed on/against the vehicle. Keep the unit compact enough for match-screen readability. Leave generous padding around the full unit.
+
+Content constraints: original adult character only, no existing IP, no text, no watermark, no blood, no visible injury, no explicit nudity, no sex act, no lingerie-only default outfit, no underage-coded body or face, no drugging or non-consensual framing. Attractive adult styling is allowed, but match readability comes first.
+```
+
+## Shared Vehicle-Only Style Prompt
+
+Use this when generating standalone vehicle sprites:
+
+```text
+Create a brand-new original 2D cel-shaded arcade artillery vehicle sprite on a perfectly flat solid #00ff00 chroma-key background.
+
+Style target: compact cyber-toy artillery vehicle, readable side-view silhouette, thick dark outline, crisp cel shading, clean mechanical shapes, saturated but controlled colors, no pilot baked into the vehicle.
+
+Composition target: standalone vehicle gameplay sprite for a 2D browser artillery game. The vehicle should have a clear cannon or weapon direction, visible chassis, readable ground contact, and enough open attachment space for a separate mounted pilot sprite to layer in front or on top. Leave generous padding.
+
+Content constraints: vehicle only, no character, no text, no watermark, no logo copied from real brands or existing IP.
+```
+
+## Kaelii Identity Notes
+
+Preserve this DNA from the older Kaelii concept:
+
+- bronze skin,
+- vibrant violet messy twin buns with stray strands,
+- golden eyes,
+- playful smirk,
+- pink and black techwear,
+- white sneakers with pink laces,
+- thigh straps and fingerless gloves,
+- loud, cocky, flirtatious, attention-hungry, reckless stage energy.
+
+Translate the old reckless defeat energy into arcade KO staging. Do not use drugging, gas, humiliation, or non-consensual framing. Her defeat should read as a dramatic stunt crash.
+
+### Kaelii Vehicle Default: Flashkick Skip-Rig
+
+```text
+[Shared Vehicle-Only Style Prompt]
+
+Design Kaelii's signature vehicle: the Flashkick Skip-Rig, a light bouncer-class ricochet artillery vehicle.
+
+Vehicle identity: flashy pink-black stunt rig, compact springy chassis, angled cannon rail, bounce-pad armor plates, bright white sneaker-like wheel guards, small spotlight strip, energetic decals, toy-like but combat-ready. It should look fast, unstable, and built for trick shots.
+
+Class readability: bouncer class. The silhouette should suggest ricochets, banks, springs, rails, and rebound shots rather than heavy craters or fire. Avoid making it look like a standard tank.
+
+Layering need: leave a clear top rail or side perch where Kaelii's character sprite can stand/perch with one foot on the cannon rail.
+```
+
+### Kaelii Vehicle Destroyed
+
+```text
+[Shared Vehicle-Only Style Prompt]
+
+Create the destroyed version of Kaelii's Flashkick Skip-Rig.
+
+Preserve the pink-black stunt rig identity, angled cannon rail, bounce-pad armor plates, white sneaker-like wheel guards, and spotlight strip, but show it disabled for an arcade KO state. The chassis is tilted, one spring or rail is bent, bounce pads are cracked, spotlight strip is dim, and small smoke puffs rise from the vehicle.
+
+No pilot, no flames covering the silhouette, no blood, no gore, no text.
+```
+
+### Kaelii Character Default
+
+```text
+[Shared Gameplay Sprite Style Prompt]
+
+Character: Kaelii, an original adult anime stunt-pilot for Gravity Canyon.
+
+Appearance: athletic young adult woman, bronze skin, vibrant violet messy twin buns with stray strands, golden eyes, playful smirk, pink and black techwear crop jacket over a streamable fitted combat top, high-tech shorts or fitted stunt bottoms with thigh straps, fingerless gloves, white sneakers with pink laces. Keep her stylish, flirty, and confident without explicit exposure.
+
+Vehicle relationship: Kaelii is perched showily on top of her pink-black Flashkick Skip-Rig bouncer vehicle. One sneaker is planted on the cannon rail, the other foot braces on the chassis. Her hips and shoulders are angled like she is taunting the opponent and performing for a crowd. She must feel attached to the vehicle, not standing separately beside it.
+
+Expression: cocky playful smirk, bright golden eyes, stage-idol confidence.
+```
+
+### Kaelii Character Intense
+
+```text
+[Shared Gameplay Sprite Style Prompt]
+
+Character: Kaelii, original adult anime stunt-pilot with bronze skin, violet messy twin buns, golden eyes, pink-black techwear, fingerless gloves, white sneakers with pink laces.
+
+Pose: intense firing version of her mounted stance. She remains perched on the Flashkick Skip-Rig, torso snapped forward, one hand gripping a rail, one sneaker kicked back as the rig fires into a ricochet angle. Hair strands and jacket edges react to recoil. The pose is energetic, reckless, and showy while still compact for gameplay.
+
+Expression: fierce grin, focused golden eyes, thrilled by the risk.
+
+Vehicle relationship: keep her clearly on the same bouncer rig with the cannon rail and springy pink-black chassis visible.
+```
+
+### Kaelii Character Defeated KO
+
+```text
+[Shared Gameplay Sprite Style Prompt]
+
+Character: Kaelii, original adult anime stunt-pilot with bronze skin, violet messy twin buns, golden eyes, pink-black techwear, white sneakers with pink laces.
+
+Defeated KO staging: Kaelii has slid sideways off her perch and is sprawled across the damaged Flashkick Skip-Rig chassis after a failed stunt. One sneaker dangles off the side, one arm is loose over the bent rail, hair buns messy, spotlight strip dimmed out. The pose should be theatrical and arcade-comedic, like a stunt crash, not sensualized defeat.
+
+Face readability: dazed KO expression with heavy sleepy eyelids or compressed white KO eyes, pupils rolled upward or crossed inward, small tongue blep if it remains cute and readable. No spiral eyes. No blood or visible injury.
+
+Vehicle relationship: damaged pink-black bouncer rig remains visible behind/under her, with cracked bounce pads and bent rail.
+```
+
+## Perlah Identity Notes
+
+Preserve this DNA from the older Perlah concept:
+
+- shorter Filipina-inspired adult woman,
+- golden-brown skin,
+- slim attractive athletic build,
+- long feminine legs,
+- curly black hair with orange highlights,
+- orange and black styling,
+- warm tropical heat identity,
+- scrappy, teasing, underestimated energy.
+
+Translate the old beachwear direction into a streamable island salvage racer outfit for match sprites. Portrait art can later explore more adult fantasy styling.
+
+### Perlah Vehicle Default: Sunspike Embercart
+
+```text
+[Shared Vehicle-Only Style Prompt]
+
+Design Perlah's signature vehicle: the Sunspike Embercart, a spark-class volcanic salvage artillery cart.
+
+Vehicle identity: compact orange-black salvage racer, volcanic heat vents, ceramic heat shield, sunburst furnace core, chunky heatproof wheels or treads, small brass and black mechanical details, bright ember accents, cannon nested behind a protective shield.
+
+Class readability: spark class. The silhouette should suggest heat, splash, lingering fire zones, molten pressure, and terrain softening. It should not look like a heavy crater tank or a glitch-tech rover.
+
+Layering need: leave a low front/side heat shield where Perlah's character sprite can kneel and brace one hand on the cannon housing.
+```
+
+### Perlah Vehicle Destroyed
+
+```text
+[Shared Vehicle-Only Style Prompt]
+
+Create the destroyed version of Perlah's Sunspike Embercart.
+
+Preserve the orange-black salvage racer identity, ceramic heat shield, sunburst furnace core, heat vents, and ember accents, but show it disabled for an arcade KO state. The heat shield is cracked, vents puff gray smoke, furnace glow is low, one wheel or tread is bent, and the cannon housing sags.
+
+No pilot, no intense flames hiding the silhouette, no blood, no gore, no text.
+```
+
+### Perlah Character Default
+
+```text
+[Shared Gameplay Sprite Style Prompt]
+
+Character: Perlah, an original adult anime spark-pilot for Gravity Canyon.
+
+Appearance: shorter Filipina-inspired adult woman, golden-brown skin, slim athletic build, curly black hair with orange highlights, expressive eyes, warm teasing smile. Outfit is orange and black island salvage racer gear: tied wrap-tech top over a streamable fitted combat layer, utility shorts or fitted heatproof stunt bottoms, heatproof gloves, compact boots, small straps and salvage details. Attractive and stylish, but not explicit.
+
+Vehicle relationship: Perlah kneels low against the Sunspike Embercart's heat shield, one hand braced on the cannon housing, the other close to a heat control lever. She is compact, ready, and clearly mounted/braced with her signature orange-black spark vehicle.
+
+Expression: warm teasing confidence, like she knows the canyon is about to get too hot for the opponent.
+```
+
+### Perlah Character Intense
+
+```text
+[Shared Gameplay Sprite Style Prompt]
+
+Character: Perlah, original adult anime spark-pilot with golden-brown skin, curly black hair with orange highlights, orange-black salvage racer outfit, heatproof gloves, compact boots.
+
+Pose: intense firing version of her low kneeling stance. She braces harder behind the Sunspike Embercart's heat shield as orange vents flare, one hand gripping the cannon housing, the other pulling a heat lever. Hair curls and wrap details lift in furnace wind. Keep the silhouette compact and readable.
+
+Expression: focused grin, bright eyes, scrappy heat-pilot confidence.
+
+Vehicle relationship: the orange-black Embercart heat shield, vents, and sunburst furnace core remain visible and aligned with her pose.
+```
+
+### Perlah Character Defeated KO
+
+```text
+[Shared Gameplay Sprite Style Prompt]
+
+Character: Perlah, original adult anime spark-pilot with golden-brown skin, curly black hair with orange highlights, orange-black salvage racer outfit, heatproof gloves, compact boots.
+
+Defeated KO staging: Perlah is draped belly-down across the warm engine cover of her damaged Sunspike Embercart, hair messy, one arm hanging over the cracked heat shield, vehicle vents puffing smoke as if the heat finally overwhelmed the cart. The pose should read as arcade defeat after overloading her own spark engine, not sensualized defeat.
+
+Face readability: dazed KO expression with heavy sleepy eyelids or compressed white KO eyes, pupils rolled upward or crossed inward, small tongue blep if it remains cute and readable. No spiral eyes. No blood or visible injury.
+
+Vehicle relationship: damaged orange-black Embercart remains visible under/behind her, with cracked heat shield, low furnace glow, and smoke puffs.
+```
+
+## Prompt Pack Review Notes
+
+Before generating final candidates, verify:
+
+- Kaelii reads as `bouncer`, not `spark` or `bunger`.
+- Perlah reads as `spark`, not generic beach character or standard tank pilot.
+- Both default poses are mounted or braced with the vehicle, not full-body characters standing beside vehicles.
+- Character and vehicle silhouettes will still work if separated into the runtime layer model.
+- Outfit styling preserves adult fantasy potential without making the match sprite explicit or hard to stream.
+- KO states preserve the vehicle relationship and read as game feedback, not fetish framing.
