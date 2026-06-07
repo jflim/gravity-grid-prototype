@@ -17,6 +17,7 @@ Highlights:
 - Added a session handoff document with current repo state, active branch, sprite status, Vesper KO generation prompt, next steps, and verification notes.
 - Added repo-level Codex project guidance in `AGENTS.md` so new local Codex chats inherit setup, commands, docs, and working rules.
 - Added adult-playable sprite probe design and implementation planning for deciding whether Nova and Vesper gameplay sprites should move beyond compact/semi-chibi style.
+- Added cosmetic set/loadout direction: themed sets can unlock matching character outfits and vehicle skins, while characters remain identity/presentation and vehicles carry gameplay mechanics.
 - Clarified Git workflow with branch strategy, quality gates, commit cadence, and push cadence.
 - Updated GitHub management notes now that the private remote and GitHub CLI are configured.
 - Added canonical game design spec with 95% confidence direction for the next build milestone.

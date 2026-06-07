@@ -55,6 +55,7 @@ Rules:
 - Login target: Guest, Google, Email Magic Link.
 - Art direction: premium anime arcade for collection surfaces, compact readable vehicle sprites for gameplay.
 - Tone: stylish adult anime arcade with a decent amount of fan service, but not explicit or platform-risky.
+- Character/vehicle split: characters define identity and presentation; vehicles define gameplay kit and combat attributes.
 
 ## 4. Build Milestones
 
@@ -356,6 +357,14 @@ First visible cosmetic slots:
 - Vehicle skin.
 - Pilot skin/outfit.
 - Nameplate/banner.
+
+Cosmetic set rule:
+
+- Themed sets may unlock matching character outfits and vehicle skins together.
+- Loadout still exposes character outfit and vehicle skin as separate equip slots.
+- Characters are the identity/presentation layer; vehicles are the gameplay/mechanical layer.
+- Character choice should not affect combat stats in MVP.
+- Vehicle choice may define movement, weapon kit, cannon behavior, terrain interaction, durability, or other vehicle-class combat attributes.
 
 Second wave:
 
