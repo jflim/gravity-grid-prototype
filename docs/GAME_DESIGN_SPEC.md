@@ -321,11 +321,14 @@ Asset split:
 
 - Vehicle gameplay sprite: one standalone vehicle sprite per vehicle look, with no pilot baked in.
 - Vehicle damage state: each vehicle look needs at least default and destroyed gameplay sprites.
-- Character gameplay sprite set: one standalone playable-character sprite per state.
+- Character gameplay sprite set: one standalone playable-character sprite per state, usually designed as a mounted or vehicle-interaction pose layered in front of/on the vehicle.
 - Required first character states: default, KO, and intense shooting.
 - Active prototype sprites use stable runtime aliases in `public/assets`; generation experiments live under `public/assets/sprite-variants`.
+- Current runtime assets are the v0 baseline; do not overwrite them during art-direction probes.
 - Gameplay sprites should be compact, tight-cropped, outlined, and readable.
 - Character states must be generated/painted as integrated artwork rather than drawn on top of the default sprite in code.
+- Active/default character poses may be seated, kneeling, crouched, leaning on the cannon, bracing behind the weapon, or otherwise clearly riding/using the vehicle.
+- The vehicle remains the gameplay anchor. Character art can show legs when compact and mounted, but full standing characters beside the vehicle are not the default-state target.
 - KO sprites should prioritize instant facial readability at gameplay scale: rolled-up/crossed pupils, sleepy compressed white eyes, and a small tongue blep where allowed.
 - The active Nova KO direction is a wide prone defeat sprite. Vesper should get a unique glitch-overloaded KO pose instead of copying Nova's exact pose.
 - Portrait/card art: higher detail and more character-forward.
