@@ -78,9 +78,13 @@ They should use:
 
 ## Fan-Service Boundary
 
-Tasteful adult fan service is allowed for the adult-playable probe, especially through mature proportions, confident styling, fitted arcade pilot outfits, legs/boots/silhouette, expressive faces, and stylish pose language.
+Use a tiered art model:
 
-Combat readability still comes first. Gameplay sprites should remain compact, stream-safe, and readable at match scale. KO sprites should feel goofy, defeated, and expressive rather than eroticized, because they represent a vulnerable combat-loss state.
+- Playable sprites may be attractive, adult-anime, and lightly suggestive through mature proportions, confident styling, fitted arcade pilot outfits, legs/boots/silhouette, expressive faces, and stylish pose language.
+- Stream-safe collection/reward/profile art may carry stronger fan-service or pin-up energy because those surfaces can support larger framing and detail.
+- Private mature exploration, if pursued, should remain separate from runtime combat assets and should not drive gameplay readability decisions.
+
+Combat readability still comes first for match sprites. Gameplay sprites should remain compact, stream-safe, and readable at match scale. KO sprites may keep attractive adult-anime styling, but the playable KO read should stay goofy, defeated, and expressive rather than making the vulnerable combat-loss state the primary erotic focal point.
 
 Runtime target:
 
