@@ -14,6 +14,111 @@ The root of `public/assets/` is the known-good runtime surface. Treat it as gold
 
 `work/` is allowed to be messy during an active art pass, but it is not a long-term asset library. Anything important must leave `work/` before cleanup.
 
+## Transparent PNGs And Chroma-Key Sources
+
+The game should use transparent PNG sprites. A green chroma-key background is not a runtime target.
+
+Use this mental model:
+
+```text
+green image = temporary source/workshop image
+transparent PNG = real sprite candidate or runtime asset
+```
+
+Approved or promoted gameplay assets should be transparent PNGs with alpha, not green-background images. Phaser can load transparent PNGs directly, and this is the expected final format for standalone sprites. Later, production sprites may be packed into a texture atlas, but the atlas still uses alpha transparency.
+
+Recommended workflow for now:
+
+```text
+Exploration = generate on green, then remove green
+Refinement = use transparent PNG candidate as the base/reference
+Runtime = transparent PNG only
+```
+
+### Option A: Green Chroma-Key Exploration
+
+Use green chroma-key source images when:
+
+- generating a brand-new AI sprite from scratch,
+- workshopping a pose or vehicle concept,
+- the image generator cannot reliably return true transparency,
+- a flat background makes cleanup and edge validation easier.
+
+This route is best for new characters, new vehicles, new KO poses, new weapon poses, and big style changes.
+
+Pros:
+
+- Reliable background removal.
+- Easy to automate.
+- Good for fast rough concepts before the final silhouette is known.
+- Keeps workshop/raw images separate from game-ready assets.
+
+Cons:
+
+- Requires an extra cleanup step.
+- Hair, glow, smoke, thin outlines, and translucent effects may need edge cleanup.
+- The green image can feel like the asset even though it is only raw material.
+
+### Option B: Transparent PNG Refinement
+
+Use existing transparent PNGs as the base/reference when:
+
+- refining an approved candidate,
+- preserving a pose, silhouette, palette, or vehicle layout,
+- asking for a small art revision instead of a new concept,
+- preparing a candidate for runtime integration.
+
+This route is best for candidates the team already likes, such as Kaelii v2, Perlah v2, Nova, Vesper, or any selected unit variant.
+
+Pros:
+
+- Closer to a normal game-art revision workflow.
+- Preserves pose, silhouette, palette, and vehicle identity better.
+- Treats the transparent PNG as the source of truth, which matches the runtime goal.
+- Reduces the chance that the generator reinvents the whole character or vehicle.
+
+Cons:
+
+- Generated edits may still return with a flattened background.
+- Transparency may not be preserved perfectly by the generator.
+- The existing image can pull too hard against larger changes.
+- Cleanup may still be required before preserving or promoting the result.
+
+Even when a transparent PNG is used as the visual base, generated edits may come back with a flattened background. If that happens, clean the result back to a transparent PNG before preserving or promoting it.
+
+Runtime rule:
+
+- `public/assets/`: transparent PNGs only for gameplay sprites.
+- `public/assets/sprite-variants/`: transparent PNGs for preserved candidates; raw green sources may be referenced from `work/` but should not be the primary preserved variant.
+- `work/asset-lab/.../source/`: raw green images are acceptable while workshopping.
+- `work/asset-lab/.../processed/`: transparent PNGs created from source images.
+
+## Required Unit Asset Checklist
+
+Every playable pilot-plus-vehicle unit needs five gameplay sprite assets before it is runtime-complete:
+
+1. `vehicle-default`
+2. `vehicle-destroyed`
+3. `character-default`
+4. `character-intense`
+5. `character-ko`
+
+Generation passes may deliberately cover only a subset, such as default probes first. When that happens, record the missing assets in `docs/CHARACTER_ROSTER.md` before moving on.
+
+`character-intense` should usually be an animation-linked keyframe from `character-default`. Preserve the default state's main foot, hand, hip, and vehicle contact anchors unless the kit explicitly needs a full-body move. Add intensity through expression, grip, recoil, hair/cloth motion, muzzle charge, and vehicle compression instead of inventing a separate action pose that cannot transition cleanly from default.
+
+Recommended generation order for a new unit:
+
+1. Generate `vehicle-default`.
+2. Generate `character-default`.
+3. Compare the default unit at match scale against Nova/Vesper baselines.
+4. If the default unit is accepted as a direction, generate `character-intense`.
+5. Generate `vehicle-destroyed`.
+6. Generate `character-ko`.
+7. Build a contact sheet for all selected states.
+8. Promote transparent PNG candidates to `public/assets/sprite-variants/...`.
+9. Promote runtime aliases in `public/assets` only after explicit selection and gameplay-scale verification.
+
 ## Runtime Aliases
 
 The game loads stable runtime filenames from `public/assets`.
@@ -23,6 +128,8 @@ Examples:
 - `public/assets/nova-character-default.png`
 - `public/assets/nova-character-ko.png`
 - `public/assets/nova-character-intense.png`
+- `public/assets/nova-unit-intense.png`
+- `public/assets/vesper-unit-intense.png`
 - `public/assets/nova-vehicle-sprite.png`
 - `public/assets/nova-vehicle-destroyed.png`
 
@@ -49,6 +156,8 @@ public/assets/sprite-variants/characters/nova/ko/
 public/assets/sprite-variants/characters/vesper/ko/
 public/assets/sprite-variants/vehicles/nova/destroyed/
 public/assets/sprite-variants/vehicles/vesper/destroyed/
+public/assets/sprite-variants/units/nova/intense/
+public/assets/sprite-variants/units/vesper/intense/
 public/assets/sprite-variants/units/nova/defeated-ko/
 public/assets/sprite-variants/units/vesper/default/
 public/assets/sprite-variants/units/vesper/defeated-ko/
@@ -97,7 +206,7 @@ Older ad hoc folders such as `work/sprite-probes/` are still valid scratch histo
 - Candidate/history asset: versioned file under `public/assets/sprite-variants`.
 - Lab/scratch asset: ignored file under `work/`.
 - If the new sprite has a very different pose or aspect ratio, update the display size in `src/main.ts`.
-- Prefer transparent PNGs in the project. If a source image arrives on a green chroma background, remove the green and trim empty padding before using it in the game.
+- Prefer transparent PNGs in the project. If a source image arrives on a green chroma background, remove the green and trim empty padding before using it in the game or promoting it as a selected candidate.
 
 Use **Defeated KO** for the defeated-state asset name when possible. Keep "KO" in prompts and notes when describing the face details: crossed or rolled-up pupils, sleepy compressed white eyes, and tongue blep readability.
 
@@ -138,11 +247,13 @@ The current art-direction probe is moving toward adult-anime unit sprites, with 
 
 ```text
 public/assets/sprite-variants/units/nova/defeated-ko/nova-unit-defeated-ko-head-over-heels-v1.png
+public/assets/sprite-variants/units/nova/intense/nova-unit-intense-bunger-rig-probe-01-alpha.png
+public/assets/sprite-variants/units/vesper/intense/vesper-unit-intense-glitch-rover-probe-08-subtle-tension-scale-stable-normalized-alpha.png
 public/assets/sprite-variants/units/vesper/default/vesper-unit-default-mounted-tech-shorts-v9.png
 public/assets/sprite-variants/units/vesper/defeated-ko/vesper-unit-defeated-ko-tech-shorts-v10.png
 ```
 
-Vesper still needs production cleanup before runtime replacement. Use the committed unit candidates above, `public/assets/vesper-character-default.png`, and the Vesper vehicle identity as references in a fresh image-generation context, then archive character-layer winners under:
+Vesper default and Defeated KO still need production cleanup before replacing the older layered baseline set. Vesper full-unit intense v8 subtle tension scale-stable is active as a runtime test alias. It preserves the default visible alpha footprint while allowing small pilot/rover recoil, leg tension, joystick/deck-control charge action, and compact glitch UI without a dramatic apparent scale pop. Use the committed unit candidates above, `public/assets/vesper-character-default.png`, and the Vesper vehicle identity as references in a fresh image-generation context, then archive character-layer winners under:
 
 ```text
 public/assets/sprite-variants/characters/vesper/ko/

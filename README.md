@@ -6,7 +6,7 @@ First playable local artillery prototype for Gravity Canyon.
 
 - Browser-based Phaser prototype.
 - Working title updated to Gravity Canyon.
-- Two local vehicles, one red and one blue.
+- Four local test units in a 2v2-style roster: Nova and Kaelii on red, Vesper and Perlah on blue.
 - Procedural heightmap terrain.
 - Keyboard movement, 5-90 degree elevation aiming, and hold/release shot power.
 - Left/Right input turns the vehicle, character, and aim direction before moving.
@@ -23,15 +23,21 @@ First playable local artillery prototype for Gravity Canyon.
 - Projectile camera follow after firing.
 - Firing commits the turn immediately, so the active vehicle cannot move during projectile flight or impact resolution.
 - Swept projectile collision checks to make fast shots hit terrain/vehicles more predictably.
+- Visible prototype combat hulls define direct-hit collision for the larger pilot-plus-vehicle unit concepts.
+- Full-unit concept preview sprites and prototype combat hulls have been scaled down from the first large pass to keep more playable battlefield space visible.
 - Crater deformation on impact.
 - Terrain can be blasted through into a visible void beneath the stage.
 - Temporary impact rings showing crater size and splash damage range.
+- Floating combat markers call out direct hits, splash hits, knockback, KOs, and bunge defeats.
+- Round starts now pick from varied terrain/spawn archetypes to reduce flat direct-fire duels and encourage lob play.
 - Prototype Bunger shot behavior: larger/deeper excavation, knockback, slope sliding, and fall/bunge KOs, now tuned toward precise 2-3 shot ring-outs.
 - Localized post-impact vehicle settling so distant vehicles are not randomly displaced by unrelated craters.
 - Splash/direct damage, HP bars, turn switching, timeout, round win detection, and automatic round reset.
 - Layered gameplay sprites: one standalone vehicle sprite plus one standalone playable-character sprite.
 - Generated character sprite states for Nova and Vesper: default, KO, and intense shooting.
-- Generated destroyed vehicle sprites pair with KO character sprites when a vehicle is no longer alive.
+- Accepted Nova and Vesper full-unit intense runtime test sprites for concept-preview charging.
+- Accepted Kaelii and Perlah v1 test runtime unit sprites: default, intense shooting, Defeated KO, vehicle default, and vehicle destroyed.
+- Generated destroyed vehicle sprites pair with KO character sprites or full-unit KO sprites when a vehicle is no longer alive.
 - Style B 2v2 concept art used as a faint backdrop reference.
 - High-detail anime vehicle/pilot portraits plus standalone generated gameplay sprites for Nova and Vesper.
 - First Colyseus online foundation:
@@ -83,6 +89,12 @@ Production build:
 npm run build
 ```
 
+Runtime roster asset check:
+
+```powershell
+npm run verify:runtime-roster
+```
+
 Open the built file:
 
 ```text
@@ -104,6 +116,7 @@ dist/index.html
 - Up/Down arrows: raise/lower barrel relative to the vehicle's facing direction, up to vertical 90-degree aim.
 - Hold/release Spacebar: charge and fire.
 - R: restart round.
+- H: show/hide prototype combat hulls. Hulls are shown by default while tuning.
 
 ## Terms
 
@@ -123,6 +136,7 @@ dist/index.html
 - Players can intentionally drive into holes or off the map, which sets that vehicle to 0 HP.
 - Every weapon affects terrain. Bunger weapons are tuned to affect terrain the most.
 - Nova is currently set up as the prototype Bunger class so terrain knock-off play can be tested.
+- Kaelii and Perlah are accepted as v1 runtime test units for local play; their Bouncer and Spark class-specific shot behavior is still future work, so they currently use the baseline non-Bunger projectile behavior.
 - Deep enough craters expose the void under the terrain instead of stopping at a safe floor.
 - The current crater, splash, and Bunger knockback radii are intentionally smaller so map KOs require more precision.
 - Impact rings are temporary debugging/readability feedback: inner ring is crater/terrain effect, outer ring is splash damage range.
@@ -132,6 +146,7 @@ dist/index.html
 - Wind is global round information; turn time is shown above the active vehicle.
 - Launch power, movement range, active vehicle identity, and aim angle live in a raised bottom command deck.
 - Active player also gets a world-space aim arrow, turn timer badge, and ground movement range rail so movement decisions can be read without covering the character art.
+- Prototype combat hulls are visible by default so collision can be tuned against the larger unit concept sprites.
 - The game camera reserves space above the command deck so the playable battlefield does not sit underneath detached UI.
 - Current sprites are first-pass generated assets, not final production sprites.
 - Gameplay rendering uses separate layers for vehicle and playable character sprites.

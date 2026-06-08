@@ -69,6 +69,23 @@ Each signature unit needs these gameplay assets:
 
 Portrait, card, gacha, and adult fantasy collection art can come later and can use higher detail, stronger fashion, and more character-forward posing than match sprites.
 
+## Background And Transparency Workflow
+
+The final game asset should be a transparent PNG. Green chroma-key images are source/workshop images only.
+
+Use this rule:
+
+```text
+green source = useful for generating and workshopping
+transparent PNG = preserved candidate or runtime-ready sprite
+```
+
+For brand-new AI sprite concepts, it is acceptable to generate on a flat `#00ff00` background because it gives a predictable cleanup path. After generation, remove the green, validate the alpha channel, and preserve the transparent PNG as the candidate under `public/assets/sprite-variants/...`.
+
+For approved candidates, future iterations should increasingly use the transparent PNG as the visual base or reference. This is closer to a normal game-art workflow: revise the current sprite, keep the pose and silhouette, and export another transparent PNG. If the generator flattens the result onto a background, clean it back to transparency before review or promotion.
+
+Do not promote green-background images to runtime aliases. Runtime aliases in `public/assets` should be transparent PNGs.
+
 ## Match Sprite Style Rule
 
 Playable sprites should be:
@@ -127,15 +144,16 @@ Public class names can be improved later. For now, the class family is more impo
 
 - Class family: `bouncer`
 - Signature vehicle: Flashkick Skip-Rig
-- Visual identity: Bronze-skinned adult stunt pilot with vibrant violet messy twin buns, golden eyes, pink-black techwear, white sneakers, pink laces, thigh straps, fingerless gloves, and a stage-ready silhouette.
+- Visual identity: Bronze-skinned adult stunt pilot with tri-tone black, deep purple, and hot pink high twin buns, golden eyes, pink-black techwear, white sneakers, pink laces, thigh straps, fingerless gloves, and a stage-ready silhouette.
+- Hair lock: Use the user-provided hair reference as the anchor: glossy black and deep purple hair, hot pink streaks, high twin buns with braided wrap loops around each bun, long bangs, and loose stray strands.
 - Personality: Loud, cocky, flirtatious, expressive, reckless when watched, and theatrically annoyed when outplayed.
 - Tiny lore: A former stunt-stream idol who turned ricochet artillery into performance art.
 - Primary shot: One-bounce skip shot.
 - Special shot: Spotlight Rebound, a shell that gains stronger splash after bouncing off terrain.
 - Active stance: Perched showily on the Flashkick Skip-Rig, one foot on a cannon rail, hips angled toward the camera, taunting like the match is a stage.
-- Intense stance: Same perch with her torso snapped forward, one hand gripping a rail, one sneaker kicked back as the rig fires into a bounce angle.
+- Intense stance: Same perch as default, compressed into an animation-linked recoil keyframe: hands grip tighter, shoulders lower, hips and knees tense, hair and jacket react, and both sneakers stay close to their default vehicle anchors.
 - Defeated KO stance: Slid sideways off her perch, sprawled across the chassis with one sneaker dangling, the rig's spotlight strip dimmed out.
-- Sprite note: Preserve the old Kaelii DNA: violet twin buns, golden eyes, pink-black fashion, bratty confidence, and attention-seeking energy. Translate the old reckless defeat energy into arcade KO staging.
+- Sprite note: Preserve the old Kaelii DNA: tri-tone black/deep-purple/hot-pink twin buns, golden eyes, pink-black fashion, bratty confidence, and attention-seeking energy. Translate the old reckless defeat energy into arcade KO staging. The Flashkick Skip-Rig uses real compact circular wheels, mechanical rim covers, rails, springs, and bounce pads; Kaelii's sneakers are clothing only, not vehicle parts.
 
 ### Perlah
 

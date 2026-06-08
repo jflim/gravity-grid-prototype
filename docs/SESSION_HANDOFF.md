@@ -35,6 +35,13 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
   - preview token reward on round end.
 - The online preview is visible in the floating Online Alpha panel.
 - Phaser projectile and terrain simulation are not yet synced to the server-owned combat model.
+- Local combat readability now has prototype combat hulls, floating combat markers, and randomized terrain/spawn archetypes:
+  - Direct-hit projectile collision uses visible ellipse combat hulls around the pilot-plus-vehicle unit concepts instead of the old small center-radius check.
+  - Combat hulls are shown by default for tuning and can be toggled with `H`.
+  - Floating markers call out direct damage, splash damage, Bunger shove, HP KO, and terrain/fall bunge defeat.
+  - Round start randomly picks one of five map/spawn archetypes: Twin Ridges, Shelf Duel, Canyon Basin, Broken Center Wall, or Staggered Shelves.
+  - The combat readability design is saved at `docs/superpowers/specs/2026-06-07-combat-readability-wind-lobs-design.md`.
+  - Slice 1 implementation notes are saved at `docs/superpowers/plans/2026-06-07-combat-readability-slice-1.md`.
 
 ## Current Sprite State
 
@@ -49,14 +56,35 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
 - Selected Vesper paired-unit concept candidates:
   - default mounted tech-shorts look: `public/assets/sprite-variants/units/vesper/default/vesper-unit-default-mounted-tech-shorts-v9.png`
   - Defeated KO tech-shorts look: `public/assets/sprite-variants/units/vesper/defeated-ko/vesper-unit-defeated-ko-tech-shorts-v10.png`
+- Nova and Vesper now have full-unit intense runtime test aliases used by the default concept-preview charging state:
+  - `public/assets/nova-unit-intense.png`
+  - `public/assets/vesper-unit-intense.png`
+- Vesper intense uses the v8 subtle tension scale-stable footprint-locked candidate. Earlier intense candidates either had a too-wide/low alpha box, read as visually shrunken, or made Vesper/rover feel like a different-size unit during the power-shot swap. The v8 normalized alias matches the default visible alpha footprint while allowing small pilot/rover recoil, leg tension, joystick/deck-control charge action, cannon reticle, headset glow, and compact glitch UI.
+- Perlah intense uses the v2 footprint-locked candidate. It keeps the same apparent size and default leg/vehicle anchors while showing a compact heat-charge reaction.
+- Default concept-preview unit display boxes and prototype combat hulls are now about 10-12% smaller so local 2v2-style play has more open battlefield space.
 - Destroyed vehicle sprites exist for Nova and Vesper:
   - `public/assets/nova-vehicle-destroyed.png`
   - `public/assets/vesper-vehicle-destroyed.png`
-- Vesper still needs production cleanup before runtime replacement. Use adult anime compact game-sprite proportions, not semi-chibi and not tall fashion-anime proportions.
+- Kaelii and Perlah are now accepted as v1 local runtime test units, with stable aliases:
+  - `public/assets/kaelii-vehicle-sprite.png`
+  - `public/assets/kaelii-vehicle-destroyed.png`
+  - `public/assets/kaelii-unit-default.png`
+  - `public/assets/kaelii-unit-intense.png`
+  - `public/assets/kaelii-unit-ko.png`
+  - `public/assets/perlah-vehicle-sprite.png`
+  - `public/assets/perlah-vehicle-destroyed.png`
+  - `public/assets/perlah-unit-default.png`
+  - `public/assets/perlah-unit-intense.png`
+  - `public/assets/perlah-unit-ko.png`
+- Local play now spawns Nova, Vesper, Kaelii, and Perlah as a 2v2-style test roster. Online alpha remains private-room 1v1 preview.
+- Kaelii Defeated KO v5 remains acceptable for v1 testing, but its right-eye pupil placement is an open future artist/refinement note.
+- Vesper default/KO unit candidates still need production cleanup before replacing the older layered baseline set. Vesper full-unit intense v8 subtle tension scale-stable is active as a runtime test alias.
 
 ## Next Best Step
 
-Use the committed Vesper v9/v10 unit candidates as references for the next production pass. The next pass should simplify detail, preserve the light full gloves/tech shorts/chunky sneaker identity, remove the chroma key, split or size layers as needed, and only then promote runtime aliases.
+For combat feel, playtest the visible combat hulls and terrain/spawn archetypes first. Tune hull size/offsets until visual hits and direct damage agree, then move to the next combat-readability slice: upper-air wind bands and high-angle/plunge reward rules.
+
+For sprites, use the committed Vesper v9/v10 unit candidates as references for the next production pass. The next pass should simplify detail, preserve the light full gloves/tech shorts/chunky sneaker identity, remove the chroma key, split or size layers as needed, and only then promote runtime aliases.
 
 Recommended Vesper direction:
 
@@ -85,6 +113,7 @@ After generation:
 ## Verification Already Run
 
 - `npm run build` passed after the online preview and Nova KO sprite changes.
+- `npm run verify:runtime-roster` checks Kaelii/Perlah runtime aliases, preload keys, class IDs, and local turn order.
 - A two-client Colyseus smoke test reached `round-over`, set the losing vehicle to 0 HP, and granted the preview token reward.
 
 ## Known Environment Note

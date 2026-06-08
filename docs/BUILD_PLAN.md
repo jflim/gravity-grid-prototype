@@ -33,7 +33,7 @@ Goal: make the core artillery loop readable and fun with two local players on on
 
 Done:
 - Browser-based Phaser prototype.
-- Two local vehicles.
+- Four local test units in a 2v2-style roster: Nova, Vesper, Kaelii, and Perlah.
 - Facing-aware movement and aim.
 - Downhill/fall-friendly movement with an uphill climb-angle limit.
 - Vehicle sprites tilt to match terrain slope.
@@ -46,7 +46,10 @@ Done:
 - Gameplay sprites separate from portrait art.
 - Layered gameplay rendering with one vehicle sprite and one playable-character sprite.
 - Generated Nova and Vesper character state sprites: default, KO, and intense shooting.
+- Accepted Nova and Vesper full-unit intense runtime test aliases for concept-preview charging.
 - Generated Nova and Vesper destroyed vehicle sprites for KO/dead states.
+- Accepted Kaelii and Perlah v1 test runtime aliases for local play: unit default, unit intense, unit Defeated KO, vehicle default, and vehicle destroyed.
+- Full-unit concept preview sprites and prototype combat hulls are scaled down from the first large pass so the local 2v2-style roster covers less battlefield.
 - Stable runtime sprite aliases plus versioned sprite-variant folders for faster art iteration.
 - Command panel with movement range, launch power, aim, active identity, timer, and wind.
 - Working title updated to Gravity Canyon.
@@ -68,7 +71,7 @@ Next:
 - Tune vehicle scale, camera framing, and UI spacing.
 - Continue tuning hit, damage, KO, and round-end feedback.
 - Replace first-pass generated gameplay sprites with production per-character and per-vehicle sprite sets.
-- Decide whether 1v1 local prototype should expand to 2v2 local before online multiplayer.
+- Tune the local 2v2-style test roster now that Kaelii and Perlah are visible in the playable prototype.
 - Wire server-authoritative combat state into the Phaser match scene.
 
 Exit criteria:

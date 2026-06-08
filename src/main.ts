@@ -3,12 +3,20 @@ import { mountOnlineLobby } from "./onlineLobby";
 import "./styles.css";
 
 type TeamId = "red" | "blue";
-type ClassId = "bunger" | "glitch";
+type ClassId = "bunger" | "glitch" | "bouncer" | "spark";
 type CharacterPose = "default" | "ko" | "intense";
+type CombatMarkerKind = "direct" | "splash" | "shoved" | "ko" | "bunged";
 
 interface SpriteDisplaySize {
   width: number;
   height: number;
+}
+
+interface CombatHull {
+  offsetX: number;
+  offsetY: number;
+  radiusX: number;
+  radiusY: number;
 }
 
 interface CharacterSpriteSet {
@@ -21,6 +29,18 @@ interface CharacterDisplaySet {
   default: SpriteDisplaySize;
   ko: SpriteDisplaySize;
   intense: SpriteDisplaySize;
+}
+
+interface UnitConceptSpriteSet {
+  default: string;
+  intense: string;
+  ko: string;
+}
+
+interface UnitConceptDisplaySet {
+  default: SpriteDisplaySize;
+  intense: SpriteDisplaySize;
+  ko: SpriteDisplaySize;
 }
 
 interface VehicleState {
@@ -48,6 +68,11 @@ interface VehicleState {
   characterDisplays: CharacterDisplaySet;
   characterOffsetX: number;
   characterOffsetY: number;
+  unitConceptSpriteKeys?: UnitConceptSpriteSet;
+  unitConceptDisplays?: UnitConceptDisplaySet;
+  unitConceptSpriteFaces?: 1 | -1;
+  unitConceptOffsetY?: number;
+  combatHull: CombatHull;
   portraitKey: string;
 }
 
@@ -76,10 +101,32 @@ interface ImpactPreview {
   timeLeft: number;
 }
 
+interface CombatMarker {
+  kind: CombatMarkerKind;
+  label: string;
+  x: number;
+  y: number;
+  age: number;
+  duration: number;
+  lift: number;
+  text: Phaser.GameObjects.Text;
+}
+
 interface SettleOptions {
   changedX: number;
   changedRadius: number;
   forceIds?: Set<string>;
+}
+
+interface SpawnPair {
+  redX: number;
+  blueX: number;
+}
+
+interface TerrainArchetype {
+  name: string;
+  spawns: SpawnPair;
+  shape: (x: number, currentY: number) => number;
 }
 
 const WORLD_WIDTH = 2400;
@@ -102,19 +149,20 @@ const GRAVITY = 440;
 const SHOT_SPEED_MIN = 240;
 const SHOT_SPEED_MAX = 780;
 const WIND_FORCE = 34;
-const CRATER_RADIUS = 64;
-const BUNGER_CRATER_RADIUS = 112;
-const DAMAGE_RADIUS = 92;
-const BUNGER_DAMAGE_RADIUS = 132;
-const BUNGER_KNOCKBACK = 118;
-const DIRECT_HIT_RADIUS = VEHICLE_RADIUS + 9;
+const CRATER_RADIUS = 52;
+const BUNGER_CRATER_RADIUS = 82;
+const DAMAGE_RADIUS = 78;
+const BUNGER_DAMAGE_RADIUS = 92;
+const BUNGER_KNOCKBACK = 82;
 const IMPACT_PREVIEW_SECONDS = 1.25;
+const COMBAT_MARKER_SECONDS = 1.15;
 const TURN_SECONDS = 30;
 const COMMAND_PANEL_HEIGHT = 176;
 const COMMAND_PANEL_BOTTOM_MARGIN = 24;
 const VOID_SURFACE_Y = WORLD_HEIGHT + 260;
 const DEATH_SURFACE_Y = WORLD_HEIGHT - 6;
 const MAX_TERRAIN_SPRITE_TILT_DEG = 20;
+const USE_UNIT_CONCEPT_PREVIEW = !new URLSearchParams(window.location.search).has("runtimeAssets");
 
 class GravityGridScene extends Phaser.Scene {
   private terrain: number[] = [];
@@ -131,10 +179,13 @@ class GravityGridScene extends Phaser.Scene {
   private shotResult = "";
   private roundOver = false;
   private pendingRoundEvent?: Phaser.Time.TimerEvent;
+  private showCombatHulls = true;
+  private combatMarkers: CombatMarker[] = [];
 
   private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
   private spaceKey?: Phaser.Input.Keyboard.Key;
   private resetKey?: Phaser.Input.Keyboard.Key;
+  private hullToggleKey?: Phaser.Input.Keyboard.Key;
 
   private terrainGfx!: Phaser.GameObjects.Graphics;
   private vehicleGfx!: Phaser.GameObjects.Graphics;
@@ -168,12 +219,40 @@ class GravityGridScene extends Phaser.Scene {
     this.load.image("nova-character-default", "assets/nova-character-default.png");
     this.load.image("nova-character-ko", "assets/nova-character-ko.png");
     this.load.image("nova-character-intense", "assets/nova-character-intense.png");
+    this.load.image("nova-unit-intense", "assets/nova-unit-intense.png");
     this.load.image("vesper-vehicle", "assets/vesper-vehicle.png");
     this.load.image("vesper-vehicle-sprite", "assets/vesper-vehicle-sprite.png");
     this.load.image("vesper-vehicle-destroyed", "assets/vesper-vehicle-destroyed.png");
     this.load.image("vesper-character-default", "assets/vesper-character-default.png");
     this.load.image("vesper-character-ko", "assets/vesper-character-ko.png");
     this.load.image("vesper-character-intense", "assets/vesper-character-intense.png");
+    this.load.image("vesper-unit-intense", "assets/vesper-unit-intense.png");
+    this.load.image("kaelii-vehicle-sprite", "assets/kaelii-vehicle-sprite.png");
+    this.load.image("kaelii-vehicle-destroyed", "assets/kaelii-vehicle-destroyed.png");
+    this.load.image("kaelii-unit-default", "assets/kaelii-unit-default.png");
+    this.load.image("kaelii-unit-intense", "assets/kaelii-unit-intense.png");
+    this.load.image("kaelii-unit-ko", "assets/kaelii-unit-ko.png");
+    this.load.image("perlah-vehicle-sprite", "assets/perlah-vehicle-sprite.png");
+    this.load.image("perlah-vehicle-destroyed", "assets/perlah-vehicle-destroyed.png");
+    this.load.image("perlah-unit-default", "assets/perlah-unit-default.png");
+    this.load.image("perlah-unit-intense", "assets/perlah-unit-intense.png");
+    this.load.image("perlah-unit-ko", "assets/perlah-unit-ko.png");
+    this.load.image(
+      "nova-unit-default-concept",
+      "assets/sprite-variants/units/nova/default/nova-unit-default-mounted-v1-alpha.png",
+    );
+    this.load.image(
+      "nova-unit-ko-concept",
+      "assets/sprite-variants/units/nova/defeated-ko/nova-unit-defeated-ko-head-over-heels-v1-alpha.png",
+    );
+    this.load.image(
+      "vesper-unit-default-concept",
+      "assets/sprite-variants/units/vesper/default/vesper-unit-default-mounted-tech-shorts-v9-alpha.png",
+    );
+    this.load.image(
+      "vesper-unit-ko-concept",
+      "assets/sprite-variants/units/vesper/defeated-ko/vesper-unit-defeated-ko-tech-shorts-v10-alpha.png",
+    );
   }
 
   create(): void {
@@ -182,6 +261,7 @@ class GravityGridScene extends Phaser.Scene {
     this.cursors = this.input.keyboard?.createCursorKeys();
     this.spaceKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.resetKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+    this.hullToggleKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.H);
 
     this.createBackground();
     this.terrainGfx = this.add.graphics();
@@ -300,10 +380,17 @@ class GravityGridScene extends Phaser.Scene {
   update(_: number, deltaMs: number): void {
     const dt = Math.min(deltaMs / 1000, 0.033);
     this.updateImpactPreview(dt);
+    this.updateCombatMarkers(dt);
 
     if (this.resetKey && Phaser.Input.Keyboard.JustDown(this.resetKey)) {
       this.startRound();
       return;
+    }
+
+    if (this.hullToggleKey && Phaser.Input.Keyboard.JustDown(this.hullToggleKey)) {
+      this.showCombatHulls = !this.showCombatHulls;
+      this.shotResult = `Combat hulls ${this.showCombatHulls ? "shown" : "hidden"}.`;
+      this.drawWorld();
     }
 
     if (this.roundOver) {
@@ -384,7 +471,13 @@ class GravityGridScene extends Phaser.Scene {
     this.pendingRoundEvent?.remove(false);
     this.pendingRoundEvent = undefined;
     this.roundOver = false;
-    this.generateTerrain();
+    this.clearCombatMarkers();
+    const terrainArchetype = this.pickTerrainArchetype();
+    this.generateTerrain(terrainArchetype);
+    const kaeliiSpawnX = Phaser.Math.Clamp(terrainArchetype.spawns.redX + 250, MOVE_MIN_X, MOVE_MAX_X);
+    const perlahSpawnX = Phaser.Math.Clamp(terrainArchetype.spawns.blueX - 250, MOVE_MIN_X, MOVE_MAX_X);
+    this.flattenSpawnZone(kaeliiSpawnX, 150);
+    this.flattenSpawnZone(perlahSpawnX, 150);
     this.vehicles = [
       {
         id: "red-1",
@@ -392,7 +485,7 @@ class GravityGridScene extends Phaser.Scene {
         team: "red",
         classId: "bunger",
         className: "Bunger Rig",
-        x: 385,
+        x: terrainArchetype.spawns.redX,
         y: 0,
         hp: MAX_HP,
         angle: 47,
@@ -419,6 +512,19 @@ class GravityGridScene extends Phaser.Scene {
         },
         characterOffsetX: -36,
         characterOffsetY: -34,
+        unitConceptSpriteKeys: {
+          default: "nova-unit-default-concept",
+          intense: "nova-unit-intense",
+          ko: "nova-unit-ko-concept",
+        },
+        unitConceptDisplays: {
+          default: { width: 350, height: 233 },
+          intense: { width: 350, height: 233 },
+          ko: { width: 354, height: 212 },
+        },
+        unitConceptSpriteFaces: 1,
+        unitConceptOffsetY: 28,
+        combatHull: { offsetX: 0, offsetY: -65, radiusX: 150, radiusY: 91 },
         portraitKey: "nova-vehicle",
       },
       {
@@ -427,7 +533,7 @@ class GravityGridScene extends Phaser.Scene {
         team: "blue",
         classId: "glitch",
         className: "Glitch Rover",
-        x: 1995,
+        x: terrainArchetype.spawns.blueX,
         y: 0,
         hp: MAX_HP,
         angle: 133,
@@ -454,23 +560,189 @@ class GravityGridScene extends Phaser.Scene {
         },
         characterOffsetX: 54,
         characterOffsetY: -34,
+        unitConceptSpriteKeys: {
+          default: "vesper-unit-default-concept",
+          intense: "vesper-unit-intense",
+          ko: "vesper-unit-ko-concept",
+        },
+        unitConceptDisplays: {
+          default: { width: 356, height: 208 },
+          intense: { width: 356, height: 208 },
+          ko: { width: 356, height: 208 },
+        },
+        unitConceptSpriteFaces: -1,
+        unitConceptOffsetY: 25,
+        combatHull: { offsetX: 0, offsetY: -58, radiusX: 146, radiusY: 80 },
         portraitKey: "vesper-vehicle",
       },
+      {
+        id: "red-2",
+        username: "Kaelii",
+        team: "red",
+        classId: "bouncer",
+        className: "Flashkick Skip-Rig",
+        x: kaeliiSpawnX,
+        y: 0,
+        hp: MAX_HP,
+        angle: 47,
+        facing: 1,
+        moveUnits: MAX_MOVE_UNITS,
+        alive: true,
+        color: 0xff4fb4,
+        accent: 0xffd1f0,
+        vehicleSpriteKey: "kaelii-vehicle-sprite",
+        vehicleDestroyedSpriteKey: "kaelii-vehicle-destroyed",
+        vehicleSpriteFaces: 1,
+        vehicleDisplay: { width: 1, height: 1 },
+        vehicleDestroyedDisplay: { width: 1, height: 1 },
+        characterSpriteKeys: {
+          default: "kaelii-unit-default",
+          ko: "kaelii-unit-ko",
+          intense: "kaelii-unit-intense",
+        },
+        characterSpriteFaces: 1,
+        characterDisplays: {
+          default: { width: 350, height: 233 },
+          ko: { width: 354, height: 212 },
+          intense: { width: 350, height: 233 },
+        },
+        characterOffsetX: 0,
+        characterOffsetY: 24,
+        unitConceptSpriteKeys: {
+          default: "kaelii-unit-default",
+          intense: "kaelii-unit-intense",
+          ko: "kaelii-unit-ko",
+        },
+        unitConceptDisplays: {
+          default: { width: 350, height: 233 },
+          intense: { width: 350, height: 233 },
+          ko: { width: 354, height: 212 },
+        },
+        unitConceptSpriteFaces: 1,
+        unitConceptOffsetY: 28,
+        combatHull: { offsetX: 0, offsetY: -65, radiusX: 150, radiusY: 91 },
+        portraitKey: "kaelii-unit-default",
+      },
+      {
+        id: "blue-2",
+        username: "Perlah",
+        team: "blue",
+        classId: "spark",
+        className: "Sunspike Embercart",
+        x: perlahSpawnX,
+        y: 0,
+        hp: MAX_HP,
+        angle: 133,
+        facing: -1,
+        moveUnits: MAX_MOVE_UNITS,
+        alive: true,
+        color: 0xff8a24,
+        accent: 0xffd166,
+        vehicleSpriteKey: "perlah-vehicle-sprite",
+        vehicleDestroyedSpriteKey: "perlah-vehicle-destroyed",
+        vehicleSpriteFaces: 1,
+        vehicleDisplay: { width: 1, height: 1 },
+        vehicleDestroyedDisplay: { width: 1, height: 1 },
+        characterSpriteKeys: {
+          default: "perlah-unit-default",
+          ko: "perlah-unit-ko",
+          intense: "perlah-unit-intense",
+        },
+        characterSpriteFaces: 1,
+        characterDisplays: {
+          default: { width: 356, height: 208 },
+          ko: { width: 354, height: 212 },
+          intense: { width: 356, height: 208 },
+        },
+        characterOffsetX: 0,
+        characterOffsetY: 25,
+        unitConceptSpriteKeys: {
+          default: "perlah-unit-default",
+          intense: "perlah-unit-intense",
+          ko: "perlah-unit-ko",
+        },
+        unitConceptDisplays: {
+          default: { width: 356, height: 208 },
+          intense: { width: 356, height: 208 },
+          ko: { width: 354, height: 212 },
+        },
+        unitConceptSpriteFaces: 1,
+        unitConceptOffsetY: 25,
+        combatHull: { offsetX: 0, offsetY: -58, radiusX: 146, radiusY: 80 },
+        portraitKey: "perlah-unit-default",
+      },
     ];
-    this.turnOrder = ["red-1", "blue-1"];
+    this.turnOrder = ["red-1", "blue-1", "red-2", "blue-2"];
     this.turnIndex = 0;
     this.projectile = undefined;
     this.impactPreview = undefined;
     this.turnCommitted = false;
     this.charge = 0;
     this.charging = false;
-    this.shotResult = "Round started.";
+    this.shotResult = `Round started: ${terrainArchetype.name}.`;
     this.settleVehicles();
     this.beginTurn();
     this.drawWorld();
   }
 
-  private generateTerrain(): void {
+  private pickTerrainArchetype(): TerrainArchetype {
+    const ridge = (centerX: number, width: number, height: number) => (x: number) =>
+      -height * Math.exp(-Math.pow((x - centerX) / width, 2));
+    const basin = (centerX: number, width: number, depth: number) => (x: number) =>
+      depth * Math.exp(-Math.pow((x - centerX) / width, 2));
+    const shelf = (centerX: number, width: number, height: number) => (x: number) =>
+      Math.abs(x - centerX) <= width ? -height : 0;
+
+    const archetypes: TerrainArchetype[] = [
+      {
+        name: "Twin Ridges",
+        spawns: { redX: 360, blueX: 2040 },
+        shape: (x, currentY) => currentY + ridge(960, 170, 86)(x) + ridge(1440, 170, 86)(x) + basin(1200, 240, 58)(x),
+      },
+      {
+        name: "Shelf Duel",
+        spawns: { redX: 470, blueX: 1930 },
+        shape: (x, currentY) =>
+          currentY +
+          shelf(640, 210, 48)(x) +
+          shelf(1760, 210, 48)(x) +
+          ridge(1200, 120, 132)(x) +
+          basin(1200, 300, 42)(x),
+      },
+      {
+        name: "Canyon Basin",
+        spawns: { redX: 330, blueX: 2070 },
+        shape: (x, currentY) =>
+          currentY + basin(1200, 360, 128)(x) + ridge(1060, 95, 84)(x) + ridge(1340, 95, 84)(x),
+      },
+      {
+        name: "Broken Center Wall",
+        spawns: { redX: 415, blueX: 1985 },
+        shape: (x, currentY) =>
+          currentY +
+          ridge(1120, 78, 142)(x) +
+          ridge(1280, 78, 142)(x) +
+          basin(1200, 72, 92)(x) +
+          basin(900, 180, 34)(x) +
+          basin(1500, 180, 34)(x),
+      },
+      {
+        name: "Staggered Shelves",
+        spawns: { redX: 540, blueX: 1860 },
+        shape: (x, currentY) =>
+          currentY +
+          shelf(525, 210, 62)(x) +
+          shelf(1875, 210, 62)(x) +
+          ridge(1180, 155, 118)(x) +
+          ridge(1510, 105, 54)(x) +
+          basin(820, 150, 36)(x),
+      },
+    ];
+
+    return Phaser.Utils.Array.GetRandom(archetypes);
+  }
+
+  private generateTerrain(archetype: TerrainArchetype): void {
     this.terrain = new Array(WORLD_WIDTH + 1);
     for (let x = 0; x <= WORLD_WIDTH; x += TERRAIN_STEP) {
       const nx = x / WORLD_WIDTH;
@@ -480,14 +752,15 @@ class GravityGridScene extends Phaser.Scene {
         Math.sin(nx * Math.PI * 5.8 + 1.2) * 34 +
         Math.sin(nx * Math.PI * 12.5) * 12;
       const valley = 110 * Math.exp(-Math.pow((x - WORLD_WIDTH / 2) / 380, 2));
-      const y = Phaser.Math.Clamp(base + valley, 420, 760);
+      const shaped = archetype.shape(x, base + valley);
+      const y = Phaser.Math.Clamp(shaped, 390, 780);
       for (let i = 0; i < TERRAIN_STEP && x + i <= WORLD_WIDTH; i += 1) {
         this.terrain[x + i] = y;
       }
     }
 
-    this.flattenSpawnZone(385, 150);
-    this.flattenSpawnZone(1995, 150);
+    this.flattenSpawnZone(archetype.spawns.redX, 150);
+    this.flattenSpawnZone(archetype.spawns.blueX, 150);
   }
 
   private flattenSpawnZone(centerX: number, width: number): void {
@@ -684,7 +957,7 @@ class GravityGridScene extends Phaser.Scene {
         if (!vehicle.alive || vehicle.id === projectile.shooterId) {
           return false;
         }
-        return Phaser.Math.Distance.Between(x, y, vehicle.x, vehicle.y) < DIRECT_HIT_RADIUS;
+        return this.projectileHitsCombatHull(x, y, vehicle);
       });
 
       if (hitVehicle) {
@@ -715,10 +988,11 @@ class GravityGridScene extends Phaser.Scene {
       isBungerShot,
       timeLeft: IMPACT_PREVIEW_SECONDS,
     };
-    this.makeCrater(x, y, craterRadius, isBungerShot ? 2.05 : 0.78);
+    this.makeCrater(x, y, craterRadius, isBungerShot ? 1.3 : 0.68);
     const damaged: string[] = [];
     const bungeEvents: string[] = [];
     const affectedVehicleIds = new Set<string>();
+    const defeatMarkedIds = new Set<string>();
     if (directHitId) {
       affectedVehicleIds.add(directHitId);
     }
@@ -731,16 +1005,19 @@ class GravityGridScene extends Phaser.Scene {
       const directHit = vehicle.id === directHitId;
       const splashFactor = Phaser.Math.Clamp(1 - d / damageRadius, 0, 1);
       if (splashFactor > 0 || directHit) {
-        const splash = Math.round((isBungerShot ? 30 : 46) * splashFactor);
-        const damage = vehicle.id === directHitId ? Math.max(isBungerShot ? 24 : 38, splash) : splash;
+        const splash = Math.round((isBungerShot ? 18 : 34) * splashFactor);
+        const damage = vehicle.id === directHitId ? Math.max(isBungerShot ? 22 : 34, splash) : splash;
         if (damage <= 0) {
           continue;
         }
         affectedVehicleIds.add(vehicle.id);
         vehicle.hp = Math.max(0, vehicle.hp - damage);
         damaged.push(`${vehicle.username} -${damage}`);
+        this.addVehicleCombatMarker(vehicle, directHit ? "direct" : "splash", `${directHit ? "DIRECT" : "SPLASH"} -${damage}`);
         if (vehicle.hp <= 0) {
           vehicle.alive = false;
+          defeatMarkedIds.add(vehicle.id);
+          this.addVehicleCombatMarker(vehicle, "ko", "KO", 1);
         }
         if (isBungerShot && vehicle.alive) {
           const beforeX = vehicle.x;
@@ -750,17 +1027,24 @@ class GravityGridScene extends Phaser.Scene {
           if (Math.abs(vehicle.x - beforeX) > 12) {
             affectedVehicleIds.add(vehicle.id);
             bungeEvents.push(`${vehicle.username} shoved`);
+            this.addVehicleCombatMarker(vehicle, "shoved", "SHOVED", 1);
           }
         }
       }
     }
 
     this.projectile = undefined;
+    const aliveBeforeSettle = new Set(this.vehicles.filter((vehicle) => vehicle.alive).map((vehicle) => vehicle.id));
     const fallEvents = this.settleVehicles({
       changedX: x,
       changedRadius: Math.max(craterRadius, damageRadius),
       forceIds: affectedVehicleIds,
     });
+    for (const vehicle of this.vehicles) {
+      if (aliveBeforeSettle.has(vehicle.id) && !vehicle.alive && !defeatMarkedIds.has(vehicle.id)) {
+        this.addVehicleCombatMarker(vehicle, "bunged", "BUNGED");
+      }
+    }
     this.shotResult = damaged.length > 0 ? damaged.join(" / ") : "Terrain carved.";
     if (bungeEvents.length > 0) {
       this.shotResult += ` / ${bungeEvents.join(" / ")}`;
@@ -976,6 +1260,75 @@ class GravityGridScene extends Phaser.Scene {
     }
   }
 
+  private addCombatMarker(kind: CombatMarkerKind, label: string, x: number, y: number): void {
+    const style = this.combatMarkerStyle(kind);
+    const text = this.add
+      .text(x, y, label, {
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: kind === "ko" || kind === "bunged" ? "24px" : "21px",
+        fontStyle: "800",
+        color: style.color,
+        stroke: "#10131b",
+        strokeThickness: 7,
+      })
+      .setOrigin(0.5)
+      .setDepth(35);
+
+    this.combatMarkers.push({
+      kind,
+      label,
+      x,
+      y,
+      age: 0,
+      duration: COMBAT_MARKER_SECONDS,
+      lift: style.lift,
+      text,
+    });
+  }
+
+  private addVehicleCombatMarker(vehicle: VehicleState, kind: CombatMarkerKind, label: string, slot = 0): void {
+    const yOffset = USE_UNIT_CONCEPT_PREVIEW ? 176 : 104;
+    this.addCombatMarker(kind, label, vehicle.x, vehicle.y - yOffset - slot * 26);
+  }
+
+  private combatMarkerStyle(kind: CombatMarkerKind): { color: string; lift: number } {
+    switch (kind) {
+      case "direct":
+        return { color: "#ff6b6b", lift: 54 };
+      case "splash":
+        return { color: "#ffd166", lift: 46 };
+      case "shoved":
+        return { color: "#8be9ff", lift: 40 };
+      case "ko":
+        return { color: "#ff8bd1", lift: 58 };
+      case "bunged":
+        return { color: "#ff8bd1", lift: 58 };
+    }
+  }
+
+  private updateCombatMarkers(dt: number): void {
+    for (const marker of this.combatMarkers) {
+      marker.age += dt;
+      const progress = Phaser.Math.Clamp(marker.age / marker.duration, 0, 1);
+      marker.text
+        .setPosition(marker.x, marker.y - marker.lift * Phaser.Math.Easing.Sine.Out(progress))
+        .setAlpha(Phaser.Math.Clamp(1 - progress, 0, 1));
+    }
+
+    const expired = this.combatMarkers.filter((marker) => marker.age >= marker.duration);
+    for (const marker of expired) {
+      marker.text.destroy();
+    }
+    this.combatMarkers = this.combatMarkers.filter((marker) => marker.age < marker.duration);
+  }
+
+  private clearCombatMarkers(): void {
+    for (const marker of this.combatMarkers) {
+      marker.text.destroy();
+    }
+    this.combatMarkers = [];
+  }
+
   private drawWorld(): void {
     this.drawTerrain();
     this.drawAim();
@@ -1146,6 +1499,22 @@ class GravityGridScene extends Phaser.Scene {
     return vehicle.facing === nativeFacing ? offset : -offset;
   }
 
+  private combatHullCenter(vehicle: VehicleState): Phaser.Math.Vector2 {
+    const hull = vehicle.combatHull;
+    return new Phaser.Math.Vector2(
+      vehicle.x + this.orientedOffset(vehicle, hull.offsetX, 1),
+      vehicle.y + hull.offsetY,
+    );
+  }
+
+  private projectileHitsCombatHull(x: number, y: number, vehicle: VehicleState): boolean {
+    const hull = vehicle.combatHull;
+    const center = this.combatHullCenter(vehicle);
+    const normalizedX = (x - center.x) / hull.radiusX;
+    const normalizedY = (y - center.y) / hull.radiusY;
+    return normalizedX * normalizedX + normalizedY * normalizedY <= 1;
+  }
+
   private drawVehicles(): void {
     const gfx = this.vehicleGfx;
     gfx.clear();
@@ -1172,48 +1541,89 @@ class GravityGridScene extends Phaser.Scene {
         vehicleSprite.setDepth(11);
         this.vehicleSprites.set(vehicle.id, vehicleSprite);
       }
-      vehicleSprite
-        .setTexture(vehicleKey)
-        .setOrigin(0.5, 0.86)
-        .setPosition(vehicle.x, vehicle.y + 20)
-        .setDisplaySize(vehicleDisplay.width, vehicleDisplay.height)
-        .setFlipX(vehicle.facing !== vehicle.vehicleSpriteFaces)
-        .setAlpha(vehicle.alive ? 1 : 0.96)
-        .setAngle(slopeAngle + koTilt);
 
-      vehicleSprite.clearTint();
+      if (
+        USE_UNIT_CONCEPT_PREVIEW &&
+        vehicle.unitConceptSpriteKeys &&
+        vehicle.unitConceptDisplays &&
+        vehicle.unitConceptSpriteFaces
+      ) {
+        const conceptPose = this.characterPoseFor(vehicle, active);
+        const conceptKey = vehicle.unitConceptSpriteKeys[conceptPose];
+        const conceptDisplay = vehicle.unitConceptDisplays[conceptPose];
+        vehicleSprite
+          .setTexture(conceptKey)
+          .setOrigin(0.5, 0.86)
+          .setPosition(vehicle.x, vehicle.y + (vehicle.unitConceptOffsetY ?? 24))
+          .setDisplaySize(conceptDisplay.width, conceptDisplay.height)
+          .setFlipX(vehicle.facing !== vehicle.unitConceptSpriteFaces)
+          .setAlpha(alpha)
+          .setAngle(slopeAngle + koTilt);
+        vehicleSprite.clearTint();
+        this.characterSprites.get(vehicle.id)?.setAlpha(0);
+      } else {
+        vehicleSprite
+          .setTexture(vehicleKey)
+          .setOrigin(0.5, 0.86)
+          .setPosition(vehicle.x, vehicle.y + 20)
+          .setDisplaySize(vehicleDisplay.width, vehicleDisplay.height)
+          .setFlipX(vehicle.facing !== vehicle.vehicleSpriteFaces)
+          .setAlpha(vehicle.alive ? 1 : 0.96)
+          .setAngle(slopeAngle + koTilt);
 
-      const characterPose = this.characterPoseFor(vehicle, active);
-      const characterKey = vehicle.characterSpriteKeys[characterPose];
-      const characterDisplay = vehicle.characterDisplays[characterPose];
-      const characterX =
-        vehicle.x + this.orientedOffset(vehicle, vehicle.characterOffsetX, vehicle.characterSpriteFaces);
-      const characterSprite =
-        this.characterSprites.get(vehicle.id) ?? this.add.image(characterX, vehicle.y, characterKey);
-      if (!this.characterSprites.has(vehicle.id)) {
-        characterSprite.setDepth(12);
-        this.characterSprites.set(vehicle.id, characterSprite);
+        vehicleSprite.clearTint();
+
+        const characterPose = this.characterPoseFor(vehicle, active);
+        const characterKey = vehicle.characterSpriteKeys[characterPose];
+        const characterDisplay = vehicle.characterDisplays[characterPose];
+        const characterX =
+          vehicle.x + this.orientedOffset(vehicle, vehicle.characterOffsetX, vehicle.characterSpriteFaces);
+        const characterSprite =
+          this.characterSprites.get(vehicle.id) ?? this.add.image(characterX, vehicle.y, characterKey);
+        if (!this.characterSprites.has(vehicle.id)) {
+          characterSprite.setDepth(12);
+          this.characterSprites.set(vehicle.id, characterSprite);
+        }
+        characterSprite
+          .setTexture(characterKey)
+          .setOrigin(0.5, 0.88)
+          .setPosition(characterX, vehicle.y + vehicle.characterOffsetY)
+          .setDisplaySize(characterDisplay.width, characterDisplay.height)
+          .setFlipX(vehicle.facing !== vehicle.characterSpriteFaces)
+          .setAlpha(alpha)
+          .setAngle(slopeAngle + koTilt);
+        characterSprite.clearTint();
       }
-      characterSprite
-        .setTexture(characterKey)
-        .setOrigin(0.5, 0.88)
-        .setPosition(characterX, vehicle.y + vehicle.characterOffsetY)
-        .setDisplaySize(characterDisplay.width, characterDisplay.height)
-        .setFlipX(vehicle.facing !== vehicle.characterSpriteFaces)
-        .setAlpha(alpha)
-        .setAngle(slopeAngle + koTilt);
-      characterSprite.clearTint();
 
-      gfx.lineStyle(active ? 4 : 2, active ? 0xffffff : vehicle.accent, active ? 0.95 : 0.5);
-      gfx.strokeRoundedRect(vehicle.x - 116, vehicle.y - 106, 232, 138, 18);
+      const frameWidth = USE_UNIT_CONCEPT_PREVIEW ? 404 : 232;
+      const frameHeight = USE_UNIT_CONCEPT_PREVIEW ? 258 : 138;
+      const frameTopOffset = USE_UNIT_CONCEPT_PREVIEW ? 202 : 106;
+      if (active) {
+        gfx.fillStyle(0xffffff, USE_UNIT_CONCEPT_PREVIEW ? 0.07 : 0.04);
+        gfx.fillRoundedRect(vehicle.x - frameWidth / 2, vehicle.y - frameTopOffset, frameWidth, frameHeight, 24);
+      }
+      gfx.lineStyle(active ? 3 : 2, active ? 0xffffff : vehicle.accent, active ? 0.44 : 0.28);
+      gfx.strokeRoundedRect(vehicle.x - frameWidth / 2, vehicle.y - frameTopOffset, frameWidth, frameHeight, 24);
+
+      if (this.showCombatHulls && vehicle.alive) {
+        const hull = vehicle.combatHull;
+        const hullCenter = this.combatHullCenter(vehicle);
+        const hullColor = active ? 0xffffff : vehicle.accent;
+        gfx.fillStyle(hullColor, active ? 0.1 : 0.055);
+        gfx.fillEllipse(hullCenter.x, hullCenter.y, hull.radiusX * 2, hull.radiusY * 2);
+        gfx.lineStyle(active ? 3 : 2, hullColor, active ? 0.72 : 0.52);
+        gfx.strokeEllipse(hullCenter.x, hullCenter.y, hull.radiusX * 2, hull.radiusY * 2);
+      }
 
       gfx.fillStyle(0x0f172a, 0.88);
-      gfx.fillRoundedRect(vehicle.x - 44, vehicle.y - 76, 88, 14, 5);
+      const hpY = vehicle.y - (USE_UNIT_CONCEPT_PREVIEW ? 174 : 76);
+      gfx.fillRoundedRect(vehicle.x - 44, hpY, 88, 14, 5);
       gfx.fillStyle(vehicle.team === "red" ? 0xff4d5d : 0x4cc9f0, 0.92);
-      gfx.fillRoundedRect(vehicle.x - 42, vehicle.y - 74, 84 * (vehicle.hp / MAX_HP), 10, 4);
+      gfx.fillRoundedRect(vehicle.x - 42, hpY + 2, 84 * (vehicle.hp / MAX_HP), 10, 4);
 
+      const labelY = vehicle.y - (USE_UNIT_CONCEPT_PREVIEW ? 214 : 118);
       const label = this.add
-        .text(vehicle.x, vehicle.y - 118, vehicle.username, {
+        .text(vehicle.x, labelY, vehicle.username, {
           fontFamily: "Inter, Arial, sans-serif",
           fontSize: "16px",
           fontStyle: "700",
@@ -1226,7 +1636,7 @@ class GravityGridScene extends Phaser.Scene {
       this.vehicleLabels.push(label);
 
       const classLabel = this.add
-        .text(vehicle.x, vehicle.y - 97, vehicle.className, {
+        .text(vehicle.x, labelY + 21, vehicle.className, {
           fontFamily: "Consolas, 'SFMono-Regular', monospace",
           fontSize: "12px",
           color: vehicle.team === "red" ? "#ffd166" : "#8be9ff",

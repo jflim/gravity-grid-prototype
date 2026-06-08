@@ -42,7 +42,7 @@ Content constraints: vehicle only, no character, no text, no watermark, no logo 
 Preserve this DNA from the older Kaelii concept:
 
 - bronze skin,
-- vibrant violet messy twin buns with stray strands,
+- tri-tone black, deep purple, and hot pink high twin buns with braided wrap loops, pink streaks, long bangs, and stray strands,
 - golden eyes,
 - playful smirk,
 - pink and black techwear,
@@ -52,6 +52,8 @@ Preserve this DNA from the older Kaelii concept:
 
 Translate the old reckless defeat energy into arcade KO staging. Do not use drugging, gas, humiliation, or non-consensual framing. Her defeat should read as a dramatic stunt crash.
 
+Vehicle correction lock: Kaelii wears sneakers; the Flashkick Skip-Rig does not. The rig should use real compact circular wheels, mechanical rim covers, spring suspension, rails, footrest plates, and bounce pads. Do not prompt shoe-shaped wheels, sneaker wheel guards, toe-box armor, sole-like plates, or lace-like vehicle parts.
+
 ### Kaelii Vehicle Default: Flashkick Skip-Rig
 
 ```text
@@ -59,7 +61,9 @@ Translate the old reckless defeat energy into arcade KO staging. Do not use drug
 
 Design Kaelii's signature vehicle: the Flashkick Skip-Rig, a light bouncer-class ricochet artillery vehicle.
 
-Vehicle identity: flashy pink-black stunt rig, compact springy chassis, angled cannon rail, bounce-pad armor plates, bright white sneaker-like wheel guards, small spotlight strip, energetic decals, toy-like but combat-ready. It should look fast, unstable, and built for trick shots.
+Vehicle identity: flashy pink-black stunt rig, compact springy chassis, angled cannon rail, bounce-pad armor plates, circular compact wheels, white and pink mechanical rim covers, spring suspension, footrest plates, small spotlight strip, energetic decals, toy-like but combat-ready. It should look fast, unstable, and built for trick shots.
+
+Important correction: Kaelii wears white sneakers; the vehicle does not. Do not make the wheels or wheel guards look like shoes. No toe boxes, no soles, no sneaker tongues, no literal laces on vehicle parts, no footwear-shaped wheel guards.
 
 Class readability: bouncer class. The silhouette should suggest ricochets, banks, springs, rails, and rebound shots rather than heavy craters or fire. Avoid making it look like a standard tank.
 
@@ -73,9 +77,19 @@ Layering need: leave a clear top rail or side perch where Kaelii's character spr
 
 Create the destroyed version of Kaelii's Flashkick Skip-Rig.
 
-Preserve the pink-black stunt rig identity, angled cannon rail, bounce-pad armor plates, white sneaker-like wheel guards, and spotlight strip, but show it disabled for an arcade KO state. The chassis is tilted, one spring or rail is bent, bounce pads are cracked, spotlight strip is dim, and small smoke puffs rise from the vehicle.
+Preserve the pink-black stunt rig identity, angled cannon rail, bounce-pad armor plates, real compact circular wheels, white/pink mechanical rim covers, spring suspension, and spotlight strip, but show it disabled for an arcade KO state. The chassis is tilted, one spring or rail is bent, bounce pads are cracked, spotlight strip is dim, and small smoke puffs rise from the vehicle.
+
+Important correction: no shoe-shaped vehicle parts. No toe boxes, no soles, no sneaker tongues, no literal laces, no footwear-shaped wheel guards. White accents must read as mechanical rim covers or armor plates only.
 
 No pilot, no flames covering the silhouette, no blood, no gore, no text.
+```
+
+### Kaelii Hair Reference Lock
+
+Use the user-provided hair reference for Kaelii's hair direction:
+
+```text
+Tri-tone black, deep purple, and hot pink hair. High twin buns with braided wrap loops around each bun, hot pink streaks, long black-purple bangs, glossy anime highlights, and loose stray strands. Do not simplify the hair to plain violet buns.
 ```
 
 ### Kaelii Character Default
@@ -85,9 +99,11 @@ No pilot, no flames covering the silhouette, no blood, no gore, no text.
 
 Character: Kaelii, an original adult anime stunt-pilot for Gravity Canyon.
 
-Appearance: athletic young adult woman, bronze skin, vibrant violet messy twin buns with stray strands, golden eyes, playful smirk, pink and black techwear crop jacket over a streamable fitted combat top, high-tech shorts or fitted stunt bottoms with thigh straps, fingerless gloves, white sneakers with pink laces. Keep her stylish, flirty, and confident without explicit exposure.
+Appearance: athletic young adult woman, bronze skin, tri-tone black, deep purple, and hot pink high twin buns with braided wrap loops, hot pink streaks, long bangs, stray strands, golden eyes, playful smirk, pink and black techwear crop jacket over a streamable fitted combat top, high-tech shorts or fitted stunt bottoms with thigh straps, fingerless gloves, white sneakers with pink laces. Keep her stylish, flirty, and confident without explicit exposure.
 
 Vehicle relationship: Kaelii is perched showily on top of her pink-black Flashkick Skip-Rig bouncer vehicle. One sneaker is planted on the cannon rail, the other foot braces on the chassis. Her hips and shoulders are angled like she is taunting the opponent and performing for a crowd. She must feel attached to the vehicle, not standing separately beside it.
+
+Vehicle correction: the Flashkick Skip-Rig uses real compact circular wheels, mechanical rim covers, spring suspension, rails, and bounce pads. Kaelii's sneakers are only on her feet.
 
 Expression: cocky playful smirk, bright golden eyes, stage-idol confidence.
 ```
@@ -97,13 +113,13 @@ Expression: cocky playful smirk, bright golden eyes, stage-idol confidence.
 ```text
 [Shared Gameplay Sprite Style Prompt]
 
-Character: Kaelii, original adult anime stunt-pilot with bronze skin, violet messy twin buns, golden eyes, pink-black techwear, fingerless gloves, white sneakers with pink laces.
+Character: Kaelii, original adult anime stunt-pilot with bronze skin, tri-tone black, deep purple, and hot pink high twin buns with braided wrap loops, hot pink streaks, long bangs, golden eyes, pink-black techwear, fingerless gloves, white sneakers with pink laces.
 
-Pose: intense firing version of her mounted stance. She remains perched on the Flashkick Skip-Rig, torso snapped forward, one hand gripping a rail, one sneaker kicked back as the rig fires into a ricochet angle. Hair strands and jacket edges react to recoil. The pose is energetic, reckless, and showy while still compact for gameplay.
+Pose: intense firing version of her mounted stance. This should feel like the next animation keyframe from default, not a new action illustration. Preserve the same main foot, hand, hip, and vehicle contact anchors. Kaelii remains perched on the Flashkick Skip-Rig, shoulders lowered, hands gripping tighter, hips and knees tensed in place, hair strands and jacket edges reacting to recoil as the rig fires into a ricochet angle. Both sneakers stay close to their default vehicle anchors; no kicked-back or floating leg.
 
 Expression: fierce grin, focused golden eyes, thrilled by the risk.
 
-Vehicle relationship: keep her clearly on the same bouncer rig with the cannon rail and springy pink-black chassis visible.
+Vehicle relationship: keep her clearly on the same bouncer rig with the cannon rail and springy pink-black chassis visible. Preserve real compact circular wheels and mechanical rim covers; Kaelii's sneakers are only on her feet.
 ```
 
 ### Kaelii Character Defeated KO
@@ -111,13 +127,13 @@ Vehicle relationship: keep her clearly on the same bouncer rig with the cannon r
 ```text
 [Shared Gameplay Sprite Style Prompt]
 
-Character: Kaelii, original adult anime stunt-pilot with bronze skin, violet messy twin buns, golden eyes, pink-black techwear, white sneakers with pink laces.
+Character: Kaelii, original adult anime stunt-pilot with bronze skin, tri-tone black, deep purple, and hot pink high twin buns with braided wrap loops, hot pink streaks, long bangs, golden eyes, pink-black techwear, white sneakers with pink laces.
 
 Defeated KO staging: Kaelii has slid sideways off her perch and is sprawled across the damaged Flashkick Skip-Rig chassis after a failed stunt. One sneaker dangles off the side, one arm is loose over the bent rail, hair buns messy, spotlight strip dimmed out. The pose should be theatrical and arcade-comedic, like a stunt crash, not sensualized defeat.
 
 Face readability: dazed KO expression with heavy sleepy eyelids or compressed white KO eyes, pupils rolled upward or crossed inward, small tongue blep if it remains cute and readable. No spiral eyes. No blood or visible injury.
 
-Vehicle relationship: damaged pink-black bouncer rig remains visible behind/under her, with cracked bounce pads and bent rail.
+Vehicle relationship: damaged pink-black bouncer rig remains visible behind/under her, with cracked bounce pads, bent rail, real compact circular wheels, and mechanical rim covers. The only sneakers in the image should be Kaelii's two sneakers attached to her feet.
 ```
 
 ## Perlah Identity Notes
@@ -182,7 +198,9 @@ Expression: warm teasing confidence, like she knows the canyon is about to get t
 
 Character: Perlah, original adult anime spark-pilot with golden-brown skin, curly black hair with orange highlights, orange-black salvage racer outfit, heatproof gloves, compact boots.
 
-Pose: intense firing version of her low kneeling stance. She braces harder behind the Sunspike Embercart's heat shield as orange vents flare, one hand gripping the cannon housing, the other pulling a heat lever. Hair curls and wrap details lift in furnace wind. Keep the silhouette compact and readable.
+Pose: intense power-hold version of her low kneeling stance. This must be an animation-linked keyframe from default, not a new pose. Preserve the default leg positions, hand contact points, vehicle size, cannon position, heat shield position, and cart silhouette. She braces harder behind the Sunspike Embercart's heat shield as orange vents flare, fingers tighten on the lever and cannon housing, hair curls and wrap details lift subtly in furnace wind. Keep the same visible footprint as default.
+
+Effects: compact charge only. The cannon core and heat shield glow brighter, with small heat shimmer close to the muzzle. No fired projectile, no long muzzle flame, no explosion, and no large effect that expands the default silhouette.
 
 Expression: focused grin, bright eyes, scrappy heat-pilot confidence.
 
@@ -208,6 +226,8 @@ Vehicle relationship: damaged orange-black Embercart remains visible under/behin
 Before generating final candidates, verify:
 
 - Kaelii reads as `bouncer`, not `spark` or `bunger`.
+- Kaelii's vehicle uses real wheels and mechanical plates, not shoe-shaped wheel guards.
+- Kaelii's intense sprite reads as an animation-linked keyframe from default, not a separate flying-leg action pose.
 - Perlah reads as `spark`, not generic beach character or standard tank pilot.
 - Both default poses are mounted or braced with the vehicle, not full-body characters standing beside vehicles.
 - Character and vehicle silhouettes will still work if separated into the runtime layer model.

@@ -21,6 +21,30 @@ Highlights:
 - Added mounted gameplay asset direction: current assets stay as the v0 baseline while future probes explore characters riding, kneeling on, leaning on, or otherwise interacting with vehicles.
 - Preserved selected paired-unit concept candidates for Nova's head-over-heels Defeated KO direction and Vesper's tech-shorts default/Defeated KO direction.
 - Added playable roster sprite direction for 10 signature pilot-plus-vehicle units, plus Kaelii and Perlah gameplay sprite prompt packs for the first new-unit generation pass.
+- Added a living character roster document with selected visual probe links, tight generation anchors, and Kaelii's tri-tone hair reference lock.
+- Added Kaelii v2 compact vehicle and mounted default sprite candidates using the tri-tone hair lock.
+- Added Perlah v2 compact vehicle and mounted default sprite candidates for comparison against the first Spark-unit probes.
+- Added Kaelii v3/v5 selected gap-fill sprite candidates: corrected real-wheel Flashkick Skip-Rig, mounted default pupil fix, animation-linked intense state, destroyed vehicle, and Defeated KO with user-marked pupil placement.
+- Recorded an open art-review note that Kaelii Defeated KO v5 still needs a future pupil-placement pass, especially the right eye.
+- Added Perlah selected gap-fill sprite candidates for intense, destroyed vehicle, and Defeated KO with user-marked pupil placement.
+- Promoted Kaelii and Perlah selected candidates to stable v1 runtime test aliases and integrated them into the local playable roster as red/blue support units.
+- Added a runtime-roster verification script to check runtime unit aliases, preload keys, class IDs, and local turn order.
+- Generated Nova and Vesper full-unit intense sprite probes, promoted them to `nova-unit-intense.png` and `vesper-unit-intense.png`, and wired concept-preview charging to use them.
+- Expanded runtime-roster verification to check Nova and Vesper full-unit intense aliases.
+- Replaced Vesper's first full-unit intense alias with a compact v3 power-hold candidate, trimmed transparent padding so it no longer shrinks at runtime, and documented the selected prompt.
+- Reduced full-unit concept-preview display sizes, active frames, combat-marker offsets, HP/label offsets, and prototype combat hulls to give the local four-unit roster more playable battlefield space.
+- Replaced Vesper and Perlah intense runtime aliases with footprint-locked variants so default and intense states keep identical apparent unit size while showing compact power-hold reactions.
+- Iterated Vesper intense to the v6 cool glitch-control candidate, preserving the default visible footprint while adding a stronger joystick/deck-control charge action, cannon reticle, headset glow, and compact glitch UI.
+- Superseded Vesper intense v6 with v8 subtle tension scale-stable after visual review showed that same alpha footprint alone was not enough; v8 allows small pilot/rover motion while reducing the apparent power-shot size pop.
+- Expanded runtime-roster verification to compare default/intense visible alpha footprints for Vesper and Perlah, preventing future intense sprites from silently growing, shrinking, or widening.
+- Clarified that character-intense sprites should usually be animation-linked keyframes from default poses, preserving the main contact anchors instead of becoming unrelated action poses.
+- Corrected Kaelii prompt guidance so her sneakers remain character clothing only; the Flashkick Skip-Rig uses real wheels, mechanical rim covers, rails, springs, and bounce pads.
+- Clarified the sprite workflow: green chroma-key images are workshop sources, approved candidates and runtime sprites should be transparent PNGs, and the current recommendation is green for exploration plus transparent PNG bases for refinement.
+- Added a required unit asset checklist and roster generation status table so missing intense, destroyed, and KO sprites are visible.
+- Added a combat readability design and Slice 1 implementation plan for combat hulls, damage markers, wind bands, and lob-focused map prototypes.
+- Added visible prototype combat hulls, shown by default and toggleable with `H`, so direct-hit collision better matches the larger pilot-plus-vehicle unit concepts.
+- Added floating combat markers for direct damage, splash damage, knockback, HP KOs, and terrain/fall bunge defeats.
+- Added randomized terrain/spawn archetypes for local rounds to reduce flat direct-fire duels and encourage high-angle lob play.
 - Clarified Git workflow with branch strategy, quality gates, commit cadence, and push cadence.
 - Updated GitHub management notes now that the private remote and GitHub CLI are configured.
 - Added canonical game design spec with 95% confidence direction for the next build milestone.
