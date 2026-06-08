@@ -43,6 +43,7 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
   - Floating markers call out direct damage, splash damage, Bunger shove, HP KO, and terrain/fall bunge defeat.
   - Round start defaults to Ring Basin from the committed v1 map pool, using exact four-seat spawns, two broad playable landmasses, a full-unit-readable center chasm, and faint non-lethal ring landmarks.
   - The command deck now uses explicit viewport layout rules and the browser's smallest reliable visible viewport size so the active player info stays inside the visible browser area on wide/short screens.
+  - Projectile flight keeps the full battlefield framed while the shot is readable, with recentering reserved for shots that leave the readable frame.
   - The combat readability design is saved at `docs/superpowers/specs/2026-06-07-combat-readability-wind-lobs-design.md`.
   - Slice 1 implementation notes are saved at `docs/superpowers/plans/2026-06-07-combat-readability-slice-1.md`.
 

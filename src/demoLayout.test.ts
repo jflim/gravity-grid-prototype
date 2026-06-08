@@ -4,6 +4,7 @@ import {
   computeBattlefieldFrameLayout,
   computeCommandPanelLayout,
   getGameViewportSize,
+  shouldRecenterProjectileCamera,
   shouldMountOnlineLobby,
   shouldShowCombatHulls,
 } from "./demoLayout";
@@ -65,4 +66,26 @@ test("battlefield framing keeps map scale consistent across common desktop width
 
   assert.ok(Math.abs(wide.visibleWorldWidth - standard.visibleWorldWidth) < 1);
   assert.equal(Math.round(wide.visibleWorldWidth), 2960);
+});
+
+test("projectile camera stays stable while a shot is readable in the battlefield frame", () => {
+  const shouldRecenter = shouldRecenterProjectileCamera({
+    projectile: { x: 1200, y: 420 },
+    cameraCenter: { x: 1200, y: 470 },
+    visibleWorldWidth: 2960,
+    visibleWorldHeight: 760,
+  });
+
+  assert.equal(shouldRecenter, false);
+});
+
+test("projectile camera can recenter when a shot leaves the readable battlefield frame", () => {
+  const shouldRecenter = shouldRecenterProjectileCamera({
+    projectile: { x: 3000, y: 420 },
+    cameraCenter: { x: 1200, y: 470 },
+    visibleWorldWidth: 2960,
+    visibleWorldHeight: 760,
+  });
+
+  assert.equal(shouldRecenter, true);
 });

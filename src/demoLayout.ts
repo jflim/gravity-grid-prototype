@@ -44,6 +44,20 @@ export interface BattlefieldFrameLayout {
   visibleWorldWidth: number;
 }
 
+export interface ProjectileCameraInput {
+  projectile: {
+    x: number;
+    y: number;
+  };
+  cameraCenter: {
+    x: number;
+    y: number;
+  };
+  visibleWorldWidth: number;
+  visibleWorldHeight: number;
+  marginRatio?: number;
+}
+
 const DOCK_MAX_WIDTH = 1720;
 const DOCK_SIDE_MARGIN = 48;
 const DOCK_SIDE_MARGIN_COMPACT = 18;
@@ -122,6 +136,20 @@ export function computeBattlefieldFrameLayout(input: BattlefieldFrameInput): Bat
     zoom,
     visibleWorldWidth: input.viewportWidth / zoom,
   };
+}
+
+export function shouldRecenterProjectileCamera(input: ProjectileCameraInput): boolean {
+  if (input.visibleWorldWidth <= 0 || input.visibleWorldHeight <= 0) {
+    return false;
+  }
+
+  const marginRatio = input.marginRatio ?? 0.08;
+  const halfWidth = input.visibleWorldWidth / 2 + input.visibleWorldWidth * marginRatio;
+  const halfHeight = input.visibleWorldHeight / 2 + input.visibleWorldHeight * marginRatio;
+  const dx = Math.abs(input.projectile.x - input.cameraCenter.x);
+  const dy = Math.abs(input.projectile.y - input.cameraCenter.y);
+
+  return dx > halfWidth || dy > halfHeight;
 }
 
 function clamp(value: number, min: number, max: number): number {

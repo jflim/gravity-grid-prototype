@@ -4,6 +4,7 @@ import {
   computeCommandPanelLayout,
   getGameViewportSize,
   shouldMountOnlineLobby,
+  shouldRecenterProjectileCamera,
   shouldShowCombatHulls,
 } from "./demoLayout";
 import { mountOnlineLobby } from "./onlineLobby";
@@ -859,7 +860,7 @@ class GravityGridScene extends Phaser.Scene {
     if (collision) {
       p.x = collision.x;
       p.y = collision.y;
-      this.cameras.main.centerOn(p.x, p.y);
+      this.recenterCameraForProjectileIfNeeded(p);
       this.resolveImpact(collision.x, collision.y, collision.directHitId);
       return;
     }
@@ -867,13 +868,32 @@ class GravityGridScene extends Phaser.Scene {
     p.x = nextX;
     p.y = nextY;
 
-    this.cameras.main.centerOn(p.x, p.y);
+    this.recenterCameraForProjectileIfNeeded(p);
 
     if (p.x < 0 || p.x > WORLD_WIDTH || p.y > WORLD_HEIGHT + 120 || p.y < -220) {
       this.shotResult = "Shot flew out of bounds.";
       this.projectile = undefined;
       this.queueRoundEvent(700, () => this.advanceTurn());
       return;
+    }
+  }
+
+  private recenterCameraForProjectileIfNeeded(projectile: ProjectileState): void {
+    const camera = this.cameras.main;
+    const visibleWorldWidth = camera.width / camera.zoom;
+    const visibleWorldHeight = camera.height / camera.zoom;
+    const shouldRecenter = shouldRecenterProjectileCamera({
+      projectile,
+      cameraCenter: {
+        x: camera.scrollX + visibleWorldWidth / 2,
+        y: camera.scrollY + visibleWorldHeight / 2,
+      },
+      visibleWorldWidth,
+      visibleWorldHeight,
+    });
+
+    if (shouldRecenter) {
+      camera.centerOn(projectile.x, projectile.y);
     }
   }
 

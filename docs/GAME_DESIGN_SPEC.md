@@ -281,7 +281,7 @@ Combat UX requirements:
 - Defeated KO character expressions should use literal crossed or rolled-up eyes, not spiral/hypnotic eyes.
 - Dead vehicles should pair the Defeated KO character sprite with a destroyed vehicle sprite.
 - Opened terrain should expose a readable void/background beneath the stage.
-- Projectile camera should follow shots and preserve impact context.
+- Projectile camera should stay stable while the shot is readable in the full battlefield frame, only recentering when impact context would otherwise be lost.
 - Large character banners do not belong in the live match screen.
 
 ## 7. Classes

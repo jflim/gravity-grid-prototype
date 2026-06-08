@@ -58,6 +58,7 @@ Highlights:
 - Added explicit demo layout rules and tests so the bottom command deck remains visible and battlefield framing stays more consistent across common desktop viewport widths.
 - Synchronized Phaser and CSS sizing against the smallest reliable visible browser viewport measurement so fullscreen browser chrome/layout mismatches do not push the command deck below the visible screen.
 - Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.
+- Changed projectile camera behavior to keep the battlefield stable while shots are readable, recentering only when a projectile leaves the readable frame.
 - Added visible prototype combat hulls, toggleable with `H`, so direct-hit collision better matches the larger pilot-plus-vehicle unit concepts.
 - Added floating combat markers for direct damage, splash damage, knockback, HP KOs, and terrain/fall bunge defeats.
 - Added randomized terrain/spawn archetypes for local rounds to reduce flat direct-fire duels and encourage high-angle lob play.

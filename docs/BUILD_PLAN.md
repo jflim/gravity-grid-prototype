@@ -62,6 +62,7 @@ Done:
 - Crater, splash, and Bunger knockback radii are smaller so ring-outs require more precise setup.
 - Ring Basin is now the local demo default, using the fixed v1 map surface, exact four-seat spawns, and visual ring landmarks for map-feel testing.
 - Ring Basin now uses a full-unit-readable center chasm instead of tiny lethal slots, so fall threats match the current large sprite/combat-hull scale.
+- Projectile flight keeps the current battlefield framing while shots remain readable, only recentering as a fallback if a shot leaves the visible frame.
 - Destroyed vehicles now pair destroyed vehicle sprites with character-specific generated KO character sprites instead of overlay effects.
 - Command panel is raised with a bottom safe margin so gameplay controls remain visible.
 - Local map-review layout now hides the online panel and combat hull overlays by default, keeps both available through URL flags or hotkeys, and uses capped command-deck framing for more consistent desktop viewport composition.

@@ -19,8 +19,8 @@ First playable local artillery prototype for Gravity Canyon.
 - Vehicle sprites tilt with terrain slope for clearer ground contact.
 - World-space muzzle aim arrow and ground movement range rail for the active player while positioning.
 - Projectile physics with gravity and turn-based wind.
-- Full-battlefield aiming camera so both players are visible before firing.
-- Projectile camera follow after firing.
+- Full-battlefield aiming camera so both teams stay visible before firing.
+- Stable full-battlefield projectile view after firing, with camera recentering only if a shot leaves the readable frame.
 - Firing commits the turn immediately, so the active vehicle cannot move during projectile flight or impact resolution.
 - Swept projectile collision checks to make fast shots hit terrain/vehicles more predictably.
 - Visible prototype combat hulls define direct-hit collision for the larger pilot-plus-vehicle unit concepts.
