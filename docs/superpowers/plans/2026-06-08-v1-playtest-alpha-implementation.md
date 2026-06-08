@@ -53,7 +53,7 @@ This plan turns that scaffold into V1 in testable slices.
 - Create: `server/v1/rules.ts`
 - Create: `server/v1/rules.test.ts`
 
-- [ ] **Step 1: Add the test command**
+- [x] **Step 1: Add the test command**
 
 Add `test` after `docs:html` in `package.json`:
 
@@ -63,7 +63,7 @@ Add `test` after `docs:html` in `package.json`:
 "verify:runtime-roster": "node scripts/verify-runtime-roster.mjs"
 ```
 
-- [ ] **Step 2: Write the failing rule tests**
+- [x] **Step 2: Write the failing rule tests**
 
 Create `server/v1/rules.test.ts`:
 
@@ -127,13 +127,13 @@ test("turn and phrase constants are locked for v1 readability", () => {
 });
 ```
 
-- [ ] **Step 3: Run the failing tests**
+- [x] **Step 3: Run the failing tests**
 
 Run: `npm run test`
 
 Expected: FAIL because `server/v1/rules.ts` does not exist.
 
-- [ ] **Step 4: Implement the rule constants**
+- [x] **Step 4: Implement the rule constants**
 
 Create `server/v1/rules.ts`:
 
@@ -214,7 +214,7 @@ export function sanitizeDisplayName(displayName = "Guest") {
 }
 ```
 
-- [ ] **Step 5: Run tests and commit**
+- [x] **Step 5: Run tests and commit**
 
 Run: `npm run test`
 
@@ -232,8 +232,14 @@ git commit -m "test: add v1 rule contract"
 **Files:**
 - Create: `server/v1/maps.ts`
 - Create: `server/v1/maps.test.ts`
+- Create: `scripts/build-map-previews.ts`
+- Create: `docs/V1_MAP_PREVIEWS.html`
+- Modify: `scripts/build-docs-html.mjs`
+- Modify: `package.json`
 
-- [ ] **Step 1: Write map tests**
+**Implementation note:** Task 2 also generates an HTML map-preview page from `server/v1/maps.ts`. The preview is documentation/debug visibility, not a new gameplay feature; map gameplay authority remains the map contract.
+
+- [x] **Step 1: Write map tests**
 
 Create `server/v1/maps.test.ts`:
 
@@ -272,13 +278,13 @@ test("explicit map selection wins over random", () => {
 });
 ```
 
-- [ ] **Step 2: Run the failing map tests**
+- [x] **Step 2: Run the failing map tests**
 
 Run: `npm run test -- server/v1/maps.test.ts`
 
 Expected: FAIL because `server/v1/maps.ts` does not exist.
 
-- [ ] **Step 3: Implement map definitions**
+- [x] **Step 3: Implement map definitions**
 
 Create `server/v1/maps.ts`:
 
@@ -363,7 +369,7 @@ function spawn(x: number, y: number, facing: 1 | -1): SpawnPoint {
 }
 ```
 
-- [ ] **Step 4: Run tests and commit**
+- [x] **Step 4: Run tests and commit**
 
 Run: `npm run test -- server/v1/maps.test.ts`
 

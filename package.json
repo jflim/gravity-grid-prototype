@@ -10,7 +10,7 @@
     "build": "npm run build:client && npm run build:server",
     "build:client": "tsc -p tsconfig.json && vite build --base=./",
     "build:server": "tsc -p tsconfig.server.json",
-    "docs:html": "node scripts/build-docs-html.mjs",
+    "docs:html": "tsx scripts/build-map-previews.ts && node scripts/build-docs-html.mjs",
     "test": "tsx --test \"server/**/*.test.ts\" \"src/**/*.test.ts\"",
     "verify:runtime-roster": "node scripts/verify-runtime-roster.mjs",
     "preview": "vite preview --host 127.0.0.1"

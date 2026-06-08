@@ -139,7 +139,7 @@
 <li>Create: <code>server/v1/rules.test.ts</code></li>
 </ul>
 <ul>
-<li>[ ] <strong>Step 1: Add the test command</strong></li>
+<li>[x] <strong>Step 1: Add the test command</strong></li>
 </ul>
 <p>Add <code>test</code> after <code>docs:html</code> in <code>package.json</code>:</p>
 <pre><code class="language-json">
@@ -151,7 +151,7 @@
 
 </code></pre>
 <ul>
-<li>[ ] <strong>Step 2: Write the failing rule tests</strong></li>
+<li>[x] <strong>Step 2: Write the failing rule tests</strong></li>
 </ul>
 <p>Create <code>server/v1/rules.test.ts</code>:</p>
 <pre><code class="language-ts">
@@ -271,12 +271,12 @@ test(&quot;turn and phrase constants are locked for v1 readability&quot;, () =&g
 
 </code></pre>
 <ul>
-<li>[ ] <strong>Step 3: Run the failing tests</strong></li>
+<li>[x] <strong>Step 3: Run the failing tests</strong></li>
 </ul>
 <p>Run: <code>npm run test</code></p>
 <p>Expected: FAIL because <code>server/v1/rules.ts</code> does not exist.</p>
 <ul>
-<li>[ ] <strong>Step 4: Implement the rule constants</strong></li>
+<li>[x] <strong>Step 4: Implement the rule constants</strong></li>
 </ul>
 <p>Create <code>server/v1/rules.ts</code>:</p>
 <pre><code class="language-ts">
@@ -430,7 +430,7 @@ export function sanitizeDisplayName(displayName = &quot;Guest&quot;) {
 
 </code></pre>
 <ul>
-<li>[ ] <strong>Step 5: Run tests and commit</strong></li>
+<li>[x] <strong>Step 5: Run tests and commit</strong></li>
 </ul>
 <p>Run: <code>npm run test</code></p>
 <p>Expected: PASS.</p>
@@ -446,9 +446,14 @@ git commit -m &quot;test: add v1 rule contract&quot;
 <ul>
 <li>Create: <code>server/v1/maps.ts</code></li>
 <li>Create: <code>server/v1/maps.test.ts</code></li>
+<li>Create: <code>scripts/build-map-previews.ts</code></li>
+<li>Create: <code>docs/V1_MAP_PREVIEWS.html</code></li>
+<li>Modify: <code>scripts/build-docs-html.mjs</code></li>
+<li>Modify: <code>package.json</code></li>
 </ul>
+<p><strong>Implementation note:</strong> Task 2 also generates an HTML map-preview page from <code>server/v1/maps.ts</code>. The preview is documentation/debug visibility, not a new gameplay feature; map gameplay authority remains the map contract.</p>
 <ul>
-<li>[ ] <strong>Step 1: Write map tests</strong></li>
+<li>[x] <strong>Step 1: Write map tests</strong></li>
 </ul>
 <p>Create <code>server/v1/maps.test.ts</code>:</p>
 <pre><code class="language-ts">
@@ -518,12 +523,12 @@ test(&quot;explicit map selection wins over random&quot;, () =&gt; {
 
 </code></pre>
 <ul>
-<li>[ ] <strong>Step 2: Run the failing map tests</strong></li>
+<li>[x] <strong>Step 2: Run the failing map tests</strong></li>
 </ul>
 <p>Run: <code>npm run test -- server/v1/maps.test.ts</code></p>
 <p>Expected: FAIL because <code>server/v1/maps.ts</code> does not exist.</p>
 <ul>
-<li>[ ] <strong>Step 3: Implement map definitions</strong></li>
+<li>[x] <strong>Step 3: Implement map definitions</strong></li>
 </ul>
 <p>Create <code>server/v1/maps.ts</code>:</p>
 <pre><code class="language-ts">
@@ -685,7 +690,7 @@ function spawn(x: number, y: number, facing: 1 | -1): SpawnPoint {
 
 </code></pre>
 <ul>
-<li>[ ] <strong>Step 4: Run tests and commit</strong></li>
+<li>[x] <strong>Step 4: Run tests and commit</strong></li>
 </ul>
 <p>Run: <code>npm run test -- server/v1/maps.test.ts</code></p>
 <p>Expected: PASS.</p>

@@ -5,6 +5,20 @@ const root = resolve('.');
 const generatedAt = new Date().toISOString().slice(0, 10);
 const rootMarkdownFiles = ['README.md', 'AGENTS.md'];
 const docsDir = join(root, 'docs');
+const standaloneHtmlFiles = [
+  {
+    title: 'V1 Playtest Alpha Contract',
+    htmlPath: join(docsDir, 'V1_PLAYTEST_ALPHA.html'),
+    source: 'docs/V1_PLAYTEST_ALPHA.html',
+    description: 'Locked V1 scope, acceptance gates, and change-control rules.',
+  },
+  {
+    title: 'V1 Map Previews',
+    htmlPath: join(docsDir, 'V1_MAP_PREVIEWS.html'),
+    source: 'server/v1/maps.ts',
+    description: 'Generated visual previews for the five V1 map contracts.',
+  },
+];
 
 const ignoredDirs = new Set(['node_modules', 'dist', '.git', '.vite', 'work']);
 
@@ -349,6 +363,14 @@ function indexPathFor(htmlPath) {
 }
 
 function writeDocsIndex(pages) {
+  const standaloneRows = standaloneHtmlFiles
+    .filter((page) => existsSync(page.htmlPath))
+    .map((page) => {
+      const relHtml = indexPathFor(page.htmlPath);
+      return `<tr><td><a href="${escapeHtml(relHtml)}">${escapeHtml(page.title)}</a></td><td><code>${escapeHtml(page.source)}</code></td><td>${escapeHtml(page.description)}</td></tr>`;
+    })
+    .join('\n');
+
   const rows = pages
     .sort((a, b) => relative(root, a.markdownPath).localeCompare(relative(root, b.markdownPath)))
     .map((page) => {
@@ -413,6 +435,15 @@ function writeDocsIndex(pages) {
       <p>This page links the locked v1 HTML contract and generated HTML reading copies of the markdown docs.</p>
       <p class="callout"><strong>V1 authority:</strong> <a href="V1_PLAYTEST_ALPHA.html">V1 Playtest Alpha Contract</a></p>
     </header>
+    <section>
+      <h2>Primary HTML Docs</h2>
+      <table>
+        <thead><tr><th>HTML Page</th><th>Source</th><th>Purpose</th></tr></thead>
+        <tbody>
+${standaloneRows}
+        </tbody>
+      </table>
+    </section>
     <section>
       <h2>Generated Markdown Reading Copies</h2>
       <p>Generated on ${generatedAt}. Edit markdown sources, then run <code>npm run docs:html</code>.</p>

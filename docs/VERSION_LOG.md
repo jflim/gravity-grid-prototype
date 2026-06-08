@@ -45,6 +45,9 @@ Highlights:
 - Added a locked v1 playtest-alpha HTML contract for hosted private-room 2v2 scope, with change-control rules, V2 parking lot boundaries, and acceptance gates.
 - Added generated HTML reading copies for human-facing markdown docs via `npm run docs:html`, plus an HTML docs index.
 - Updated planning docs so `docs/V1_PLAYTEST_ALPHA.html` is the authority for current v1 scope while `docs/GAME_DESIGN_SPEC.md` remains broader product vision.
+- Added v1 rule-contract tests and constants for locked roster, modes, seats, room settings, turn timing, reconnect grace, and preset phrase cooldown.
+- Added the v1 map pool contract with five map ids, deterministic random selection, spawn layouts, death planes, wind scales, and drawable preview surfaces.
+- Added generated v1 map previews at `docs/V1_MAP_PREVIEWS.html`, linked from the HTML docs index.
 - Added visible prototype combat hulls, shown by default and toggleable with `H`, so direct-hit collision better matches the larger pilot-plus-vehicle unit concepts.
 - Added floating combat markers for direct damage, splash damage, knockback, HP KOs, and terrain/fall bunge defeats.
 - Added randomized terrain/spawn archetypes for local rounds to reduce flat direct-fire duels and encourage high-angle lob play.

@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gravity Canyon V1 Map Previews</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7f2;
+      --paper: #fffdf8;
+      --ink: #20211d;
+      --muted: #5f665d;
+      --line: #cfd7c9;
+      --red: #d64045;
+      --blue: #2675d9;
+      --terrain: #8d7a55;
+      --terrain-line: #352f28;
+      --hazard: #b2212b;
+      --sky-a: #e8f3f8;
+      --sky-b: #f9f3df;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 18px 64px;
+    }
+    header {
+      margin-bottom: 20px;
+    }
+    header p {
+      color: var(--muted);
+      margin: 0 0 8px;
+    }
+    h1 {
+      font-size: clamp(2rem, 4vw, 3.25rem);
+      line-height: 1.05;
+      margin: 0 0 12px;
+    }
+    .note {
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--blue);
+      background: var(--paper);
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: var(--muted);
+      margin: 14px 0 22px;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-bottom: 18px;
+    }
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .chip {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .chip--red { background: var(--red); }
+    .chip--blue { background: var(--blue); }
+    .chip--line {
+      border-radius: 0;
+      width: 24px;
+      height: 0;
+      border-top: 3px dashed var(--hazard);
+      background: transparent;
+    }
+    .grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    }
+    .map-card {
+      border: 1px solid var(--line);
+      background: var(--paper);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 10px 24px rgba(36, 45, 35, 0.08);
+    }
+    .map-card__header {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: start;
+      margin-bottom: 8px;
+    }
+    .map-card__header p {
+      color: var(--muted);
+      font-size: 0.78rem;
+      letter-spacing: 0;
+      margin: 0 0 3px;
+      text-transform: uppercase;
+    }
+    h2 {
+      line-height: 1.1;
+      margin: 0;
+      font-size: 1.35rem;
+    }
+    dl {
+      display: flex;
+      gap: 10px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-align: right;
+      white-space: nowrap;
+    }
+    dt { font-weight: 700; }
+    dd { margin: 0; }
+    .summary {
+      color: var(--muted);
+      margin: 0 0 12px;
+      min-height: 2.9em;
+    }
+    svg {
+      width: 100%;
+      display: block;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--sky-a);
+    }
+    .sky { fill: url(#none); fill: var(--sky-a); }
+    .canyon { fill: var(--terrain); opacity: 0.92; }
+    .surface {
+      fill: none;
+      stroke: var(--terrain-line);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .death-plane {
+      stroke: var(--hazard);
+      stroke-width: 2;
+      stroke-dasharray: 7 7;
+      opacity: 0.8;
+    }
+    .death-label {
+      fill: var(--hazard);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .spawn circle {
+      fill: #fffdf8;
+      stroke-width: 4;
+    }
+    .spawn text {
+      fill: var(--ink);
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .spawn--red circle { stroke: var(--red); }
+    .spawn--blue circle { stroke: var(--blue); }
+    a { color: var(--blue); }
+    code {
+      background: #e8eee2;
+      border-radius: 4px;
+      padding: 0.12em 0.3em;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <p>Generated from <code>server/v1/maps.ts</code> on 2026-06-08</p>
+      <h1>V1 Map Previews</h1>
+      <div class="note">
+        These are contract previews for spawn layout and terrain silhouette. Final Phaser terrain can add texture and polish, but it should preserve these readability goals unless the V1 contract changes.
+      </div>
+      <div class="legend">
+        <span><i class="chip chip--red"></i>Red seats</span>
+        <span><i class="chip chip--blue"></i>Blue seats</span>
+        <span><i class="chip chip--line"></i>Death plane</span>
+      </div>
+    </header>
+    <section class="grid">
+
+    <article class="map-card">
+      <div class="map-card__header">
+        <div>
+          <p>mesa-ribs</p>
+          <h2>Mesa Ribs</h2>
+        </div>
+        <dl>
+          <div><dt>Wind</dt><dd>0.85x</dd></div>
+          <div><dt>Seed Salt</dt><dd>11</dd></div>
+        </dl>
+      </div>
+      <p class="summary">wide ridges with shallow center pockets</p>
+      <svg viewBox="0 0 720 260" role="img" aria-label="Mesa Ribs terrain preview">
+        <rect class="sky" x="0" y="0" width="720" height="260" rx="8"></rect>
+        <path class="canyon" d="M 30.0 113.7 L 79.5 85.6 L 129.0 65.9 L 184.0 82.8 L 244.5 113.7 L 310.5 99.7 L 365.5 125.0 L 428.8 96.8 L 492.0 85.6 L 547.0 68.7 L 602.0 77.1 L 657.0 105.3 L 690.0 113.7 L 690.0 232.0 L 30.0 232.0 Z"></path>
+        <path class="surface" d="M 30.0 113.7 L 79.5 85.6 L 129.0 65.9 L 184.0 82.8 L 244.5 113.7 L 310.5 99.7 L 365.5 125.0 L 428.8 96.8 L 492.0 85.6 L 547.0 68.7 L 602.0 77.1 L 657.0 105.3 L 690.0 113.7"></path>
+        <line class="death-plane" x1="30" y1="232.0" x2="690" y2="232.0"></line>
+        <text class="death-label" x="690" y="224.0" text-anchor="end">death plane</text>
+
+        <g class="spawn spawn--red">
+          <circle cx="134.5" cy="68.7" r="9"></circle>
+          <text x="134.5" y="50.7" text-anchor="middle">R1</text>
+          <text x="134.5" y="72.7" text-anchor="middle">></text>
+        </g>
+
+        <g class="spawn spawn--blue">
+          <circle cx="585.5" cy="63.1" r="9"></circle>
+          <text x="585.5" y="45.1" text-anchor="middle">B1</text>
+          <text x="585.5" y="67.1" text-anchor="middle"><</text>
+        </g>
+
+        <g class="spawn spawn--red">
+          <circle cx="197.8" cy="85.6" r="9"></circle>
+          <text x="197.8" y="67.6" text-anchor="middle">R2</text>
+          <text x="197.8" y="89.6" text-anchor="middle">></text>
+        </g>
+
+        <g class="spawn spawn--blue">
+          <circle cx="522.3" cy="85.6" r="9"></circle>
+          <text x="522.3" y="67.6" text-anchor="middle">B2</text>
+          <text x="522.3" y="89.6" text-anchor="middle"><</text>
+        </g>
+      </svg>
+    </article>
+
+    <article class="map-card">
+      <div class="map-card__header">
+        <div>
+          <p>split-arch</p>
+          <h2>Split Arch</h2>
+        </div>
+        <dl>
+          <div><dt>Wind</dt><dd>1.00x</dd></div>
+          <div><dt>Seed Salt</dt><dd>23</dd></div>
+        </dl>
+      </div>
+      <p class="summary">two high shelves divided by a visible central saddle</p>
+      <svg viewBox="0 0 720 260" role="img" aria-label="Split Arch terrain preview">
+        <rect class="sky" x="0" y="0" width="720" height="260" rx="8"></rect>
+        <path class="canyon" d="M 30.0 105.3 L 82.3 68.7 L 129.0 54.6 L 197.8 77.1 L 255.5 113.7 L 307.8 139.1 L 360.0 122.2 L 412.3 139.1 L 464.5 113.7 L 522.3 77.1 L 591.0 54.6 L 637.8 68.7 L 690.0 105.3 L 690.0 232.0 L 30.0 232.0 Z"></path>
+        <path class="surface" d="M 30.0 105.3 L 82.3 68.7 L 129.0 54.6 L 197.8 77.1 L 255.5 113.7 L 307.8 139.1 L 360.0 122.2 L 412.3 139.1 L 464.5 113.7 L 522.3 77.1 L 591.0 54.6 L 637.8 68.7 L 690.0 105.3"></path>
+        <line class="death-plane" x1="30" y1="232.0" x2="690" y2="232.0"></line>
+        <text class="death-label" x="690" y="224.0" text-anchor="end">death plane</text>
+
+        <g class="spawn spawn--red">
+          <circle cx="120.8" cy="51.8" r="9"></circle>
+          <text x="120.8" y="33.8" text-anchor="middle">R1</text>
+          <text x="120.8" y="55.8" text-anchor="middle">></text>
+        </g>
+
+        <g class="spawn spawn--blue">
+          <circle cx="599.3" cy="51.8" r="9"></circle>
+          <text x="599.3" y="33.8" text-anchor="middle">B1</text>
+          <text x="599.3" y="55.8" text-anchor="middle"><</text>
+        </g>
+
+        <g class="spawn spawn--red">
+          <circle cx="228.0" cy="91.2" r="9"></circle>
+          <text x="228.0" y="73.2" text-anchor="middle">R2</text>
+          <text x="228.0" y="95.2" text-anchor="middle">></text>
+        </g>
+
+        <g class="spawn spawn--blue">
+          <circle cx="492.0" cy="91.2" r="9"></circle>
+          <text x="492.0" y="73.2" text-anchor="middle">B2</text>
+          <text x="492.0" y="95.2" text-anchor="middle"><</text>
+        </g>
+      </svg>
+    </article>
+
+    <article class="map-card">
+      <div class="map-card__header">
+        <div>
+          <p>crater-steps</p>
+          <h2>Crater Steps</h2>
+        </div>
+        <dl>
+          <div><dt>Wind</dt><dd>0.90x</dd></div>
+          <div><dt>Seed Salt</dt><dd>37</dd></div>
+        </dl>
+      </div>
+      <p class="summary">stepped shelves with several safe crater bowls</p>
+      <svg viewBox="0 0 720 260" role="img" aria-label="Crater Steps terrain preview">
+        <rect class="sky" x="0" y="0" width="720" height="260" rx="8"></rect>
+        <path class="canyon" d="M 30.0 125.0 L 87.8 99.7 L 145.5 74.3 L 197.8 105.3 L 247.3 122.2 L 299.5 91.2 L 360.0 122.2 L 420.5 91.2 L 472.7 122.2 L 522.3 105.3 L 574.5 74.3 L 632.3 99.7 L 690.0 125.0 L 690.0 232.0 L 30.0 232.0 Z"></path>
+        <path class="surface" d="M 30.0 125.0 L 87.8 99.7 L 145.5 74.3 L 197.8 105.3 L 247.3 122.2 L 299.5 91.2 L 360.0 122.2 L 420.5 91.2 L 472.7 122.2 L 522.3 105.3 L 574.5 74.3 L 632.3 99.7 L 690.0 125.0"></path>
+        <line class="death-plane" x1="30" y1="232.0" x2="690" y2="232.0"></line>
+        <text class="death-label" x="690" y="224.0" text-anchor="end">death plane</text>
+
+        <g class="spawn spawn--red">
+          <circle cx="145.5" cy="74.3" r="9"></circle>
+          <text x="145.5" y="56.3" text-anchor="middle">R1</text>
+          <text x="145.5" y="78.3" text-anchor="middle">></text>
+        </g>
+
+        <g class="spawn spawn--blue">
+          <circle cx="574.5" cy="74.3" r="9"></circle>
+          <text x="574.5" y="56.3" text-anchor="middle">B1</text>
+          <text x="574.5" y="78.3" text-anchor="middle"><</text>
+        </g>
+
+        <g class="spawn spawn--red">
+          <circle cx="244.5" cy="119.4" r="9"></circle>
+          <text x="244.5" y="101.4" text-anchor="middle">R2</text>
+          <text x="244.5" y="123.4" text-anchor="middle">></text>
+        </g>
+
+        <g class="spawn spawn--blue">
+          <circle cx="475.5" cy="119.4" r="9"></circle>
+          <text x="475.5" y="101.4" text-anchor="middle">B2</text>
+          <text x="475.5" y="123.4" text-anchor="middle"><</text>
+        </g>
+      </svg>
+    </article>
+
+    <article class="map-card">
+      <div class="map-card__header">
+        <div>
+          <p>wind-bridge</p>
+          <h2>Wind Bridge</h2>
+        </div>
+        <dl>
+          <div><dt>Wind</dt><dd>1.15x</dd></div>
+          <div><dt>Seed Salt</dt><dd>51</dd></div>
+        </dl>
+      </div>
+      <p class="summary">long central bridge that makes wind reads matter</p>
+      <svg viewBox="0 0 720 260" role="img" aria-label="Wind Bridge terrain preview">
+        <rect class="sky" x="0" y="0" width="720" height="260" rx="8"></rect>
+        <path class="canyon" d="M 30.0 119.4 L 79.5 85.6 L 129.0 57.4 L 200.5 77.1 L 266.5 96.8 L 316.0 85.6 L 360.0 79.9 L 404.0 85.6 L 453.5 96.8 L 519.5 77.1 L 591.0 57.4 L 640.5 85.6 L 690.0 119.4 L 690.0 232.0 L 30.0 232.0 Z"></path>
+        <path class="surface" d="M 30.0 119.4 L 79.5 85.6 L 129.0 57.4 L 200.5 77.1 L 266.5 96.8 L 316.0 85.6 L 360.0 79.9 L 404.0 85.6 L 453.5 96.8 L 519.5 77.1 L 591.0 57.4 L 640.5 85.6 L 690.0 119.4"></path>
+        <line class="death-plane" x1="30" y1="232.0" x2="690" y2="232.0"></line>
+        <text class="death-label" x="690" y="224.0" text-anchor="end">death plane</text>
+
+        <g class="spawn spawn--red">
+          <circle cx="129.0" cy="57.4" r="9"></circle>
+          <text x="129.0" y="39.4" text-anchor="middle">R1</text>
+          <text x="129.0" y="61.4" text-anchor="middle">></text>
+        </g>
+
+        <g class="spawn spawn--blue">
+          <circle cx="591.0" cy="57.4" r="9"></circle>
+          <text x="591.0" y="39.4" text-anchor="middle">B1</text>
+          <text x="591.0" y="61.4" text-anchor="middle"><</text>
+        </g>
+
+        <g class="spawn spawn--red">
+          <circle cx="208.8" cy="77.1" r="9"></circle>
+          <text x="208.8" y="59.1" text-anchor="middle">R2</text>
+          <text x="208.8" y="81.1" text-anchor="middle">></text>
+        </g>
+
+        <g class="spawn spawn--blue">
+          <circle cx="511.3" cy="77.1" r="9"></circle>
+          <text x="511.3" y="59.1" text-anchor="middle">B2</text>
+          <text x="511.3" y="81.1" text-anchor="middle"><</text>
+        </g>
+      </svg>
+    </article>
+
+    <article class="map-card">
+      <div class="map-card__header">
+        <div>
+          <p>basin-ridge</p>
+          <h2>Basin Ridge</h2>
+        </div>
+        <dl>
+          <div><dt>Wind</dt><dd>0.95x</dd></div>
+          <div><dt>Seed Salt</dt><dd>67</dd></div>
+        </dl>
+      </div>
+      <p class="summary">outer ridges around a broad readable basin</p>
+      <svg viewBox="0 0 720 260" role="img" aria-label="Basin Ridge terrain preview">
+        <rect class="sky" x="0" y="0" width="720" height="260" rx="8"></rect>
+        <path class="canyon" d="M 30.0 130.6 L 90.5 119.4 L 148.3 108.1 L 219.7 68.7 L 277.5 99.7 L 329.8 139.1 L 360.0 153.2 L 390.2 139.1 L 442.5 99.7 L 500.3 68.7 L 571.8 108.1 L 629.5 119.4 L 690.0 130.6 L 690.0 232.0 L 30.0 232.0 Z"></path>
+        <path class="surface" d="M 30.0 130.6 L 90.5 119.4 L 148.3 108.1 L 219.7 68.7 L 277.5 99.7 L 329.8 139.1 L 360.0 153.2 L 390.2 139.1 L 442.5 99.7 L 500.3 68.7 L 571.8 108.1 L 629.5 119.4 L 690.0 130.6"></path>
+        <line class="death-plane" x1="30" y1="232.0" x2="690" y2="232.0"></line>
+        <text class="death-label" x="690" y="224.0" text-anchor="end">death plane</text>
+
+        <g class="spawn spawn--red">
+          <circle cx="148.3" cy="108.1" r="9"></circle>
+          <text x="148.3" y="90.1" text-anchor="middle">R1</text>
+          <text x="148.3" y="112.1" text-anchor="middle">></text>
+        </g>
+
+        <g class="spawn spawn--blue">
+          <circle cx="571.8" cy="108.1" r="9"></circle>
+          <text x="571.8" y="90.1" text-anchor="middle">B1</text>
+          <text x="571.8" y="112.1" text-anchor="middle"><</text>
+        </g>
+
+        <g class="spawn spawn--red">
+          <circle cx="219.7" cy="68.7" r="9"></circle>
+          <text x="219.7" y="50.7" text-anchor="middle">R2</text>
+          <text x="219.7" y="72.7" text-anchor="middle">></text>
+        </g>
+
+        <g class="spawn spawn--blue">
+          <circle cx="500.3" cy="68.7" r="9"></circle>
+          <text x="500.3" y="50.7" text-anchor="middle">B2</text>
+          <text x="500.3" y="72.7" text-anchor="middle"><</text>
+        </g>
+      </svg>
+    </article>
+    </section>
+  </main>
+</body>
+</html>
