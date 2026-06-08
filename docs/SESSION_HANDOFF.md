@@ -41,7 +41,7 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
   - Direct-hit projectile collision uses optional ellipse combat hulls around the pilot-plus-vehicle unit concepts instead of the old small center-radius check.
   - Combat hulls are hidden by default for map review, can be toggled with `H`, and can start visible with `?combatHulls=1`.
   - Floating markers call out direct damage, splash damage, Bunger shove, HP KO, and terrain/fall bunge defeat.
-  - Round start defaults to Ring Basin from the committed v1 map pool, using exact four-seat spawns, two broad playable landmasses, a full-unit-readable center chasm, and faint non-lethal ring landmarks.
+  - Round start defaults to Ringworks Basin from the committed v1 map pool under the stable `ring-basin` id, using exact four-seat spawns, side bowls/high lips, two readable bridge gaps, a central destructible ring bridge island, and faint ring/bridge landmarks.
   - The command deck now uses explicit viewport layout rules and the browser's smallest reliable visible viewport size so the active player info stays inside the visible browser area on wide/short screens.
   - Projectile flight keeps the full battlefield framed while the shot is readable, with recentering reserved for shots that leave the readable frame.
   - The combat readability design is saved at `docs/superpowers/specs/2026-06-07-combat-readability-wind-lobs-design.md`.

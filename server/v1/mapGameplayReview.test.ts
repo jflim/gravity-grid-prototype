@@ -4,7 +4,7 @@ import { GAMEPLAY_REVIEWS, reviewForMapId } from "./mapGameplayReview.js";
 import { MAPS } from "./maps.js";
 import type { SeatId } from "./rules.js";
 
-test("gameplay review covers Ring Basin and Bridgeworks only", () => {
+test("gameplay review covers Ringworks Basin and Bridgeworks only", () => {
   assert.deepEqual(
     GAMEPLAY_REVIEWS.map((review) => review.mapId),
     ["ring-basin", "bridgeworks"],
@@ -32,7 +32,7 @@ test("gameplay review references real map seats and zones", () => {
 });
 
 test("gameplay review lookup returns specific map reviews", () => {
-  assert.equal(reviewForMapId("ring-basin")?.title, "Ring Basin Gameplay Review");
+  assert.equal(reviewForMapId("ring-basin")?.title, "Ringworks Basin Gameplay Review");
   assert.equal(reviewForMapId("bridgeworks")?.title, "Bridgeworks Gameplay Review");
   assert.equal(reviewForMapId("needlefield"), undefined);
 });

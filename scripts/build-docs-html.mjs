@@ -22,7 +22,7 @@ const standaloneHtmlFiles = [
     title: 'V1 Map Gameplay Review',
     htmlPath: join(docsDir, 'V1_MAP_GAMEPLAY_REVIEW.html'),
     source: 'server/v1/mapGameplayReview.ts',
-    description: 'Generated gameplay review notes for Ring Basin and Bridgeworks.',
+    description: 'Generated gameplay review notes for Ringworks Basin and Bridgeworks.',
   },
 ];
 

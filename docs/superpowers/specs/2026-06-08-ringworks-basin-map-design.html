@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ringworks Basin Map Design</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        Generated from <a href="2026-06-08-ringworks-basin-map-design.md">docs/superpowers/specs/2026-06-08-ringworks-basin-map-design.md</a> on 2026-06-08.
+        Edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Ringworks Basin Map Design</h1>
+<h2>Goal</h2>
+<p>Make the default local demo map more motivating to play and build by combining weapon-readable terrain with more novel ring/bridge structure.</p>
+<p>This is not a v1 scope expansion. The map still uses the existing fixed v1 map pool, existing destructible heightmap terrain, existing constant gravity/wind rules, and the four existing v1 primary weapon identities.</p>
+<h2>Approved Direction</h2>
+<p>The approved direction is <strong>B plus C: weapon-readable novelty</strong>.</p>
+<ul>
+<li>B means the terrain should make the four existing primary weapons feel necessary and distinct.</li>
+<li>C means the arena should have enough unusual structure that it feels like Gravity Canyon, not a plain slope duel.</li>
+<li>A is borrowed only where it improves fair Void Drop pressure. The map should not become a pure instant-death hazard map.</li>
+</ul>
+<h2>Design Rule</h2>
+<p>Novel terrain is allowed in v1 only when it makes the existing four primary weapons more interesting. Pure spectacle goes to v2.</p>
+<h2>Map Shape</h2>
+<p>Keep the stable map id <code>ring-basin</code> for compatibility, but change the displayed map direction to <strong>Ringworks Basin</strong>.</p>
+<p>Ringworks Basin should use three playable land spans:</p>
+<ul>
+<li>Left canyon bowl and high lip for the red seats.</li>
+<li>Central broken ring bridge/island as a destructible shot-lane obstacle.</li>
+<li>Right canyon bowl and high lip for the blue seats.</li>
+</ul>
+<p>The central ring bridge creates two large readable air gaps instead of one tiny slot or one empty middle. These gaps should be wide enough to visually fit the current large pilot-plus-vehicle unit scale.</p>
+<h2>Weapon Reads</h2>
+<ul>
+<li>Nova / Canyon Breaker: exposed high lips and bridge edges can be carved into Void Drop pressure, but should require setup rather than one free shot.</li>
+<li>Vesper / Gravity Well: pull impact points near bridge lips and chasm edges should threaten positioning without adding map-specific gravity rules.</li>
+<li>Kaelii / Skip Roller: side bowls, crater lips, and curved approaches should create obvious rolling routes into trapped or cratered enemies.</li>
+<li>Perlah / Sunspike Cluster: compact side pockets and the central bridge/island should give cluster shots meaningful area targets.</li>
+</ul>
+<h2>Constraints</h2>
+<ul>
+<li>No new weapons, second shots, passives, ultimates, map-specific physics, gravity wells as hazards, moving platforms, or procedural map sliders.</li>
+<li>No tiny lethal gaps that look too small for the current sprites.</li>
+<li>No player spawns on the central bridge/island.</li>
+<li>Spawns must stay close to safe terrain surfaces.</li>
+<li>The map should keep uphill and downhill shot reads for first-time players.</li>
+<li>The local demo should remain playable after every map iteration.</li>
+</ul>
+<h2>Acceptance</h2>
+<ul>
+<li>Tests prove Ringworks Basin still belongs to the five-map v1 pool under the existing <code>ring-basin</code> id.</li>
+<li>Tests prove the default demo uses Ringworks Basin.</li>
+<li>Tests prove the center has a playable/destructible bridge/island at the middle and readable void gaps on both sides.</li>
+<li>Tests prove the side terrain has lower bowls and high lips that support weapon-readable play.</li>
+<li>Generated HTML map docs reflect the new shape and review notes.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

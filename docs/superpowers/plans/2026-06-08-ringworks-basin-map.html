@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ringworks Basin Map Implementation Plan</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        Generated from <a href="2026-06-08-ringworks-basin-map.md">docs/superpowers/plans/2026-06-08-ringworks-basin-map.md</a> on 2026-06-08.
+        Edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Ringworks Basin Map Implementation Plan</h1>
+<blockquote>
+<p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (<code>- [ ]</code>) syntax for tracking.</p>
+</blockquote>
+<p><strong>Goal:</strong> Convert the default <code>ring-basin</code> demo map into Ringworks Basin, a B+C hybrid map with weapon-readable terrain and novel ring/bridge structure.</p>
+<p><strong>Architecture:</strong> Keep the existing v1 map contract and heightmap conversion pipeline. Update <code>server/v1/maps.ts</code> as the source of truth, use tests in <code>server/v1/maps.test.ts</code> and <code>src/playableMaps.test.ts</code> to lock the shape, then regenerate generated HTML docs.</p>
+<p><strong>Tech Stack:</strong> TypeScript, Node test runner, Phaser heightmap terrain, generated static HTML docs.</p>
+<p>---</p>
+<h3>Task 1: Lock The New Map Shape In Tests</h3>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>server/v1/maps.test.ts</code></li>
+<li>Modify: <code>src/playableMaps.test.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Update map-pool name expectations</strong></li>
+</ul>
+<p>Change the ring map display name expectation from <code>Ring Basin</code> to <code>Ringworks Basin</code> while keeping the id <code>ring-basin</code>.</p>
+<ul>
+<li>[ ] <strong>Step 2: Replace the old center-chasm assertions</strong></li>
+</ul>
+<p>In <code>src/playableMaps.test.ts</code>, assert that <code>surfaceAt(playable, 960)</code> and <code>surfaceAt(playable, 1500)</code> are void, while <code>surfaceAt(playable, 1200)</code> is playable land above the death plane.</p>
+<ul>
+<li>[ ] <strong>Step 3: Add weapon-readable side terrain assertions</strong></li>
+</ul>
+<p>In <code>src/playableMaps.test.ts</code>, assert that the red and blue high lips are at least 90 px above their lower bowls:</p>
+<pre><code class="language-ts">
+assert.ok(surfaceAt(playable, 520) - surfaceAt(playable, 705) &gt;= 90);
+
+assert.ok(surfaceAt(playable, 1880) - surfaceAt(playable, 1750) &gt;= 90);
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 4: Run focused tests to verify failure</strong></li>
+</ul>
+<p>Run: <code>npx tsx --test server/v1/maps.test.ts src/playableMaps.test.ts</code></p>
+<p>Expected: FAIL because the current map still names Ring Basin and has empty air at <code>x=1200</code>.</p>
+<h3>Task 2: Update Ringworks Basin Geometry</h3>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>server/v1/maps.ts</code></li>
+<li>Modify: <code>server/v1/mapGameplayReview.ts</code></li>
+<li>Modify: <code>server/v1/mapGameplayReview.test.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Update <code>ring-basin</code> display metadata</strong></li>
+</ul>
+<p>Set the map name to <code>Ringworks Basin</code>, summary to <code>broken ring bridge over canyon bowls</code>, and tactical role to <code>weapon-readable ring bridge playground</code>.</p>
+<ul>
+<li>[ ] <strong>Step 2: Replace <code>ring-basin</code> preview segments</strong></li>
+</ul>
+<p>Use three spans: left side, center ring bridge/island, and right side. Keep side gaps around the center at least 300 px wide.</p>
+<ul>
+<li>[ ] <strong>Step 3: Update spawns</strong></li>
+</ul>
+<p>Place <code>red-1</code> and <code>blue-1</code> in lower side bowls and <code>red-2</code> and <code>blue-2</code> on higher side lips, close to their corresponding terrain surfaces.</p>
+<ul>
+<li>[ ] <strong>Step 4: Update landmarks</strong></li>
+</ul>
+<p>Use ring, bridge, and shelf landmarks to communicate the central ring bridge, side bowls, high lips, and weapon-relevant destructible points.</p>
+<ul>
+<li>[ ] <strong>Step 5: Update gameplay review notes</strong></li>
+</ul>
+<p>Rename the ring review to <code>Ringworks Basin Gameplay Review</code> and describe the bridge/island, side void gaps, high lips, and weapon reads.</p>
+<ul>
+<li>[ ] <strong>Step 6: Run focused tests</strong></li>
+</ul>
+<p>Run: <code>npx tsx --test server/v1/maps.test.ts src/playableMaps.test.ts server/v1/mapGameplayReview.test.ts</code></p>
+<p>Expected: PASS.</p>
+<h3>Task 3: Regenerate Docs And Verify</h3>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Generated: <code>docs/V1_MAP_PREVIEWS.html</code></li>
+<li>Generated: <code>docs/V1_MAP_GAMEPLAY_REVIEW.html</code></li>
+<li>Generated: markdown reading copies affected by <code>npm run docs:html</code></li>
+<li>Modify: <code>README.md</code></li>
+<li>Modify: <code>docs/BUILD_PLAN.md</code></li>
+<li>Modify: <code>docs/SESSION_HANDOFF.md</code></li>
+<li>Modify: <code>docs/VERSION_LOG.md</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Update human docs</strong></li>
+</ul>
+<p>Replace default-demo references to Ring Basin with Ringworks Basin where they describe the current playable default.</p>
+<ul>
+<li>[ ] <strong>Step 2: Regenerate HTML docs</strong></li>
+</ul>
+<p>Run: <code>npm run docs:html</code></p>
+<p>Expected: generated docs complete without errors.</p>
+<ul>
+<li>[ ] <strong>Step 3: Run full verification</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+npm run test
+
+npm run build
+
+git diff --check
+
+</code></pre>
+<p>Expected: all commands exit 0.</p>
+<ul>
+<li>[ ] <strong>Step 4: Commit</strong></li>
+</ul>
+<p>Stage the design spec, implementation plan, source changes, tests, markdown docs, and generated HTML docs.</p>
+<p>Commit message:</p>
+<pre><code class="language-text">
+tune: build Ringworks Basin map pass
+
+</code></pre>
+    </article>
+  </main>
+</body>
+</html>

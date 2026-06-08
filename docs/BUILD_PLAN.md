@@ -60,8 +60,8 @@ Done:
 - Temporary crater/splash radius rings make impact ranges visible.
 - Terrain can be punched through into the visible void beneath the stage.
 - Crater, splash, and Bunger knockback radii are smaller so ring-outs require more precise setup.
-- Ring Basin is now the local demo default, using the fixed v1 map surface, exact four-seat spawns, and visual ring landmarks for map-feel testing.
-- Ring Basin now uses a full-unit-readable center chasm instead of tiny lethal slots, so fall threats match the current large sprite/combat-hull scale.
+- Ringworks Basin is now the local demo default under the stable `ring-basin` id, using exact four-seat spawns, two readable bridge gaps, a central ring bridge island, and weapon-readable side bowls/lips for map-feel testing.
+- Ringworks Basin now leans B+C: the map shape should make the existing four v1 primary weapons feel useful while still giving the arena a novel canyon-ring structure.
 - Projectile flight keeps the current battlefield framing while shots remain readable, only recentering as a fallback if a shot leaves the visible frame.
 - Destroyed vehicles now pair destroyed vehicle sprites with character-specific generated KO character sprites instead of overlay effects.
 - Command panel is raised with a bottom safe margin so gameplay controls remain visible.

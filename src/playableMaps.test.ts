@@ -11,11 +11,11 @@ import {
 
 const VOID_SURFACE_Y = 1160;
 
-test("local demo defaults to Ring Basin for playable map feel testing", () => {
+test("local demo defaults to Ringworks Basin for playable map feel testing", () => {
   const map = playableMapById(DEFAULT_DEMO_MAP_ID);
 
   assert.equal(DEFAULT_DEMO_MAP_ID, "ring-basin");
-  assert.equal(map.name, "Ring Basin");
+  assert.equal(map.name, "Ringworks Basin");
 });
 
 test("playable terrain follows v1 map surfaces and keeps all 2v2 spawns safe", () => {
@@ -24,7 +24,7 @@ test("playable terrain follows v1 map surfaces and keeps all 2v2 spawns safe", (
 
   assert.equal(playable.map.id, "ring-basin");
   assert.equal(playable.terrain.length, map.worldWidth + 1);
-  assert.equal(surfaceAt(playable, 1200), VOID_SURFACE_Y, "center chasm is empty air");
+  assert.ok(surfaceAt(playable, 1200) < map.deathPlaneY, "center ring bridge is playable/destructible land");
 
   for (const seat of MODE_SEATS["2v2"]) {
     const spawn = map.spawns[seat.seatId];
@@ -34,15 +34,17 @@ test("playable terrain follows v1 map surfaces and keeps all 2v2 spawns safe", (
   }
 });
 
-test("Ring Basin playable terrain uses full-unit-readable chasms", () => {
+test("Ringworks Basin playable terrain uses readable bridge gaps and weapon terrain", () => {
   const map = playableMapById("ring-basin");
   const playable = buildPlayableTerrain(map, { voidSurfaceY: VOID_SURFACE_Y });
 
-  assert.ok(surfaceAt(playable, 840) < map.deathPlaneY, "left basin shelf remains playable land");
-  assert.equal(surfaceAt(playable, 980), VOID_SURFACE_Y, "left edge of center chasm is empty air");
-  assert.equal(surfaceAt(playable, 1200), VOID_SURFACE_Y, "middle of center chasm is empty air");
-  assert.equal(surfaceAt(playable, 1420), VOID_SURFACE_Y, "right edge of center chasm is empty air");
-  assert.ok(surfaceAt(playable, 1560) < map.deathPlaneY, "right basin shelf remains playable land");
+  assert.ok(surfaceAt(playable, 705) < map.deathPlaneY, "left high lip remains playable land");
+  assert.equal(surfaceAt(playable, 960), VOID_SURFACE_Y, "left bridge gap is empty air");
+  assert.ok(surfaceAt(playable, 1200) < map.deathPlaneY, "center ring bridge is playable/destructible land");
+  assert.equal(surfaceAt(playable, 1500), VOID_SURFACE_Y, "right bridge gap is empty air");
+  assert.ok(surfaceAt(playable, 1750) < map.deathPlaneY, "right high lip remains playable land");
+  assert.ok(surfaceAt(playable, 520) - surfaceAt(playable, 705) >= 90, "left bowl and lip create a visible rolling/crater setup");
+  assert.ok(surfaceAt(playable, 1880) - surfaceAt(playable, 1750) >= 90, "right bowl and lip create a visible rolling/crater setup");
 });
 
 test("playable terrain preserves separated land as void gaps", () => {

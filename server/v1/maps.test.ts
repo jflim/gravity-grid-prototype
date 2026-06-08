@@ -10,7 +10,7 @@ test("v1 map pool has five selectable maps", () => {
   );
   assert.deepEqual(
     MAPS.map((map) => map.name),
-    ["Canyon Terraces", "Split Ravine", "Needlefield", "Ring Basin", "Bridgeworks"],
+    ["Canyon Terraces", "Split Ravine", "Needlefield", "Ringworks Basin", "Bridgeworks"],
   );
 });
 
@@ -92,28 +92,32 @@ test("ring and bridge maps have distinct novelty hooks", () => {
   const ringBasin = MAPS.find((map) => map.id === "ring-basin");
   const bridgeworks = MAPS.find((map) => map.id === "bridgeworks");
 
-  assert.ok(ringBasin, "Ring Basin exists");
+  assert.ok(ringBasin, "Ringworks Basin exists");
   assert.ok(bridgeworks, "Bridgeworks exists");
-  assert.ok(ringBasin.landmarks.filter((landmark) => landmark.type === "ring").length >= 2, "Ring Basin has multiple circular forms");
+  assert.ok(ringBasin.landmarks.filter((landmark) => landmark.type === "ring").length >= 2, "Ringworks Basin has multiple circular forms");
   assert.ok(bridgeworks.landmarks.filter((landmark) => landmark.type === "bridge").length >= 3, "Bridgeworks has many bridges");
   assert.ok(bridgeworks.previewSegments.length >= 5, "Bridgeworks uses many separated land spans");
 });
 
-test("Ring Basin uses separated playable spans instead of relying on circle overlays", () => {
+test("Ringworks Basin mixes readable bunge gaps with a central ring bridge", () => {
   const ringBasin = MAPS.find((map) => map.id === "ring-basin");
-  assert.ok(ringBasin, "Ring Basin exists");
-  assert.ok(ringBasin.previewSegments.length >= 2, "Ring Basin has broken basin spans");
+  assert.ok(ringBasin, "Ringworks Basin exists under the stable ring-basin id");
+  assert.equal(ringBasin.previewSegments.length, 3, "Ringworks Basin has side spans plus a central bridge island");
 
   const gaps = ringBasin.previewSegments.slice(1).map((segment, index) => {
     const previous = ringBasin.previewSegments[index];
     return segment[0].x - previous[previous.length - 1].x;
   });
 
-  assert.ok(gaps.every((gap) => gap >= 320), "Ring Basin avoids tiny lethal slots that look too small for the units");
-  assert.ok(gaps.some((gap) => gap >= 520), "Ring Basin has a full-unit-readable center chasm");
+  assert.ok(gaps.every((gap) => gap >= 300), "Ringworks Basin keeps both bridge gaps readable at current unit scale");
+  assert.ok(gaps.reduce((total, gap) => total + gap, 0) >= 640, "Ringworks Basin has meaningful total air around the bridge");
+  assert.ok(
+    ringBasin.landmarks.some((landmark) => landmark.type === "bridge"),
+    "Ringworks Basin has a visible bridge landmark",
+  );
   assert.ok(
     ringBasin.landmarks.filter((landmark) => landmark.type === "ring").length >= 2,
-    "Ring Basin keeps ring identity through non-lethal landmarks",
+    "Ringworks Basin keeps ring identity through visible landmarks",
   );
 });
 
