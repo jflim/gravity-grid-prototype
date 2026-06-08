@@ -125,13 +125,14 @@
 <li>winner,</li>
 <li>validated active-player preview shots,</li>
 <li>preview token reward on round end.</li>
-<li>The online preview is visible in the floating Online Alpha panel.</li>
+<li>The online preview is available in the floating Online Alpha panel when the local URL includes <code>?onlinePanel=1</code>; the default local demo hides that panel for map-review clarity.</li>
 <li>Phaser projectile and terrain simulation are not yet synced to the server-owned combat model.</li>
 <li>Local combat readability now has prototype combat hulls, floating combat markers, and playable v1 map terrain:</li>
-<li>Direct-hit projectile collision uses visible ellipse combat hulls around the pilot-plus-vehicle unit concepts instead of the old small center-radius check.</li>
-<li>Combat hulls are shown by default for tuning and can be toggled with <code>H</code>.</li>
+<li>Direct-hit projectile collision uses optional ellipse combat hulls around the pilot-plus-vehicle unit concepts instead of the old small center-radius check.</li>
+<li>Combat hulls are hidden by default for map review, can be toggled with <code>H</code>, and can start visible with <code>?combatHulls=1</code>.</li>
 <li>Floating markers call out direct damage, splash damage, Bunger shove, HP KO, and terrain/fall bunge defeat.</li>
 <li>Round start defaults to Ring Basin from the committed v1 map pool, using the reviewed surface segments, exact four-seat spawns, and visual ring landmarks.</li>
+<li>The command deck now uses explicit viewport layout rules so the active player info stays inside the visible browser area on wide/short screens.</li>
 <li>The combat readability design is saved at <code>docs/superpowers/specs/2026-06-07-combat-readability-wind-lobs-design.md</code>.</li>
 <li>Slice 1 implementation notes are saved at <code>docs/superpowers/plans/2026-06-07-combat-readability-slice-1.md</code>.</li>
 </ul>

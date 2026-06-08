@@ -49,6 +49,7 @@ First playable local artillery prototype for Gravity Canyon.
   - placeholder capsule reward and nameplate equip state,
   - server-owned combat preview state with round, turn, wind, active vehicle, HP, winner, and validated preview shot actions.
 - Browser client uses the vendored Colyseus browser SDK at `public/vendor/colyseus.js` to keep Vite dev mode stable on Windows.
+- The local map-review demo hides the Online Alpha room panel by default; add `?onlinePanel=1` to the URL when checking room create/join work.
 
 ## Run
 
@@ -124,7 +125,7 @@ dist/index.html
 - Up/Down arrows: raise/lower barrel relative to the vehicle's facing direction, up to vertical 90-degree aim.
 - Hold/release Spacebar: charge and fire.
 - R: restart round.
-- H: show/hide prototype combat hulls. Hulls are shown by default while tuning.
+- H: show/hide prototype combat hulls. Hulls are hidden by default for map review; add `?combatHulls=1` to start with them visible.
 
 ## Terms
 
@@ -154,8 +155,8 @@ dist/index.html
 - Wind is global round information; turn time is shown above the active vehicle.
 - Launch power, movement range, active vehicle identity, and aim angle live in a raised bottom command deck.
 - Active player also gets a world-space aim arrow, turn timer badge, and ground movement range rail so movement decisions can be read without covering the character art.
-- Prototype combat hulls are visible by default so collision can be tuned against the larger unit concept sprites.
-- The game camera reserves space above the command deck so the playable battlefield does not sit underneath detached UI.
+- Prototype combat hulls can be toggled on when collision needs tuning, but stay hidden by default so map shape and terrain readability are easier to judge.
+- The game camera reserves space above a centered, capped-width command deck so the playable battlefield and active-player info stay readable across common desktop viewport sizes.
 - Current sprites are first-pass generated assets, not final production sprites.
 - Gameplay rendering uses separate layers for vehicle and playable character sprites.
 - Active runtime sprites use stable filenames in `public/assets`; versioned experiments live under `public/assets/sprite-variants`.

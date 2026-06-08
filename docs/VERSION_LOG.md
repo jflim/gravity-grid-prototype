@@ -54,7 +54,9 @@ Highlights:
 - Added a generated v1 map gameplay review page for Ring Basin and Bridgeworks, covering safe spawns, danger zones, movement routes, destructible focus areas, opening reads, fun factors, and risks.
 - Made Ring Basin the local playable demo default by converting the fixed v1 map surface into destructible heightmap terrain, using exact four-seat spawns and visual ring landmarks.
 - Reworked Ring Basin from one continuous terrain strip with circle overlays into separated playable spans with real air gaps and subtler embedded ring arcs.
-- Added visible prototype combat hulls, shown by default and toggleable with `H`, so direct-hit collision better matches the larger pilot-plus-vehicle unit concepts.
+- Hid the Online Alpha room panel and prototype combat hull overlays by default for local map-review play, while keeping them available with `?onlinePanel=1`, `?combatHulls=1`, and the `H` toggle.
+- Added explicit demo layout rules and tests so the bottom command deck remains visible and battlefield framing stays more consistent across common desktop viewport widths.
+- Added visible prototype combat hulls, toggleable with `H`, so direct-hit collision better matches the larger pilot-plus-vehicle unit concepts.
 - Added floating combat markers for direct damage, splash damage, knockback, HP KOs, and terrain/fall bunge defeats.
 - Added randomized terrain/spawn archetypes for local rounds to reduce flat direct-fire duels and encourage high-angle lob play.
 - Clarified Git workflow with branch strategy, quality gates, commit cadence, and push cadence.

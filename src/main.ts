@@ -1,4 +1,10 @@
 import Phaser from "phaser";
+import {
+  computeBattlefieldFrameLayout,
+  computeCommandPanelLayout,
+  shouldMountOnlineLobby,
+  shouldShowCombatHulls,
+} from "./demoLayout";
 import { mountOnlineLobby } from "./onlineLobby";
 import {
   buildPlayableTerrain,
@@ -152,8 +158,6 @@ const BUNGER_KNOCKBACK = 82;
 const IMPACT_PREVIEW_SECONDS = 1.25;
 const COMBAT_MARKER_SECONDS = 1.15;
 const TURN_SECONDS = 30;
-const COMMAND_PANEL_HEIGHT = 176;
-const COMMAND_PANEL_BOTTOM_MARGIN = 24;
 const VOID_SURFACE_Y = WORLD_HEIGHT + 260;
 const DEATH_SURFACE_Y = WORLD_HEIGHT - 6;
 const MAX_TERRAIN_SPRITE_TILT_DEG = 20;
@@ -175,7 +179,7 @@ class GravityGridScene extends Phaser.Scene {
   private shotResult = "";
   private roundOver = false;
   private pendingRoundEvent?: Phaser.Time.TimerEvent;
-  private showCombatHulls = true;
+  private showCombatHulls = shouldShowCombatHulls(window.location.search);
   private combatMarkers: CombatMarker[] = [];
 
   private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -1121,7 +1125,7 @@ class GravityGridScene extends Phaser.Scene {
   }
 
   private playfieldHeight(): number {
-    return Math.max(420, this.scale.height - COMMAND_PANEL_HEIGHT - COMMAND_PANEL_BOTTOM_MARGIN);
+    return computeCommandPanelLayout({ width: this.scale.width, height: this.scale.height }).playfieldHeight;
   }
 
   private frameBattlefield(duration = 0): void {
@@ -1130,24 +1134,21 @@ class GravityGridScene extends Phaser.Scene {
       return;
     }
 
-    const minX = Math.min(...aliveVehicles.map((vehicle) => vehicle.x), 0);
-    const maxX = Math.max(...aliveVehicles.map((vehicle) => vehicle.x), WORLD_WIDTH);
-    const centerX = (minX + maxX) / 2;
-    const targetWidth = Math.max(maxX - minX + 560, WORLD_WIDTH * 0.78);
-    const targetHeight = 760;
-    const zoomX = this.scale.width / targetWidth;
-    const zoomY = this.playfieldHeight() / targetHeight;
-    const zoom = Phaser.Math.Clamp(Math.min(zoomX, zoomY), 0.52, 0.9);
-    const centerY = 470;
+    const frame = computeBattlefieldFrameLayout({
+      viewportWidth: this.scale.width,
+      playfieldHeight: this.playfieldHeight(),
+      worldWidth: WORLD_WIDTH,
+      aliveVehicleXs: aliveVehicles.map((vehicle) => vehicle.x),
+    });
 
     if (duration > 0) {
-      this.cameras.main.pan(centerX, centerY, duration, "Sine.easeInOut");
-      this.cameras.main.zoomTo(zoom, duration);
+      this.cameras.main.pan(frame.centerX, frame.centerY, duration, "Sine.easeInOut");
+      this.cameras.main.zoomTo(frame.zoom, duration);
       return;
     }
 
-    this.cameras.main.setZoom(zoom);
-    this.cameras.main.centerOn(centerX, centerY);
+    this.cameras.main.setZoom(frame.zoom);
+    this.cameras.main.centerOn(frame.centerX, frame.centerY);
   }
 
   private surfaceAt(x: number): number {
@@ -1859,17 +1860,18 @@ class GravityGridScene extends Phaser.Scene {
   private drawControlPanel(active?: VehicleState, roundComplete = false): void {
     const width = this.scale.width;
     const height = this.scale.height;
-    const panelWidth = width;
-    const panelHeight = COMMAND_PANEL_HEIGHT;
-    const panelX = 0;
-    const panelY = height - panelHeight - COMMAND_PANEL_BOTTOM_MARGIN;
+    const layout = computeCommandPanelLayout({ width, height });
+    const panelWidth = layout.dockWidth;
+    const panelHeight = layout.panelHeight;
+    const panelX = layout.dockX;
+    const panelY = layout.panelY;
 
     this.hudGfx.clear();
     this.timerText.setText("");
     this.hudGfx.fillStyle(0x0b1020, 0.92);
-    this.hudGfx.fillRect(panelX, panelY, panelWidth, panelHeight);
+    this.hudGfx.fillRect(0, panelY, width, panelHeight);
     this.hudGfx.fillStyle(0x050817, 0.96);
-    this.hudGfx.fillRect(0, panelY + panelHeight, width, COMMAND_PANEL_BOTTOM_MARGIN);
+    this.hudGfx.fillRect(0, panelY + panelHeight, width, layout.bottomMargin);
     this.hudGfx.lineStyle(4, 0x8be9ff, 0.36);
     this.hudGfx.lineBetween(0, panelY, width, panelY);
     this.hudGfx.lineStyle(1, 0xffffff, 0.08);
@@ -1945,15 +1947,15 @@ class GravityGridScene extends Phaser.Scene {
         strokeThickness: 4,
       });
 
-    this.drawMoveMeter(panelX + 140, panelY + 126, 218, active.moveUnits);
+    this.drawMoveMeter(panelX + 140, panelY + 118, 218, active.moveUnits);
 
     const aimPanelX = panelX + panelWidth - 324;
     const launchX = panelX + Math.min(390, Math.max(286, panelWidth * 0.31));
-    const launchWidth = Math.max(320, aimPanelX - launchX - 28);
+    const launchWidth = Math.min(960, Math.max(320, aimPanelX - launchX - 28));
     const power = this.charging ? this.charge / MAX_POWER : 0;
-    this.drawLaunchPowerMeter(launchX, panelY + 42, launchWidth, power);
+    this.drawLaunchPowerMeter(launchX, panelY + 36, launchWidth, power);
 
-    this.drawPanelAimDial(active, aimPanelX, panelY + 24, 198, 128);
+    this.drawPanelAimDial(active, aimPanelX, panelY + 18, 198, 128);
     this.drawGlobalRoundStatus(active, false);
   }
 
@@ -2139,4 +2141,6 @@ const config: Phaser.Types.Core.GameConfig = {
 };
 
 new Phaser.Game(config);
-mountOnlineLobby();
+if (shouldMountOnlineLobby(window.location.search)) {
+  mountOnlineLobby();
+}

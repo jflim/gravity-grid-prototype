@@ -139,6 +139,7 @@
 <li>placeholder capsule reward and nameplate equip state,</li>
 <li>server-owned combat preview state with round, turn, wind, active vehicle, HP, winner, and validated preview shot actions.</li>
 <li>Browser client uses the vendored Colyseus browser SDK at <code>public/vendor/colyseus.js</code> to keep Vite dev mode stable on Windows.</li>
+<li>The local map-review demo hides the Online Alpha room panel by default; add <code>?onlinePanel=1</code> to the URL when checking room create/join work.</li>
 </ul>
 <h2>Run</h2>
 <p>Development server:</p>
@@ -205,7 +206,7 @@ dist/index.html
 <li>Up/Down arrows: raise/lower barrel relative to the vehicle's facing direction, up to vertical 90-degree aim.</li>
 <li>Hold/release Spacebar: charge and fire.</li>
 <li>R: restart round.</li>
-<li>H: show/hide prototype combat hulls. Hulls are shown by default while tuning.</li>
+<li>H: show/hide prototype combat hulls. Hulls are hidden by default for map review; add <code>?combatHulls=1</code> to start with them visible.</li>
 </ul>
 <h2>Terms</h2>
 <ul>
@@ -235,8 +236,8 @@ dist/index.html
 <li>Wind is global round information; turn time is shown above the active vehicle.</li>
 <li>Launch power, movement range, active vehicle identity, and aim angle live in a raised bottom command deck.</li>
 <li>Active player also gets a world-space aim arrow, turn timer badge, and ground movement range rail so movement decisions can be read without covering the character art.</li>
-<li>Prototype combat hulls are visible by default so collision can be tuned against the larger unit concept sprites.</li>
-<li>The game camera reserves space above the command deck so the playable battlefield does not sit underneath detached UI.</li>
+<li>Prototype combat hulls can be toggled on when collision needs tuning, but stay hidden by default so map shape and terrain readability are easier to judge.</li>
+<li>The game camera reserves space above a centered, capped-width command deck so the playable battlefield and active-player info stay readable across common desktop viewport sizes.</li>
 <li>Current sprites are first-pass generated assets, not final production sprites.</li>
 <li>Gameplay rendering uses separate layers for vehicle and playable character sprites.</li>
 <li>Active runtime sprites use stable filenames in <code>public/assets</code>; versioned experiments live under <code>public/assets/sprite-variants</code>.</li>
