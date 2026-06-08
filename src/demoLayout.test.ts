@@ -19,10 +19,12 @@ test("online room panel can be enabled explicitly for multiplayer checks", () =>
   assert.equal(shouldMountOnlineLobby("?onlinePanel=true"), true);
 });
 
-test("map-review demo hides prototype combat hull overlays by default", () => {
-  assert.equal(shouldShowCombatHulls(""), false);
-  assert.equal(shouldShowCombatHulls("?runtimeAssets"), false);
+test("map-review demo shows collision hull overlays by default", () => {
+  assert.equal(shouldShowCombatHulls(""), true);
+  assert.equal(shouldShowCombatHulls("?runtimeAssets"), true);
   assert.equal(shouldShowCombatHulls("?combatHulls=1"), true);
+  assert.equal(shouldShowCombatHulls("?combatHulls=0"), false);
+  assert.equal(shouldShowCombatHulls("?hulls=false"), false);
 });
 
 test("command panel stays fully visible on a wide short viewport", () => {

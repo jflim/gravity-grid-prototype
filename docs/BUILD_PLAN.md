@@ -60,13 +60,13 @@ Done:
 - Temporary crater/splash radius rings make impact ranges visible.
 - Terrain can be punched through into the visible void beneath the stage, with a persistent void danger layer and floating-platform terrain presentation.
 - Crater, splash, and Bunger knockback radii are smaller so ring-outs require more precise setup.
-- Ringworks Basin is now the local demo default under the stable `ring-basin` id, using exact four-seat spawns, two readable bridge gaps, a central ring bridge island, and weapon-readable side bowls/lips for map-feel testing.
+- Ringworks Basin is now the local demo default under the stable `ring-basin` id, using exact four-seat spawns, widened readable bridge gaps, a central ring bridge island, and weapon-readable side bowls/lips for map-feel testing.
 - Ringworks Basin now leans B+C: the map shape should make the existing four v1 primary weapons feel useful while still giving the arena a novel canyon-ring structure.
 - Projectile flight keeps the current battlefield framing while shots remain readable, only recentering as a fallback if a shot leaves the visible frame.
 - HP KOs and Void Dropped eliminations now have distinct visual presentation even though both remove a unit from play.
 - Destroyed vehicles now pair destroyed vehicle sprites with character-specific generated KO character sprites instead of overlay effects.
 - Command panel is raised with a bottom safe margin so gameplay controls remain visible.
-- Local map-review layout now hides the online panel and combat hull overlays by default, keeps both available through URL flags or hotkeys, and uses capped command-deck framing for more consistent desktop viewport composition.
+- Local map-review layout hides the online panel by default, shows combat hull overlays by default while collision and map scale are being tuned, keeps both configurable through URL flags or hotkeys, and uses capped command-deck framing for more consistent desktop viewport composition.
 - Colyseus server added.
 - Online panel can create/join private rooms, show player slots, ready state, placeholder rewards, and equipped nameplates.
 - Online room now starts a server-owned combat preview when both players ready.

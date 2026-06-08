@@ -8,6 +8,7 @@ import {
   playableMapById,
   surfaceAt,
 } from "./playableMaps";
+import { scaleBattlefieldDisplay } from "./combatPresentation";
 
 const VOID_SURFACE_Y = 1160;
 
@@ -45,6 +46,22 @@ test("Ringworks Basin playable terrain uses readable bridge gaps and weapon terr
   assert.ok(surfaceAt(playable, 1750) < map.deathPlaneY, "right high lip remains playable land");
   assert.ok(surfaceAt(playable, 520) - surfaceAt(playable, 705) >= 90, "left bowl and lip create a visible rolling/crater setup");
   assert.ok(surfaceAt(playable, 1880) - surfaceAt(playable, 1750) >= 90, "right bowl and lip create a visible rolling/crater setup");
+});
+
+test("Ringworks Basin gaps are wider than the scaled match sprite footprint", () => {
+  const novaMatchSprite = scaleBattlefieldDisplay({ width: 354, height: 212 });
+  const minimumReadableGap = novaMatchSprite.width + 112;
+  const gaps = [
+    { name: "left bridge gap", width: 1100 - 740 },
+    { name: "right bridge gap", width: 1660 - 1300 },
+  ];
+
+  for (const gap of gaps) {
+    assert.ok(
+      gap.width >= minimumReadableGap,
+      `${gap.name} should read wider than a full scaled unit with buffer`,
+    );
+  }
 });
 
 test("playable terrain preserves separated land as void gaps", () => {

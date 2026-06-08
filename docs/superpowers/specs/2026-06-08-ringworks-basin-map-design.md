@@ -50,6 +50,6 @@ The central ring bridge creates two large readable air gaps instead of one tiny 
 
 - Tests prove Ringworks Basin still belongs to the five-map v1 pool under the existing `ring-basin` id.
 - Tests prove the default demo uses Ringworks Basin.
-- Tests prove the center has a playable/destructible bridge/island at the middle and readable void gaps on both sides.
+- Tests prove the center has a playable/destructible bridge/island at the middle and void gaps on both sides that exceed the scaled match sprite footprint with buffer.
 - Tests prove the side terrain has lower bowls and high lips that support weapon-readable play.
 - Generated HTML map docs reflect the new shape and review notes.

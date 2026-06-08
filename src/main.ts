@@ -1,6 +1,5 @@
 import Phaser from "phaser";
 import {
-  BATTLEFIELD_UNIT_SCALE,
   VOID_DROP_DISPLAY_Y,
   defeatPresentationFor,
   scaleBattlefieldCombatHull,
@@ -8,6 +7,7 @@ import {
   scaleBattlefieldOffset,
   type DefeatReason,
 } from "./combatPresentation";
+import { shouldApplyWeaponEffect } from "./combatRules";
 import {
   computeBattlefieldFrameLayout,
   computeCommandPanelLayout,
@@ -172,7 +172,7 @@ const COMBAT_MARKER_SECONDS = 1.15;
 const TURN_SECONDS = 30;
 const VOID_SURFACE_Y = WORLD_HEIGHT + 260;
 const DEATH_SURFACE_Y = WORLD_HEIGHT - 6;
-const VISIBLE_VOID_TOP_Y = WORLD_HEIGHT - 80;
+const VISIBLE_VOID_TOP_Y = WORLD_HEIGHT - 200;
 const TERRAIN_PLATFORM_BOTTOM_Y = WORLD_HEIGHT - 48;
 const TERRAIN_BREAKTHROUGH_Y = TERRAIN_PLATFORM_BOTTOM_Y - 6;
 const MAX_TERRAIN_SPRITE_TILT_DEG = 20;
@@ -970,7 +970,15 @@ class GravityGridScene extends Phaser.Scene {
     }
 
     for (const vehicle of this.vehicles) {
-      if (!vehicle.alive || vehicle.id === shooter?.id) {
+      if (
+        !vehicle.alive ||
+        !shouldApplyWeaponEffect({
+          shooterId: shooter?.id,
+          shooterTeam: shooter?.team,
+          targetId: vehicle.id,
+          targetTeam: vehicle.team,
+        })
+      ) {
         continue;
       }
       const d = Phaser.Math.Distance.Between(x, y, vehicle.x, vehicle.y);
@@ -1203,11 +1211,44 @@ class GravityGridScene extends Phaser.Scene {
       vehicle.alive = false;
       vehicle.hp = 0;
       vehicle.defeatReason = "void";
+      vehicle.x = this.nearestVoidDisplayX(vehicle.x);
       vehicle.y = VOID_DROP_DISPLAY_Y;
       return true;
     }
 
     return false;
+  }
+
+  private nearestVoidDisplayX(startX: number): number {
+    const requiredWidth = scaleBattlefieldDisplay({ width: 354, height: 212 }).width + 64;
+    let bestX = Phaser.Math.Clamp(startX, 0, WORLD_WIDTH);
+    let bestDistance = Number.POSITIVE_INFINITY;
+    let runStart: number | undefined;
+
+    for (let x = 0; x <= WORLD_WIDTH + TERRAIN_STEP; x += TERRAIN_STEP) {
+      const sampleX = Math.min(x, WORLD_WIDTH);
+      const isVoid = this.surfaceAt(sampleX) >= TERRAIN_BREAKTHROUGH_Y;
+
+      if (isVoid && runStart === undefined) {
+        runStart = sampleX;
+      }
+
+      if ((!isVoid || x > WORLD_WIDTH) && runStart !== undefined) {
+        const runEnd = sampleX - TERRAIN_STEP;
+        const width = runEnd - runStart;
+        if (width >= requiredWidth) {
+          const center = (runStart + runEnd) / 2;
+          const distance = Math.abs(center - startX);
+          if (distance < bestDistance) {
+            bestX = center;
+            bestDistance = distance;
+          }
+        }
+        runStart = undefined;
+      }
+    }
+
+    return bestX;
   }
 
   private terrainAngleAt(x: number): number {
@@ -1713,17 +1754,6 @@ class GravityGridScene extends Phaser.Scene {
           characterSprite.clearTint();
         }
       }
-
-      const frameScale = USE_UNIT_CONCEPT_PREVIEW ? BATTLEFIELD_UNIT_SCALE : 1;
-      const frameWidth = Math.round((USE_UNIT_CONCEPT_PREVIEW ? 404 : 232) * frameScale);
-      const frameHeight = Math.round((USE_UNIT_CONCEPT_PREVIEW ? 258 : 138) * frameScale);
-      const frameTopOffset = Math.round((USE_UNIT_CONCEPT_PREVIEW ? 202 : 106) * frameScale);
-      if (active) {
-        gfx.fillStyle(0xffffff, USE_UNIT_CONCEPT_PREVIEW ? 0.07 : 0.04);
-        gfx.fillRoundedRect(vehicle.x - frameWidth / 2, renderY - frameTopOffset, frameWidth, frameHeight, 18);
-      }
-      gfx.lineStyle(active ? 3 : 2, active ? 0xffffff : vehicle.accent, active ? 0.44 : 0.28);
-      gfx.strokeRoundedRect(vehicle.x - frameWidth / 2, renderY - frameTopOffset, frameWidth, frameHeight, 18);
 
       if (this.showCombatHulls && vehicle.alive) {
         const hull = this.combatHullFor(vehicle);

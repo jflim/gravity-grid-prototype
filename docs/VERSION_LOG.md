@@ -54,13 +54,15 @@ Highlights:
 - Added a generated v1 map gameplay review page for Ring Basin and Bridgeworks, covering safe spawns, danger zones, movement routes, destructible focus areas, opening reads, fun factors, and risks.
 - Made Ring Basin the local playable demo default by converting the fixed v1 map surface into destructible heightmap terrain, using exact four-seat spawns and visual ring landmarks.
 - Reworked Ring Basin from one continuous terrain strip with circle overlays into separated playable spans with real air gaps and subtler embedded ring arcs.
-- Hid the Online Alpha room panel and prototype combat hull overlays by default for local map-review play, while keeping them available with `?onlinePanel=1`, `?combatHulls=1`, and the `H` toggle.
+- Hid the Online Alpha room panel by default for local map-review play while keeping it available with `?onlinePanel=1`.
 - Added explicit demo layout rules and tests so the bottom command deck remains visible and battlefield framing stays more consistent across common desktop viewport widths.
 - Synchronized Phaser and CSS sizing against the smallest reliable visible browser viewport measurement so fullscreen browser chrome/layout mismatches do not push the command deck below the visible screen.
 - Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.
 - Changed projectile camera behavior to keep the battlefield stable while shots are readable, recentering only when a projectile leaves the readable frame.
 - Converted the default `ring-basin` demo pass into Ringworks Basin: a B+C weapon-readable novelty map with side bowls/high lips, two readable bridge gaps, and a central destructible ring bridge island.
 - Added a combat scale and void readability pass: smaller match-view full-unit art, scaled combat hulls/frames/labels, active contact cue, persistent void danger layer, and distinct HP KO versus Void Dropped presentation.
+- Removed non-gameplay character frames, made combat hull overlays visible by default for collision tuning, widened Ringworks Basin bridge gaps against the scaled sprite footprint, and moved Void Dropped display into wide nearby void runs.
+- Allowed self-damage from weapon effects while preserving allied friendly-fire immunity.
 - Added visible prototype combat hulls, toggleable with `H`, so direct-hit collision better matches the larger pilot-plus-vehicle unit concepts.
 - Added floating combat markers for direct damage, splash damage, knockback, HP KOs, and terrain/fall Void Dropped defeats.
 - Added randomized terrain/spawn archetypes for local rounds to reduce flat direct-fire duels and encourage high-angle lob play.

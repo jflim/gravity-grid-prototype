@@ -38,11 +38,11 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
 - The online preview is available in the floating Online Alpha panel when the local URL includes `?onlinePanel=1`; the default local demo hides that panel for map-review clarity.
 - Phaser projectile and terrain simulation are not yet synced to the server-owned combat model.
 - Local combat readability now has prototype combat hulls, floating combat markers, and playable v1 map terrain:
-  - Direct-hit projectile collision uses optional ellipse combat hulls around the pilot-plus-vehicle units instead of the old small center-radius check; match-view hulls and full-unit concept sprites are scaled down together for map readability.
-  - Combat hulls are hidden by default for map review, can be toggled with `H`, and can start visible with `?combatHulls=1`.
+  - Direct-hit projectile collision uses ellipse combat hulls around the pilot-plus-vehicle units instead of the old small center-radius check; match-view hulls and full-unit concept sprites are scaled down together for map readability.
+  - Combat hulls are visible by default while collision and terrain scale are being tuned, can be toggled with `H`, and can start hidden with `?combatHulls=0`.
   - Floating markers call out direct damage, splash damage, Bunger shove, HP KO, and Void Dropped eliminations.
-  - Round start defaults to Ringworks Basin from the committed v1 map pool under the stable `ring-basin` id, using exact four-seat spawns, side bowls/high lips, two readable bridge gaps, a central destructible ring bridge island, and faint ring/bridge landmarks.
-  - The void now has a persistent visual danger layer, floating terrain presentation, and suspended Void Dropped unit treatment distinct from HP KO.
+  - Round start defaults to Ringworks Basin from the committed v1 map pool under the stable `ring-basin` id, using exact four-seat spawns, side bowls/high lips, widened readable bridge gaps, a central destructible ring bridge island, and faint ring/bridge landmarks.
+  - The void now has a persistent visual danger layer, floating terrain presentation, and suspended Void Dropped unit treatment distinct from HP KO. Void Dropped units snap to a wide nearby void run for display so they do not visually rest half inside terrain.
   - The command deck now uses explicit viewport layout rules and the browser's smallest reliable visible viewport size so the active player info stays inside the visible browser area on wide/short screens.
   - Projectile flight keeps the full battlefield framed while the shot is readable, with recentering reserved for shots that leave the readable frame.
   - The combat readability design is saved at `docs/superpowers/specs/2026-06-07-combat-readability-wind-lobs-design.md`.

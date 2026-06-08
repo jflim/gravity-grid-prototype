@@ -137,11 +137,11 @@ export const MAPS: readonly V1Map[] = [
         point(590, 636),
         point(650, 590),
         point(705, 584),
-        point(760, 608),
+        point(740, 604),
       ),
-      segment(point(1080, 656), point(1135, 588), point(1200, 552), point(1265, 588), point(1320, 656)),
+      segment(point(1100, 656), point(1145, 588), point(1200, 552), point(1255, 588), point(1300, 656)),
       segment(
-        point(1640, 672),
+        point(1660, 672),
         point(1695, 608),
         point(1750, 584),
         point(1810, 590),
@@ -155,7 +155,7 @@ export const MAPS: readonly V1Map[] = [
     ],
     landmarks: [
       landmark("ring", 1200, 596, 360, 210, "broken center ring"),
-      landmark("bridge", 1200, 552, 320, 90, "ring bridge island"),
+      landmark("bridge", 1200, 552, 260, 90, "ring bridge island"),
       landmark("ring", 705, 618, 300, 150, "red bowl ring"),
       landmark("ring", 1750, 618, 300, 150, "blue bowl ring"),
       landmark("shelf", 705, 584, 260, 40, "red high lip"),

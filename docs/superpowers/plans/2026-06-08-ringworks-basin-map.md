@@ -52,7 +52,7 @@ Set the map name to `Ringworks Basin`, summary to `broken ring bridge over canyo
 
 - [ ] **Step 2: Replace `ring-basin` preview segments**
 
-Use three spans: left side, center ring bridge/island, and right side. Keep side gaps around the center at least 300 px wide.
+Use three spans: left side, center ring bridge/island, and right side. Keep side gaps around the center at least one scaled full-unit sprite width plus readability buffer.
 
 - [ ] **Step 3: Update spawns**
 
