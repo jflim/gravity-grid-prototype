@@ -60,6 +60,7 @@ Done:
 - Temporary crater/splash radius rings make impact ranges visible.
 - Terrain can be punched through into the visible void beneath the stage.
 - Crater, splash, and Bunger knockback radii are smaller so ring-outs require more precise setup.
+- Ring Basin is now the local demo default, using the fixed v1 map surface, exact four-seat spawns, and visual ring landmarks for map-feel testing.
 - Destroyed vehicles now pair destroyed vehicle sprites with character-specific generated KO character sprites instead of overlay effects.
 - Command panel is raised with a bottom safe margin so gameplay controls remain visible.
 - Colyseus server added.

@@ -1,5 +1,11 @@
 import Phaser from "phaser";
 import { mountOnlineLobby } from "./onlineLobby";
+import {
+  buildPlayableTerrain,
+  DEFAULT_DEMO_MAP_ID,
+  playableMapById,
+  type PlayableTerrain,
+} from "./playableMaps";
 import "./styles.css";
 
 type TeamId = "red" | "blue";
@@ -118,17 +124,6 @@ interface SettleOptions {
   forceIds?: Set<string>;
 }
 
-interface SpawnPair {
-  redX: number;
-  blueX: number;
-}
-
-interface TerrainArchetype {
-  name: string;
-  spawns: SpawnPair;
-  shape: (x: number, currentY: number) => number;
-}
-
 const WORLD_WIDTH = 2400;
 const WORLD_HEIGHT = 900;
 const TERRAIN_STEP = 4;
@@ -166,6 +161,7 @@ const USE_UNIT_CONCEPT_PREVIEW = !new URLSearchParams(window.location.search).ha
 
 class GravityGridScene extends Phaser.Scene {
   private terrain: number[] = [];
+  private currentDemoMap?: PlayableTerrain;
   private vehicles: VehicleState[] = [];
   private turnOrder: string[] = [];
   private turnIndex = 0;
@@ -472,12 +468,14 @@ class GravityGridScene extends Phaser.Scene {
     this.pendingRoundEvent = undefined;
     this.roundOver = false;
     this.clearCombatMarkers();
-    const terrainArchetype = this.pickTerrainArchetype();
-    this.generateTerrain(terrainArchetype);
-    const kaeliiSpawnX = Phaser.Math.Clamp(terrainArchetype.spawns.redX + 250, MOVE_MIN_X, MOVE_MAX_X);
-    const perlahSpawnX = Phaser.Math.Clamp(terrainArchetype.spawns.blueX - 250, MOVE_MIN_X, MOVE_MAX_X);
-    this.flattenSpawnZone(kaeliiSpawnX, 150);
-    this.flattenSpawnZone(perlahSpawnX, 150);
+    const demoMap = this.buildDefaultDemoMap();
+    this.currentDemoMap = demoMap;
+    this.terrain = [...demoMap.terrain];
+    this.flattenDemoSpawnZones(demoMap);
+    const redOneSpawn = demoMap.map.spawns["red-1"];
+    const blueOneSpawn = demoMap.map.spawns["blue-1"];
+    const redTwoSpawn = demoMap.map.spawns["red-2"];
+    const blueTwoSpawn = demoMap.map.spawns["blue-2"];
     this.vehicles = [
       {
         id: "red-1",
@@ -485,11 +483,11 @@ class GravityGridScene extends Phaser.Scene {
         team: "red",
         classId: "bunger",
         className: "Bunger Rig",
-        x: terrainArchetype.spawns.redX,
+        x: redOneSpawn.x,
         y: 0,
         hp: MAX_HP,
-        angle: 47,
-        facing: 1,
+        angle: this.initialAngleForFacing(redOneSpawn.facing),
+        facing: redOneSpawn.facing,
         moveUnits: MAX_MOVE_UNITS,
         alive: true,
         color: 0xff4d5d,
@@ -533,11 +531,11 @@ class GravityGridScene extends Phaser.Scene {
         team: "blue",
         classId: "glitch",
         className: "Glitch Rover",
-        x: terrainArchetype.spawns.blueX,
+        x: blueOneSpawn.x,
         y: 0,
         hp: MAX_HP,
-        angle: 133,
-        facing: -1,
+        angle: this.initialAngleForFacing(blueOneSpawn.facing),
+        facing: blueOneSpawn.facing,
         moveUnits: MAX_MOVE_UNITS,
         alive: true,
         color: 0x4cc9f0,
@@ -581,11 +579,11 @@ class GravityGridScene extends Phaser.Scene {
         team: "red",
         classId: "bouncer",
         className: "Flashkick Skip-Rig",
-        x: kaeliiSpawnX,
+        x: redTwoSpawn.x,
         y: 0,
         hp: MAX_HP,
-        angle: 47,
-        facing: 1,
+        angle: this.initialAngleForFacing(redTwoSpawn.facing),
+        facing: redTwoSpawn.facing,
         moveUnits: MAX_MOVE_UNITS,
         alive: true,
         color: 0xff4fb4,
@@ -629,11 +627,11 @@ class GravityGridScene extends Phaser.Scene {
         team: "blue",
         classId: "spark",
         className: "Sunspike Embercart",
-        x: perlahSpawnX,
+        x: blueTwoSpawn.x,
         y: 0,
         hp: MAX_HP,
-        angle: 133,
-        facing: -1,
+        angle: this.initialAngleForFacing(blueTwoSpawn.facing),
+        facing: blueTwoSpawn.facing,
         moveUnits: MAX_MOVE_UNITS,
         alive: true,
         color: 0xff8a24,
@@ -679,88 +677,24 @@ class GravityGridScene extends Phaser.Scene {
     this.turnCommitted = false;
     this.charge = 0;
     this.charging = false;
-    this.shotResult = `Round started: ${terrainArchetype.name}.`;
+    this.shotResult = `Round started: ${demoMap.map.name}.`;
     this.settleVehicles();
     this.beginTurn();
     this.drawWorld();
   }
 
-  private pickTerrainArchetype(): TerrainArchetype {
-    const ridge = (centerX: number, width: number, height: number) => (x: number) =>
-      -height * Math.exp(-Math.pow((x - centerX) / width, 2));
-    const basin = (centerX: number, width: number, depth: number) => (x: number) =>
-      depth * Math.exp(-Math.pow((x - centerX) / width, 2));
-    const shelf = (centerX: number, width: number, height: number) => (x: number) =>
-      Math.abs(x - centerX) <= width ? -height : 0;
-
-    const archetypes: TerrainArchetype[] = [
-      {
-        name: "Twin Ridges",
-        spawns: { redX: 360, blueX: 2040 },
-        shape: (x, currentY) => currentY + ridge(960, 170, 86)(x) + ridge(1440, 170, 86)(x) + basin(1200, 240, 58)(x),
-      },
-      {
-        name: "Shelf Duel",
-        spawns: { redX: 470, blueX: 1930 },
-        shape: (x, currentY) =>
-          currentY +
-          shelf(640, 210, 48)(x) +
-          shelf(1760, 210, 48)(x) +
-          ridge(1200, 120, 132)(x) +
-          basin(1200, 300, 42)(x),
-      },
-      {
-        name: "Canyon Basin",
-        spawns: { redX: 330, blueX: 2070 },
-        shape: (x, currentY) =>
-          currentY + basin(1200, 360, 128)(x) + ridge(1060, 95, 84)(x) + ridge(1340, 95, 84)(x),
-      },
-      {
-        name: "Broken Center Wall",
-        spawns: { redX: 415, blueX: 1985 },
-        shape: (x, currentY) =>
-          currentY +
-          ridge(1120, 78, 142)(x) +
-          ridge(1280, 78, 142)(x) +
-          basin(1200, 72, 92)(x) +
-          basin(900, 180, 34)(x) +
-          basin(1500, 180, 34)(x),
-      },
-      {
-        name: "Staggered Shelves",
-        spawns: { redX: 540, blueX: 1860 },
-        shape: (x, currentY) =>
-          currentY +
-          shelf(525, 210, 62)(x) +
-          shelf(1875, 210, 62)(x) +
-          ridge(1180, 155, 118)(x) +
-          ridge(1510, 105, 54)(x) +
-          basin(820, 150, 36)(x),
-      },
-    ];
-
-    return Phaser.Utils.Array.GetRandom(archetypes);
+  private buildDefaultDemoMap(): PlayableTerrain {
+    return buildPlayableTerrain(playableMapById(DEFAULT_DEMO_MAP_ID), { voidSurfaceY: VOID_SURFACE_Y });
   }
 
-  private generateTerrain(archetype: TerrainArchetype): void {
-    this.terrain = new Array(WORLD_WIDTH + 1);
-    for (let x = 0; x <= WORLD_WIDTH; x += TERRAIN_STEP) {
-      const nx = x / WORLD_WIDTH;
-      const base =
-        612 +
-        Math.sin(nx * Math.PI * 2.1 + 0.4) * 72 +
-        Math.sin(nx * Math.PI * 5.8 + 1.2) * 34 +
-        Math.sin(nx * Math.PI * 12.5) * 12;
-      const valley = 110 * Math.exp(-Math.pow((x - WORLD_WIDTH / 2) / 380, 2));
-      const shaped = archetype.shape(x, base + valley);
-      const y = Phaser.Math.Clamp(shaped, 390, 780);
-      for (let i = 0; i < TERRAIN_STEP && x + i <= WORLD_WIDTH; i += 1) {
-        this.terrain[x + i] = y;
-      }
+  private flattenDemoSpawnZones(demoMap: PlayableTerrain): void {
+    for (const spawn of Object.values(demoMap.map.spawns)) {
+      this.flattenSpawnZone(spawn.x, 150);
     }
+  }
 
-    this.flattenSpawnZone(archetype.spawns.redX, 150);
-    this.flattenSpawnZone(archetype.spawns.blueX, 150);
+  private initialAngleForFacing(facing: 1 | -1): number {
+    return facing === 1 ? 47 : 133;
   }
 
   private flattenSpawnZone(centerX: number, width: number): void {
@@ -1341,6 +1275,7 @@ class GravityGridScene extends Phaser.Scene {
   private drawTerrain(): void {
     const gfx = this.terrainGfx;
     gfx.clear();
+    this.drawMapLandmarks(gfx, "backdrop");
 
     let segment: Array<{ x: number; y: number }> = [];
     const flushSegment = () => {
@@ -1380,6 +1315,72 @@ class GravityGridScene extends Phaser.Scene {
       segment.push({ x, y: surface });
     }
     flushSegment();
+    this.drawMapLandmarks(gfx, "highlight");
+  }
+
+  private drawMapLandmarks(gfx: Phaser.GameObjects.Graphics, pass: "backdrop" | "highlight"): void {
+    const landmarks = this.currentDemoMap?.map.landmarks ?? [];
+    for (const landmark of landmarks) {
+      switch (landmark.type) {
+        case "ring": {
+          if (pass === "backdrop") {
+            gfx.lineStyle(28, 0xc8914c, 0.18);
+            gfx.strokeEllipse(landmark.x, landmark.y, landmark.width, landmark.height);
+            gfx.lineStyle(10, 0x2a1f1c, 0.16);
+            gfx.strokeEllipse(landmark.x, landmark.y, landmark.width * 0.74, landmark.height * 0.64);
+          } else {
+            gfx.lineStyle(4, 0xffd166, 0.32);
+            gfx.strokeEllipse(landmark.x, landmark.y, landmark.width, landmark.height);
+          }
+          break;
+        }
+        case "bridge":
+        case "arch": {
+          const y = landmark.y + landmark.height * 0.26;
+          const left = landmark.x - landmark.width / 2;
+          const right = landmark.x + landmark.width / 2;
+          gfx.lineStyle(
+            pass === "backdrop" ? 18 : 4,
+            pass === "backdrop" ? 0x9b7650 : 0xffd166,
+            pass === "backdrop" ? 0.2 : 0.3,
+          );
+          gfx.beginPath();
+          for (let step = 0; step <= 12; step += 1) {
+            const t = step / 12;
+            const x = Phaser.Math.Linear(left, right, t);
+            const archY = y - Math.sin(t * Math.PI) * landmark.height * 0.74;
+            if (step === 0) {
+              gfx.moveTo(x, archY);
+            } else {
+              gfx.lineTo(x, archY);
+            }
+          }
+          gfx.strokePath();
+          break;
+        }
+        case "shelf": {
+          if (pass === "highlight") {
+            gfx.lineStyle(5, 0xffd166, 0.22);
+            gfx.lineBetween(landmark.x - landmark.width / 2, landmark.y, landmark.x + landmark.width / 2, landmark.y);
+          }
+          break;
+        }
+        case "spire": {
+          if (pass === "backdrop") {
+            gfx.fillStyle(0x7a5b3f, 0.16);
+            gfx.fillTriangle(
+              landmark.x,
+              landmark.y - landmark.height / 2,
+              landmark.x - landmark.width / 2,
+              landmark.y + landmark.height / 2,
+              landmark.x + landmark.width / 2,
+              landmark.y + landmark.height / 2,
+            );
+          }
+          break;
+        }
+      }
+    }
   }
 
   private drawAim(): void {

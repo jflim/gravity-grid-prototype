@@ -37,11 +37,11 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
   - preview token reward on round end.
 - The online preview is visible in the floating Online Alpha panel.
 - Phaser projectile and terrain simulation are not yet synced to the server-owned combat model.
-- Local combat readability now has prototype combat hulls, floating combat markers, and randomized terrain/spawn archetypes:
+- Local combat readability now has prototype combat hulls, floating combat markers, and playable v1 map terrain:
   - Direct-hit projectile collision uses visible ellipse combat hulls around the pilot-plus-vehicle unit concepts instead of the old small center-radius check.
   - Combat hulls are shown by default for tuning and can be toggled with `H`.
   - Floating markers call out direct damage, splash damage, Bunger shove, HP KO, and terrain/fall bunge defeat.
-  - Round start randomly picks one of five map/spawn archetypes: Twin Ridges, Shelf Duel, Canyon Basin, Broken Center Wall, or Staggered Shelves.
+  - Round start defaults to Ring Basin from the committed v1 map pool, using the reviewed surface segments, exact four-seat spawns, and visual ring landmarks.
   - The combat readability design is saved at `docs/superpowers/specs/2026-06-07-combat-readability-wind-lobs-design.md`.
   - Slice 1 implementation notes are saved at `docs/superpowers/plans/2026-06-07-combat-readability-slice-1.md`.
 
@@ -86,7 +86,7 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
 
 For v1 scope discipline, use `docs/V1_PLAYTEST_ALPHA.html` as the authority before accepting any new gameplay, roster, asset, UI, economy, social, or polish work as v1. If the request is not required for v1 acceptance, preserve it in the V2 parking lot/context notes instead of expanding v1.
 
-For combat feel, keep tuning visible combat hulls and terrain/spawn archetypes only where they support v1 readability. Advanced wind bands and high-angle/plunge reward rules are future ideas unless the v1 contract is explicitly changed.
+For combat feel, keep tuning visible combat hulls and playable v1 map terrain only where they support v1 readability. Advanced wind bands and high-angle/plunge reward rules are future ideas unless the v1 contract is explicitly changed.
 
 For online v1, the next best build direction is to move from the current Colyseus combat preview toward real private-room 1v1/2v2 room settings, seat ownership, persistent match turn order, and server-owned combat results wired into the Phaser match scene.
 

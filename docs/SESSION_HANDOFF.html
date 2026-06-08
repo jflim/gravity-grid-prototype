@@ -127,11 +127,11 @@
 <li>preview token reward on round end.</li>
 <li>The online preview is visible in the floating Online Alpha panel.</li>
 <li>Phaser projectile and terrain simulation are not yet synced to the server-owned combat model.</li>
-<li>Local combat readability now has prototype combat hulls, floating combat markers, and randomized terrain/spawn archetypes:</li>
+<li>Local combat readability now has prototype combat hulls, floating combat markers, and playable v1 map terrain:</li>
 <li>Direct-hit projectile collision uses visible ellipse combat hulls around the pilot-plus-vehicle unit concepts instead of the old small center-radius check.</li>
 <li>Combat hulls are shown by default for tuning and can be toggled with <code>H</code>.</li>
 <li>Floating markers call out direct damage, splash damage, Bunger shove, HP KO, and terrain/fall bunge defeat.</li>
-<li>Round start randomly picks one of five map/spawn archetypes: Twin Ridges, Shelf Duel, Canyon Basin, Broken Center Wall, or Staggered Shelves.</li>
+<li>Round start defaults to Ring Basin from the committed v1 map pool, using the reviewed surface segments, exact four-seat spawns, and visual ring landmarks.</li>
 <li>The combat readability design is saved at <code>docs/superpowers/specs/2026-06-07-combat-readability-wind-lobs-design.md</code>.</li>
 <li>Slice 1 implementation notes are saved at <code>docs/superpowers/plans/2026-06-07-combat-readability-slice-1.md</code>.</li>
 </ul>
@@ -174,7 +174,7 @@
 </ul>
 <h2>Next Best Step</h2>
 <p>For v1 scope discipline, use <code>docs/V1_PLAYTEST_ALPHA.html</code> as the authority before accepting any new gameplay, roster, asset, UI, economy, social, or polish work as v1. If the request is not required for v1 acceptance, preserve it in the V2 parking lot/context notes instead of expanding v1.</p>
-<p>For combat feel, keep tuning visible combat hulls and terrain/spawn archetypes only where they support v1 readability. Advanced wind bands and high-angle/plunge reward rules are future ideas unless the v1 contract is explicitly changed.</p>
+<p>For combat feel, keep tuning visible combat hulls and playable v1 map terrain only where they support v1 readability. Advanced wind bands and high-angle/plunge reward rules are future ideas unless the v1 contract is explicitly changed.</p>
 <p>For online v1, the next best build direction is to move from the current Colyseus combat preview toward real private-room 1v1/2v2 room settings, seat ownership, persistent match turn order, and server-owned combat results wired into the Phaser match scene.</p>
 <p>For sprites, use the committed Vesper v9/v10 unit candidates as references for the next production pass. The next pass should simplify detail, preserve the light full gloves/tech shorts/chunky sneaker identity, remove the chroma key, split or size layers as needed, and only then promote runtime aliases.</p>
 <p>Recommended Vesper direction:</p>

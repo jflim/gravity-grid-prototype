@@ -7,7 +7,7 @@ First playable local artillery prototype for Gravity Canyon.
 - Browser-based Phaser prototype.
 - Working title updated to Gravity Canyon.
 - Four local test units in a 2v2-style roster: Nova and Kaelii on red, Vesper and Perlah on blue.
-- Procedural heightmap terrain.
+- Ring Basin is the local demo default, converted from the fixed v1 map contract into destructible heightmap terrain.
 - Keyboard movement, 5-90 degree elevation aiming, and hold/release shot power.
 - Left/Right input turns the vehicle, character, and aim direction before moving.
 - Facing-aware aim controls so each side's Up/Down input feels consistent.
@@ -29,7 +29,7 @@ First playable local artillery prototype for Gravity Canyon.
 - Terrain can be blasted through into a visible void beneath the stage.
 - Temporary impact rings showing crater size and splash damage range.
 - Floating combat markers call out direct hits, splash hits, knockback, KOs, and bunge defeats.
-- Round starts now pick from varied terrain/spawn archetypes to reduce flat direct-fire duels and encourage lob play.
+- Round starts now use the playable Ring Basin v1 map, with exact four-seat spawns and visible ring landmarks for map-feel testing.
 - Prototype Bunger shot behavior: larger/deeper excavation, knockback, slope sliding, and fall/bunge KOs, now tuned toward precise 2-3 shot ring-outs.
 - Localized post-impact vehicle settling so distant vehicles are not randomly displaced by unrelated craters.
 - Splash/direct damage, HP bars, turn switching, timeout, round win detection, and automatic round reset.
