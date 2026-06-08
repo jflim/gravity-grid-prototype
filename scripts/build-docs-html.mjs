@@ -18,6 +18,12 @@ const standaloneHtmlFiles = [
     source: 'server/v1/maps.ts',
     description: 'Generated visual previews for the five V1 map contracts.',
   },
+  {
+    title: 'V1 Map Gameplay Review',
+    htmlPath: join(docsDir, 'V1_MAP_GAMEPLAY_REVIEW.html'),
+    source: 'server/v1/mapGameplayReview.ts',
+    description: 'Generated gameplay review notes for Ring Basin and Bridgeworks.',
+  },
 ];
 
 const ignoredDirs = new Set(['node_modules', 'dist', '.git', '.vite', 'work']);

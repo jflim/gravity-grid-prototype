@@ -51,6 +51,7 @@ Highlights:
 - Redesigned the v1 map pool around more interesting canyon silhouettes: multi-tier terrain, broken land segments, central gaps, spires, shelves, arches, and stronger tactical identities.
 - Added explicit uphill/downhill shot-lane examples to every v1 map preview so multi-tier play reads as "shoot up" and "shoot down" at a glance.
 - Replaced Basin Stack and Arch Crossing with Ring Basin and Bridgeworks, adding circular ring forms and many natural bridge spans to the v1 map-preview contract.
+- Added a generated v1 map gameplay review page for Ring Basin and Bridgeworks, covering safe spawns, danger zones, movement routes, destructible focus areas, opening reads, fun factors, and risks.
 - Added visible prototype combat hulls, shown by default and toggleable with `H`, so direct-hit collision better matches the larger pilot-plus-vehicle unit concepts.
 - Added floating combat markers for direct damage, splash damage, knockback, HP KOs, and terrain/fall bunge defeats.
 - Added randomized terrain/spawn archetypes for local rounds to reduce flat direct-fire duels and encourage high-angle lob play.
