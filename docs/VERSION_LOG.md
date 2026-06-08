@@ -63,7 +63,10 @@ Highlights:
 - Added a combat scale and void readability pass: smaller match-view full-unit art, scaled combat hulls/frames/labels, active contact cue, persistent void danger layer, and distinct HP KO versus Void Dropped presentation.
 - Removed non-gameplay character frames, made combat hull overlays visible by default for collision tuning, widened Ringworks Basin bridge gaps against the scaled sprite footprint, and moved Void Dropped display into wide nearby void runs.
 - Allowed self-damage from weapon effects while preserving allied friendly-fire immunity.
-- Added visible prototype combat hulls, toggleable with `H`, so direct-hit collision better matches the larger pilot-plus-vehicle unit concepts.
+- Switched prototype combat collision to one shared rectangular vehicle-only hit zone, with splash measuring to vehicle-zone edges and projectile impact resolving at first swept edge contact.
+- Added collision art review enforcement so standing/high pilot poses require a vehicle protection cue and v1 units cannot silently get custom hitboxes.
+- Enlarged the visible void band and added a short slow-start Void Dropped fall presentation so fallen units are readable before becoming suspended eye candy.
+- Added visible prototype combat hulls, toggleable with `H`, so vehicle-only collision truth can be tuned against larger unit art.
 - Added floating combat markers for direct damage, splash damage, knockback, HP KOs, and terrain/fall Void Dropped defeats.
 - Added randomized terrain/spawn archetypes for local rounds to reduce flat direct-fire duels and encourage high-angle lob play.
 - Clarified Git workflow with branch strategy, quality gates, commit cadence, and push cadence.

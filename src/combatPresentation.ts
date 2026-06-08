@@ -6,8 +6,8 @@ export interface SpriteDisplaySize {
 export interface CombatHullShape {
   offsetX: number;
   offsetY: number;
-  radiusX: number;
-  radiusY: number;
+  width: number;
+  height: number;
 }
 
 export type DefeatReason = "damage" | "void";
@@ -33,8 +33,8 @@ export function scaleBattlefieldCombatHull(hull: CombatHullShape): CombatHullSha
   return {
     offsetX: scaleBattlefieldOffset(hull.offsetX),
     offsetY: scaleBattlefieldOffset(hull.offsetY),
-    radiusX: scaleBattlefieldOffset(hull.radiusX),
-    radiusY: scaleBattlefieldOffset(hull.radiusY),
+    width: scaleBattlefieldOffset(hull.width),
+    height: scaleBattlefieldOffset(hull.height),
   };
 }
 

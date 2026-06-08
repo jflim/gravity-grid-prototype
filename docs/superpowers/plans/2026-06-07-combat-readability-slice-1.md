@@ -4,6 +4,8 @@
 
 **Goal:** Replace tiny anchor-only direct hits with visible unit combat hulls that match the larger pilot-plus-vehicle concept sprites.
 
+**Superseded note:** The current v1 collision rule has since narrowed this slice to one shared rectangular **vehicle-only** hit zone. Pilot art is reviewed against the collision art rule instead of expanding gameplay collision around the full pilot-plus-vehicle silhouette. See `docs/COLLISION_ART_RULE.md`.
+
 **Architecture:** Add a small hull data model to `VehicleState`, compute oriented hull centers from each vehicle anchor, use ellipse collision for direct projectile hits, and draw hulls through the existing vehicle graphics layer. Keep splash damage unchanged for this slice.
 
 **Tech Stack:** TypeScript, Phaser 3, Vite, current monolithic `src/main.ts` prototype.

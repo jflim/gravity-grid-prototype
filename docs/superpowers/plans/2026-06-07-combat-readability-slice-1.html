@@ -95,6 +95,7 @@
 <p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (<code>- [ ]</code>) syntax for tracking.</p>
 </blockquote>
 <p><strong>Goal:</strong> Replace tiny anchor-only direct hits with visible unit combat hulls that match the larger pilot-plus-vehicle concept sprites.</p>
+<p><strong>Superseded note:</strong> The current v1 collision rule has since narrowed this slice to one shared rectangular <strong>vehicle-only</strong> hit zone. Pilot art is reviewed against the collision art rule instead of expanding gameplay collision around the full pilot-plus-vehicle silhouette. See <code>docs/COLLISION_ART_RULE.md</code>.</p>
 <p><strong>Architecture:</strong> Add a small hull data model to <code>VehicleState</code>, compute oriented hull centers from each vehicle anchor, use ellipse collision for direct projectile hits, and draw hulls through the existing vehicle graphics layer. Keep splash damage unchanged for this slice.</p>
 <p><strong>Tech Stack:</strong> TypeScript, Phaser 3, Vite, current monolithic <code>src/main.ts</code> prototype.</p>
 <p>---</p>

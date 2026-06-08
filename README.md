@@ -23,9 +23,10 @@ First playable local artillery prototype for Gravity Canyon.
 - Full-battlefield aiming camera so both teams stay visible before firing.
 - Stable full-battlefield projectile view after firing, with camera recentering only if a shot leaves the readable frame.
 - Firing commits the turn immediately, so the active vehicle cannot move during projectile flight or impact resolution.
-- Swept projectile collision checks to make fast shots hit terrain/vehicles more predictably.
-- Visible prototype combat hulls define direct-hit collision for the pilot-plus-vehicle units.
+- Swept projectile-edge collision checks so fast shots impact at the first visible terrain or vehicle contact.
+- Visible prototype combat hulls define one shared vehicle-only hit zone for all v1 units.
 - Full-unit concept preview sprites, active frames, labels, and prototype combat hulls are scaled down in the match view to keep terrain and movement readable.
+- Collision art review rules keep pilot poses visually compatible with the vehicle-only hit zone.
 - Crater deformation on impact.
 - Terrain can be blasted through into a visible void beneath the stage, with a persistent void danger layer under the floating platforms.
 - Temporary impact rings showing crater size and splash damage range.
@@ -150,6 +151,7 @@ dist/index.html
 - Deep enough craters expose the void under the terrain instead of stopping at a safe floor.
 - The current crater, splash, and Bunger knockback radii are intentionally smaller so map KOs require more precision.
 - Impact rings are temporary debugging/readability feedback: inner ring is crater/terrain effect, outer ring is splash damage range.
+- Direct-hit and splash damage use the vehicle hit zone, not pilot hair, pose, outfit, or cosmetic silhouette.
 - After a shot, the turn is committed immediately. There is intentionally no post-shot movement window.
 - A round ends when one team has no alive vehicles left. In this prototype, alive means `alive = true` and HP above 0.
 - Finished rounds show the result briefly, then start a fresh round automatically. R still restarts immediately.
@@ -164,5 +166,6 @@ dist/index.html
 - Each vehicle look currently needs a default gameplay sprite and a destroyed gameplay sprite.
 - Each playable character currently needs three generated gameplay states: default, KO, and intense shooting.
 - Character states should be integrated artwork, not code-drawn facial overlays on top of default art.
+- Match sprites must pass the collision art rule in [docs/COLLISION_ART_RULE.md](docs/COLLISION_ART_RULE.md): pilot poses need to read as protected by or tucked into the vehicle hit zone.
 - KO character art should use literal crossed or rolled-up eyes, not spiral/hypnotic eyes.
 - Gameplay sprites are separate from portrait art so battlefield readability can be tuned without losing high-detail character art.

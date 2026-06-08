@@ -8,6 +8,14 @@ import {
   type DefeatReason,
 } from "./combatPresentation";
 import { shouldApplyWeaponEffect } from "./combatRules";
+import { firstTerrainContact, firstVehicleContact } from "./projectileCollision";
+import { SHARED_V1_VEHICLE_HIT_ZONE } from "./v1CollisionProfiles";
+import {
+  chooseVoidDropDisplayX,
+  requiredVoidZoneHeight,
+  voidDropRenderPosition,
+} from "./voidDropPresentation";
+import { distanceToVehicleHitZone, type VehicleHitZone } from "./vehicleHitZone";
 import {
   computeBattlefieldFrameLayout,
   computeCommandPanelLayout,
@@ -38,8 +46,8 @@ interface SpriteDisplaySize {
 interface CombatHull {
   offsetX: number;
   offsetY: number;
-  radiusX: number;
-  radiusY: number;
+  width: number;
+  height: number;
 }
 
 interface CharacterSpriteSet {
@@ -97,6 +105,7 @@ interface VehicleState {
   unitConceptSpriteFaces?: 1 | -1;
   unitConceptOffsetY?: number;
   combatHull: CombatHull;
+  voidDropPresentation?: VoidDropPresentationState;
   portraitKey: string;
 }
 
@@ -114,6 +123,15 @@ interface ProjectileCollision {
   x: number;
   y: number;
   directHitId?: string;
+}
+
+interface VoidDropPresentationState {
+  fromX: number;
+  fromY: number;
+  targetX: number;
+  targetY: number;
+  age: number;
+  duration: number;
 }
 
 interface ImpactPreview {
@@ -159,6 +177,7 @@ const CLIMB_MAX_ANGLE_DEG = 34;
 const MAX_CLIMB_SLOPE = Math.tan((CLIMB_MAX_ANGLE_DEG * Math.PI) / 180);
 const MAX_POWER = 100;
 const GRAVITY = 440;
+const PROJECTILE_RADIUS = 11;
 const SHOT_SPEED_MIN = 240;
 const SHOT_SPEED_MAX = 780;
 const WIND_FORCE = 34;
@@ -172,9 +191,12 @@ const COMBAT_MARKER_SECONDS = 1.15;
 const TURN_SECONDS = 30;
 const VOID_SURFACE_Y = WORLD_HEIGHT + 260;
 const DEATH_SURFACE_Y = WORLD_HEIGHT - 6;
-const VISIBLE_VOID_TOP_Y = WORLD_HEIGHT - 200;
+const VOID_DROP_DISPLAY_SIZE = scaleBattlefieldDisplay({ width: 354, height: 212 });
+const VISIBLE_VOID_TOP_Y = WORLD_HEIGHT - requiredVoidZoneHeight(VOID_DROP_DISPLAY_SIZE);
 const TERRAIN_PLATFORM_BOTTOM_Y = WORLD_HEIGHT - 48;
 const TERRAIN_BREAKTHROUGH_Y = TERRAIN_PLATFORM_BOTTOM_Y - 6;
+const VOID_DROP_FALL_SECONDS = 0.85;
+const VOID_DROP_HORIZONTAL_PADDING = 24;
 const MAX_TERRAIN_SPRITE_TILT_DEG = 20;
 const USE_UNIT_CONCEPT_PREVIEW = !new URLSearchParams(window.location.search).has("runtimeAssets");
 
@@ -396,6 +418,7 @@ class GravityGridScene extends Phaser.Scene {
     const dt = Math.min(deltaMs / 1000, 0.033);
     this.updateImpactPreview(dt);
     this.updateCombatMarkers(dt);
+    this.updateVoidDropPresentations(dt);
 
     if (this.resetKey && Phaser.Input.Keyboard.JustDown(this.resetKey)) {
       this.startRound();
@@ -541,7 +564,7 @@ class GravityGridScene extends Phaser.Scene {
         },
         unitConceptSpriteFaces: 1,
         unitConceptOffsetY: 28,
-        combatHull: { offsetX: 0, offsetY: -65, radiusX: 150, radiusY: 91 },
+        combatHull: SHARED_V1_VEHICLE_HIT_ZONE,
         portraitKey: "nova-vehicle",
       },
       {
@@ -589,7 +612,7 @@ class GravityGridScene extends Phaser.Scene {
         },
         unitConceptSpriteFaces: -1,
         unitConceptOffsetY: 25,
-        combatHull: { offsetX: 0, offsetY: -58, radiusX: 146, radiusY: 80 },
+        combatHull: SHARED_V1_VEHICLE_HIT_ZONE,
         portraitKey: "vesper-vehicle",
       },
       {
@@ -637,7 +660,7 @@ class GravityGridScene extends Phaser.Scene {
         },
         unitConceptSpriteFaces: 1,
         unitConceptOffsetY: 28,
-        combatHull: { offsetX: 0, offsetY: -65, radiusX: 150, radiusY: 91 },
+        combatHull: SHARED_V1_VEHICLE_HIT_ZONE,
         portraitKey: "kaelii-unit-default",
       },
       {
@@ -685,7 +708,7 @@ class GravityGridScene extends Phaser.Scene {
         },
         unitConceptSpriteFaces: 1,
         unitConceptOffsetY: 25,
-        combatHull: { offsetX: 0, offsetY: -58, radiusX: 146, radiusY: 80 },
+        combatHull: SHARED_V1_VEHICLE_HIT_ZONE,
         portraitKey: "perlah-unit-default",
       },
     ];
@@ -917,34 +940,34 @@ class GravityGridScene extends Phaser.Scene {
     endX: number,
     endY: number,
   ): ProjectileCollision | undefined {
-    const distance = Phaser.Math.Distance.Between(startX, startY, endX, endY);
-    const steps = Math.max(4, Math.ceil(distance / 22));
+    const vehicleContact = firstVehicleContact({
+      startX,
+      startY,
+      endX,
+      endY,
+      projectileRadius: PROJECTILE_RADIUS,
+      zones: this.vehicles
+        .filter((vehicle) => vehicle.alive && vehicle.id !== projectile.shooterId && vehicle.team !== projectile.team)
+        .map((vehicle) => ({
+          id: vehicle.id,
+          ...this.vehicleHitZoneFor(vehicle),
+        })),
+    });
+    const terrainContact = firstTerrainContact({
+      startX,
+      startY,
+      endX,
+      endY,
+      projectileRadius: PROJECTILE_RADIUS,
+      worldWidth: WORLD_WIDTH,
+      surfaceAt: (x) => this.surfaceAt(x),
+    });
 
-    for (let i = 1; i <= steps; i += 1) {
-      const t = i / steps;
-      const x = Phaser.Math.Linear(startX, endX, t);
-      const y = Phaser.Math.Linear(startY, endY, t);
-
-      const hitVehicle = this.vehicles.find((vehicle) => {
-        if (!vehicle.alive || vehicle.id === projectile.shooterId) {
-          return false;
-        }
-        return this.projectileHitsCombatHull(x, y, vehicle);
-      });
-
-      if (hitVehicle) {
-        return { x, y, directHitId: hitVehicle.id };
-      }
-
-      if (x >= 0 && x <= WORLD_WIDTH) {
-        const surface = this.surfaceAt(x);
-        if (y >= surface) {
-          return { x, y: surface };
-        }
-      }
+    if (vehicleContact && (!terrainContact || vehicleContact.time <= terrainContact.time)) {
+      return { x: vehicleContact.x, y: vehicleContact.y, directHitId: vehicleContact.id };
     }
 
-    return undefined;
+    return terrainContact ? { x: terrainContact.x, y: terrainContact.y } : undefined;
   }
 
   private resolveImpact(x: number, y: number, directHitId?: string): void {
@@ -981,7 +1004,7 @@ class GravityGridScene extends Phaser.Scene {
       ) {
         continue;
       }
-      const d = Phaser.Math.Distance.Between(x, y, vehicle.x, vehicle.y);
+      const d = distanceToVehicleHitZone(x, y, this.vehicleHitZoneFor(vehicle));
       const directHit = vehicle.id === directHitId;
       const splashFactor = Phaser.Math.Clamp(1 - d / damageRadius, 0, 1);
       if (splashFactor > 0 || directHit) {
@@ -1204,14 +1227,25 @@ class GravityGridScene extends Phaser.Scene {
   }
 
   private placeVehicleOnSurface(vehicle: VehicleState): boolean {
+    const fallStartX = vehicle.x;
+    const fallStartY = vehicle.y > 0 ? vehicle.y : VISIBLE_VOID_TOP_Y - 40;
     const surface = this.surfaceAt(vehicle.x);
     vehicle.y = surface - VEHICLE_HALF_HEIGHT;
 
     if (surface >= DEATH_SURFACE_Y) {
+      const targetX = this.nearestVoidDisplayX(fallStartX);
       vehicle.alive = false;
       vehicle.hp = 0;
       vehicle.defeatReason = "void";
-      vehicle.x = this.nearestVoidDisplayX(vehicle.x);
+      vehicle.voidDropPresentation = {
+        fromX: fallStartX,
+        fromY: fallStartY,
+        targetX,
+        targetY: VOID_DROP_DISPLAY_Y,
+        age: 0,
+        duration: VOID_DROP_FALL_SECONDS,
+      };
+      vehicle.x = targetX;
       vehicle.y = VOID_DROP_DISPLAY_Y;
       return true;
     }
@@ -1220,35 +1254,14 @@ class GravityGridScene extends Phaser.Scene {
   }
 
   private nearestVoidDisplayX(startX: number): number {
-    const requiredWidth = scaleBattlefieldDisplay({ width: 354, height: 212 }).width + 64;
-    let bestX = Phaser.Math.Clamp(startX, 0, WORLD_WIDTH);
-    let bestDistance = Number.POSITIVE_INFINITY;
-    let runStart: number | undefined;
-
-    for (let x = 0; x <= WORLD_WIDTH + TERRAIN_STEP; x += TERRAIN_STEP) {
-      const sampleX = Math.min(x, WORLD_WIDTH);
-      const isVoid = this.surfaceAt(sampleX) >= TERRAIN_BREAKTHROUGH_Y;
-
-      if (isVoid && runStart === undefined) {
-        runStart = sampleX;
-      }
-
-      if ((!isVoid || x > WORLD_WIDTH) && runStart !== undefined) {
-        const runEnd = sampleX - TERRAIN_STEP;
-        const width = runEnd - runStart;
-        if (width >= requiredWidth) {
-          const center = (runStart + runEnd) / 2;
-          const distance = Math.abs(center - startX);
-          if (distance < bestDistance) {
-            bestX = center;
-            bestDistance = distance;
-          }
-        }
-        runStart = undefined;
-      }
-    }
-
-    return bestX;
+    return chooseVoidDropDisplayX({
+      startX,
+      worldWidth: WORLD_WIDTH,
+      step: TERRAIN_STEP,
+      displayWidth: VOID_DROP_DISPLAY_SIZE.width,
+      padding: VOID_DROP_HORIZONTAL_PADDING,
+      isVoidAt: (x) => this.surfaceAt(x) >= TERRAIN_BREAKTHROUGH_Y,
+    });
   }
 
   private terrainAngleAt(x: number): number {
@@ -1340,6 +1353,17 @@ class GravityGridScene extends Phaser.Scene {
       marker.text.destroy();
     }
     this.combatMarkers = [];
+  }
+
+  private updateVoidDropPresentations(dt: number): void {
+    for (const vehicle of this.vehicles) {
+      if (vehicle.voidDropPresentation) {
+        vehicle.voidDropPresentation.age = Math.min(
+          vehicle.voidDropPresentation.duration,
+          vehicle.voidDropPresentation.age + dt,
+        );
+      }
+    }
   }
 
   private drawWorld(): void {
@@ -1637,12 +1661,15 @@ class GravityGridScene extends Phaser.Scene {
     return scaleBattlefieldCombatHull(vehicle.combatHull);
   }
 
-  private projectileHitsCombatHull(x: number, y: number, vehicle: VehicleState): boolean {
+  private vehicleHitZoneFor(vehicle: VehicleState): VehicleHitZone {
     const hull = this.combatHullFor(vehicle);
     const center = this.combatHullCenter(vehicle);
-    const normalizedX = (x - center.x) / hull.radiusX;
-    const normalizedY = (y - center.y) / hull.radiusY;
-    return normalizedX * normalizedX + normalizedY * normalizedY <= 1;
+    return {
+      centerX: center.x,
+      centerY: center.y,
+      width: hull.width,
+      height: hull.height,
+    };
   }
 
   private drawFootingMarker(gfx: Phaser.GameObjects.Graphics, vehicle: VehicleState, active: boolean): void {
@@ -1671,7 +1698,12 @@ class GravityGridScene extends Phaser.Scene {
     for (const vehicle of this.vehicles) {
       const defeatPresentation = vehicle.alive ? undefined : defeatPresentationFor(vehicle.defeatReason);
       const alpha = vehicle.alive ? 1 : defeatPresentation?.alpha ?? 0.9;
-      const renderY = defeatPresentation?.y ?? vehicle.y;
+      const voidDropPosition =
+        vehicle.voidDropPresentation && defeatPresentation?.label === "VOID DROPPED"
+          ? voidDropRenderPosition(vehicle.voidDropPresentation)
+          : undefined;
+      const renderX = voidDropPosition?.x ?? vehicle.x;
+      const renderY = voidDropPosition?.y ?? defeatPresentation?.y ?? vehicle.y;
       const active =
         this.activeVehicle()?.id === vehicle.id &&
         !this.projectile &&
@@ -1682,7 +1714,7 @@ class GravityGridScene extends Phaser.Scene {
       const vehicleDisplay = vehicle.alive ? vehicle.vehicleDisplay : vehicle.vehicleDestroyedDisplay;
       const slopeAngle = vehicle.defeatReason === "void" ? 0 : this.terrainAngleAt(vehicle.x);
       const koTilt = vehicle.alive ? 0 : vehicle.team === "red" ? -8 : 8;
-      const vehicleSprite = this.vehicleSprites.get(vehicle.id) ?? this.add.image(vehicle.x, renderY, vehicleKey);
+      const vehicleSprite = this.vehicleSprites.get(vehicle.id) ?? this.add.image(renderX, renderY, vehicleKey);
       if (!this.vehicleSprites.has(vehicle.id)) {
         vehicleSprite.setDepth(11);
         this.vehicleSprites.set(vehicle.id, vehicleSprite);
@@ -1702,7 +1734,7 @@ class GravityGridScene extends Phaser.Scene {
         vehicleSprite
           .setTexture(conceptKey)
           .setOrigin(0.5, 0.86)
-          .setPosition(vehicle.x, renderY + scaleBattlefieldOffset(vehicle.unitConceptOffsetY ?? 24))
+          .setPosition(renderX, renderY + scaleBattlefieldOffset(vehicle.unitConceptOffsetY ?? 24))
           .setDisplaySize(conceptDisplay.width, conceptDisplay.height)
           .setFlipX(vehicle.facing !== vehicle.unitConceptSpriteFaces)
           .setAlpha(alpha)
@@ -1717,7 +1749,7 @@ class GravityGridScene extends Phaser.Scene {
         vehicleSprite
           .setTexture(vehicleKey)
           .setOrigin(0.5, 0.86)
-          .setPosition(vehicle.x, renderY + 20)
+          .setPosition(renderX, renderY + 20)
           .setDisplaySize(vehicleDisplay.width, vehicleDisplay.height)
           .setFlipX(vehicle.facing !== vehicle.vehicleSpriteFaces)
           .setAlpha(alpha)
@@ -1733,7 +1765,7 @@ class GravityGridScene extends Phaser.Scene {
         const characterKey = vehicle.characterSpriteKeys[characterPose];
         const characterDisplay = vehicle.characterDisplays[characterPose];
         const characterX =
-          vehicle.x + this.orientedOffset(vehicle, vehicle.characterOffsetX, vehicle.characterSpriteFaces);
+          renderX + this.orientedOffset(vehicle, vehicle.characterOffsetX, vehicle.characterSpriteFaces);
         const characterSprite =
           this.characterSprites.get(vehicle.id) ?? this.add.image(characterX, renderY, characterKey);
         if (!this.characterSprites.has(vehicle.id)) {
@@ -1760,24 +1792,30 @@ class GravityGridScene extends Phaser.Scene {
         const hullCenter = this.combatHullCenter(vehicle);
         const hullColor = active ? 0xffffff : vehicle.accent;
         gfx.fillStyle(hullColor, active ? 0.1 : 0.055);
-        gfx.fillEllipse(hullCenter.x, hullCenter.y, hull.radiusX * 2, hull.radiusY * 2);
+        gfx.fillRoundedRect(hullCenter.x - hull.width / 2, hullCenter.y - hull.height / 2, hull.width, hull.height, 8);
         gfx.lineStyle(active ? 3 : 2, hullColor, active ? 0.72 : 0.52);
-        gfx.strokeEllipse(hullCenter.x, hullCenter.y, hull.radiusX * 2, hull.radiusY * 2);
+        gfx.strokeRoundedRect(
+          hullCenter.x - hull.width / 2,
+          hullCenter.y - hull.height / 2,
+          hull.width,
+          hull.height,
+          8,
+        );
       }
 
       if (vehicle.alive || vehicle.defeatReason === "damage") {
         gfx.fillStyle(0x0f172a, 0.88);
         const hpOffset = USE_UNIT_CONCEPT_PREVIEW ? scaleBattlefieldOffset(174) : 76;
         const hpY = renderY - hpOffset;
-        gfx.fillRoundedRect(vehicle.x - 44, hpY, 88, 14, 5);
+        gfx.fillRoundedRect(renderX - 44, hpY, 88, 14, 5);
         gfx.fillStyle(vehicle.team === "red" ? 0xff4d5d : 0x4cc9f0, 0.92);
-        gfx.fillRoundedRect(vehicle.x - 42, hpY + 2, 84 * (vehicle.hp / MAX_HP), 10, 4);
+        gfx.fillRoundedRect(renderX - 42, hpY + 2, 84 * (vehicle.hp / MAX_HP), 10, 4);
       }
 
       const labelOffset = USE_UNIT_CONCEPT_PREVIEW ? scaleBattlefieldOffset(214) : 118;
       const labelY = renderY - labelOffset;
       const label = this.add
-        .text(vehicle.x, labelY, vehicle.username, {
+        .text(renderX, labelY, vehicle.username, {
           fontFamily: "Inter, Arial, sans-serif",
           fontSize: "16px",
           fontStyle: "700",
@@ -1791,7 +1829,7 @@ class GravityGridScene extends Phaser.Scene {
 
       const stateLabel = defeatPresentation?.label ?? vehicle.className;
       const classLabel = this.add
-        .text(vehicle.x, labelY + 21, stateLabel, {
+        .text(renderX, labelY + 21, stateLabel, {
           fontFamily: "Consolas, 'SFMono-Regular', monospace",
           fontSize: "12px",
           color: vehicle.defeatReason === "void" ? "#8be9ff" : vehicle.team === "red" ? "#ffd166" : "#8be9ff",
@@ -1806,12 +1844,12 @@ class GravityGridScene extends Phaser.Scene {
         const timerOffset = USE_UNIT_CONCEPT_PREVIEW ? scaleBattlefieldOffset(178) : 178;
         const timerY = renderY - timerOffset;
         gfx.fillStyle(0x0b1020, 0.88);
-        gfx.fillRoundedRect(vehicle.x - 52, timerY - 18, 104, 40, 10);
+        gfx.fillRoundedRect(renderX - 52, timerY - 18, 104, 40, 10);
         gfx.lineStyle(2, vehicle.accent, 0.72);
-        gfx.strokeRoundedRect(vehicle.x - 52, timerY - 18, 104, 40, 10);
+        gfx.strokeRoundedRect(renderX - 52, timerY - 18, 104, 40, 10);
 
         const timerTag = this.add
-          .text(vehicle.x, timerY, `${Math.ceil(this.turnTime)}s`, {
+          .text(renderX, timerY, `${Math.ceil(this.turnTime)}s`, {
             fontFamily: "Inter, Arial, sans-serif",
             fontSize: "24px",
             fontStyle: "700",
@@ -1824,7 +1862,7 @@ class GravityGridScene extends Phaser.Scene {
         this.vehicleLabels.push(timerTag);
 
         const turnTag = this.add
-          .text(vehicle.x, timerY + 30, "TURN", {
+          .text(renderX, timerY + 30, "TURN", {
             fontFamily: "Inter, Arial, sans-serif",
             fontSize: "11px",
             fontStyle: "700",
@@ -1855,7 +1893,7 @@ class GravityGridScene extends Phaser.Scene {
     }
 
     gfx.fillStyle(p.team === "red" ? 0xff4d5d : 0x4cc9f0, 1);
-    gfx.fillCircle(p.x, p.y, 11);
+    gfx.fillCircle(p.x, p.y, PROJECTILE_RADIUS);
     gfx.fillStyle(0xffffff, 0.85);
     gfx.fillCircle(p.x - 3, p.y - 3, 4);
   }

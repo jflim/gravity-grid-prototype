@@ -18,9 +18,9 @@ test("battlefield unit display scale keeps large concept art map-readable", () =
 });
 
 test("battlefield combat hull scales with the visible gameplay unit", () => {
-  const hull = scaleBattlefieldCombatHull({ offsetX: 0, offsetY: -65, radiusX: 150, radiusY: 91 });
+  const hull = scaleBattlefieldCombatHull({ offsetX: 0, offsetY: -18, width: 240, height: 78 });
 
-  assert.deepEqual(hull, { offsetX: 0, offsetY: -44, radiusX: 102, radiusY: 62 });
+  assert.deepEqual(hull, { offsetX: 0, offsetY: -12, width: 163, height: 53 });
 });
 
 test("battlefield offsets scale so smaller units stay grounded", () => {

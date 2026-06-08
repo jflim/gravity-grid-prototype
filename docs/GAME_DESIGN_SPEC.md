@@ -80,13 +80,13 @@ Current result:
 - Gameplay rendering layers a standalone vehicle sprite under a standalone playable-character sprite.
 - Nova and Vesper now have generated character gameplay states for default, Defeated KO, and intense shooting.
 - Nova and Vesper now have full-unit intense runtime test aliases so concept-preview charging can show a distinct state.
-- Full-unit concept preview sprites and prototype combat hulls are intentionally smaller than the first large pass to preserve playable battlefield space.
+- Full-unit concept preview sprites and prototype vehicle-only combat hulls are intentionally smaller than the first large pass to preserve playable battlefield space.
 - Nova and Vesper now have destroyed vehicle gameplay sprites for defeated/KO states.
 - Kaelii and Perlah now have accepted v1 test runtime aliases for default, intense, Defeated KO, vehicle default, and vehicle destroyed states.
 - Command deck, launch power, movement range, timer, wind, aim arrow, and terrain effects are playable.
 - A shot commits the turn immediately; the shooter cannot move during projectile flight or impact resolution.
 - Projectile collision now checks along the shot path, and post-impact settling is localized to nearby or affected vehicles.
-- Prototype direct-hit collision now uses visible combat hulls around the larger pilot-plus-vehicle unit concepts, so shots that visually strike the unit read more fairly.
+- Prototype direct-hit collision now uses one shared visible vehicle-only hit zone. Pilot poses must visually read as protected by or tucked into that vehicle hit zone, and cosmetics never define damageable pixels.
 - Impact readability includes temporary crater/splash radius rings and character-specific KO/faint feedback for destroyed vehicles.
 - Round terrain now moves toward varied map/spawn archetypes that reduce flat direct-fire duels and encourage artillery lobs over cover.
 - Movement allows downhill travel and falling, while steep uphill movement is limited by a climb-angle rule.
@@ -274,7 +274,7 @@ Combat UX requirements:
 - Active player needs clear angle, movement range, launch power, HP, and weapon info.
 - Command panel content must fit inside the visible browser viewport, with safe margin above the bottom edge.
 - Aim should show direction without giving a full landing prediction.
-- Direct-hit collision should be readable against the visible unit. Prototype combat hulls may be shown during tuning, but final combat hitboxes must remain cosmetic-fair and not change with cosmetic detail.
+- Direct-hit collision should be readable against the visible unit while remaining vehicle-only. Prototype combat hulls may be shown during tuning, but final combat hitboxes must remain cosmetic-fair and not change with pilot pose or cosmetic detail.
 - Impact feedback should briefly show crater/terrain range and splash damage range.
 - Disabled vehicles should read as fainted/knocked out, not only desaturated.
 - Defeated KO and intense shooting expressions should be character-specific generated art, not universal generic faces or code-drawn overlays.

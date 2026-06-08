@@ -51,12 +51,13 @@ Done:
 - Accepted Nova and Vesper full-unit intense runtime test aliases for concept-preview charging.
 - Generated Nova and Vesper destroyed vehicle sprites for KO/dead states.
 - Accepted Kaelii and Perlah v1 test runtime aliases for local play: unit default, unit intense, unit Defeated KO, vehicle default, and vehicle destroyed.
-- Full-unit concept preview sprites, active frames, labels, and prototype combat hulls are scaled down in the match view so the local 2v2-style roster reads as game pieces instead of covering the terrain.
+- Full-unit concept preview sprites, active frames, labels, and prototype vehicle-only combat hulls are scaled down in the match view so the local 2v2-style roster reads as game pieces instead of covering the terrain.
+- Collision art review rules keep pilot poses visually compatible with the shared vehicle-only hit zone without letting cosmetics affect combat.
 - Stable runtime sprite aliases plus versioned sprite-variant folders for faster art iteration.
 - Command panel with movement range, launch power, aim, active identity, timer, and wind.
 - Working title updated to Gravity Canyon.
 - Turn commits immediately when a shot is fired, with no post-shot movement window.
-- Swept projectile collision and localized post-impact settling make hits and falls more predictable.
+- Swept projectile-edge collision and localized post-impact settling make hits and falls more predictable.
 - Temporary crater/splash radius rings make impact ranges visible.
 - Terrain can be punched through into the visible void beneath the stage, with a persistent void danger layer and floating-platform terrain presentation.
 - Crater, splash, and Bunger knockback radii are smaller so ring-outs require more precise setup.
@@ -64,6 +65,7 @@ Done:
 - Ringworks Basin now leans B+C: the map shape should make the existing four v1 primary weapons feel useful while still giving the arena a novel canyon-ring structure.
 - Projectile flight keeps the current battlefield framing while shots remain readable, only recentering as a fallback if a shot leaves the visible frame.
 - HP KOs and Void Dropped eliminations now have distinct visual presentation even though both remove a unit from play.
+- Void Dropped eliminations now use a short fall presentation into a larger visible void band so the fall can be read before the unit becomes suspended eye candy.
 - Destroyed vehicles now pair destroyed vehicle sprites with character-specific generated KO character sprites instead of overlay effects.
 - Command panel is raised with a bottom safe margin so gameplay controls remain visible.
 - Local map-review layout hides the online panel by default, shows combat hull overlays by default while collision and map scale are being tuned, keeps both configurable through URL flags or hotkeys, and uses capped command-deck framing for more consistent desktop viewport composition.
