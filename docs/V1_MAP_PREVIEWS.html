@@ -83,6 +83,14 @@
       border-radius: 3px;
       background: #5f4b32;
     }
+    .chip--up {
+      border-radius: 3px;
+      background: #336cbb;
+    }
+    .chip--down {
+      border-radius: 3px;
+      background: #b86622;
+    }
     .grid {
       display: grid;
       gap: 18px;
@@ -184,6 +192,27 @@
       font-size: 10px;
       font-weight: 800;
     }
+    .tier-shot {
+      fill: none;
+      stroke-width: 3;
+      stroke-dasharray: 8 5;
+      stroke-linecap: round;
+      opacity: 0.92;
+    }
+    .tier-shot--uphill { stroke: #336cbb; }
+    .tier-shot--downhill { stroke: #b86622; }
+    .tier-arrow--uphill { fill: #336cbb; }
+    .tier-arrow--downhill { fill: #b86622; }
+    .tier-shot-label {
+      font-size: 12px;
+      font-weight: 900;
+      paint-order: stroke;
+      stroke: #fffdf8;
+      stroke-width: 4px;
+      stroke-linejoin: round;
+    }
+    .tier-shot-label--uphill { fill: #24559b; }
+    .tier-shot-label--downhill { fill: #8d4d17; }
     .spawn circle {
       fill: #fffdf8;
       stroke-width: 4;
@@ -216,6 +245,8 @@
         <span><i class="chip chip--blue"></i>Blue seats</span>
         <span><i class="chip chip--line"></i>Death plane</span>
         <span><i class="chip chip--landmark"></i>Canyon landmark</span>
+        <span><i class="chip chip--up"></i>Shoot up</span>
+        <span><i class="chip chip--down"></i>Shoot down</span>
       </div>
     </header>
     <section class="grid">
@@ -234,6 +265,15 @@
       <p class="summary">tiered ledges with a safe starter rhythm</p>
       <p class="role">starter multi-tier duel</p>
       <svg viewBox="0 0 720 260" role="img" aria-label="Canyon Terraces terrain preview">
+
+        <defs>
+          <marker id="arrow-canyon-terraces-uphill" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path class="tier-arrow tier-arrow--uphill" d="M 0 0 L 10 5 L 0 10 z"></path>
+          </marker>
+          <marker id="arrow-canyon-terraces-downhill" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path class="tier-arrow tier-arrow--downhill" d="M 0 0 L 10 5 L 0 10 z"></path>
+          </marker>
+        </defs>
         <rect class="sky" x="0" y="0" width="720" height="260" rx="8"></rect>
 
         <path class="canyon" d="M 30.0 151.8 L 76.8 130.4 L 120.8 90.8 L 173.0 85.4 L 219.7 142.1 L 269.3 162.5 L 316.0 117.5 L 360.0 59.7 L 404.0 117.5 L 450.7 162.5 L 500.3 142.1 L 547.0 85.4 L 599.3 90.8 L 643.3 130.4 L 690.0 151.8 L 690.0 232.0 L 30.0 232.0 Z"></path>
@@ -252,6 +292,16 @@
         <g class="landmark landmark--spire">
           <polygon points="412.0,100.4 423.3,20.1 434.5,100.4"></polygon>
           <text x="423.3" y="18.0" text-anchor="middle">right watch spire</text>
+        </g>
+
+        <g class="tier-shot-group">
+          <path class="tier-shot tier-shot--uphill" marker-end="url(#arrow-canyon-terraces-uphill)" d="M 200.5 123.8 Q 395.8 38.6 591.0 74.6"></path>
+          <text class="tier-shot-label tier-shot-label--uphill" x="395.8" y="30.6" text-anchor="middle">shoot up</text>
+        </g>
+
+        <g class="tier-shot-group">
+          <path class="tier-shot tier-shot--downhill" marker-end="url(#arrow-canyon-terraces-downhill)" d="M 129.0 74.6 Q 324.3 153.8 519.5 123.8"></path>
+          <text class="tier-shot-label tier-shot-label--downhill" x="324.3" y="171.8" text-anchor="middle">shoot down</text>
         </g>
         <line class="death-plane" x1="30" y1="232.0" x2="690" y2="232.0"></line>
         <text class="death-label" x="690" y="224.0" text-anchor="end">death plane</text>
@@ -296,6 +346,15 @@
       <p class="summary">broken shelves around a central drop</p>
       <p class="role">bunge pressure with recovery ledges</p>
       <svg viewBox="0 0 720 260" role="img" aria-label="Split Ravine terrain preview">
+
+        <defs>
+          <marker id="arrow-split-ravine-uphill" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path class="tier-arrow tier-arrow--uphill" d="M 0 0 L 10 5 L 0 10 z"></path>
+          </marker>
+          <marker id="arrow-split-ravine-downhill" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path class="tier-arrow tier-arrow--downhill" d="M 0 0 L 10 5 L 0 10 z"></path>
+          </marker>
+        </defs>
         <rect class="sky" x="0" y="0" width="720" height="260" rx="8"></rect>
 
         <path class="canyon" d="M 30.0 150.7 L 79.5 112.2 L 123.5 76.8 L 173.0 82.2 L 222.5 138.9 L 263.8 162.5 L 263.8 232.0 L 30.0 232.0 Z"></path>
@@ -320,6 +379,16 @@
         <g class="landmark landmark--shelf">
           <rect x="503.0" y="117.5" width="66.0" height="20.3" rx="5"></rect>
           <text x="536.0" y="99.3" text-anchor="middle">blue lower shelf</text>
+        </g>
+
+        <g class="tier-shot-group">
+          <path class="tier-shot tier-shot--uphill" marker-end="url(#arrow-split-ravine-uphill)" d="M 215.6 124.9 Q 406.1 26.8 596.5 62.8"></path>
+          <text class="tier-shot-label tier-shot-label--uphill" x="406.1" y="18.8" text-anchor="middle">shoot up</text>
+        </g>
+
+        <g class="tier-shot-group">
+          <path class="tier-shot tier-shot--downhill" marker-end="url(#arrow-split-ravine-downhill)" d="M 123.5 62.8 Q 313.9 154.9 504.4 124.9"></path>
+          <text class="tier-shot-label tier-shot-label--downhill" x="313.9" y="172.9" text-anchor="middle">shoot down</text>
         </g>
         <line class="death-plane" x1="30" y1="232.0" x2="690" y2="232.0"></line>
         <text class="death-label" x="690" y="224.0" text-anchor="end">death plane</text>
@@ -364,6 +433,15 @@
       <p class="summary">thin stone towers split the battlefield into trick-shot lanes</p>
       <p class="role">tower cover and gap reads</p>
       <svg viewBox="0 0 720 260" role="img" aria-label="Needlefield terrain preview">
+
+        <defs>
+          <marker id="arrow-needlefield-uphill" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path class="tier-arrow tier-arrow--uphill" d="M 0 0 L 10 5 L 0 10 z"></path>
+          </marker>
+          <marker id="arrow-needlefield-downhill" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path class="tier-arrow tier-arrow--downhill" d="M 0 0 L 10 5 L 0 10 z"></path>
+          </marker>
+        </defs>
         <rect class="sky" x="0" y="0" width="720" height="260" rx="8"></rect>
 
         <path class="canyon" d="M 30.0 157.1 L 79.5 126.1 L 129.0 94.0 L 173.0 98.3 L 208.8 144.3 L 208.8 232.0 L 30.0 232.0 Z"></path>
@@ -391,6 +469,16 @@
         <g class="landmark landmark--spire">
           <polygon points="488.7,88.6 500.3,-2.3 511.8,88.6"></polygon>
           <text x="500.3" y="18.0" text-anchor="middle">right needle</text>
+        </g>
+
+        <g class="tier-shot-group">
+          <path class="tier-shot tier-shot--uphill" marker-end="url(#arrow-needlefield-uphill)" d="M 244.5 120.6 Q 417.8 44.0 591.0 80.0"></path>
+          <text class="tier-shot-label tier-shot-label--uphill" x="417.8" y="36.0" text-anchor="middle">shoot up</text>
+        </g>
+
+        <g class="tier-shot-group">
+          <path class="tier-shot tier-shot--downhill" marker-end="url(#arrow-needlefield-downhill)" d="M 129.0 80.0 Q 302.3 150.6 475.5 120.6"></path>
+          <text class="tier-shot-label tier-shot-label--downhill" x="302.3" y="168.6" text-anchor="middle">shoot down</text>
         </g>
         <line class="death-plane" x1="30" y1="232.0" x2="690" y2="232.0"></line>
         <text class="death-label" x="690" y="224.0" text-anchor="end">death plane</text>
@@ -435,6 +523,15 @@
       <p class="summary">layered bowls and recovery platforms reward crater control</p>
       <p class="role">cluster and roller practice</p>
       <svg viewBox="0 0 720 260" role="img" aria-label="Basin Stack terrain preview">
+
+        <defs>
+          <marker id="arrow-basin-stack-uphill" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path class="tier-arrow tier-arrow--uphill" d="M 0 0 L 10 5 L 0 10 z"></path>
+          </marker>
+          <marker id="arrow-basin-stack-downhill" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path class="tier-arrow tier-arrow--downhill" d="M 0 0 L 10 5 L 0 10 z"></path>
+          </marker>
+        </defs>
         <rect class="sky" x="0" y="0" width="720" height="260" rx="8"></rect>
 
         <path class="canyon" d="M 30.0 167.8 L 82.3 147.5 L 148.3 106.8 L 200.5 73.6 L 239.0 62.9 L 280.3 110.0 L 316.0 153.9 L 360.0 179.6 L 404.0 153.9 L 439.8 110.0 L 481.0 62.9 L 519.5 73.6 L 571.8 106.8 L 637.8 147.5 L 690.0 167.8 L 690.0 232.0 L 30.0 232.0 Z"></path>
@@ -453,6 +550,16 @@
         <g class="landmark landmark--arch">
           <path d="M 310.5 148.5 Q 360.0 84.3 409.5 148.5"></path>
           <text x="360.0" y="76.3" text-anchor="middle">basin under-arch</text>
+        </g>
+
+        <g class="tier-shot-group">
+          <path class="tier-shot tier-shot--uphill" marker-end="url(#arrow-basin-stack-uphill)" d="M 148.3 92.8 Q 322.2 12.9 496.1 48.9"></path>
+          <text class="tier-shot-label tier-shot-label--uphill" x="322.2" y="4.9" text-anchor="middle">shoot up</text>
+        </g>
+
+        <g class="tier-shot-group">
+          <path class="tier-shot tier-shot--downhill" marker-end="url(#arrow-basin-stack-downhill)" d="M 223.9 48.9 Q 397.8 122.8 571.8 92.8"></path>
+          <text class="tier-shot-label tier-shot-label--downhill" x="397.8" y="140.8" text-anchor="middle">shoot down</text>
         </g>
         <line class="death-plane" x1="30" y1="232.0" x2="690" y2="232.0"></line>
         <text class="death-label" x="690" y="224.0" text-anchor="end">death plane</text>
@@ -497,6 +604,15 @@
       <p class="summary">windy broken arch pieces with open-air shot lanes</p>
       <p class="role">wind reads and long lobs</p>
       <svg viewBox="0 0 720 260" role="img" aria-label="Arch Crossing terrain preview">
+
+        <defs>
+          <marker id="arrow-arch-crossing-uphill" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path class="tier-arrow tier-arrow--uphill" d="M 0 0 L 10 5 L 0 10 z"></path>
+          </marker>
+          <marker id="arrow-arch-crossing-downhill" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path class="tier-arrow tier-arrow--downhill" d="M 0 0 L 10 5 L 0 10 z"></path>
+          </marker>
+        </defs>
         <rect class="sky" x="0" y="0" width="720" height="260" rx="8"></rect>
 
         <path class="canyon" d="M 30.0 165.7 L 82.3 119.6 L 137.3 69.4 L 184.0 84.3 L 228.0 142.1 L 228.0 232.0 L 30.0 232.0 Z"></path>
@@ -524,6 +640,16 @@
         <g class="landmark landmark--spire">
           <polygon points="452.1,112.2 463.1,21.2 474.1,112.2"></polygon>
           <text x="463.1" y="18.0" text-anchor="middle">blue arch tooth</text>
+        </g>
+
+        <g class="tier-shot-group">
+          <path class="tier-shot tier-shot--uphill" marker-end="url(#arrow-arch-crossing-uphill)" d="M 208.8 119.6 Q 395.8 19.4 582.8 55.4"></path>
+          <text class="tier-shot-label tier-shot-label--uphill" x="395.8" y="11.4" text-anchor="middle">shoot up</text>
+        </g>
+
+        <g class="tier-shot-group">
+          <path class="tier-shot tier-shot--downhill" marker-end="url(#arrow-arch-crossing-downhill)" d="M 137.3 55.4 Q 324.3 149.6 511.3 119.6"></path>
+          <text class="tier-shot-label tier-shot-label--downhill" x="324.3" y="167.6" text-anchor="middle">shoot down</text>
         </g>
         <line class="death-plane" x1="30" y1="232.0" x2="690" y2="232.0"></line>
         <text class="death-label" x="690" y="224.0" text-anchor="end">death plane</text>

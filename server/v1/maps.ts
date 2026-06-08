@@ -22,6 +22,13 @@ export type TerrainLandmark = {
   label: string;
 };
 
+export type TierShotLane = {
+  from: SeatId;
+  to: SeatId;
+  direction: "uphill" | "downhill";
+  label: string;
+};
+
 export type V1Map = {
   id: Exclude<MapPick, "random">;
   name: string;
@@ -34,6 +41,7 @@ export type V1Map = {
   spawns: Record<SeatId, SpawnPoint>;
   previewSegments: readonly (readonly SurfacePoint[])[];
   landmarks: readonly TerrainLandmark[];
+  tierShots: readonly TierShotLane[];
 };
 
 const WORLD_WIDTH = 2400;
@@ -71,6 +79,7 @@ export const MAPS: readonly V1Map[] = [
       landmark("spire", 970, 654, 82, 150, "left watch spire"),
       landmark("spire", 1430, 654, 82, 150, "right watch spire"),
     ],
+    tierShots: [tierShot("red-2", "blue-1", "uphill"), tierShot("red-1", "blue-2", "downhill")],
   }),
   map("split-ravine", "Split Ravine", "broken shelves around a central drop", "bunge pressure with recovery ledges", 23, 1, {
     spawns: {
@@ -89,6 +98,7 @@ export const MAPS: readonly V1Map[] = [
       landmark("shelf", 560, 705, 240, 38, "red lower shelf"),
       landmark("shelf", 1840, 705, 240, 38, "blue lower shelf"),
     ],
+    tierShots: [tierShot("red-2", "blue-1", "uphill"), tierShot("red-1", "blue-2", "downhill")],
   }),
   map("needlefield", "Needlefield", "thin stone towers split the battlefield into trick-shot lanes", "tower cover and gap reads", 37, 0.95, {
     spawns: {
@@ -108,6 +118,7 @@ export const MAPS: readonly V1Map[] = [
       landmark("spire", 1360, 572, 112, 200, "center needle"),
       landmark("spire", 1710, 632, 84, 170, "right needle"),
     ],
+    tierShots: [tierShot("red-2", "blue-1", "uphill"), tierShot("red-1", "blue-2", "downhill")],
   }),
   map("basin-stack", "Basin Stack", "layered bowls and recovery platforms reward crater control", "cluster and roller practice", 51, 0.9, {
     spawns: {
@@ -140,6 +151,7 @@ export const MAPS: readonly V1Map[] = [
       landmark("shelf", 1680, 584, 300, 40, "blue high balcony"),
       landmark("arch", 1200, 744, 360, 120, "basin under-arch"),
     ],
+    tierShots: [tierShot("red-1", "blue-2", "uphill"), tierShot("red-2", "blue-1", "downhill")],
   }),
   map("arch-crossing", "Arch Crossing", "windy broken arch pieces with open-air shot lanes", "wind reads and long lobs", 67, 1.18, {
     spawns: {
@@ -159,6 +171,7 @@ export const MAPS: readonly V1Map[] = [
       landmark("spire", 825, 676, 80, 170, "red arch tooth"),
       landmark("spire", 1575, 676, 80, 170, "blue arch tooth"),
     ],
+    tierShots: [tierShot("red-2", "blue-1", "uphill"), tierShot("red-1", "blue-2", "downhill")],
   }),
 ];
 
@@ -181,7 +194,7 @@ function map(
   tacticalRole: string,
   terrainSeedSalt: number,
   windScale: number,
-  shape: Pick<V1Map, "spawns" | "previewSegments" | "landmarks">,
+  shape: Pick<V1Map, "spawns" | "previewSegments" | "landmarks" | "tierShots">,
 ): V1Map {
   return {
     id,
@@ -195,6 +208,7 @@ function map(
     spawns: shape.spawns,
     previewSegments: shape.previewSegments,
     landmarks: shape.landmarks,
+    tierShots: shape.tierShots,
   };
 }
 
@@ -219,4 +233,13 @@ function landmark(
   label: string,
 ): TerrainLandmark {
   return { type, x, y, width, height, label };
+}
+
+function tierShot(from: SeatId, to: SeatId, direction: TierShotLane["direction"]): TierShotLane {
+  return {
+    from,
+    to,
+    direction,
+    label: direction === "uphill" ? "shoot up" : "shoot down",
+  };
 }

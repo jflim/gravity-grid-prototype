@@ -85,3 +85,26 @@ test("map pool includes gaps and canyon landmarks", () => {
   assert.ok(landmarkTypes.has("spire"), "map pool has canyon spires");
   assert.ok(landmarkTypes.has("arch"), "map pool has canyon arches");
 });
+
+test("each multi-tier map shows uphill and downhill shot lanes", () => {
+  for (const map of MAPS) {
+    assert.equal(map.tierShots.length, 2, `${map.id} has one uphill and one downhill example`);
+    assert.deepEqual(
+      map.tierShots.map((shot) => shot.direction).sort(),
+      ["downhill", "uphill"],
+      `${map.id} labels both vertical shot reads`,
+    );
+
+    for (const shot of map.tierShots) {
+      const from = spawnForSeat(map, shot.from);
+      const to = spawnForSeat(map, shot.to);
+      const verticalDelta = to.y - from.y;
+
+      if (shot.direction === "uphill") {
+        assert.ok(verticalDelta <= -70, `${map.id} uphill shot target is meaningfully above shooter`);
+      } else {
+        assert.ok(verticalDelta >= 70, `${map.id} downhill shot target is meaningfully below shooter`);
+      }
+    }
+  }
+});

@@ -72,6 +72,40 @@ function landmarkMarkers(map: V1Map) {
   return map.landmarks.map((landmark) => landmarkMarker(map, landmark)).join("\n");
 }
 
+function arrowDefs(map: V1Map) {
+  return `
+        <defs>
+          <marker id="arrow-${map.id}-uphill" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path class="tier-arrow tier-arrow--uphill" d="M 0 0 L 10 5 L 0 10 z"></path>
+          </marker>
+          <marker id="arrow-${map.id}-downhill" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path class="tier-arrow tier-arrow--downhill" d="M 0 0 L 10 5 L 0 10 z"></path>
+          </marker>
+        </defs>`;
+}
+
+function tierShotMarkers(map: V1Map) {
+  return map.tierShots
+    .map((shot) => {
+      const from = map.spawns[shot.from];
+      const to = map.spawns[shot.to];
+      const x1 = scaleX(map, from.x);
+      const y1 = scaleY(map, from.y) - 14;
+      const x2 = scaleX(map, to.x);
+      const y2 = scaleY(map, to.y) - 14;
+      const controlX = (x1 + x2) / 2;
+      const controlY = shot.direction === "uphill" ? Math.min(y1, y2) - 36 : Math.max(y1, y2) + 30;
+      const labelY = shot.direction === "uphill" ? controlY - 8 : controlY + 18;
+
+      return `
+        <g class="tier-shot-group">
+          <path class="tier-shot tier-shot--${shot.direction}" marker-end="url(#arrow-${map.id}-${shot.direction})" d="M ${x1.toFixed(1)} ${y1.toFixed(1)} Q ${controlX.toFixed(1)} ${controlY.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}"></path>
+          <text class="tier-shot-label tier-shot-label--${shot.direction}" x="${controlX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle">${escapeHtml(shot.label)}</text>
+        </g>`;
+    })
+    .join("\n");
+}
+
 function landmarkMarker(map: V1Map, landmark: TerrainLandmark) {
   const x = scaleX(map, landmark.x);
   const y = scaleY(map, landmark.y);
@@ -145,9 +179,11 @@ function mapCard(map: V1Map) {
       <p class="summary">${escapeHtml(map.summary)}</p>
       <p class="role">${escapeHtml(map.tacticalRole)}</p>
       <svg viewBox="0 0 720 260" role="img" aria-label="${escapeHtml(map.name)} terrain preview">
+${arrowDefs(map)}
         <rect class="sky" x="0" y="0" width="720" height="260" rx="8"></rect>
 ${terrainPaths(map)}
 ${landmarkMarkers(map)}
+${tierShotMarkers(map)}
         <line class="death-plane" x1="30" y1="${deathY}" x2="690" y2="${deathY}"></line>
         <text class="death-label" x="690" y="${(Number(deathY) - 8).toFixed(1)}" text-anchor="end">death plane</text>
 ${spawnMarkers(map)}
@@ -239,6 +275,14 @@ const html = `<!doctype html>
     .chip--landmark {
       border-radius: 3px;
       background: #5f4b32;
+    }
+    .chip--up {
+      border-radius: 3px;
+      background: #336cbb;
+    }
+    .chip--down {
+      border-radius: 3px;
+      background: #b86622;
     }
     .grid {
       display: grid;
@@ -341,6 +385,27 @@ const html = `<!doctype html>
       font-size: 10px;
       font-weight: 800;
     }
+    .tier-shot {
+      fill: none;
+      stroke-width: 3;
+      stroke-dasharray: 8 5;
+      stroke-linecap: round;
+      opacity: 0.92;
+    }
+    .tier-shot--uphill { stroke: #336cbb; }
+    .tier-shot--downhill { stroke: #b86622; }
+    .tier-arrow--uphill { fill: #336cbb; }
+    .tier-arrow--downhill { fill: #b86622; }
+    .tier-shot-label {
+      font-size: 12px;
+      font-weight: 900;
+      paint-order: stroke;
+      stroke: #fffdf8;
+      stroke-width: 4px;
+      stroke-linejoin: round;
+    }
+    .tier-shot-label--uphill { fill: #24559b; }
+    .tier-shot-label--downhill { fill: #8d4d17; }
     .spawn circle {
       fill: #fffdf8;
       stroke-width: 4;
@@ -373,6 +438,8 @@ const html = `<!doctype html>
         <span><i class="chip chip--blue"></i>Blue seats</span>
         <span><i class="chip chip--line"></i>Death plane</span>
         <span><i class="chip chip--landmark"></i>Canyon landmark</span>
+        <span><i class="chip chip--up"></i>Shoot up</span>
+        <span><i class="chip chip--down"></i>Shoot down</span>
       </div>
     </header>
     <section class="grid">
