@@ -99,6 +99,25 @@ test("ring and bridge maps have distinct novelty hooks", () => {
   assert.ok(bridgeworks.previewSegments.length >= 5, "Bridgeworks uses many separated land spans");
 });
 
+test("Ring Basin uses separated playable spans instead of relying on circle overlays", () => {
+  const ringBasin = MAPS.find((map) => map.id === "ring-basin");
+  assert.ok(ringBasin, "Ring Basin exists");
+  assert.ok(ringBasin.previewSegments.length >= 5, "Ring Basin has broken basin spans");
+
+  const gaps = ringBasin.previewSegments.slice(1).filter((segment, index) => {
+    const previous = ringBasin.previewSegments[index];
+    return segment[0].x - previous[previous.length - 1].x >= 48;
+  });
+
+  assert.ok(gaps.length >= 4, "Ring Basin has visible air gaps between terrain spans");
+  assert.ok(
+    ringBasin.previewSegments.some((segment) =>
+      segment.some((point) => point.x >= 1120 && point.x <= 1280 && point.y >= 790),
+    ),
+    "Ring Basin has a low central basin span",
+  );
+});
+
 test("each multi-tier map shows uphill and downhill shot lanes", () => {
   for (const map of MAPS) {
     assert.equal(map.tierShots.length, 2, `${map.id} has one uphill and one downhill example`);

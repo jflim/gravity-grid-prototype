@@ -1324,13 +1324,29 @@ class GravityGridScene extends Phaser.Scene {
       switch (landmark.type) {
         case "ring": {
           if (pass === "backdrop") {
-            gfx.lineStyle(28, 0xc8914c, 0.18);
-            gfx.strokeEllipse(landmark.x, landmark.y, landmark.width, landmark.height);
-            gfx.lineStyle(10, 0x2a1f1c, 0.16);
-            gfx.strokeEllipse(landmark.x, landmark.y, landmark.width * 0.74, landmark.height * 0.64);
+            gfx.lineStyle(22, 0xc8914c, 0.1);
+            this.strokeEllipseArc(gfx, landmark.x, landmark.y, landmark.width / 2, landmark.height / 2, 0, Math.PI * 2);
+            gfx.lineStyle(7, 0x2a1f1c, 0.1);
+            this.strokeEllipseArc(
+              gfx,
+              landmark.x,
+              landmark.y,
+              landmark.width * 0.37,
+              landmark.height * 0.32,
+              0,
+              Math.PI * 2,
+            );
           } else {
-            gfx.lineStyle(4, 0xffd166, 0.32);
-            gfx.strokeEllipse(landmark.x, landmark.y, landmark.width, landmark.height);
+            gfx.lineStyle(5, 0xffd166, 0.24);
+            this.strokeEllipseArc(
+              gfx,
+              landmark.x,
+              landmark.y,
+              landmark.width / 2,
+              landmark.height / 2,
+              Math.PI * 1.08,
+              Math.PI * 1.92,
+            );
           }
           break;
         }
@@ -1381,6 +1397,31 @@ class GravityGridScene extends Phaser.Scene {
         }
       }
     }
+  }
+
+  private strokeEllipseArc(
+    gfx: Phaser.GameObjects.Graphics,
+    centerX: number,
+    centerY: number,
+    radiusX: number,
+    radiusY: number,
+    startAngle: number,
+    endAngle: number,
+    steps = 28,
+  ): void {
+    gfx.beginPath();
+    for (let step = 0; step <= steps; step += 1) {
+      const t = step / steps;
+      const angle = Phaser.Math.Linear(startAngle, endAngle, t);
+      const x = centerX + Math.cos(angle) * radiusX;
+      const y = centerY + Math.sin(angle) * radiusY;
+      if (step === 0) {
+        gfx.moveTo(x, y);
+      } else {
+        gfx.lineTo(x, y);
+      }
+    }
+    gfx.strokePath();
   }
 
   private drawAim(): void {

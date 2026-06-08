@@ -34,6 +34,16 @@ test("playable terrain follows v1 map surfaces and keeps all 2v2 spawns safe", (
   }
 });
 
+test("Ring Basin playable terrain keeps air gaps between its ring spans", () => {
+  const map = playableMapById("ring-basin");
+  const playable = buildPlayableTerrain(map, { voidSurfaceY: VOID_SURFACE_Y });
+
+  assert.equal(surfaceAt(playable, 545), VOID_SURFACE_Y, "left ring gap is empty air");
+  assert.equal(surfaceAt(playable, 975), VOID_SURFACE_Y, "left basin gap is empty air");
+  assert.equal(surfaceAt(playable, 1420), VOID_SURFACE_Y, "right basin gap is empty air");
+  assert.equal(surfaceAt(playable, 1855), VOID_SURFACE_Y, "right ring gap is empty air");
+});
+
 test("playable terrain preserves separated land as void gaps", () => {
   const bridgeworks = MAPS.find((map) => map.id === "bridgeworks");
   assert.ok(bridgeworks, "Bridgeworks exists");
