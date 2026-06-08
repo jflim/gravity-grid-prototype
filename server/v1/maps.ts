@@ -11,135 +11,153 @@ export type SurfacePoint = {
   y: number;
 };
 
+export type TerrainLandmarkType = "spire" | "arch" | "shelf";
+
+export type TerrainLandmark = {
+  type: TerrainLandmarkType;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  label: string;
+};
+
 export type V1Map = {
   id: Exclude<MapPick, "random">;
   name: string;
   summary: string;
+  tacticalRole: string;
   worldWidth: number;
   deathPlaneY: number;
   windScale: number;
   terrainSeedSalt: number;
   spawns: Record<SeatId, SpawnPoint>;
-  previewSurface: readonly SurfacePoint[];
+  previewSegments: readonly (readonly SurfacePoint[])[];
+  landmarks: readonly TerrainLandmark[];
 };
 
 const WORLD_WIDTH = 2400;
 const DEATH_PLANE_Y = 900;
 
 export const MAPS: readonly V1Map[] = [
-  map("mesa-ribs", "Mesa Ribs", "wide ridges with shallow center pockets", 11, 0.85, {
+  map("canyon-terraces", "Canyon Terraces", "tiered ledges with a safe starter rhythm", "starter multi-tier duel", 11, 0.9, {
     spawns: {
-      "red-1": spawn(380, 610, 1),
-      "blue-1": spawn(2020, 600, -1),
-      "red-2": spawn(610, 640, 1),
-      "blue-2": spawn(1790, 640, -1),
+      "red-1": spawn(360, 632, 1),
+      "blue-1": spawn(2040, 632, -1),
+      "red-2": spawn(620, 724, 1),
+      "blue-2": spawn(1780, 724, -1),
     },
-    previewSurface: [
-      point(0, 690),
-      point(180, 640),
-      point(360, 605),
-      point(560, 635),
-      point(780, 690),
-      point(1020, 665),
-      point(1220, 710),
-      point(1450, 660),
-      point(1680, 640),
-      point(1880, 610),
-      point(2080, 625),
-      point(2280, 675),
-      point(2400, 690),
+    previewSegments: [
+      segment(
+        point(0, 750),
+        point(170, 710),
+        point(330, 636),
+        point(520, 626),
+        point(690, 732),
+        point(870, 770),
+        point(1040, 686),
+        point(1200, 578),
+        point(1360, 686),
+        point(1530, 770),
+        point(1710, 732),
+        point(1880, 626),
+        point(2070, 636),
+        point(2230, 710),
+        point(2400, 750),
+      ),
+    ],
+    landmarks: [
+      landmark("shelf", 1200, 578, 280, 42, "center high shelf"),
+      landmark("spire", 970, 654, 82, 150, "left watch spire"),
+      landmark("spire", 1430, 654, 82, 150, "right watch spire"),
     ],
   }),
-  map("split-arch", "Split Arch", "two high shelves divided by a visible central saddle", 23, 1, {
+  map("split-ravine", "Split Ravine", "broken shelves around a central drop", "bunge pressure with recovery ledges", 23, 1, {
     spawns: {
-      "red-1": spawn(330, 580, 1),
-      "blue-1": spawn(2070, 580, -1),
-      "red-2": spawn(720, 650, 1),
-      "blue-2": spawn(1680, 650, -1),
+      "red-1": spawn(340, 610, 1),
+      "blue-1": spawn(2060, 610, -1),
+      "red-2": spawn(675, 726, 1),
+      "blue-2": spawn(1725, 726, -1),
     },
-    previewSurface: [
-      point(0, 675),
-      point(190, 610),
-      point(360, 585),
-      point(610, 625),
-      point(820, 690),
-      point(1010, 735),
-      point(1200, 705),
-      point(1390, 735),
-      point(1580, 690),
-      point(1790, 625),
-      point(2040, 585),
-      point(2210, 610),
-      point(2400, 675),
+    previewSegments: [
+      segment(point(0, 748), point(180, 676), point(340, 610), point(520, 620), point(700, 726), point(850, 770)),
+      segment(point(1010, 762), point(1110, 648), point(1200, 560), point(1290, 648), point(1390, 762)),
+      segment(point(1550, 770), point(1700, 726), point(1880, 620), point(2060, 610), point(2220, 676), point(2400, 748)),
+    ],
+    landmarks: [
+      landmark("arch", 1200, 650, 340, 170, "fractured center arch"),
+      landmark("shelf", 560, 705, 240, 38, "red lower shelf"),
+      landmark("shelf", 1840, 705, 240, 38, "blue lower shelf"),
     ],
   }),
-  map("crater-steps", "Crater Steps", "stepped shelves with several safe crater bowls", 37, 0.9, {
+  map("needlefield", "Needlefield", "thin stone towers split the battlefield into trick-shot lanes", "tower cover and gap reads", 37, 0.95, {
     spawns: {
-      "red-1": spawn(420, 620, 1),
-      "blue-1": spawn(1980, 620, -1),
-      "red-2": spawn(780, 700, 1),
-      "blue-2": spawn(1620, 700, -1),
+      "red-1": spawn(360, 642, 1),
+      "blue-1": spawn(2040, 642, -1),
+      "red-2": spawn(780, 718, 1),
+      "blue-2": spawn(1620, 718, -1),
     },
-    previewSurface: [
-      point(0, 710),
-      point(210, 665),
-      point(420, 620),
-      point(610, 675),
-      point(790, 705),
-      point(980, 650),
-      point(1200, 705),
-      point(1420, 650),
-      point(1610, 705),
-      point(1790, 675),
-      point(1980, 620),
-      point(2190, 665),
-      point(2400, 710),
+    previewSegments: [
+      segment(point(0, 760), point(180, 702), point(360, 642), point(520, 650), point(650, 736)),
+      segment(point(740, 724), point(840, 620), point(920, 548), point(1010, 624), point(1080, 742)),
+      segment(point(1180, 770), point(1270, 676), point(1360, 572), point(1460, 676), point(1530, 770)),
+      segment(point(1640, 736), point(1880, 650), point(2040, 642), point(2220, 702), point(2400, 760)),
+    ],
+    landmarks: [
+      landmark("spire", 890, 548, 96, 216, "left needle"),
+      landmark("spire", 1360, 572, 112, 200, "center needle"),
+      landmark("spire", 1710, 632, 84, 170, "right needle"),
     ],
   }),
-  map("wind-bridge", "Wind Bridge", "long central bridge that makes wind reads matter", 51, 1.15, {
+  map("basin-stack", "Basin Stack", "layered bowls and recovery platforms reward crater control", "cluster and roller practice", 51, 0.9, {
     spawns: {
-      "red-1": spawn(360, 590, 1),
-      "blue-1": spawn(2040, 590, -1),
-      "red-2": spawn(650, 625, 1),
-      "blue-2": spawn(1750, 625, -1),
+      "red-1": spawn(430, 666, 1),
+      "blue-1": spawn(1970, 666, -1),
+      "red-2": spawn(705, 584, 1),
+      "blue-2": spawn(1695, 584, -1),
     },
-    previewSurface: [
-      point(0, 700),
-      point(180, 640),
-      point(360, 590),
-      point(620, 625),
-      point(860, 660),
-      point(1040, 640),
-      point(1200, 630),
-      point(1360, 640),
-      point(1540, 660),
-      point(1780, 625),
-      point(2040, 590),
-      point(2220, 640),
-      point(2400, 700),
+    previewSegments: [
+      segment(
+        point(0, 780),
+        point(190, 742),
+        point(430, 666),
+        point(620, 604),
+        point(760, 584),
+        point(910, 672),
+        point(1040, 754),
+        point(1200, 802),
+        point(1360, 754),
+        point(1490, 672),
+        point(1640, 584),
+        point(1780, 604),
+        point(1970, 666),
+        point(2210, 742),
+        point(2400, 780),
+      ),
+    ],
+    landmarks: [
+      landmark("shelf", 720, 584, 300, 40, "red high balcony"),
+      landmark("shelf", 1680, 584, 300, 40, "blue high balcony"),
+      landmark("arch", 1200, 744, 360, 120, "basin under-arch"),
     ],
   }),
-  map("basin-ridge", "Basin Ridge", "outer ridges around a broad readable basin", 67, 0.95, {
+  map("arch-crossing", "Arch Crossing", "windy broken arch pieces with open-air shot lanes", "wind reads and long lobs", 67, 1.18, {
     spawns: {
-      "red-1": spawn(430, 680, 1),
-      "blue-1": spawn(1970, 680, -1),
-      "red-2": spawn(690, 610, 1),
-      "blue-2": spawn(1710, 610, -1),
+      "red-1": spawn(390, 596, 1),
+      "blue-1": spawn(2010, 596, -1),
+      "red-2": spawn(650, 716, 1),
+      "blue-2": spawn(1750, 716, -1),
     },
-    previewSurface: [
-      point(0, 720),
-      point(220, 700),
-      point(430, 680),
-      point(690, 610),
-      point(900, 665),
-      point(1090, 735),
-      point(1200, 760),
-      point(1310, 735),
-      point(1500, 665),
-      point(1710, 610),
-      point(1970, 680),
-      point(2180, 700),
-      point(2400, 720),
+    previewSegments: [
+      segment(point(0, 776), point(190, 690), point(390, 596), point(560, 624), point(720, 732)),
+      segment(point(900, 742), point(1030, 630), point(1140, 548)),
+      segment(point(1260, 548), point(1370, 630), point(1500, 742)),
+      segment(point(1680, 732), point(1840, 624), point(2010, 596), point(2210, 690), point(2400, 776)),
+    ],
+    landmarks: [
+      landmark("arch", 1200, 620, 520, 220, "broken sky arch"),
+      landmark("spire", 825, 676, 80, 170, "red arch tooth"),
+      landmark("spire", 1575, 676, 80, 170, "blue arch tooth"),
     ],
   }),
 ];
@@ -160,20 +178,23 @@ function map(
   id: V1Map["id"],
   name: string,
   summary: string,
+  tacticalRole: string,
   terrainSeedSalt: number,
   windScale: number,
-  shape: Pick<V1Map, "spawns" | "previewSurface">,
+  shape: Pick<V1Map, "spawns" | "previewSegments" | "landmarks">,
 ): V1Map {
   return {
     id,
     name,
     summary,
+    tacticalRole,
     worldWidth: WORLD_WIDTH,
     deathPlaneY: DEATH_PLANE_Y,
     windScale,
     terrainSeedSalt,
     spawns: shape.spawns,
-    previewSurface: shape.previewSurface,
+    previewSegments: shape.previewSegments,
+    landmarks: shape.landmarks,
   };
 }
 
@@ -181,6 +202,21 @@ function spawn(x: number, y: number, facing: 1 | -1): SpawnPoint {
   return { x, y, facing };
 }
 
+function segment(...points: SurfacePoint[]) {
+  return points;
+}
+
 function point(x: number, y: number): SurfacePoint {
   return { x, y };
+}
+
+function landmark(
+  type: TerrainLandmarkType,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  label: string,
+): TerrainLandmark {
+  return { type, x, y, width, height, label };
 }

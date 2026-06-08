@@ -6,7 +6,11 @@ import { MODE_SEATS } from "./rules.js";
 test("v1 map pool has five selectable maps", () => {
   assert.deepEqual(
     MAPS.map((map) => map.id),
-    ["mesa-ribs", "split-arch", "crater-steps", "wind-bridge", "basin-ridge"],
+    ["canyon-terraces", "split-ravine", "needlefield", "basin-stack", "arch-crossing"],
+  );
+  assert.deepEqual(
+    MAPS.map((map) => map.name),
+    ["Canyon Terraces", "Split Ravine", "Needlefield", "Basin Stack", "Arch Crossing"],
   );
 });
 
@@ -28,19 +32,56 @@ test("random map selection is deterministic by seed", () => {
 });
 
 test("explicit map selection wins over random", () => {
-  assert.equal(pickMap("split-arch", 1001).id, "split-arch");
+  assert.equal(pickMap("split-ravine", 1001).id, "split-ravine");
 });
 
-test("map preview surfaces are drawable from left to right", () => {
+test("map preview terrain segments are drawable from left to right", () => {
   for (const map of MAPS) {
-    assert.equal(map.previewSurface[0].x, 0, `${map.id} preview starts at world edge`);
-    assert.equal(map.previewSurface.at(-1)?.x, map.worldWidth, `${map.id} preview ends at world edge`);
+    assert.ok(map.previewSegments.length >= 1, `${map.id} has at least one land segment`);
 
-    for (let index = 1; index < map.previewSurface.length; index += 1) {
-      const previous = map.previewSurface[index - 1];
-      const current = map.previewSurface[index];
-      assert.ok(current.x > previous.x, `${map.id} preview points move left to right`);
-      assert.ok(current.y < map.deathPlaneY, `${map.id} preview stays above death plane`);
+    for (const segment of map.previewSegments) {
+      assert.ok(segment.length >= 2, `${map.id} segment has drawable endpoints`);
+      for (let index = 1; index < segment.length; index += 1) {
+        const previous = segment[index - 1];
+        const current = segment[index];
+        assert.ok(current.x > previous.x, `${map.id} segment points move left to right`);
+        assert.ok(current.y < map.deathPlaneY, `${map.id} segment stays above death plane`);
+      }
     }
   }
+});
+
+test("v1 maps have multi-tier terrain instead of rolling hills", () => {
+  for (const map of MAPS) {
+    const tiers = new Set(
+      map.previewSegments
+        .flat()
+        .map((point) => {
+          if (point.y <= 600) {
+            return "high";
+          }
+          if (point.y <= 700) {
+            return "mid";
+          }
+          return "low";
+        }),
+    );
+
+    assert.deepEqual([...tiers].sort(), ["high", "low", "mid"], `${map.id} uses high, mid, and low tiers`);
+  }
+});
+
+test("map pool includes gaps and canyon landmarks", () => {
+  const gapMaps = MAPS.filter((map) => map.previewSegments.length > 1).map((map) => map.id);
+  assert.ok(gapMaps.includes("split-ravine"), "Split Ravine has broken land");
+  assert.ok(gapMaps.includes("needlefield"), "Needlefield has broken land");
+  assert.ok(gapMaps.includes("arch-crossing"), "Arch Crossing has broken land");
+
+  for (const map of MAPS) {
+    assert.ok(map.landmarks.length > 0, `${map.id} has visible canyon landmarks`);
+  }
+
+  const landmarkTypes = new Set(MAPS.flatMap((map) => map.landmarks.map((landmark) => landmark.type)));
+  assert.ok(landmarkTypes.has("spire"), "map pool has canyon spires");
+  assert.ok(landmarkTypes.has("arch"), "map pool has canyon arches");
 });

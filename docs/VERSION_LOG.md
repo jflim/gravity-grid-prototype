@@ -48,6 +48,7 @@ Highlights:
 - Added v1 rule-contract tests and constants for locked roster, modes, seats, room settings, turn timing, reconnect grace, and preset phrase cooldown.
 - Added the v1 map pool contract with five map ids, deterministic random selection, spawn layouts, death planes, wind scales, and drawable preview surfaces.
 - Added generated v1 map previews at `docs/V1_MAP_PREVIEWS.html`, linked from the HTML docs index.
+- Redesigned the v1 map pool around more interesting canyon silhouettes: multi-tier terrain, broken land segments, central gaps, spires, shelves, arches, and stronger tactical identities.
 - Added visible prototype combat hulls, shown by default and toggleable with `H`, so direct-hit collision better matches the larger pilot-plus-vehicle unit concepts.
 - Added floating combat markers for direct damage, splash damage, knockback, HP KOs, and terrain/fall bunge defeats.
 - Added randomized terrain/spawn archetypes for local rounds to reduce flat direct-fire duels and encourage high-angle lob play.

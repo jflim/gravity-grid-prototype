@@ -2,7 +2,13 @@ export type GameMode = "1v1" | "2v2";
 export type MatchLength = "best-of-1" | "best-of-3";
 export type TeamId = "red" | "blue";
 export type CharacterId = "nova" | "vesper" | "kaelii" | "perlah";
-export type MapPick = "random" | "mesa-ribs" | "split-arch" | "crater-steps" | "wind-bridge" | "basin-ridge";
+export type MapPick =
+  | "random"
+  | "canyon-terraces"
+  | "split-ravine"
+  | "needlefield"
+  | "basin-stack"
+  | "arch-crossing";
 
 export type SeatId = "red-1" | "blue-1" | "red-2" | "blue-2";
 
@@ -50,11 +56,11 @@ const GAME_MODES = new Set<GameMode>(["1v1", "2v2"]);
 const MATCH_LENGTHS = new Set<MatchLength>(["best-of-1", "best-of-3"]);
 const MAP_PICKS = new Set<MapPick>([
   "random",
-  "mesa-ribs",
-  "split-arch",
-  "crater-steps",
-  "wind-bridge",
-  "basin-ridge",
+  "canyon-terraces",
+  "split-ravine",
+  "needlefield",
+  "basin-stack",
+  "arch-crossing",
 ]);
 
 export function validateRoomSettings(input: Partial<Record<keyof RoomSettings, unknown>>): RoomSettings {

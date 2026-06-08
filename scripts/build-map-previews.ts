@@ -1,10 +1,11 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { MAPS, type SurfacePoint, type V1Map } from "../server/v1/maps.js";
+import { MAPS, type TerrainLandmark, type V1Map } from "../server/v1/maps.js";
 import type { SeatId } from "../server/v1/rules.js";
 
 const outputPath = resolve("docs/V1_MAP_PREVIEWS.html");
 const generatedAt = new Date().toISOString().slice(0, 10);
+const previewTopY = 500;
 
 const seatLabels: Record<SeatId, string> = {
   "red-1": "R1",
@@ -33,21 +34,81 @@ function scaleX(map: V1Map, x: number) {
 }
 
 function scaleY(map: V1Map, y: number) {
-  const topY = 520;
-  const bottomY = map.deathPlaneY;
-  return 18 + ((y - topY) / (bottomY - topY)) * 214;
+  return 18 + ((y - previewTopY) / (map.deathPlaneY - previewTopY)) * 214;
 }
 
-function surfacePath(map: V1Map) {
-  return map.previewSurface.map((point, index) => `${index === 0 ? "M" : "L"} ${scaleX(map, point.x).toFixed(1)} ${scaleY(map, point.y).toFixed(1)}`).join(" ");
+function scaleWidth(map: V1Map, width: number) {
+  return (width / map.worldWidth) * 660;
 }
 
-function terrainFillPath(map: V1Map) {
-  const surface = surfacePath(map);
-  const last = map.previewSurface.at(-1) as SurfacePoint;
-  const first = map.previewSurface[0];
+function scaleHeight(map: V1Map, height: number) {
+  return (height / (map.deathPlaneY - previewTopY)) * 214;
+}
+
+function surfacePath(map: V1Map, segment: V1Map["previewSegments"][number]) {
+  return segment
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${scaleX(map, point.x).toFixed(1)} ${scaleY(map, point.y).toFixed(1)}`)
+    .join(" ");
+}
+
+function terrainFillPath(map: V1Map, segment: V1Map["previewSegments"][number]) {
+  const first = segment[0];
+  const last = segment.at(-1);
   const deathY = scaleY(map, map.deathPlaneY).toFixed(1);
-  return `${surface} L ${scaleX(map, last.x).toFixed(1)} ${deathY} L ${scaleX(map, first.x).toFixed(1)} ${deathY} Z`;
+  return `${surfacePath(map, segment)} L ${scaleX(map, last.x).toFixed(1)} ${deathY} L ${scaleX(map, first.x).toFixed(1)} ${deathY} Z`;
+}
+
+function terrainPaths(map: V1Map) {
+  return map.previewSegments
+    .map(
+      (segment) => `
+        <path class="canyon" d="${terrainFillPath(map, segment)}"></path>
+        <path class="surface" d="${surfacePath(map, segment)}"></path>`,
+    )
+    .join("\n");
+}
+
+function landmarkMarkers(map: V1Map) {
+  return map.landmarks.map((landmark) => landmarkMarker(map, landmark)).join("\n");
+}
+
+function landmarkMarker(map: V1Map, landmark: TerrainLandmark) {
+  const x = scaleX(map, landmark.x);
+  const y = scaleY(map, landmark.y);
+  const width = scaleWidth(map, landmark.width);
+  const height = scaleHeight(map, landmark.height);
+  const labelY = Math.max(18, y - height - 8);
+
+  if (landmark.type === "spire") {
+    const points = [
+      `${(x - width / 2).toFixed(1)},${y.toFixed(1)}`,
+      `${x.toFixed(1)},${(y - height).toFixed(1)}`,
+      `${(x + width / 2).toFixed(1)},${y.toFixed(1)}`,
+    ].join(" ");
+
+    return `
+        <g class="landmark landmark--spire">
+          <polygon points="${points}"></polygon>
+          <text x="${x.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle">${escapeHtml(landmark.label)}</text>
+        </g>`;
+  }
+
+  if (landmark.type === "arch") {
+    const startX = x - width / 2;
+    const endX = x + width / 2;
+    const controlY = y - height;
+    return `
+        <g class="landmark landmark--arch">
+          <path d="M ${startX.toFixed(1)} ${y.toFixed(1)} Q ${x.toFixed(1)} ${controlY.toFixed(1)} ${endX.toFixed(1)} ${y.toFixed(1)}"></path>
+          <text x="${x.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle">${escapeHtml(landmark.label)}</text>
+        </g>`;
+  }
+
+  return `
+        <g class="landmark landmark--shelf">
+          <rect x="${(x - width / 2).toFixed(1)}" y="${(y - height / 2).toFixed(1)}" width="${width.toFixed(1)}" height="${Math.max(6, height).toFixed(1)}" rx="5"></rect>
+          <text x="${x.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle">${escapeHtml(landmark.label)}</text>
+        </g>`;
 }
 
 function spawnMarkers(map: V1Map) {
@@ -82,10 +143,11 @@ function mapCard(map: V1Map) {
         </dl>
       </div>
       <p class="summary">${escapeHtml(map.summary)}</p>
+      <p class="role">${escapeHtml(map.tacticalRole)}</p>
       <svg viewBox="0 0 720 260" role="img" aria-label="${escapeHtml(map.name)} terrain preview">
         <rect class="sky" x="0" y="0" width="720" height="260" rx="8"></rect>
-        <path class="canyon" d="${terrainFillPath(map)}"></path>
-        <path class="surface" d="${surfacePath(map)}"></path>
+${terrainPaths(map)}
+${landmarkMarkers(map)}
         <line class="death-plane" x1="30" y1="${deathY}" x2="690" y2="${deathY}"></line>
         <text class="death-label" x="690" y="${(Number(deathY) - 8).toFixed(1)}" text-anchor="end">death plane</text>
 ${spawnMarkers(map)}
@@ -113,7 +175,6 @@ const html = `<!doctype html>
       --terrain-line: #352f28;
       --hazard: #b2212b;
       --sky-a: #e8f3f8;
-      --sky-b: #f9f3df;
     }
     * { box-sizing: border-box; }
     body {
@@ -128,9 +189,7 @@ const html = `<!doctype html>
       margin: 0 auto;
       padding: 28px 18px 64px;
     }
-    header {
-      margin-bottom: 20px;
-    }
+    header { margin-bottom: 20px; }
     header p {
       color: var(--muted);
       margin: 0 0 8px;
@@ -177,6 +236,10 @@ const html = `<!doctype html>
       border-top: 3px dashed var(--hazard);
       background: transparent;
     }
+    .chip--landmark {
+      border-radius: 3px;
+      background: #5f4b32;
+    }
     .grid {
       display: grid;
       gap: 18px;
@@ -221,8 +284,15 @@ const html = `<!doctype html>
     dd { margin: 0; }
     .summary {
       color: var(--muted);
+      margin: 0 0 6px;
+      min-height: 2.6em;
+    }
+    .role {
+      color: #405b41;
+      font-size: 0.86rem;
+      font-weight: 700;
       margin: 0 0 12px;
-      min-height: 2.9em;
+      text-transform: uppercase;
     }
     svg {
       width: 100%;
@@ -231,7 +301,7 @@ const html = `<!doctype html>
       border-radius: 8px;
       background: var(--sky-a);
     }
-    .sky { fill: url(#none); fill: var(--sky-a); }
+    .sky { fill: var(--sky-a); }
     .canyon { fill: var(--terrain); opacity: 0.92; }
     .surface {
       fill: none;
@@ -250,6 +320,26 @@ const html = `<!doctype html>
       fill: var(--hazard);
       font-size: 12px;
       font-weight: 700;
+    }
+    .landmark { pointer-events: none; }
+    .landmark polygon,
+    .landmark rect {
+      fill: #6d5a3d;
+      opacity: 0.5;
+      stroke: #3e3324;
+      stroke-width: 2;
+    }
+    .landmark--arch path {
+      fill: none;
+      stroke: #5f4b32;
+      stroke-width: 10;
+      stroke-linecap: round;
+      opacity: 0.58;
+    }
+    .landmark text {
+      fill: #483a27;
+      font-size: 10px;
+      font-weight: 800;
     }
     .spawn circle {
       fill: #fffdf8;
@@ -282,6 +372,7 @@ const html = `<!doctype html>
         <span><i class="chip chip--red"></i>Red seats</span>
         <span><i class="chip chip--blue"></i>Blue seats</span>
         <span><i class="chip chip--line"></i>Death plane</span>
+        <span><i class="chip chip--landmark"></i>Canyon landmark</span>
       </div>
     </header>
     <section class="grid">
