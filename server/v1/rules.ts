@@ -7,8 +7,8 @@ export type MapPick =
   | "canyon-terraces"
   | "split-ravine"
   | "needlefield"
-  | "basin-stack"
-  | "arch-crossing";
+  | "ring-basin"
+  | "bridgeworks";
 
 export type SeatId = "red-1" | "blue-1" | "red-2" | "blue-2";
 
@@ -59,8 +59,8 @@ const MAP_PICKS = new Set<MapPick>([
   "canyon-terraces",
   "split-ravine",
   "needlefield",
-  "basin-stack",
-  "arch-crossing",
+  "ring-basin",
+  "bridgeworks",
 ]);
 
 export function validateRoomSettings(input: Partial<Record<keyof RoomSettings, unknown>>): RoomSettings {

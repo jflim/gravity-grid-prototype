@@ -138,6 +138,24 @@ function landmarkMarker(map: V1Map, landmark: TerrainLandmark) {
         </g>`;
   }
 
+  if (landmark.type === "ring") {
+    return `
+        <g class="landmark landmark--ring">
+          <ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${(width / 2).toFixed(1)}" ry="${(height / 2).toFixed(1)}"></ellipse>
+          <text x="${x.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle">${escapeHtml(landmark.label)}</text>
+        </g>`;
+  }
+
+  if (landmark.type === "bridge") {
+    const startX = x - width / 2;
+    const endX = x + width / 2;
+    return `
+        <g class="landmark landmark--bridge">
+          <path d="M ${startX.toFixed(1)} ${y.toFixed(1)} C ${(x - width * 0.22).toFixed(1)} ${(y - height).toFixed(1)} ${(x + width * 0.22).toFixed(1)} ${(y - height).toFixed(1)} ${endX.toFixed(1)} ${y.toFixed(1)}"></path>
+          <text x="${x.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle">${escapeHtml(landmark.label)}</text>
+        </g>`;
+  }
+
   return `
         <g class="landmark landmark--shelf">
           <rect x="${(x - width / 2).toFixed(1)}" y="${(y - height / 2).toFixed(1)}" width="${width.toFixed(1)}" height="${Math.max(6, height).toFixed(1)}" rx="5"></rect>
@@ -276,6 +294,14 @@ const html = `<!doctype html>
       border-radius: 3px;
       background: #5f4b32;
     }
+    .chip--ring {
+      border: 2px solid #7a4fb3;
+      background: transparent;
+    }
+    .chip--bridge {
+      border-radius: 3px;
+      background: #7d6547;
+    }
     .chip--up {
       border-radius: 3px;
       background: #336cbb;
@@ -367,11 +393,18 @@ const html = `<!doctype html>
     }
     .landmark { pointer-events: none; }
     .landmark polygon,
-    .landmark rect {
+    .landmark rect,
+    .landmark ellipse {
       fill: #6d5a3d;
       opacity: 0.5;
       stroke: #3e3324;
       stroke-width: 2;
+    }
+    .landmark--ring ellipse {
+      fill: none;
+      stroke: #7a4fb3;
+      stroke-width: 7;
+      opacity: 0.62;
     }
     .landmark--arch path {
       fill: none;
@@ -379,6 +412,13 @@ const html = `<!doctype html>
       stroke-width: 10;
       stroke-linecap: round;
       opacity: 0.58;
+    }
+    .landmark--bridge path {
+      fill: none;
+      stroke: #6d5130;
+      stroke-width: 11;
+      stroke-linecap: round;
+      opacity: 0.66;
     }
     .landmark text {
       fill: #483a27;
@@ -438,6 +478,8 @@ const html = `<!doctype html>
         <span><i class="chip chip--blue"></i>Blue seats</span>
         <span><i class="chip chip--line"></i>Death plane</span>
         <span><i class="chip chip--landmark"></i>Canyon landmark</span>
+        <span><i class="chip chip--ring"></i>Ring form</span>
+        <span><i class="chip chip--bridge"></i>Bridge span</span>
         <span><i class="chip chip--up"></i>Shoot up</span>
         <span><i class="chip chip--down"></i>Shoot down</span>
       </div>

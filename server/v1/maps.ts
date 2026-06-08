@@ -11,7 +11,7 @@ export type SurfacePoint = {
   y: number;
 };
 
-export type TerrainLandmarkType = "spire" | "arch" | "shelf";
+export type TerrainLandmarkType = "spire" | "arch" | "shelf" | "ring" | "bridge";
 
 export type TerrainLandmark = {
   type: TerrainLandmarkType;
@@ -120,7 +120,7 @@ export const MAPS: readonly V1Map[] = [
     ],
     tierShots: [tierShot("red-2", "blue-1", "uphill"), tierShot("red-1", "blue-2", "downhill")],
   }),
-  map("basin-stack", "Basin Stack", "layered bowls and recovery platforms reward crater control", "cluster and roller practice", 51, 0.9, {
+  map("ring-basin", "Ring Basin", "round canyon bowls and stone hoops reward crater control", "circular terrain reads for clusters and rollers", 51, 0.9, {
     spawns: {
       "red-1": spawn(430, 666, 1),
       "blue-1": spawn(1970, 666, -1),
@@ -147,29 +147,35 @@ export const MAPS: readonly V1Map[] = [
       ),
     ],
     landmarks: [
+      landmark("ring", 760, 628, 250, 150, "red stone ring"),
+      landmark("ring", 1680, 628, 250, 150, "blue stone ring"),
+      landmark("ring", 1200, 744, 390, 170, "basin ring"),
       landmark("shelf", 720, 584, 300, 40, "red high balcony"),
       landmark("shelf", 1680, 584, 300, 40, "blue high balcony"),
-      landmark("arch", 1200, 744, 360, 120, "basin under-arch"),
     ],
     tierShots: [tierShot("red-1", "blue-2", "uphill"), tierShot("red-2", "blue-1", "downhill")],
   }),
-  map("arch-crossing", "Arch Crossing", "windy broken arch pieces with open-air shot lanes", "wind reads and long lobs", 67, 1.18, {
+  map("bridgeworks", "Bridgeworks", "stacked natural bridges and broken spans over open canyon air", "many bridge lanes with bunge pressure", 67, 1.18, {
     spawns: {
-      "red-1": spawn(390, 596, 1),
-      "blue-1": spawn(2010, 596, -1),
-      "red-2": spawn(650, 716, 1),
-      "blue-2": spawn(1750, 716, -1),
+      "red-1": spawn(370, 586, 1),
+      "blue-1": spawn(2030, 586, -1),
+      "red-2": spawn(640, 738, 1),
+      "blue-2": spawn(1760, 738, -1),
     },
     previewSegments: [
-      segment(point(0, 776), point(190, 690), point(390, 596), point(560, 624), point(720, 732)),
-      segment(point(900, 742), point(1030, 630), point(1140, 548)),
-      segment(point(1260, 548), point(1370, 630), point(1500, 742)),
-      segment(point(1680, 732), point(1840, 624), point(2010, 596), point(2210, 690), point(2400, 776)),
+      segment(point(0, 780), point(170, 686), point(370, 586), point(520, 600)),
+      segment(point(600, 742), point(760, 724), point(930, 704)),
+      segment(point(990, 610), point(1120, 574), point(1240, 574), point(1370, 610)),
+      segment(point(1450, 704), point(1620, 724), point(1780, 742)),
+      segment(point(1880, 600), point(2030, 586), point(2230, 686), point(2400, 780)),
     ],
     landmarks: [
-      landmark("arch", 1200, 620, 520, 220, "broken sky arch"),
-      landmark("spire", 825, 676, 80, 170, "red arch tooth"),
-      landmark("spire", 1575, 676, 80, 170, "blue arch tooth"),
+      landmark("bridge", 760, 704, 330, 58, "low red bridge"),
+      landmark("bridge", 1200, 574, 440, 62, "high center bridge"),
+      landmark("bridge", 1620, 704, 330, 58, "low blue bridge"),
+      landmark("bridge", 1200, 736, 640, 46, "broken lower span"),
+      landmark("spire", 540, 650, 76, 170, "red bridge tooth"),
+      landmark("spire", 1860, 650, 76, 170, "blue bridge tooth"),
     ],
     tierShots: [tierShot("red-2", "blue-1", "uphill"), tierShot("red-1", "blue-2", "downhill")],
   }),

@@ -6,11 +6,11 @@ import { MODE_SEATS } from "./rules.js";
 test("v1 map pool has five selectable maps", () => {
   assert.deepEqual(
     MAPS.map((map) => map.id),
-    ["canyon-terraces", "split-ravine", "needlefield", "basin-stack", "arch-crossing"],
+    ["canyon-terraces", "split-ravine", "needlefield", "ring-basin", "bridgeworks"],
   );
   assert.deepEqual(
     MAPS.map((map) => map.name),
-    ["Canyon Terraces", "Split Ravine", "Needlefield", "Basin Stack", "Arch Crossing"],
+    ["Canyon Terraces", "Split Ravine", "Needlefield", "Ring Basin", "Bridgeworks"],
   );
 });
 
@@ -75,7 +75,7 @@ test("map pool includes gaps and canyon landmarks", () => {
   const gapMaps = MAPS.filter((map) => map.previewSegments.length > 1).map((map) => map.id);
   assert.ok(gapMaps.includes("split-ravine"), "Split Ravine has broken land");
   assert.ok(gapMaps.includes("needlefield"), "Needlefield has broken land");
-  assert.ok(gapMaps.includes("arch-crossing"), "Arch Crossing has broken land");
+  assert.ok(gapMaps.includes("bridgeworks"), "Bridgeworks has broken land");
 
   for (const map of MAPS) {
     assert.ok(map.landmarks.length > 0, `${map.id} has visible canyon landmarks`);
@@ -84,6 +84,19 @@ test("map pool includes gaps and canyon landmarks", () => {
   const landmarkTypes = new Set(MAPS.flatMap((map) => map.landmarks.map((landmark) => landmark.type)));
   assert.ok(landmarkTypes.has("spire"), "map pool has canyon spires");
   assert.ok(landmarkTypes.has("arch"), "map pool has canyon arches");
+  assert.ok(landmarkTypes.has("ring"), "map pool has circular ring forms");
+  assert.ok(landmarkTypes.has("bridge"), "map pool has bridge forms");
+});
+
+test("ring and bridge maps have distinct novelty hooks", () => {
+  const ringBasin = MAPS.find((map) => map.id === "ring-basin");
+  const bridgeworks = MAPS.find((map) => map.id === "bridgeworks");
+
+  assert.ok(ringBasin, "Ring Basin exists");
+  assert.ok(bridgeworks, "Bridgeworks exists");
+  assert.ok(ringBasin.landmarks.filter((landmark) => landmark.type === "ring").length >= 2, "Ring Basin has multiple circular forms");
+  assert.ok(bridgeworks.landmarks.filter((landmark) => landmark.type === "bridge").length >= 3, "Bridgeworks has many bridges");
+  assert.ok(bridgeworks.previewSegments.length >= 5, "Bridgeworks uses many separated land spans");
 });
 
 test("each multi-tier map shows uphill and downhill shot lanes", () => {
