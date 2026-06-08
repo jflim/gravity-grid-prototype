@@ -1326,9 +1326,9 @@ class GravityGridScene extends Phaser.Scene {
       switch (landmark.type) {
         case "ring": {
           if (pass === "backdrop") {
-            gfx.lineStyle(22, 0xc8914c, 0.1);
+            gfx.lineStyle(18, 0x7d8fa8, 0.08);
             this.strokeEllipseArc(gfx, landmark.x, landmark.y, landmark.width / 2, landmark.height / 2, 0, Math.PI * 2);
-            gfx.lineStyle(7, 0x2a1f1c, 0.1);
+            gfx.lineStyle(5, 0xb7c8da, 0.055);
             this.strokeEllipseArc(
               gfx,
               landmark.x,
@@ -1337,17 +1337,6 @@ class GravityGridScene extends Phaser.Scene {
               landmark.height * 0.32,
               0,
               Math.PI * 2,
-            );
-          } else {
-            gfx.lineStyle(5, 0xffd166, 0.24);
-            this.strokeEllipseArc(
-              gfx,
-              landmark.x,
-              landmark.y,
-              landmark.width / 2,
-              landmark.height / 2,
-              Math.PI * 1.08,
-              Math.PI * 1.92,
             );
           }
           break;

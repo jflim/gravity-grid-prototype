@@ -102,19 +102,18 @@ test("ring and bridge maps have distinct novelty hooks", () => {
 test("Ring Basin uses separated playable spans instead of relying on circle overlays", () => {
   const ringBasin = MAPS.find((map) => map.id === "ring-basin");
   assert.ok(ringBasin, "Ring Basin exists");
-  assert.ok(ringBasin.previewSegments.length >= 5, "Ring Basin has broken basin spans");
+  assert.ok(ringBasin.previewSegments.length >= 2, "Ring Basin has broken basin spans");
 
-  const gaps = ringBasin.previewSegments.slice(1).filter((segment, index) => {
+  const gaps = ringBasin.previewSegments.slice(1).map((segment, index) => {
     const previous = ringBasin.previewSegments[index];
-    return segment[0].x - previous[previous.length - 1].x >= 48;
+    return segment[0].x - previous[previous.length - 1].x;
   });
 
-  assert.ok(gaps.length >= 4, "Ring Basin has visible air gaps between terrain spans");
+  assert.ok(gaps.every((gap) => gap >= 320), "Ring Basin avoids tiny lethal slots that look too small for the units");
+  assert.ok(gaps.some((gap) => gap >= 520), "Ring Basin has a full-unit-readable center chasm");
   assert.ok(
-    ringBasin.previewSegments.some((segment) =>
-      segment.some((point) => point.x >= 1120 && point.x <= 1280 && point.y >= 790),
-    ),
-    "Ring Basin has a low central basin span",
+    ringBasin.landmarks.filter((landmark) => landmark.type === "ring").length >= 2,
+    "Ring Basin keeps ring identity through non-lethal landmarks",
   );
 });
 
