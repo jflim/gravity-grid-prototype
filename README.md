@@ -89,6 +89,12 @@ Production build:
 npm run build
 ```
 
+Generate HTML reading copies for the human-facing markdown docs:
+
+```powershell
+npm run docs:html
+```
+
 Runtime roster asset check:
 
 ```powershell
@@ -103,6 +109,8 @@ dist/index.html
 
 ## Planning
 
+- Locked v1 playtest-alpha contract: [docs/V1_PLAYTEST_ALPHA.html](docs/V1_PLAYTEST_ALPHA.html)
+- HTML docs index: [docs/index.html](docs/index.html)
 - Canonical game design spec: [docs/GAME_DESIGN_SPEC.md](docs/GAME_DESIGN_SPEC.md)
 - Build/iteration plan: [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md)
 - Version log: [docs/VERSION_LOG.md](docs/VERSION_LOG.md)

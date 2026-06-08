@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Git Workflow</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        Generated from <a href="GIT_WORKFLOW.md">docs/GIT_WORKFLOW.md</a> on 2026-06-08.
+        Edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Git Workflow</h1>
+<p>This repo should be treated as a sequence of playable checkpoints, not a forever-growing uncommitted prototype.</p>
+<h2>Commit Rules</h2>
+<ul>
+<li>Commit after each coherent iteration or reviewable documentation update.</li>
+<li>Keep commits descriptive and scoped.</li>
+<li>Run <code>npm run build</code> before committing gameplay/code changes.</li>
+<li>Keep generated folders out of Git: <code>node_modules/</code> and <code>dist/</code> are ignored.</li>
+<li>Prefer one focused purpose per commit.</li>
+<li>Do not commit exploratory throwaway changes unless they have become the chosen direction.</li>
+</ul>
+<h2>Branch And Push Strategy</h2>
+<p>Use <code>main</code> as the stable playable branch. Work should usually happen in a short-lived feature branch, then merge back into <code>main</code> after the quality gate passes.</p>
+<p>Recommended branch names:</p>
+<pre><code class="language-text">
+feature/local-2v2
+
+tune/bunger-terrain
+
+fix/round-reset
+
+docs/iteration-workflow
+
+</code></pre>
+<p>Default flow:</p>
+<pre><code class="language-powershell">
+git switch -c feature/example-change
+
+# work, test, update docs if needed
+
+git add .
+
+git commit -m &quot;feat: describe the focused change&quot;
+
+git switch main
+
+git merge feature/example-change
+
+git push
+
+</code></pre>
+<p>For tiny docs-only changes, committing directly to <code>main</code> is acceptable.</p>
+<h2>Quality Gate Before Pushing</h2>
+<p>Before pushing code changes:</p>
+<ul>
+<li>Run <code>npm run build</code>.</li>
+<li>Refresh/play the local prototype when the change is visual or gameplay-facing.</li>
+<li>Update docs when terminology, controls, rules, assets, or planning changed.</li>
+<li>Update <code>docs/VERSION_LOG.md</code> for playable checkpoints or meaningful project-management changes.</li>
+<li>Check <code>git status --short</code> so only intended files are included.</li>
+</ul>
+<p>Docs-only commits do not require <code>npm run build</code>, but should still be reviewed for accuracy.</p>
+<p>If markdown docs changed, run <code>npm run docs:html</code> so generated HTML reading copies stay current.</p>
+<h2>How Often To Commit</h2>
+<p>Commit when the work reaches a stable checkpoint:</p>
+<ul>
+<li>A feature works end to end.</li>
+<li>A bug is fixed and verified.</li>
+<li>A tuning pass is coherent enough to compare against the previous state.</li>
+<li>A planning/doc update changes how we will manage the project.</li>
+</ul>
+<p>Avoid committing every tiny experiment. If an experiment is messy but useful, keep it local until it is either cleaned up into a checkpoint or deliberately discarded.</p>
+<h2>How Often To Push</h2>
+<p>Push after a commit passes the quality gate. Good default cadence:</p>
+<ul>
+<li>Push at the end of each working session.</li>
+<li>Push after each playable checkpoint.</li>
+<li>Push before switching to a new major task.</li>
+<li>Push immediately after tags.</li>
+</ul>
+<p>Do not push broken code to <code>main</code> unless the commit explicitly documents a known blocked state and we have agreed that preserving it is more important than playability.</p>
+<h2>Commit Message Style</h2>
+<p>Use short conventional prefixes:</p>
+<ul>
+<li><code>feat:</code> for new player-facing behavior.</li>
+<li><code>fix:</code> for bug fixes.</li>
+<li><code>docs:</code> for planning/version/log changes.</li>
+<li><code>chore:</code> for setup, versioning, repo hygiene, or tooling.</li>
+<li><code>tune:</code> for gameplay balance/readability tweaks.</li>
+</ul>
+<p>Examples:</p>
+<pre><code class="language-text">
+feat: add local 2v2 turn order
+
+tune: improve bunger crater knockback
+
+fix: end round when blue team is eliminated
+
+docs: update v0.5 planning notes
+
+chore: tag v0.5.0 checkpoint
+
+</code></pre>
+<h2>Version Checkpoint Loop</h2>
+<ol>
+<li>Pick one version goal from <code>docs/BUILD_PLAN.md</code>.</li>
+<li>Implement only that goal.</li>
+<li>Run <code>npm run build</code>.</li>
+<li>Update <code>docs/VERSION_LOG.md</code>.</li>
+<li>Commit with a descriptive message.</li>
+<li>Merge to <code>main</code> if the work happened on a feature branch.</li>
+<li>Tag meaningful playable checkpoints, for example:</li>
+</ol>
+<pre><code class="language-powershell">
+git tag v0.5.0
+
+</code></pre>
+<ol>
+<li>Push commits and tags:</li>
+</ol>
+<pre><code class="language-powershell">
+git push
+
+git push --tags
+
+</code></pre>
+<h2>GitHub Management</h2>
+<p>GitHub CLI is installed locally at <code>C:\Users\jflim\Documents\Codex\tools\gh.cmd</code>, and the remote repo is <code>https://github.com/jflim/gravity-grid-prototype</code>.</p>
+<p>Use GitHub CLI for repo checks when helpful:</p>
+<pre><code class="language-powershell">
+gh repo view jflim/gravity-grid-prototype
+
+gh pr status
+
+</code></pre>
+<h2>Current Local Repo</h2>
+<ul>
+<li>Branch: <code>main</code></li>
+<li>Remote: <code>origin</code></li>
+<li>First checkpoint commit: <code>chore: establish gravity grid prototype checkpoint</code></li>
+<li>Current checkpoint tag: <code>v0.4.0</code></li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

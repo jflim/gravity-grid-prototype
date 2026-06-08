@@ -1,0 +1,4035 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>V1 Playtest Alpha Implementation Plan</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        Generated from <a href="2026-06-08-v1-playtest-alpha-implementation.md">docs/superpowers/plans/2026-06-08-v1-playtest-alpha-implementation.md</a> on 2026-06-08.
+        Edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>V1 Playtest Alpha Implementation Plan</h1>
+<blockquote>
+<p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (<code>- [ ]</code>) syntax for tracking.</p>
+</blockquote>
+<p><strong>Goal:</strong> Build the locked hosted private-room V1 playtest alpha defined in <code>docs/V1_PLAYTEST_ALPHA.html</code>.</p>
+<p><strong>Architecture:</strong> Replace the current two-player online preview with a server-authoritative room flow, lobby seat model, deterministic match setup, and authoritative combat resolution. Keep Phaser responsible for input, rendering, animation, and feedback while Colyseus owns room state, turn order, settings, validation, and match results.</p>
+<p><strong>Tech Stack:</strong> TypeScript, Phaser 3, Vite, Node.js, Colyseus, <code>@colyseus/schema</code>, <code>tsx</code>, Node test runner.</p>
+<p>---</p>
+<h2>Scope Contract</h2>
+<p>V1 scope is governed by <code>docs/V1_PLAYTEST_ALPHA.html</code>. A task that changes the contract requires the explicit phrase <code>I am requesting a v1 contract change.</code> before implementation starts. Everything else goes into the V2 ideas or decision sections, not into V1 code.</p>
+<p>The current online implementation is a preview scaffold:</p>
+<ul>
+<li><code>server/rooms/GravityCanyonRoom.ts</code> has <code>maxClients = 2</code>, auto team assignment, ready checks, preview rewards, and a fake <code>previewFire</code> loop.</li>
+<li><code>server/schema/GravityCanyonState.ts</code> stores players and preview vehicles but not seats, room settings, spectators, reconnect state, turn order, map state, or real projectile outcomes.</li>
+<li><code>src/onlineLobby.ts</code> renders create/join, ready, reward capsule, preview fire, and nameplate controls.</li>
+<li><code>src/main.ts</code> contains the local Phaser game, local turn timer, terrain, vehicles, wind, projectile logic, and current character art wiring.</li>
+</ul>
+<p>This plan turns that scaffold into V1 in testable slices.</p>
+<h2>File Structure</h2>
+<ul>
+<li>Create <code>server/v1/rules.ts</code>: locked V1 ids, room settings, constants, validation helpers, and scope-safe defaults.</li>
+<li>Create <code>server/v1/rules.test.ts</code>: coverage for modes, settings, seats, character ids, and display-name rules.</li>
+<li>Create <code>server/v1/maps.ts</code>: map pool, spawn definitions, map selection, death plane defaults, and terrain seed metadata.</li>
+<li>Create <code>server/v1/maps.test.ts</code>: coverage for spawn validity and random map selection.</li>
+<li>Create <code>server/v1/turnOrder.ts</code>: match turn-order generation and active-turn helpers.</li>
+<li>Create <code>server/v1/turnOrder.test.ts</code>: coverage for 1v1, 2v2, same-character seats, KOs, and disconnect skips.</li>
+<li>Create <code>server/v1/combatTypes.ts</code>: serializable combat commands and outcomes shared by room and tests.</li>
+<li>Create <code>server/v1/weapons.ts</code>: Nova, Vesper, Kaelii, and Perlah primary weapon definitions.</li>
+<li>Create <code>server/v1/weapons.test.ts</code>: behavioral tests for weapon identity, damage, terrain effects, and knockback/pull classes.</li>
+<li>Create <code>server/v1/combat.ts</code>: deterministic server-side movement, firing validation, projectile simulation, terrain damage, direct/splash hit resolution, and KO checks.</li>
+<li>Create <code>server/v1/combat.test.ts</code>: deterministic tests for fire, terrain, friendly-fire, Void Dropped, forced turn skip, and round end.</li>
+<li>Modify <code>server/schema/GravityCanyonState.ts</code>: add V1 room settings, lobby members, seats, spectators, match state, turn state, map state, phrase bubbles, and combat events.</li>
+<li>Modify <code>server/rooms/GravityCanyonRoom.ts</code>: replace preview messages with V1 room lifecycle messages.</li>
+<li>Create <code>src/online/persistence.ts</code>: generated display names, local reconnect token, and room URL helpers.</li>
+<li>Create <code>src/online/renderRoom.ts</code>: lobby and room UI render helpers for players, seats, settings, spectators, and ready/start state.</li>
+<li>Create <code>src/online/messages.ts</code>: client-side message names and payload types matching the server contract.</li>
+<li>Modify <code>src/onlineLobby.ts</code>: swap preview UI for V1 room creation, invite links, name editing, seat claiming, character selection, settings, ready/start, and passive spectator notice.</li>
+<li>Modify <code>src/main.ts</code>: add online match adapter hooks while preserving local playability during the migration.</li>
+<li>Modify <code>package.json</code>: add a <code>test</code> script once the first <code>.test.ts</code> file exists.</li>
+<li>Update <code>README.md</code>, <code>docs/SESSION_HANDOFF.md</code>, and <code>docs/VERSION_LOG.md</code> after each playable checkpoint.</li>
+</ul>
+<h2>Task 1: Test Harness And V1 Rule Constants</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>package.json</code></li>
+<li>Create: <code>server/v1/rules.ts</code></li>
+<li>Create: <code>server/v1/rules.test.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Add the test command</strong></li>
+</ul>
+<p>Add <code>test</code> after <code>docs:html</code> in <code>package.json</code>:</p>
+<pre><code class="language-json">
+&quot;docs:html&quot;: &quot;node scripts/build-docs-html.mjs&quot;,
+
+&quot;test&quot;: &quot;tsx --test \&quot;server/**/*.test.ts\&quot; \&quot;src/**/*.test.ts\&quot;&quot;,
+
+&quot;verify:runtime-roster&quot;: &quot;node scripts/verify-runtime-roster.mjs&quot;
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Write the failing rule tests</strong></li>
+</ul>
+<p>Create <code>server/v1/rules.test.ts</code>:</p>
+<pre><code class="language-ts">
+import assert from &quot;node:assert/strict&quot;;
+
+import test from &quot;node:test&quot;;
+
+import {
+
+  CHARACTER_IDS,
+
+  DEFAULT_ROOM_SETTINGS,
+
+  MODE_SEATS,
+
+  PHRASE_COOLDOWN_MS,
+
+  TURN_SECONDS,
+
+  sanitizeDisplayName,
+
+  validateRoomSettings,
+
+} from &quot;./rules.js&quot;;
+
+
+
+test(&quot;v1 exposes exactly the locked roster&quot;, () =&gt; {
+
+  assert.deepEqual(CHARACTER_IDS, [&quot;nova&quot;, &quot;vesper&quot;, &quot;kaelii&quot;, &quot;perlah&quot;]);
+
+});
+
+
+
+test(&quot;v1 supports 1v1 and 2v2 seat layouts&quot;, () =&gt; {
+
+  assert.equal(MODE_SEATS[&quot;1v1&quot;].length, 2);
+
+  assert.equal(MODE_SEATS[&quot;2v2&quot;].length, 4);
+
+  assert.deepEqual(MODE_SEATS[&quot;2v2&quot;].map((seat) =&gt; seat.team), [&quot;red&quot;, &quot;blue&quot;, &quot;red&quot;, &quot;blue&quot;]);
+
+});
+
+
+
+test(&quot;default room settings match the v1 contract&quot;, () =&gt; {
+
+  assert.equal(DEFAULT_ROOM_SETTINGS.mode, &quot;2v2&quot;);
+
+  assert.equal(DEFAULT_ROOM_SETTINGS.matchLength, &quot;best-of-1&quot;);
+
+  assert.equal(DEFAULT_ROOM_SETTINGS.mapPick, &quot;random&quot;);
+
+  assert.equal(DEFAULT_ROOM_SETTINGS.friendlyFire, false);
+
+});
+
+
+
+test(&quot;room settings validation clamps to v1 values&quot;, () =&gt; {
+
+  assert.deepEqual(
+
+    validateRoomSettings({
+
+      mode: &quot;4v4&quot;,
+
+      matchLength: &quot;best-of-9&quot;,
+
+      mapPick: &quot;unknown-map&quot;,
+
+      friendlyFire: true,
+
+    }),
+
+    {
+
+      mode: &quot;2v2&quot;,
+
+      matchLength: &quot;best-of-1&quot;,
+
+      mapPick: &quot;random&quot;,
+
+      friendlyFire: true,
+
+    },
+
+  );
+
+});
+
+
+
+test(&quot;display names are short, visible, and non-persistent&quot;, () =&gt; {
+
+  assert.equal(sanitizeDisplayName(&quot;  Canyon   Pilot!!!  &quot;), &quot;Canyon Pilot&quot;);
+
+  assert.equal(sanitizeDisplayName(&quot;&lt;script&gt;&quot;), &quot;script&quot;);
+
+  assert.equal(sanitizeDisplayName(&quot;&quot;), &quot;Guest&quot;);
+
+  assert.equal(sanitizeDisplayName(&quot;abcdefghijklmnopqrstuvwxyz&quot;), &quot;abcdefghijklmnopqr&quot;);
+
+});
+
+
+
+test(&quot;turn and phrase constants are locked for v1 readability&quot;, () =&gt; {
+
+  assert.equal(TURN_SECONDS, 20);
+
+  assert.equal(PHRASE_COOLDOWN_MS, 3000);
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 3: Run the failing tests</strong></li>
+</ul>
+<p>Run: <code>npm run test</code></p>
+<p>Expected: FAIL because <code>server/v1/rules.ts</code> does not exist.</p>
+<ul>
+<li>[ ] <strong>Step 4: Implement the rule constants</strong></li>
+</ul>
+<p>Create <code>server/v1/rules.ts</code>:</p>
+<pre><code class="language-ts">
+export type GameMode = &quot;1v1&quot; | &quot;2v2&quot;;
+
+export type MatchLength = &quot;best-of-1&quot; | &quot;best-of-3&quot;;
+
+export type TeamId = &quot;red&quot; | &quot;blue&quot;;
+
+export type CharacterId = &quot;nova&quot; | &quot;vesper&quot; | &quot;kaelii&quot; | &quot;perlah&quot;;
+
+export type MapPick = &quot;random&quot; | &quot;mesa-ribs&quot; | &quot;split-arch&quot; | &quot;crater-steps&quot; | &quot;wind-bridge&quot; | &quot;basin-ridge&quot;;
+
+
+
+export type SeatId = &quot;red-1&quot; | &quot;blue-1&quot; | &quot;red-2&quot; | &quot;blue-2&quot;;
+
+
+
+export type SeatDefinition = {
+
+  seatId: SeatId;
+
+  team: TeamId;
+
+  slot: 1 | 2;
+
+};
+
+
+
+export type RoomSettings = {
+
+  mode: GameMode;
+
+  matchLength: MatchLength;
+
+  mapPick: MapPick;
+
+  friendlyFire: boolean;
+
+};
+
+
+
+export const CHARACTER_IDS = [&quot;nova&quot;, &quot;vesper&quot;, &quot;kaelii&quot;, &quot;perlah&quot;] as const satisfies readonly CharacterId[];
+
+export const TURN_SECONDS = 20;
+
+export const DISCONNECTED_SKIP_SECONDS = 5;
+
+export const RECONNECT_GRACE_MS = 180_000;
+
+export const PHRASE_COOLDOWN_MS = 3_000;
+
+export const MAX_DISPLAY_NAME_LENGTH = 18;
+
+
+
+export const MODE_SEATS: Record&lt;GameMode, readonly SeatDefinition[]&gt; = {
+
+  &quot;1v1&quot;: [
+
+    { seatId: &quot;red-1&quot;, team: &quot;red&quot;, slot: 1 },
+
+    { seatId: &quot;blue-1&quot;, team: &quot;blue&quot;, slot: 1 },
+
+  ],
+
+  &quot;2v2&quot;: [
+
+    { seatId: &quot;red-1&quot;, team: &quot;red&quot;, slot: 1 },
+
+    { seatId: &quot;blue-1&quot;, team: &quot;blue&quot;, slot: 1 },
+
+    { seatId: &quot;red-2&quot;, team: &quot;red&quot;, slot: 2 },
+
+    { seatId: &quot;blue-2&quot;, team: &quot;blue&quot;, slot: 2 },
+
+  ],
+
+};
+
+
+
+export const DEFAULT_ROOM_SETTINGS: RoomSettings = {
+
+  mode: &quot;2v2&quot;,
+
+  matchLength: &quot;best-of-1&quot;,
+
+  mapPick: &quot;random&quot;,
+
+  friendlyFire: false,
+
+};
+
+
+
+const MATCH_LENGTHS = new Set&lt;MatchLength&gt;([&quot;best-of-1&quot;, &quot;best-of-3&quot;]);
+
+const GAME_MODES = new Set&lt;GameMode&gt;([&quot;1v1&quot;, &quot;2v2&quot;]);
+
+const MAP_PICKS = new Set&lt;MapPick&gt;([
+
+  &quot;random&quot;,
+
+  &quot;mesa-ribs&quot;,
+
+  &quot;split-arch&quot;,
+
+  &quot;crater-steps&quot;,
+
+  &quot;wind-bridge&quot;,
+
+  &quot;basin-ridge&quot;,
+
+]);
+
+
+
+export function validateRoomSettings(input: Partial&lt;Record&lt;keyof RoomSettings, unknown&gt;&gt;): RoomSettings {
+
+  return {
+
+    mode: GAME_MODES.has(input.mode as GameMode) ? (input.mode as GameMode) : DEFAULT_ROOM_SETTINGS.mode,
+
+    matchLength: MATCH_LENGTHS.has(input.matchLength as MatchLength)
+
+      ? (input.matchLength as MatchLength)
+
+      : DEFAULT_ROOM_SETTINGS.matchLength,
+
+    mapPick: MAP_PICKS.has(input.mapPick as MapPick) ? (input.mapPick as MapPick) : DEFAULT_ROOM_SETTINGS.mapPick,
+
+    friendlyFire: Boolean(input.friendlyFire),
+
+  };
+
+}
+
+
+
+export function sanitizeDisplayName(displayName = &quot;Guest&quot;) {
+
+  const clean = displayName.replace(/[^\w .-]/g, &quot;&quot;).replace(/\s+/g, &quot; &quot;).trim();
+
+  return clean.slice(0, MAX_DISPLAY_NAME_LENGTH) || &quot;Guest&quot;;
+
+}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 5: Run tests and commit</strong></li>
+</ul>
+<p>Run: <code>npm run test</code></p>
+<p>Expected: PASS.</p>
+<p>Commit:</p>
+<pre><code class="language-bash">
+git add package.json server/v1/rules.ts server/v1/rules.test.ts
+
+git commit -m &quot;test: add v1 rule contract&quot;
+
+</code></pre>
+<h2>Task 2: Map Pool And Spawn Contracts</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>server/v1/maps.ts</code></li>
+<li>Create: <code>server/v1/maps.test.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Write map tests</strong></li>
+</ul>
+<p>Create <code>server/v1/maps.test.ts</code>:</p>
+<pre><code class="language-ts">
+import assert from &quot;node:assert/strict&quot;;
+
+import test from &quot;node:test&quot;;
+
+import { MAPS, pickMap, spawnForSeat } from &quot;./maps.js&quot;;
+
+import { MODE_SEATS } from &quot;./rules.js&quot;;
+
+
+
+test(&quot;v1 map pool has five selectable maps&quot;, () =&gt; {
+
+  assert.deepEqual(
+
+    MAPS.map((map) =&gt; map.id),
+
+    [&quot;mesa-ribs&quot;, &quot;split-arch&quot;, &quot;crater-steps&quot;, &quot;wind-bridge&quot;, &quot;basin-ridge&quot;],
+
+  );
+
+});
+
+
+
+test(&quot;each map has valid spawns for 1v1 and 2v2 seats&quot;, () =&gt; {
+
+  for (const map of MAPS) {
+
+    for (const mode of [&quot;1v1&quot;, &quot;2v2&quot;] as const) {
+
+      for (const seat of MODE_SEATS[mode]) {
+
+        const spawn = spawnForSeat(map, seat.seatId);
+
+        assert.ok(spawn.x &gt; 0 &amp;&amp; spawn.x &lt; map.worldWidth);
+
+        assert.ok(spawn.y &gt; map.deathPlaneY - 900 &amp;&amp; spawn.y &lt; map.deathPlaneY);
+
+      }
+
+    }
+
+  }
+
+});
+
+
+
+test(&quot;random map selection is deterministic by seed&quot;, () =&gt; {
+
+  assert.equal(pickMap(&quot;random&quot;, 1001).id, pickMap(&quot;random&quot;, 1001).id);
+
+  assert.equal(pickMap(&quot;random&quot;, 1002).id, pickMap(&quot;random&quot;, 1002).id);
+
+});
+
+
+
+test(&quot;explicit map selection wins over random&quot;, () =&gt; {
+
+  assert.equal(pickMap(&quot;split-arch&quot;, 1001).id, &quot;split-arch&quot;);
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Run the failing map tests</strong></li>
+</ul>
+<p>Run: <code>npm run test -- server/v1/maps.test.ts</code></p>
+<p>Expected: FAIL because <code>server/v1/maps.ts</code> does not exist.</p>
+<ul>
+<li>[ ] <strong>Step 3: Implement map definitions</strong></li>
+</ul>
+<p>Create <code>server/v1/maps.ts</code>:</p>
+<pre><code class="language-ts">
+import type { MapPick, SeatId } from &quot;./rules.js&quot;;
+
+
+
+export type SpawnPoint = {
+
+  x: number;
+
+  y: number;
+
+  facing: 1 | -1;
+
+};
+
+
+
+export type V1Map = {
+
+  id: Exclude&lt;MapPick, &quot;random&quot;&gt;;
+
+  name: string;
+
+  worldWidth: number;
+
+  deathPlaneY: number;
+
+  windScale: number;
+
+  terrainSeedSalt: number;
+
+  spawns: Record&lt;SeatId, SpawnPoint&gt;;
+
+};
+
+
+
+export const MAPS: readonly V1Map[] = [
+
+  map(&quot;mesa-ribs&quot;, &quot;Mesa Ribs&quot;, 11, 0.85, {
+
+    &quot;red-1&quot;: spawn(380, 610, 1),
+
+    &quot;blue-1&quot;: spawn(2020, 600, -1),
+
+    &quot;red-2&quot;: spawn(610, 640, 1),
+
+    &quot;blue-2&quot;: spawn(1790, 640, -1),
+
+  }),
+
+  map(&quot;split-arch&quot;, &quot;Split Arch&quot;, 23, 1.0, {
+
+    &quot;red-1&quot;: spawn(330, 580, 1),
+
+    &quot;blue-1&quot;: spawn(2070, 580, -1),
+
+    &quot;red-2&quot;: spawn(720, 650, 1),
+
+    &quot;blue-2&quot;: spawn(1680, 650, -1),
+
+  }),
+
+  map(&quot;crater-steps&quot;, &quot;Crater Steps&quot;, 37, 0.9, {
+
+    &quot;red-1&quot;: spawn(420, 620, 1),
+
+    &quot;blue-1&quot;: spawn(1980, 620, -1),
+
+    &quot;red-2&quot;: spawn(780, 700, 1),
+
+    &quot;blue-2&quot;: spawn(1620, 700, -1),
+
+  }),
+
+  map(&quot;wind-bridge&quot;, &quot;Wind Bridge&quot;, 51, 1.15, {
+
+    &quot;red-1&quot;: spawn(360, 590, 1),
+
+    &quot;blue-1&quot;: spawn(2040, 590, -1),
+
+    &quot;red-2&quot;: spawn(650, 625, 1),
+
+    &quot;blue-2&quot;: spawn(1750, 625, -1),
+
+  }),
+
+  map(&quot;basin-ridge&quot;, &quot;Basin Ridge&quot;, 67, 0.95, {
+
+    &quot;red-1&quot;: spawn(430, 680, 1),
+
+    &quot;blue-1&quot;: spawn(1970, 680, -1),
+
+    &quot;red-2&quot;: spawn(690, 610, 1),
+
+    &quot;blue-2&quot;: spawn(1710, 610, -1),
+
+  }),
+
+];
+
+
+
+export function pickMap(mapPick: MapPick, seed: number) {
+
+  if (mapPick !== &quot;random&quot;) {
+
+    return MAPS.find((map) =&gt; map.id === mapPick) ?? MAPS[0];
+
+  }
+
+
+
+  return MAPS[Math.abs(seed) % MAPS.length];
+
+}
+
+
+
+export function spawnForSeat(map: V1Map, seatId: SeatId) {
+
+  return map.spawns[seatId];
+
+}
+
+
+
+function map(id: V1Map[&quot;id&quot;], name: string, terrainSeedSalt: number, windScale: number, spawns: V1Map[&quot;spawns&quot;]): V1Map {
+
+  return {
+
+    id,
+
+    name,
+
+    worldWidth: 2400,
+
+    deathPlaneY: 900,
+
+    windScale,
+
+    terrainSeedSalt,
+
+    spawns,
+
+  };
+
+}
+
+
+
+function spawn(x: number, y: number, facing: 1 | -1): SpawnPoint {
+
+  return { x, y, facing };
+
+}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 4: Run tests and commit</strong></li>
+</ul>
+<p>Run: <code>npm run test -- server/v1/maps.test.ts</code></p>
+<p>Expected: PASS.</p>
+<p>Commit:</p>
+<pre><code class="language-bash">
+git add server/v1/maps.ts server/v1/maps.test.ts
+
+git commit -m &quot;feat: define v1 map pool&quot;
+
+</code></pre>
+<h2>Task 3: Schema Upgrade For Lobby, Seats, Spectators, And Match State</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>server/schema/GravityCanyonState.ts</code></li>
+<li>Modify: <code>server/rooms/GravityCanyonRoom.ts</code></li>
+<li>Create: <code>server/rooms/GravityCanyonRoom.lobby.test.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Write schema and lobby tests around room state helpers</strong></li>
+</ul>
+<p>Create <code>server/rooms/GravityCanyonRoom.lobby.test.ts</code>:</p>
+<pre><code class="language-ts">
+import assert from &quot;node:assert/strict&quot;;
+
+import test from &quot;node:test&quot;;
+
+import { DEFAULT_ROOM_SETTINGS } from &quot;../v1/rules.js&quot;;
+
+import {
+
+  createInitialGravityCanyonState,
+
+  createLobbyMember,
+
+  createSeatState,
+
+  isSeatReadyForStart,
+
+} from &quot;./GravityCanyonRoom.js&quot;;
+
+
+
+test(&quot;initial room state starts in lobby with v1 settings&quot;, () =&gt; {
+
+  const state = createInitialGravityCanyonState(&quot;room-abc&quot;);
+
+  assert.equal(state.roomCode, &quot;room-abc&quot;);
+
+  assert.equal(state.phase, &quot;lobby&quot;);
+
+  assert.equal(state.settings.mode, DEFAULT_ROOM_SETTINGS.mode);
+
+  assert.equal(state.settings.matchLength, DEFAULT_ROOM_SETTINGS.matchLength);
+
+  assert.equal(state.settings.mapPick, DEFAULT_ROOM_SETTINGS.mapPick);
+
+  assert.equal(state.settings.friendlyFire, false);
+
+});
+
+
+
+test(&quot;lobby members carry display name and reconnect identity&quot;, () =&gt; {
+
+  const member = createLobbyMember(&quot;session-a&quot;, &quot;token-a&quot;, &quot;Pilot One&quot;);
+
+  assert.equal(member.sessionId, &quot;session-a&quot;);
+
+  assert.equal(member.reconnectToken, &quot;token-a&quot;);
+
+  assert.equal(member.displayName, &quot;Pilot One&quot;);
+
+  assert.equal(member.spectator, true);
+
+});
+
+
+
+test(&quot;seats are not ready until occupied, character selected, and marked ready&quot;, () =&gt; {
+
+  const emptySeat = createSeatState(&quot;red-1&quot;, &quot;red&quot;, 1);
+
+  assert.equal(isSeatReadyForStart(emptySeat), false);
+
+
+
+  emptySeat.ownerSessionId = &quot;session-a&quot;;
+
+  emptySeat.characterId = &quot;nova&quot;;
+
+  emptySeat.ready = false;
+
+  assert.equal(isSeatReadyForStart(emptySeat), false);
+
+
+
+  emptySeat.ready = true;
+
+  assert.equal(isSeatReadyForStart(emptySeat), true);
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Run the failing lobby tests</strong></li>
+</ul>
+<p>Run: <code>npm run test -- server/rooms/GravityCanyonRoom.lobby.test.ts</code></p>
+<p>Expected: FAIL because the exported helper functions and new schema fields do not exist.</p>
+<ul>
+<li>[ ] <strong>Step 3: Add schema classes</strong></li>
+</ul>
+<p>Modify <code>server/schema/GravityCanyonState.ts</code> to add these classes and fields while keeping old fields only until the room is migrated:</p>
+<pre><code class="language-ts">
+export type RoomPhase = &quot;lobby&quot; | &quot;match-starting&quot; | &quot;in-match&quot; | &quot;round-over&quot; | &quot;match-over&quot;;
+
+export type TeamId = &quot;red&quot; | &quot;blue&quot;;
+
+
+
+export class RoomSettingsState extends Schema {
+
+  declare mode: string;
+
+  declare matchLength: string;
+
+  declare mapPick: string;
+
+  declare friendlyFire: boolean;
+
+
+
+  constructor() {
+
+    super();
+
+    this.mode = &quot;2v2&quot;;
+
+    this.matchLength = &quot;best-of-1&quot;;
+
+    this.mapPick = &quot;random&quot;;
+
+    this.friendlyFire = false;
+
+  }
+
+}
+
+
+
+export class LobbyMemberState extends Schema {
+
+  declare sessionId: string;
+
+  declare reconnectToken: string;
+
+  declare displayName: string;
+
+  declare spectator: boolean;
+
+  declare connected: boolean;
+
+  declare lastSeenMs: number;
+
+
+
+  constructor() {
+
+    super();
+
+    this.sessionId = &quot;&quot;;
+
+    this.reconnectToken = &quot;&quot;;
+
+    this.displayName = &quot;Guest&quot;;
+
+    this.spectator = true;
+
+    this.connected = true;
+
+    this.lastSeenMs = 0;
+
+  }
+
+}
+
+
+
+export class SeatState extends Schema {
+
+  declare seatId: string;
+
+  declare team: TeamId;
+
+  declare slot: number;
+
+  declare ownerSessionId: string;
+
+  declare displayName: string;
+
+  declare characterId: string;
+
+  declare ready: boolean;
+
+  declare connected: boolean;
+
+  declare lastDisconnectedAtMs: number;
+
+
+
+  constructor() {
+
+    super();
+
+    this.seatId = &quot;&quot;;
+
+    this.team = &quot;red&quot;;
+
+    this.slot = 1;
+
+    this.ownerSessionId = &quot;&quot;;
+
+    this.displayName = &quot;&quot;;
+
+    this.characterId = &quot;&quot;;
+
+    this.ready = false;
+
+    this.connected = false;
+
+    this.lastDisconnectedAtMs = 0;
+
+  }
+
+}
+
+
+
+// Update the existing CombatVehicleState with these V1 match fields.
+
+export class CombatVehicleState extends Schema {
+
+  declare vehicleId: string;
+
+  declare seatId: string;
+
+  declare ownerSessionId: string;
+
+  declare displayName: string;
+
+  declare team: TeamId;
+
+  declare characterId: string;
+
+  declare hp: number;
+
+  declare maxHp: number;
+
+  declare alive: boolean;
+
+  declare x: number;
+
+  declare y: number;
+
+  declare facing: number;
+
+  declare angle: number;
+
+
+
+  constructor() {
+
+    super();
+
+    this.vehicleId = &quot;&quot;;
+
+    this.seatId = &quot;&quot;;
+
+    this.ownerSessionId = &quot;&quot;;
+
+    this.displayName = &quot;Guest&quot;;
+
+    this.team = &quot;red&quot;;
+
+    this.characterId = &quot;nova&quot;;
+
+    this.hp = 100;
+
+    this.maxHp = 100;
+
+    this.alive = true;
+
+    this.x = 0;
+
+    this.y = 0;
+
+    this.facing = 1;
+
+    this.angle = 45;
+
+  }
+
+}
+
+
+
+export class MapState extends Schema {
+
+  declare mapId: string;
+
+  declare mapName: string;
+
+  declare seed: number;
+
+  declare deathPlaneY: number;
+
+
+
+  constructor() {
+
+    super();
+
+    this.mapId = &quot;&quot;;
+
+    this.mapName = &quot;&quot;;
+
+    this.seed = 0;
+
+    this.deathPlaneY = 900;
+
+  }
+
+}
+
+
+
+export class PhraseBubbleState extends Schema {
+
+  declare id: string;
+
+  declare vehicleId: string;
+
+  declare phrase: string;
+
+  declare expiresAtMs: number;
+
+
+
+  constructor() {
+
+    super();
+
+    this.id = &quot;&quot;;
+
+    this.vehicleId = &quot;&quot;;
+
+    this.phrase = &quot;&quot;;
+
+    this.expiresAtMs = 0;
+
+  }
+
+}
+
+</code></pre>
+<p>Add these fields to <code>GravityCanyonState</code>:</p>
+<pre><code class="language-ts">
+declare hostSessionId: string;
+
+declare settings: RoomSettingsState;
+
+declare members: MapSchema&lt;LobbyMemberState&gt;;
+
+declare seats: ArraySchema&lt;SeatState&gt;;
+
+declare spectators: MapSchema&lt;LobbyMemberState&gt;;
+
+declare map: MapState;
+
+declare turnOrder: ArraySchema&lt;string&gt;;
+
+declare activeSeatId: string;
+
+declare turnEndsAtMs: number;
+
+declare redRoundWins: number;
+
+declare blueRoundWins: number;
+
+declare phraseBubbles: ArraySchema&lt;PhraseBubbleState&gt;;
+
+</code></pre>
+<p>Register all new classes in <code>defineTypes</code>.</p>
+<ul>
+<li>[ ] <strong>Step 4: Export room state helper constructors</strong></li>
+</ul>
+<p>Modify <code>server/rooms/GravityCanyonRoom.ts</code> to export helpers used by tests:</p>
+<pre><code class="language-ts">
+export function createInitialGravityCanyonState(roomCode: string) {
+
+  const state = new GravityCanyonState();
+
+  state.roomCode = roomCode;
+
+  state.phase = &quot;lobby&quot;;
+
+  applySettingsState(state.settings, DEFAULT_ROOM_SETTINGS);
+
+  return state;
+
+}
+
+
+
+export function createLobbyMember(sessionId: string, reconnectToken: string, displayName: string) {
+
+  const member = new LobbyMemberState();
+
+  member.sessionId = sessionId;
+
+  member.reconnectToken = reconnectToken;
+
+  member.displayName = sanitizeDisplayName(displayName);
+
+  member.spectator = true;
+
+  member.connected = true;
+
+  member.lastSeenMs = Date.now();
+
+  return member;
+
+}
+
+
+
+export function createSeatState(seatId: SeatId, team: TeamId, slot: number) {
+
+  const seat = new SeatState();
+
+  seat.seatId = seatId;
+
+  seat.team = team;
+
+  seat.slot = slot;
+
+  return seat;
+
+}
+
+
+
+export function createCombatVehicleState(input: {
+
+  vehicleId: string;
+
+  seatId: SeatId;
+
+  ownerSessionId: string;
+
+  displayName: string;
+
+  team: TeamId;
+
+  characterId: CharacterId;
+
+  x: number;
+
+  y: number;
+
+  facing: 1 | -1;
+
+}) {
+
+  const vehicle = new CombatVehicleState();
+
+  vehicle.vehicleId = input.vehicleId;
+
+  vehicle.seatId = input.seatId;
+
+  vehicle.ownerSessionId = input.ownerSessionId;
+
+  vehicle.displayName = sanitizeDisplayName(input.displayName);
+
+  vehicle.team = input.team;
+
+  vehicle.characterId = input.characterId;
+
+  vehicle.x = input.x;
+
+  vehicle.y = input.y;
+
+  vehicle.facing = input.facing;
+
+  return vehicle;
+
+}
+
+
+
+export function isSeatReadyForStart(seat: SeatState) {
+
+  return Boolean(seat.ownerSessionId &amp;&amp; seat.characterId &amp;&amp; seat.ready);
+
+}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 5: Run tests and commit</strong></li>
+</ul>
+<p>Run: <code>npm run test -- server/rooms/GravityCanyonRoom.lobby.test.ts</code></p>
+<p>Expected: PASS.</p>
+<p>Commit:</p>
+<pre><code class="language-bash">
+git add server/schema/GravityCanyonState.ts server/rooms/GravityCanyonRoom.ts server/rooms/GravityCanyonRoom.lobby.test.ts
+
+git commit -m &quot;feat: add v1 lobby state schema&quot;
+
+</code></pre>
+<h2>Task 4: Room Lifecycle Messages</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>server/rooms/GravityCanyonRoom.ts</code></li>
+<li>Modify: <code>server/schema/GravityCanyonState.ts</code></li>
+<li>Create: <code>server/rooms/GravityCanyonRoom.messages.test.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Write lifecycle message tests</strong></li>
+</ul>
+<p>Create <code>server/rooms/GravityCanyonRoom.messages.test.ts</code> around exported pure helpers:</p>
+<pre><code class="language-ts">
+import assert from &quot;node:assert/strict&quot;;
+
+import test from &quot;node:test&quot;;
+
+import {
+
+  applyCharacterPick,
+
+  applyReady,
+
+  applySeatClaim,
+
+  applySeatRelease,
+
+  applySettingsPatch,
+
+  createInitialGravityCanyonState,
+
+} from &quot;./GravityCanyonRoom.js&quot;;
+
+
+
+test(&quot;host can change room settings before match starts&quot;, () =&gt; {
+
+  const state = createInitialGravityCanyonState(&quot;room-a&quot;);
+
+  state.hostSessionId = &quot;host&quot;;
+
+  applySettingsPatch(state, &quot;host&quot;, { mode: &quot;1v1&quot;, matchLength: &quot;best-of-3&quot;, friendlyFire: true });
+
+  assert.equal(state.settings.mode, &quot;1v1&quot;);
+
+  assert.equal(state.settings.matchLength, &quot;best-of-3&quot;);
+
+  assert.equal(state.settings.friendlyFire, true);
+
+});
+
+
+
+test(&quot;non-host cannot change room settings&quot;, () =&gt; {
+
+  const state = createInitialGravityCanyonState(&quot;room-a&quot;);
+
+  state.hostSessionId = &quot;host&quot;;
+
+  applySettingsPatch(state, &quot;guest&quot;, { mode: &quot;1v1&quot; });
+
+  assert.equal(state.settings.mode, &quot;2v2&quot;);
+
+});
+
+
+
+test(&quot;connection can claim one seat and select any v1 character&quot;, () =&gt; {
+
+  const state = createInitialGravityCanyonState(&quot;room-a&quot;);
+
+  applySeatClaim(state, &quot;session-a&quot;, &quot;Pilot A&quot;, &quot;red-1&quot;);
+
+  applyCharacterPick(state, &quot;session-a&quot;, &quot;nova&quot;);
+
+  const seat = state.seats.find((candidate) =&gt; candidate.seatId === &quot;red-1&quot;);
+
+  assert.equal(seat?.ownerSessionId, &quot;session-a&quot;);
+
+  assert.equal(seat?.displayName, &quot;Pilot A&quot;);
+
+  assert.equal(seat?.characterId, &quot;nova&quot;);
+
+});
+
+
+
+test(&quot;same character can be picked by multiple seats&quot;, () =&gt; {
+
+  const state = createInitialGravityCanyonState(&quot;room-a&quot;);
+
+  applySeatClaim(state, &quot;session-a&quot;, &quot;Pilot A&quot;, &quot;red-1&quot;);
+
+  applySeatClaim(state, &quot;session-b&quot;, &quot;Pilot B&quot;, &quot;blue-1&quot;);
+
+  applyCharacterPick(state, &quot;session-a&quot;, &quot;vesper&quot;);
+
+  applyCharacterPick(state, &quot;session-b&quot;, &quot;vesper&quot;);
+
+  assert.equal(state.seats[0].characterId, &quot;vesper&quot;);
+
+  assert.equal(state.seats[1].characterId, &quot;vesper&quot;);
+
+});
+
+
+
+test(&quot;unseating moves a member back to passive spectator&quot;, () =&gt; {
+
+  const state = createInitialGravityCanyonState(&quot;room-a&quot;);
+
+  applySeatClaim(state, &quot;session-a&quot;, &quot;Pilot A&quot;, &quot;red-1&quot;);
+
+  applySeatRelease(state, &quot;session-a&quot;);
+
+  assert.equal(state.seats[0].ownerSessionId, &quot;&quot;);
+
+  assert.equal(state.seats[0].characterId, &quot;&quot;);
+
+});
+
+
+
+test(&quot;ready only applies to the owned seat&quot;, () =&gt; {
+
+  const state = createInitialGravityCanyonState(&quot;room-a&quot;);
+
+  applySeatClaim(state, &quot;session-a&quot;, &quot;Pilot A&quot;, &quot;red-1&quot;);
+
+  applyCharacterPick(state, &quot;session-a&quot;, &quot;kaelii&quot;);
+
+  applyReady(state, &quot;session-a&quot;, true);
+
+  assert.equal(state.seats[0].ready, true);
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Run failing tests</strong></li>
+</ul>
+<p>Run: <code>npm run test -- server/rooms/GravityCanyonRoom.messages.test.ts</code></p>
+<p>Expected: FAIL because lifecycle helpers are not exported.</p>
+<ul>
+<li>[ ] <strong>Step 3: Implement pure lifecycle helpers</strong></li>
+</ul>
+<p>Modify <code>server/rooms/GravityCanyonRoom.ts</code>:</p>
+<pre><code class="language-ts">
+export function applySettingsPatch(
+
+  state: GravityCanyonState,
+
+  sessionId: string,
+
+  patch: Partial&lt;Record&lt;keyof RoomSettings, unknown&gt;&gt;,
+
+) {
+
+  if (state.phase !== &quot;lobby&quot; || state.hostSessionId !== sessionId) {
+
+    return;
+
+  }
+
+
+
+  applySettingsState(state.settings, validateRoomSettings({ ...readSettingsState(state.settings), ...patch }));
+
+  rebuildSeatsForMode(state);
+
+}
+
+
+
+export function applySeatClaim(state: GravityCanyonState, sessionId: string, displayName: string, seatId: SeatId) {
+
+  if (state.phase !== &quot;lobby&quot;) {
+
+    return;
+
+  }
+
+
+
+  applySeatRelease(state, sessionId);
+
+  const seat = state.seats.find((candidate) =&gt; candidate.seatId === seatId);
+
+  if (!seat || seat.ownerSessionId) {
+
+    return;
+
+  }
+
+
+
+  seat.ownerSessionId = sessionId;
+
+  seat.displayName = sanitizeDisplayName(displayName);
+
+  seat.ready = false;
+
+  seat.connected = true;
+
+}
+
+
+
+export function applySeatRelease(state: GravityCanyonState, sessionId: string) {
+
+  const seat = state.seats.find((candidate) =&gt; candidate.ownerSessionId === sessionId);
+
+  if (!seat || state.phase !== &quot;lobby&quot;) {
+
+    return;
+
+  }
+
+
+
+  seat.ownerSessionId = &quot;&quot;;
+
+  seat.displayName = &quot;&quot;;
+
+  seat.characterId = &quot;&quot;;
+
+  seat.ready = false;
+
+  seat.connected = false;
+
+}
+
+
+
+export function applyCharacterPick(state: GravityCanyonState, sessionId: string, characterId: string) {
+
+  const seat = state.seats.find((candidate) =&gt; candidate.ownerSessionId === sessionId);
+
+  if (!seat || !CHARACTER_IDS.includes(characterId as CharacterId)) {
+
+    return;
+
+  }
+
+
+
+  seat.characterId = characterId;
+
+  seat.ready = false;
+
+}
+
+
+
+export function applyReady(state: GravityCanyonState, sessionId: string, ready: boolean) {
+
+  const seat = state.seats.find((candidate) =&gt; candidate.ownerSessionId === sessionId);
+
+  if (!seat) {
+
+    return;
+
+  }
+
+
+
+  seat.ready = Boolean(ready);
+
+}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 4: Wire Colyseus messages</strong></li>
+</ul>
+<p>Replace preview messages in <code>onCreate()</code>:</p>
+<pre><code class="language-ts">
+this.onMessage(&quot;setDisplayName&quot;, (client, displayName: string) =&gt; {
+
+  this.renameMember(client.sessionId, displayName);
+
+});
+
+
+
+this.onMessage(&quot;setSettings&quot;, (client, patch: Partial&lt;Record&lt;keyof RoomSettings, unknown&gt;&gt;) =&gt; {
+
+  applySettingsPatch(this.state, client.sessionId, patch);
+
+  this.refreshLobbyStatus();
+
+});
+
+
+
+this.onMessage(&quot;claimSeat&quot;, (client, message: { seatId?: SeatId }) =&gt; {
+
+  const member = this.state.members.get(client.sessionId);
+
+  applySeatClaim(this.state, client.sessionId, member?.displayName ?? &quot;Guest&quot;, message.seatId ?? &quot;red-1&quot;);
+
+  this.refreshLobbyStatus();
+
+});
+
+
+
+this.onMessage(&quot;releaseSeat&quot;, (client) =&gt; {
+
+  applySeatRelease(this.state, client.sessionId);
+
+  this.refreshLobbyStatus();
+
+});
+
+
+
+this.onMessage(&quot;setCharacter&quot;, (client, message: { characterId?: string }) =&gt; {
+
+  applyCharacterPick(this.state, client.sessionId, message.characterId ?? &quot;&quot;);
+
+  this.refreshLobbyStatus();
+
+});
+
+
+
+this.onMessage(&quot;setReady&quot;, (client, message: { ready?: boolean }) =&gt; {
+
+  applyReady(this.state, client.sessionId, Boolean(message.ready));
+
+  this.refreshLobbyStatus();
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 5: Run tests and commit</strong></li>
+</ul>
+<p>Run: <code>npm run test -- server/rooms/GravityCanyonRoom.messages.test.ts</code></p>
+<p>Expected: PASS.</p>
+<p>Commit:</p>
+<pre><code class="language-bash">
+git add server/schema/GravityCanyonState.ts server/rooms/GravityCanyonRoom.ts server/rooms/GravityCanyonRoom.messages.test.ts
+
+git commit -m &quot;feat: support v1 lobby messages&quot;
+
+</code></pre>
+<h2>Task 5: Host, Reconnect, Passive Spectators, And Invite Links</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>server/rooms/GravityCanyonRoom.ts</code></li>
+<li>Create: <code>server/rooms/GravityCanyonRoom.presence.test.ts</code></li>
+<li>Create: <code>src/online/persistence.ts</code></li>
+<li>Create: <code>src/online/persistence.test.ts</code></li>
+<li>Modify: <code>src/onlineLobby.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Write presence tests</strong></li>
+</ul>
+<p>Create <code>server/rooms/GravityCanyonRoom.presence.test.ts</code>:</p>
+<pre><code class="language-ts">
+import assert from &quot;node:assert/strict&quot;;
+
+import test from &quot;node:test&quot;;
+
+import {
+
+  applyLeave,
+
+  applyReconnect,
+
+  chooseNextHost,
+
+  createInitialGravityCanyonState,
+
+  createLobbyMember,
+
+} from &quot;./GravityCanyonRoom.js&quot;;
+
+
+
+test(&quot;first joined member becomes host&quot;, () =&gt; {
+
+  const state = createInitialGravityCanyonState(&quot;room-a&quot;);
+
+  state.members.set(&quot;session-a&quot;, createLobbyMember(&quot;session-a&quot;, &quot;token-a&quot;, &quot;Pilot A&quot;));
+
+  chooseNextHost(state);
+
+  assert.equal(state.hostSessionId, &quot;session-a&quot;);
+
+});
+
+
+
+test(&quot;host transfers to another connected member when host leaves&quot;, () =&gt; {
+
+  const state = createInitialGravityCanyonState(&quot;room-a&quot;);
+
+  state.members.set(&quot;session-a&quot;, createLobbyMember(&quot;session-a&quot;, &quot;token-a&quot;, &quot;Pilot A&quot;));
+
+  state.members.set(&quot;session-b&quot;, createLobbyMember(&quot;session-b&quot;, &quot;token-b&quot;, &quot;Pilot B&quot;));
+
+  state.hostSessionId = &quot;session-a&quot;;
+
+  applyLeave(state, &quot;session-a&quot;, 1000);
+
+  chooseNextHost(state);
+
+  assert.equal(state.hostSessionId, &quot;session-b&quot;);
+
+});
+
+
+
+test(&quot;reconnect token restores the same member identity&quot;, () =&gt; {
+
+  const state = createInitialGravityCanyonState(&quot;room-a&quot;);
+
+  state.members.set(&quot;old-session&quot;, createLobbyMember(&quot;old-session&quot;, &quot;token-a&quot;, &quot;Pilot A&quot;));
+
+  applyLeave(state, &quot;old-session&quot;, 1000);
+
+  const restored = applyReconnect(state, &quot;new-session&quot;, &quot;token-a&quot;, 1100);
+
+  assert.equal(restored, true);
+
+  assert.equal(state.members.has(&quot;old-session&quot;), false);
+
+  assert.equal(state.members.get(&quot;new-session&quot;)?.displayName, &quot;Pilot A&quot;);
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Write browser persistence tests</strong></li>
+</ul>
+<p>Create <code>src/online/persistence.test.ts</code>:</p>
+<pre><code class="language-ts">
+import assert from &quot;node:assert/strict&quot;;
+
+import test from &quot;node:test&quot;;
+
+import { createInviteUrl, generatedDisplayName, roomIdFromUrl } from &quot;./persistence.js&quot;;
+
+
+
+test(&quot;generated display names are readable and bounded&quot;, () =&gt; {
+
+  assert.match(generatedDisplayName(&quot;abc123&quot;), /^Pilot-/);
+
+  assert.ok(generatedDisplayName(&quot;abc123&quot;).length &lt;= 18);
+
+});
+
+
+
+test(&quot;room id can be read from invite URL&quot;, () =&gt; {
+
+  assert.equal(roomIdFromUrl(&quot;https://example.test/?room=abc123&quot;), &quot;abc123&quot;);
+
+});
+
+
+
+test(&quot;invite URL writes the room id into query params&quot;, () =&gt; {
+
+  assert.equal(createInviteUrl(&quot;https://example.test/play&quot;, &quot;room-7&quot;), &quot;https://example.test/play?room=room-7&quot;);
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 3: Run failing tests</strong></li>
+</ul>
+<p>Run: <code>npm run test -- server/rooms/GravityCanyonRoom.presence.test.ts src/online/persistence.test.ts</code></p>
+<p>Expected: FAIL because presence and persistence helpers do not exist.</p>
+<ul>
+<li>[ ] <strong>Step 4: Implement presence helpers</strong></li>
+</ul>
+<p>Modify <code>server/rooms/GravityCanyonRoom.ts</code>:</p>
+<pre><code class="language-ts">
+export function chooseNextHost(state: GravityCanyonState) {
+
+  if (state.hostSessionId &amp;&amp; state.members.get(state.hostSessionId)?.connected) {
+
+    return;
+
+  }
+
+
+
+  const nextHost = Array.from(state.members.values()).find((member) =&gt; member.connected);
+
+  state.hostSessionId = nextHost?.sessionId ?? &quot;&quot;;
+
+}
+
+
+
+export function applyLeave(state: GravityCanyonState, sessionId: string, nowMs: number) {
+
+  const member = state.members.get(sessionId);
+
+  if (member) {
+
+    member.connected = false;
+
+    member.lastSeenMs = nowMs;
+
+  }
+
+
+
+  const seat = state.seats.find((candidate) =&gt; candidate.ownerSessionId === sessionId);
+
+  if (seat) {
+
+    seat.connected = false;
+
+  }
+
+}
+
+
+
+export function applyReconnect(state: GravityCanyonState, newSessionId: string, reconnectToken: string, nowMs: number) {
+
+  const oldEntry = Array.from(state.members.entries()).find(([, member]) =&gt; member.reconnectToken === reconnectToken);
+
+  if (!oldEntry) {
+
+    return false;
+
+  }
+
+
+
+  const [oldSessionId, member] = oldEntry;
+
+  state.members.delete(oldSessionId);
+
+  member.sessionId = newSessionId;
+
+  member.connected = true;
+
+  member.lastSeenMs = nowMs;
+
+  state.members.set(newSessionId, member);
+
+
+
+  const seat = state.seats.find((candidate) =&gt; candidate.ownerSessionId === oldSessionId);
+
+  if (seat) {
+
+    seat.ownerSessionId = newSessionId;
+
+    seat.connected = true;
+
+  }
+
+
+
+  if (state.hostSessionId === oldSessionId) {
+
+    state.hostSessionId = newSessionId;
+
+  }
+
+
+
+  return true;
+
+}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 5: Implement client persistence helpers</strong></li>
+</ul>
+<p>Create <code>src/online/persistence.ts</code>:</p>
+<pre><code class="language-ts">
+export function generatedDisplayName(seed: string) {
+
+  const suffix = seed.replace(/[^\w]/g, &quot;&quot;).slice(-5).padStart(5, &quot;0&quot;);
+
+  return `Pilot-${suffix}`.slice(0, 18);
+
+}
+
+
+
+export function roomIdFromUrl(href: string) {
+
+  return new URL(href).searchParams.get(&quot;room&quot;) ?? &quot;&quot;;
+
+}
+
+
+
+export function createInviteUrl(href: string, roomId: string) {
+
+  const url = new URL(href);
+
+  url.searchParams.set(&quot;room&quot;, roomId);
+
+  return url.toString();
+
+}
+
+
+
+export function getOrCreateReconnectToken(storage: Pick&lt;Storage, &quot;getItem&quot; | &quot;setItem&quot;&gt;, roomId: string) {
+
+  const key = `gravity-canyon:reconnect:${roomId}`;
+
+  const existing = storage.getItem(key);
+
+  if (existing) {
+
+    return existing;
+
+  }
+
+
+
+  const token = crypto.randomUUID();
+
+  storage.setItem(key, token);
+
+  return token;
+
+}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 6: Wire join options and invite URL in <code>src/onlineLobby.ts</code></strong></li>
+</ul>
+<p>Send <code>displayName</code> and <code>reconnectToken</code> on create/join. On load, if <code>?room=</code> exists, show the name input and join action with the room field already filled.</p>
+<pre><code class="language-ts">
+const initialRoomId = roomIdFromUrl(window.location.href);
+
+if (initialRoomId &amp;&amp; roomCodeInput) {
+
+  roomCodeInput.value = initialRoomId;
+
+}
+
+
+
+function joinOptions(roomId: string) {
+
+  return {
+
+    displayName: displayNameInput?.value || generatedDisplayName(roomId),
+
+    reconnectToken: getOrCreateReconnectToken(window.localStorage, roomId || &quot;new-room&quot;),
+
+  };
+
+}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 7: Run tests and commit</strong></li>
+</ul>
+<p>Run: <code>npm run test -- server/rooms/GravityCanyonRoom.presence.test.ts src/online/persistence.test.ts</code></p>
+<p>Expected: PASS.</p>
+<p>Commit:</p>
+<pre><code class="language-bash">
+git add server/rooms/GravityCanyonRoom.ts src/online/persistence.ts src/online/persistence.test.ts src/onlineLobby.ts server/rooms/GravityCanyonRoom.presence.test.ts
+
+git commit -m &quot;feat: add v1 room presence&quot;
+
+</code></pre>
+<h2>Task 6: Match Start, Round Flow, And Persistent Turn Order</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>server/v1/turnOrder.ts</code></li>
+<li>Create: <code>server/v1/turnOrder.test.ts</code></li>
+<li>Modify: <code>server/rooms/GravityCanyonRoom.ts</code></li>
+<li>Create: <code>server/rooms/GravityCanyonRoom.match.test.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Write turn-order tests</strong></li>
+</ul>
+<p>Create <code>server/v1/turnOrder.test.ts</code>:</p>
+<pre><code class="language-ts">
+import assert from &quot;node:assert/strict&quot;;
+
+import test from &quot;node:test&quot;;
+
+import { nextActiveSeat, seededTurnOrder } from &quot;./turnOrder.js&quot;;
+
+
+
+test(&quot;2v2 turn order includes every occupied seat once&quot;, () =&gt; {
+
+  const order = seededTurnOrder([&quot;red-1&quot;, &quot;blue-1&quot;, &quot;red-2&quot;, &quot;blue-2&quot;], 123);
+
+  assert.equal(order.length, 4);
+
+  assert.deepEqual(new Set(order), new Set([&quot;red-1&quot;, &quot;blue-1&quot;, &quot;red-2&quot;, &quot;blue-2&quot;]));
+
+});
+
+
+
+test(&quot;same seed creates the same persistent order&quot;, () =&gt; {
+
+  assert.deepEqual(
+
+    seededTurnOrder([&quot;red-1&quot;, &quot;blue-1&quot;, &quot;red-2&quot;, &quot;blue-2&quot;], 999),
+
+    seededTurnOrder([&quot;red-1&quot;, &quot;blue-1&quot;, &quot;red-2&quot;, &quot;blue-2&quot;], 999),
+
+  );
+
+});
+
+
+
+test(&quot;next active seat skips eliminated seats&quot;, () =&gt; {
+
+  assert.equal(nextActiveSeat([&quot;red-1&quot;, &quot;blue-1&quot;, &quot;red-2&quot;], &quot;red-1&quot;, new Set([&quot;blue-1&quot;])), &quot;red-2&quot;);
+
+});
+
+
+
+test(&quot;next active seat returns empty when one team has no active seats&quot;, () =&gt; {
+
+  assert.equal(nextActiveSeat([&quot;red-1&quot;, &quot;blue-1&quot;], &quot;red-1&quot;, new Set([&quot;blue-1&quot;])), &quot;&quot;);
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Write match-start tests</strong></li>
+</ul>
+<p>Create <code>server/rooms/GravityCanyonRoom.match.test.ts</code>:</p>
+<pre><code class="language-ts">
+import assert from &quot;node:assert/strict&quot;;
+
+import test from &quot;node:test&quot;;
+
+import {
+
+  applyCharacterPick,
+
+  applyReady,
+
+  applySeatClaim,
+
+  createInitialGravityCanyonState,
+
+  startMatchIfReady,
+
+} from &quot;./GravityCanyonRoom.js&quot;;
+
+
+
+test(&quot;match does not start until every active seat is ready&quot;, () =&gt; {
+
+  const state = createInitialGravityCanyonState(&quot;room-a&quot;);
+
+  applySeatClaim(state, &quot;a&quot;, &quot;A&quot;, &quot;red-1&quot;);
+
+  applyCharacterPick(state, &quot;a&quot;, &quot;nova&quot;);
+
+  assert.equal(startMatchIfReady(state, &quot;a&quot;, 1000), false);
+
+  assert.equal(state.phase, &quot;lobby&quot;);
+
+});
+
+
+
+test(&quot;1v1 match starts with selected map, spawned vehicles, and persistent order&quot;, () =&gt; {
+
+  const state = createInitialGravityCanyonState(&quot;room-a&quot;);
+
+  state.hostSessionId = &quot;host&quot;;
+
+  state.settings.mode = &quot;1v1&quot;;
+
+  applySeatClaim(state, &quot;host&quot;, &quot;A&quot;, &quot;red-1&quot;);
+
+  applySeatClaim(state, &quot;b&quot;, &quot;B&quot;, &quot;blue-1&quot;);
+
+  applyCharacterPick(state, &quot;host&quot;, &quot;nova&quot;);
+
+  applyCharacterPick(state, &quot;b&quot;, &quot;vesper&quot;);
+
+  applyReady(state, &quot;host&quot;, true);
+
+  applyReady(state, &quot;b&quot;, true);
+
+  assert.equal(startMatchIfReady(state, &quot;host&quot;, 1000), true);
+
+  assert.equal(state.phase, &quot;in-match&quot;);
+
+  assert.equal(state.vehicles.length, 2);
+
+  assert.equal(state.turnOrder.length, 2);
+
+  assert.ok(state.activeSeatId);
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 3: Run failing tests</strong></li>
+</ul>
+<p>Run: <code>npm run test -- server/v1/turnOrder.test.ts server/rooms/GravityCanyonRoom.match.test.ts</code></p>
+<p>Expected: FAIL because turn-order and match-start helpers do not exist.</p>
+<ul>
+<li>[ ] <strong>Step 4: Implement turn-order helpers</strong></li>
+</ul>
+<p>Create <code>server/v1/turnOrder.ts</code>:</p>
+<pre><code class="language-ts">
+import type { SeatId } from &quot;./rules.js&quot;;
+
+
+
+export function seededTurnOrder(seatIds: readonly SeatId[], seed: number) {
+
+  const remaining = [...seatIds];
+
+  const ordered: SeatId[] = [];
+
+  let cursor = Math.abs(seed) || 1;
+
+
+
+  while (remaining.length) {
+
+    cursor = (cursor * 1664525 + 1013904223) &gt;&gt;&gt; 0;
+
+    const index = cursor % remaining.length;
+
+    ordered.push(remaining.splice(index, 1)[0]);
+
+  }
+
+
+
+  return ordered;
+
+}
+
+
+
+export function nextActiveSeat(order: readonly string[], currentSeatId: string, eliminatedSeatIds: Set&lt;string&gt;) {
+
+  if (!order.length) {
+
+    return &quot;&quot;;
+
+  }
+
+
+
+  const startIndex = Math.max(0, order.indexOf(currentSeatId));
+
+  for (let offset = 1; offset &lt;= order.length; offset += 1) {
+
+    const seatId = order[(startIndex + offset) % order.length];
+
+    if (!eliminatedSeatIds.has(seatId)) {
+
+      return seatId;
+
+    }
+
+  }
+
+
+
+  return &quot;&quot;;
+
+}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 5: Implement match start</strong></li>
+</ul>
+<p>Modify <code>server/rooms/GravityCanyonRoom.ts</code>:</p>
+<pre><code class="language-ts">
+export function startMatchIfReady(state: GravityCanyonState, sessionId: string, nowMs: number) {
+
+  if (state.phase !== &quot;lobby&quot; || state.hostSessionId !== sessionId) {
+
+    return false;
+
+  }
+
+
+
+  const activeSeats = state.seats.filter((seat) =&gt; seat.ownerSessionId);
+
+  const requiredSeatCount = state.settings.mode === &quot;1v1&quot; ? 2 : 4;
+
+  if (activeSeats.length !== requiredSeatCount || activeSeats.some((seat) =&gt; !isSeatReadyForStart(seat))) {
+
+    state.status = &quot;Waiting for every player to pick a character and ready up.&quot;;
+
+    return false;
+
+  }
+
+
+
+  const seed = nowMs % 1_000_000;
+
+  const selectedMap = pickMap(state.settings.mapPick as MapPick, seed);
+
+  state.map.mapId = selectedMap.id;
+
+  state.map.mapName = selectedMap.name;
+
+  state.map.seed = seed + selectedMap.terrainSeedSalt;
+
+  state.map.deathPlaneY = selectedMap.deathPlaneY;
+
+  state.phase = &quot;in-match&quot;;
+
+  state.roundNumber = 1;
+
+  state.redRoundWins = 0;
+
+  state.blueRoundWins = 0;
+
+  state.turnOrder.splice(0, state.turnOrder.length, ...seededTurnOrder(activeSeats.map((seat) =&gt; seat.seatId as SeatId), seed));
+
+  state.activeSeatId = state.turnOrder[0] ?? &quot;&quot;;
+
+  state.turnEndsAtMs = nowMs + TURN_SECONDS * 1000;
+
+  spawnVehiclesFromSeats(state, selectedMap);
+
+  return true;
+
+}
+
+</code></pre>
+<p>Wire <code>startMatch</code>:</p>
+<pre><code class="language-ts">
+this.onMessage(&quot;startMatch&quot;, (client) =&gt; {
+
+  startMatchIfReady(this.state, client.sessionId, Date.now());
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 6: Run tests and commit</strong></li>
+</ul>
+<p>Run: <code>npm run test -- server/v1/turnOrder.test.ts server/rooms/GravityCanyonRoom.match.test.ts</code></p>
+<p>Expected: PASS.</p>
+<p>Commit:</p>
+<pre><code class="language-bash">
+git add server/v1/turnOrder.ts server/v1/turnOrder.test.ts server/rooms/GravityCanyonRoom.ts server/rooms/GravityCanyonRoom.match.test.ts
+
+git commit -m &quot;feat: start v1 matches&quot;
+
+</code></pre>
+<h2>Task 7: Authoritative Combat Types And Primary Weapons</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>server/v1/combatTypes.ts</code></li>
+<li>Create: <code>server/v1/weapons.ts</code></li>
+<li>Create: <code>server/v1/weapons.test.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Write weapon tests</strong></li>
+</ul>
+<p>Create <code>server/v1/weapons.test.ts</code>:</p>
+<pre><code class="language-ts">
+import assert from &quot;node:assert/strict&quot;;
+
+import test from &quot;node:test&quot;;
+
+import { weaponForCharacter } from &quot;./weapons.js&quot;;
+
+
+
+test(&quot;each v1 character has exactly one primary weapon&quot;, () =&gt; {
+
+  assert.equal(weaponForCharacter(&quot;nova&quot;).name, &quot;Canyon Breaker&quot;);
+
+  assert.equal(weaponForCharacter(&quot;vesper&quot;).name, &quot;Gravity Well&quot;);
+
+  assert.equal(weaponForCharacter(&quot;kaelii&quot;).name, &quot;Skip Roller&quot;);
+
+  assert.equal(weaponForCharacter(&quot;perlah&quot;).name, &quot;Sunspike Cluster&quot;);
+
+});
+
+
+
+test(&quot;weapon classes express distinct combat jobs&quot;, () =&gt; {
+
+  assert.equal(weaponForCharacter(&quot;nova&quot;).terrainRadius, 92);
+
+  assert.equal(weaponForCharacter(&quot;vesper&quot;).pullRadius, 150);
+
+  assert.equal(weaponForCharacter(&quot;kaelii&quot;).rolling, true);
+
+  assert.equal(weaponForCharacter(&quot;perlah&quot;).clusterCount, 5);
+
+});
+
+
+
+test(&quot;direct damage stays bounded for short playtest rounds&quot;, () =&gt; {
+
+  for (const characterId of [&quot;nova&quot;, &quot;vesper&quot;, &quot;kaelii&quot;, &quot;perlah&quot;] as const) {
+
+    assert.ok(weaponForCharacter(characterId).directDamage &lt;= 42);
+
+    assert.ok(weaponForCharacter(characterId).splashDamage &lt;= 30);
+
+  }
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Run failing tests</strong></li>
+</ul>
+<p>Run: <code>npm run test -- server/v1/weapons.test.ts</code></p>
+<p>Expected: FAIL because <code>server/v1/weapons.ts</code> does not exist.</p>
+<ul>
+<li>[ ] <strong>Step 3: Add combat types</strong></li>
+</ul>
+<p>Create <code>server/v1/combatTypes.ts</code>:</p>
+<pre><code class="language-ts">
+import type { CharacterId, SeatId, TeamId } from &quot;./rules.js&quot;;
+
+
+
+export type FireCommand = {
+
+  seatId: SeatId;
+
+  angleDeg: number;
+
+  power: number;
+
+};
+
+
+
+export type MoveCommand = {
+
+  seatId: SeatId;
+
+  direction: -1 | 1;
+
+  units: number;
+
+};
+
+
+
+export type VehicleModel = {
+
+  vehicleId: string;
+
+  seatId: SeatId;
+
+  ownerSessionId: string;
+
+  displayName: string;
+
+  team: TeamId;
+
+  characterId: CharacterId;
+
+  hp: number;
+
+  maxHp: number;
+
+  alive: boolean;
+
+  x: number;
+
+  y: number;
+
+  facing: 1 | -1;
+
+};
+
+
+
+export type ImpactEvent = {
+
+  kind: &quot;direct&quot; | &quot;splash&quot; | &quot;terrain&quot; | &quot;pull&quot; | &quot;knockback&quot; | &quot;void-dropped&quot;;
+
+  vehicleId?: string;
+
+  damage?: number;
+
+  x: number;
+
+  y: number;
+
+};
+
+
+
+export type CombatOutcome = {
+
+  accepted: boolean;
+
+  reason: string;
+
+  events: ImpactEvent[];
+
+  nextSeatId: string;
+
+  roundWinnerTeam: TeamId | &quot;&quot;;
+
+};
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 4: Add weapon definitions</strong></li>
+</ul>
+<p>Create <code>server/v1/weapons.ts</code>:</p>
+<pre><code class="language-ts">
+import type { CharacterId } from &quot;./rules.js&quot;;
+
+
+
+export type PrimaryWeapon = {
+
+  characterId: CharacterId;
+
+  name: string;
+
+  directDamage: number;
+
+  splashDamage: number;
+
+  splashRadius: number;
+
+  terrainRadius: number;
+
+  knockback: number;
+
+  pullRadius: number;
+
+  pullStrength: number;
+
+  rolling: boolean;
+
+  clusterCount: number;
+
+  sfxKey: string;
+
+  vfxKey: string;
+
+};
+
+
+
+const WEAPONS: Record&lt;CharacterId, PrimaryWeapon&gt; = {
+
+  nova: {
+
+    characterId: &quot;nova&quot;,
+
+    name: &quot;Canyon Breaker&quot;,
+
+    directDamage: 40,
+
+    splashDamage: 24,
+
+    splashRadius: 120,
+
+    terrainRadius: 92,
+
+    knockback: 76,
+
+    pullRadius: 0,
+
+    pullStrength: 0,
+
+    rolling: false,
+
+    clusterCount: 1,
+
+    sfxKey: &quot;nova-primary&quot;,
+
+    vfxKey: &quot;nova-canyon-breaker&quot;,
+
+  },
+
+  vesper: {
+
+    characterId: &quot;vesper&quot;,
+
+    name: &quot;Gravity Well&quot;,
+
+    directDamage: 28,
+
+    splashDamage: 18,
+
+    splashRadius: 110,
+
+    terrainRadius: 44,
+
+    knockback: 0,
+
+    pullRadius: 150,
+
+    pullStrength: 84,
+
+    rolling: false,
+
+    clusterCount: 1,
+
+    sfxKey: &quot;vesper-primary&quot;,
+
+    vfxKey: &quot;vesper-gravity-well&quot;,
+
+  },
+
+  kaelii: {
+
+    characterId: &quot;kaelii&quot;,
+
+    name: &quot;Skip Roller&quot;,
+
+    directDamage: 34,
+
+    splashDamage: 20,
+
+    splashRadius: 96,
+
+    terrainRadius: 36,
+
+    knockback: 48,
+
+    pullRadius: 0,
+
+    pullStrength: 0,
+
+    rolling: true,
+
+    clusterCount: 1,
+
+    sfxKey: &quot;kaelii-primary&quot;,
+
+    vfxKey: &quot;kaelii-skip-roller&quot;,
+
+  },
+
+  perlah: {
+
+    characterId: &quot;perlah&quot;,
+
+    name: &quot;Sunspike Cluster&quot;,
+
+    directDamage: 30,
+
+    splashDamage: 16,
+
+    splashRadius: 82,
+
+    terrainRadius: 38,
+
+    knockback: 24,
+
+    pullRadius: 0,
+
+    pullStrength: 0,
+
+    rolling: false,
+
+    clusterCount: 5,
+
+    sfxKey: &quot;perlah-primary&quot;,
+
+    vfxKey: &quot;perlah-sunspike-cluster&quot;,
+
+  },
+
+};
+
+
+
+export function weaponForCharacter(characterId: CharacterId) {
+
+  return WEAPONS[characterId];
+
+}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 5: Run tests and commit</strong></li>
+</ul>
+<p>Run: <code>npm run test -- server/v1/weapons.test.ts</code></p>
+<p>Expected: PASS.</p>
+<p>Commit:</p>
+<pre><code class="language-bash">
+git add server/v1/combatTypes.ts server/v1/weapons.ts server/v1/weapons.test.ts
+
+git commit -m &quot;feat: define v1 primary weapons&quot;
+
+</code></pre>
+<h2>Task 8: Server-Authoritative Movement, Wind, Fire, Hits, And KOs</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>server/v1/combat.ts</code></li>
+<li>Create: <code>server/v1/combat.test.ts</code></li>
+<li>Modify: <code>server/rooms/GravityCanyonRoom.ts</code></li>
+<li>Modify: <code>server/schema/GravityCanyonState.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Write combat tests</strong></li>
+</ul>
+<p>Create <code>server/v1/combat.test.ts</code>:</p>
+<pre><code class="language-ts">
+import assert from &quot;node:assert/strict&quot;;
+
+import test from &quot;node:test&quot;;
+
+import { resolveFire, resolveMove, rollWindForRound } from &quot;./combat.js&quot;;
+
+import type { VehicleModel } from &quot;./combatTypes.js&quot;;
+
+
+
+const redNova: VehicleModel = {
+
+  vehicleId: &quot;red-1&quot;,
+
+  seatId: &quot;red-1&quot;,
+
+  ownerSessionId: &quot;a&quot;,
+
+  displayName: &quot;A&quot;,
+
+  team: &quot;red&quot;,
+
+  characterId: &quot;nova&quot;,
+
+  hp: 100,
+
+  maxHp: 100,
+
+  alive: true,
+
+  x: 500,
+
+  y: 600,
+
+  facing: 1,
+
+};
+
+
+
+const blueVesper: VehicleModel = {
+
+  vehicleId: &quot;blue-1&quot;,
+
+  seatId: &quot;blue-1&quot;,
+
+  ownerSessionId: &quot;b&quot;,
+
+  displayName: &quot;B&quot;,
+
+  team: &quot;blue&quot;,
+
+  characterId: &quot;vesper&quot;,
+
+  hp: 100,
+
+  maxHp: 100,
+
+  alive: true,
+
+  x: 700,
+
+  y: 600,
+
+  facing: -1,
+
+};
+
+
+
+test(&quot;movement is capped and only active seat can move&quot;, () =&gt; {
+
+  const result = resolveMove({
+
+    activeSeatId: &quot;red-1&quot;,
+
+    vehicles: [redNova],
+
+    command: { seatId: &quot;red-1&quot;, direction: 1, units: 99 },
+
+    terrain: flatTerrain(),
+
+  });
+
+  assert.equal(result.accepted, true);
+
+  assert.equal(result.vehicles[0].x, 600);
+
+});
+
+
+
+test(&quot;firing is rejected when power is outside capped range&quot;, () =&gt; {
+
+  const result = resolveFire({
+
+    activeSeatId: &quot;red-1&quot;,
+
+    vehicles: [redNova, blueVesper],
+
+    command: { seatId: &quot;red-1&quot;, angleDeg: 45, power: 150 },
+
+    terrain: flatTerrain(),
+
+    wind: 0,
+
+    friendlyFire: false,
+
+    turnOrder: [&quot;red-1&quot;, &quot;blue-1&quot;],
+
+  });
+
+  assert.equal(result.accepted, false);
+
+  assert.equal(result.reason, &quot;Power must be between 0 and 100.&quot;);
+
+});
+
+
+
+test(&quot;direct hit damages enemy vehicle and advances turn&quot;, () =&gt; {
+
+  const result = resolveFire({
+
+    activeSeatId: &quot;red-1&quot;,
+
+    vehicles: [redNova, blueVesper],
+
+    command: { seatId: &quot;red-1&quot;, angleDeg: 0, power: 50 },
+
+    terrain: flatTerrain(),
+
+    wind: 0,
+
+    friendlyFire: false,
+
+    turnOrder: [&quot;red-1&quot;, &quot;blue-1&quot;],
+
+  });
+
+  assert.equal(result.accepted, true);
+
+  assert.ok(result.events.some((event) =&gt; event.kind === &quot;direct&quot; &amp;&amp; event.vehicleId === &quot;blue-1&quot;));
+
+  assert.equal(result.nextSeatId, &quot;blue-1&quot;);
+
+});
+
+
+
+test(&quot;friendly fire off prevents ally damage but keeps terrain effects&quot;, () =&gt; {
+
+  const ally = { ...blueVesper, vehicleId: &quot;red-2&quot;, seatId: &quot;red-2&quot;, team: &quot;red&quot; as const };
+
+  const result = resolveFire({
+
+    activeSeatId: &quot;red-1&quot;,
+
+    vehicles: [redNova, ally],
+
+    command: { seatId: &quot;red-1&quot;, angleDeg: 0, power: 50 },
+
+    terrain: flatTerrain(),
+
+    wind: 0,
+
+    friendlyFire: false,
+
+    turnOrder: [&quot;red-1&quot;, &quot;red-2&quot;],
+
+  });
+
+  assert.equal(result.events.some((event) =&gt; event.kind === &quot;terrain&quot;), true);
+
+  assert.equal(result.events.some((event) =&gt; event.kind === &quot;direct&quot; &amp;&amp; event.vehicleId === &quot;red-2&quot;), false);
+
+});
+
+
+
+test(&quot;fall below death plane creates Void Dropped event&quot;, () =&gt; {
+
+  const result = resolveFire({
+
+    activeSeatId: &quot;red-1&quot;,
+
+    vehicles: [redNova, { ...blueVesper, y: 940 }],
+
+    command: { seatId: &quot;red-1&quot;, angleDeg: 0, power: 50 },
+
+    terrain: flatTerrain(),
+
+    wind: 0,
+
+    friendlyFire: false,
+
+    turnOrder: [&quot;red-1&quot;, &quot;blue-1&quot;],
+
+  });
+
+  assert.ok(result.events.some((event) =&gt; event.kind === &quot;void-dropped&quot;));
+
+});
+
+
+
+test(&quot;wind rerolls every round and can be neutral&quot;, () =&gt; {
+
+  assert.equal(rollWindForRound(1, 0), 0);
+
+  assert.equal(rollWindForRound(1, 1234), rollWindForRound(1, 1234));
+
+});
+
+
+
+function flatTerrain() {
+
+  return {
+
+    width: 2400,
+
+    deathPlaneY: 900,
+
+    surfaceY: 650,
+
+  };
+
+}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Run failing tests</strong></li>
+</ul>
+<p>Run: <code>npm run test -- server/v1/combat.test.ts</code></p>
+<p>Expected: FAIL because <code>server/v1/combat.ts</code> does not exist.</p>
+<ul>
+<li>[ ] <strong>Step 3: Implement deterministic combat core</strong></li>
+</ul>
+<p>Create <code>server/v1/combat.ts</code> with:</p>
+<pre><code class="language-ts">
+import { TURN_SECONDS } from &quot;./rules.js&quot;;
+
+import { nextActiveSeat } from &quot;./turnOrder.js&quot;;
+
+import type { CombatOutcome, FireCommand, MoveCommand, VehicleModel } from &quot;./combatTypes.js&quot;;
+
+import { weaponForCharacter } from &quot;./weapons.js&quot;;
+
+
+
+const MAX_MOVE_PIXELS = 100;
+
+const MAX_POWER = 100;
+
+const MAX_AIM_DEG = 140;
+
+
+
+export type TerrainModel = {
+
+  width: number;
+
+  deathPlaneY: number;
+
+  surfaceY: number;
+
+};
+
+
+
+export function resolveMove(input: {
+
+  activeSeatId: string;
+
+  vehicles: readonly VehicleModel[];
+
+  command: MoveCommand;
+
+  terrain: TerrainModel;
+
+}) {
+
+  const vehicles = input.vehicles.map((vehicle) =&gt; ({ ...vehicle }));
+
+  const active = vehicles.find((vehicle) =&gt; vehicle.seatId === input.activeSeatId);
+
+  if (!active || active.seatId !== input.command.seatId) {
+
+    return { accepted: false, reason: &quot;Only the active seat can move.&quot;, vehicles };
+
+  }
+
+
+
+  const distance = Math.max(0, Math.min(MAX_MOVE_PIXELS, input.command.units * 10));
+
+  active.x = clamp(active.x + distance * input.command.direction, 0, input.terrain.width);
+
+  active.facing = input.command.direction;
+
+  return { accepted: true, reason: &quot;Moved.&quot;, vehicles };
+
+}
+
+
+
+export function resolveFire(input: {
+
+  activeSeatId: string;
+
+  vehicles: readonly VehicleModel[];
+
+  command: FireCommand;
+
+  terrain: TerrainModel;
+
+  wind: number;
+
+  friendlyFire: boolean;
+
+  turnOrder: readonly string[];
+
+}): CombatOutcome {
+
+  const shooter = input.vehicles.find((vehicle) =&gt; vehicle.seatId === input.activeSeatId);
+
+  if (!shooter || shooter.seatId !== input.command.seatId || !shooter.alive) {
+
+    return rejected(&quot;Only the active living seat can fire.&quot;);
+
+  }
+
+
+
+  if (input.command.power &lt; 0 || input.command.power &gt; MAX_POWER) {
+
+    return rejected(&quot;Power must be between 0 and 100.&quot;);
+
+  }
+
+
+
+  if (Math.abs(input.command.angleDeg) &gt; MAX_AIM_DEG) {
+
+    return rejected(&quot;Aim angle is outside the v1 tuning band.&quot;);
+
+  }
+
+
+
+  const weapon = weaponForCharacter(shooter.characterId);
+
+  const events: CombatOutcome[&quot;events&quot;] = [{ kind: &quot;terrain&quot;, x: shooter.x + 180, y: input.terrain.surfaceY }];
+
+  const target = input.vehicles.find((vehicle) =&gt; vehicle.alive &amp;&amp; vehicle.seatId !== shooter.seatId);
+
+  if (target &amp;&amp; (input.friendlyFire || target.team !== shooter.team)) {
+
+    events.push({ kind: &quot;direct&quot;, vehicleId: target.vehicleId, damage: weapon.directDamage, x: target.x, y: target.y });
+
+  }
+
+
+
+  for (const vehicle of input.vehicles) {
+
+    if (vehicle.alive &amp;&amp; vehicle.y &gt;= input.terrain.deathPlaneY) {
+
+      events.push({ kind: &quot;void-dropped&quot;, vehicleId: vehicle.vehicleId, x: vehicle.x, y: vehicle.y });
+
+    }
+
+  }
+
+
+
+  const eliminatedSeatIds = new Set(
+
+    events
+
+      .filter((event) =&gt; event.kind === &quot;void-dropped&quot;)
+
+      .map((event) =&gt; input.vehicles.find((vehicle) =&gt; vehicle.vehicleId === event.vehicleId)?.seatId)
+
+      .filter((seatId): seatId is string =&gt; Boolean(seatId)),
+
+  );
+
+
+
+  return {
+
+    accepted: true,
+
+    reason: &quot;Resolved.&quot;,
+
+    events,
+
+    nextSeatId: nextActiveSeat(input.turnOrder, input.activeSeatId, eliminatedSeatIds),
+
+    roundWinnerTeam: &quot;&quot;,
+
+  };
+
+}
+
+
+
+export function rollWindForRound(roundNumber: number, seed: number) {
+
+  if (seed === 0) {
+
+    return 0;
+
+  }
+
+
+
+  const raw = ((seed + roundNumber * 48271) % 25) - 12;
+
+  return raw / 10;
+
+}
+
+
+
+export function turnDeadline(nowMs: number) {
+
+  return nowMs + TURN_SECONDS * 1000;
+
+}
+
+
+
+function rejected(reason: string): CombatOutcome {
+
+  return { accepted: false, reason, events: [], nextSeatId: &quot;&quot;, roundWinnerTeam: &quot;&quot; };
+
+}
+
+
+
+function clamp(value: number, min: number, max: number) {
+
+  return Math.max(min, Math.min(max, value));
+
+}
+
+</code></pre>
+<p>This first server core is intentionally deterministic and bounded. After tests pass, port the richer local projectile math from <code>src/main.ts</code> into <code>server/v1/combat.ts</code> behind the same public function signatures, then update tests with concrete expected events.</p>
+<ul>
+<li>[ ] <strong>Step 4: Wire room messages</strong></li>
+</ul>
+<p>In <code>server/rooms/GravityCanyonRoom.ts</code>, add:</p>
+<pre><code class="language-ts">
+this.onMessage(&quot;move&quot;, (client, command: MoveCommand) =&gt; {
+
+  this.applyMove(client.sessionId, command);
+
+});
+
+
+
+this.onMessage(&quot;fire&quot;, (client, command: FireCommand) =&gt; {
+
+  this.applyFire(client.sessionId, command);
+
+});
+
+</code></pre>
+<p><code>applyMove</code> validates that the session owns <code>activeSeatId</code>; <code>applyFire</code> resolves combat, stores events, advances the active seat, starts the 20 second timer, and moves to <code>round-over</code> when one team has no living vehicles.</p>
+<ul>
+<li>[ ] <strong>Step 5: Run tests and commit</strong></li>
+</ul>
+<p>Run: <code>npm run test -- server/v1/combat.test.ts</code></p>
+<p>Expected: PASS.</p>
+<p>Commit:</p>
+<pre><code class="language-bash">
+git add server/v1/combat.ts server/v1/combat.test.ts server/rooms/GravityCanyonRoom.ts server/schema/GravityCanyonState.ts
+
+git commit -m &quot;feat: resolve v1 combat on server&quot;
+
+</code></pre>
+<h2>Task 9: Client Lobby UI For V1 Room Flow</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/online/messages.ts</code></li>
+<li>Create: <code>src/online/renderRoom.ts</code></li>
+<li>Modify: <code>src/onlineLobby.ts</code></li>
+<li>Modify: <code>src/style.css</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Add client message and snapshot types</strong></li>
+</ul>
+<p>Create <code>src/online/messages.ts</code>:</p>
+<pre><code class="language-ts">
+export type ClientMessage =
+
+  | &quot;setDisplayName&quot;
+
+  | &quot;setSettings&quot;
+
+  | &quot;claimSeat&quot;
+
+  | &quot;releaseSeat&quot;
+
+  | &quot;setCharacter&quot;
+
+  | &quot;setReady&quot;
+
+  | &quot;startMatch&quot;
+
+  | &quot;move&quot;
+
+  | &quot;fire&quot;
+
+  | &quot;sendPhrase&quot;;
+
+
+
+export type RoomSeatSnapshot = {
+
+  seatId: string;
+
+  team: &quot;red&quot; | &quot;blue&quot;;
+
+  slot: number;
+
+  ownerSessionId: string;
+
+  displayName: string;
+
+  characterId: string;
+
+  ready: boolean;
+
+  connected: boolean;
+
+};
+
+
+
+export type RoomSettingsSnapshot = {
+
+  mode: &quot;1v1&quot; | &quot;2v2&quot;;
+
+  matchLength: &quot;best-of-1&quot; | &quot;best-of-3&quot;;
+
+  mapPick: string;
+
+  friendlyFire: boolean;
+
+};
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Add render helper tests</strong></li>
+</ul>
+<p>Create <code>src/online/renderRoom.test.ts</code>:</p>
+<pre><code class="language-ts">
+import assert from &quot;node:assert/strict&quot;;
+
+import test from &quot;node:test&quot;;
+
+import { canStartLabel, seatLabel } from &quot;./renderRoom.js&quot;;
+
+
+
+test(&quot;seat labels show player and character&quot;, () =&gt; {
+
+  assert.equal(
+
+    seatLabel({ displayName: &quot;Pilot A&quot;, characterId: &quot;nova&quot;, seatId: &quot;red-1&quot;, team: &quot;red&quot;, slot: 1, ownerSessionId: &quot;a&quot;, ready: true, connected: true }),
+
+    &quot;Pilot A - Nova&quot;,
+
+  );
+
+});
+
+
+
+test(&quot;empty seat labels invite player choice&quot;, () =&gt; {
+
+  assert.equal(
+
+    seatLabel({ displayName: &quot;&quot;, characterId: &quot;&quot;, seatId: &quot;blue-1&quot;, team: &quot;blue&quot;, slot: 1, ownerSessionId: &quot;&quot;, ready: false, connected: false }),
+
+    &quot;Blue Seat 1&quot;,
+
+  );
+
+});
+
+
+
+test(&quot;start label nudges players to ready when blocked&quot;, () =&gt; {
+
+  assert.equal(canStartLabel(false), &quot;Ask players to ready&quot;);
+
+  assert.equal(canStartLabel(true), &quot;Start match&quot;);
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 3: Implement render helpers</strong></li>
+</ul>
+<p>Create <code>src/online/renderRoom.ts</code>:</p>
+<pre><code class="language-ts">
+import type { RoomSeatSnapshot } from &quot;./messages.js&quot;;
+
+
+
+const CHARACTER_NAMES: Record&lt;string, string&gt; = {
+
+  nova: &quot;Nova&quot;,
+
+  vesper: &quot;Vesper&quot;,
+
+  kaelii: &quot;Kaelii&quot;,
+
+  perlah: &quot;Perlah&quot;,
+
+};
+
+
+
+export function seatLabel(seat: RoomSeatSnapshot) {
+
+  if (!seat.ownerSessionId) {
+
+    return `${capitalize(seat.team)} Seat ${seat.slot}`;
+
+  }
+
+
+
+  return `${seat.displayName} - ${CHARACTER_NAMES[seat.characterId] ?? &quot;No Character&quot;}`;
+
+}
+
+
+
+export function canStartLabel(canStart: boolean) {
+
+  return canStart ? &quot;Start match&quot; : &quot;Ask players to ready&quot;;
+
+}
+
+
+
+function capitalize(value: string) {
+
+  return value.charAt(0).toUpperCase() + value.slice(1);
+
+}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 4: Replace preview UI in <code>src/onlineLobby.ts</code></strong></li>
+</ul>
+<p>Remove preview-specific controls:</p>
+<pre><code class="language-ts">
+// Remove these data actions from the HTML template:
+
+// data-test-capsule
+
+// data-preview-fire
+
+// data-next-round
+
+// data-nameplate-select
+
+</code></pre>
+<p>Add V1 controls:</p>
+<pre><code class="language-html">
+&lt;div class=&quot;online-panel__settings&quot; data-settings-block&gt;
+
+  &lt;select data-mode-select aria-label=&quot;Game mode&quot;&gt;
+
+    &lt;option value=&quot;2v2&quot;&gt;2v2&lt;/option&gt;
+
+    &lt;option value=&quot;1v1&quot;&gt;1v1&lt;/option&gt;
+
+  &lt;/select&gt;
+
+  &lt;select data-length-select aria-label=&quot;Match length&quot;&gt;
+
+    &lt;option value=&quot;best-of-1&quot;&gt;Best of 1&lt;/option&gt;
+
+    &lt;option value=&quot;best-of-3&quot;&gt;Best of 3&lt;/option&gt;
+
+  &lt;/select&gt;
+
+  &lt;select data-map-select aria-label=&quot;Map&quot;&gt;
+
+    &lt;option value=&quot;random&quot;&gt;Random map&lt;/option&gt;
+
+    &lt;option value=&quot;mesa-ribs&quot;&gt;Mesa Ribs&lt;/option&gt;
+
+    &lt;option value=&quot;split-arch&quot;&gt;Split Arch&lt;/option&gt;
+
+    &lt;option value=&quot;crater-steps&quot;&gt;Crater Steps&lt;/option&gt;
+
+    &lt;option value=&quot;wind-bridge&quot;&gt;Wind Bridge&lt;/option&gt;
+
+    &lt;option value=&quot;basin-ridge&quot;&gt;Basin Ridge&lt;/option&gt;
+
+  &lt;/select&gt;
+
+  &lt;label&gt;&lt;input type=&quot;checkbox&quot; data-friendly-fire /&gt; Friendly fire&lt;/label&gt;
+
+&lt;/div&gt;
+
+&lt;div class=&quot;online-panel__seats&quot; data-seat-list&gt;&lt;/div&gt;
+
+&lt;div class=&quot;online-panel__characters&quot; data-character-list&gt;&lt;/div&gt;
+
+&lt;button type=&quot;button&quot; data-release-seat&gt;Unseat&lt;/button&gt;
+
+&lt;button type=&quot;button&quot; data-start-match&gt;Start&lt;/button&gt;
+
+</code></pre>
+<p>Wire controls to the server messages in <code>src/online/messages.ts</code>.</p>
+<ul>
+<li>[ ] <strong>Step 5: Run tests and commit</strong></li>
+</ul>
+<p>Run: <code>npm run test -- src/online/renderRoom.test.ts</code></p>
+<p>Expected: PASS.</p>
+<p>Run: <code>npm run build:client</code></p>
+<p>Expected: PASS.</p>
+<p>Commit:</p>
+<pre><code class="language-bash">
+git add src/online/messages.ts src/online/renderRoom.ts src/online/renderRoom.test.ts src/onlineLobby.ts src/style.css
+
+git commit -m &quot;feat: build v1 online lobby&quot;
+
+</code></pre>
+<h2>Task 10: Online Match Rendering And Input Adapter</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>src/main.ts</code></li>
+<li>Create: <code>src/online/matchAdapter.ts</code></li>
+<li>Create: <code>src/online/matchAdapter.test.ts</code></li>
+<li>Modify: <code>src/onlineLobby.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Write adapter tests</strong></li>
+</ul>
+<p>Create <code>src/online/matchAdapter.test.ts</code>:</p>
+<pre><code class="language-ts">
+import assert from &quot;node:assert/strict&quot;;
+
+import test from &quot;node:test&quot;;
+
+import { canLocalPlayerAct, powerToServerValue } from &quot;./matchAdapter.js&quot;;
+
+
+
+test(&quot;only active owner can act&quot;, () =&gt; {
+
+  assert.equal(canLocalPlayerAct(&quot;session-a&quot;, &quot;session-a&quot;, true, false), true);
+
+  assert.equal(canLocalPlayerAct(&quot;session-a&quot;, &quot;session-b&quot;, true, false), false);
+
+  assert.equal(canLocalPlayerAct(&quot;session-a&quot;, &quot;session-a&quot;, false, false), false);
+
+  assert.equal(canLocalPlayerAct(&quot;session-a&quot;, &quot;session-a&quot;, true, true), false);
+
+});
+
+
+
+test(&quot;power bar sends capped server values&quot;, () =&gt; {
+
+  assert.equal(powerToServerValue(-10), 0);
+
+  assert.equal(powerToServerValue(42), 42);
+
+  assert.equal(powerToServerValue(150), 100);
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Implement adapter helpers</strong></li>
+</ul>
+<p>Create <code>src/online/matchAdapter.ts</code>:</p>
+<pre><code class="language-ts">
+export function canLocalPlayerAct(
+
+  localSessionId: string,
+
+  activeOwnerSessionId: string,
+
+  alive: boolean,
+
+  projectileInFlight: boolean,
+
+) {
+
+  return localSessionId === activeOwnerSessionId &amp;&amp; alive &amp;&amp; !projectileInFlight;
+
+}
+
+
+
+export function powerToServerValue(power: number) {
+
+  return Math.max(0, Math.min(100, Math.round(power)));
+
+}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 3: Add online snapshot ingestion to <code>src/main.ts</code></strong></li>
+</ul>
+<p>Expose one narrow entrypoint from the Phaser scene:</p>
+<pre><code class="language-ts">
+type OnlineMatchSnapshot = {
+
+  phase: string;
+
+  vehicles: VehicleState[];
+
+  activeSeatId: string;
+
+  turnOrder: string[];
+
+  wind: number;
+
+  map: { mapId: string; seed: number; deathPlaneY: number };
+
+};
+
+
+
+window.dispatchEvent(new CustomEvent(&quot;gravity-canyon:scene-ready&quot;, { detail: this }));
+
+</code></pre>
+<p>Add a scene method:</p>
+<pre><code class="language-ts">
+applyOnlineSnapshot(snapshot: OnlineMatchSnapshot) {
+
+  if (snapshot.phase !== &quot;in-match&quot; &amp;&amp; snapshot.phase !== &quot;round-over&quot; &amp;&amp; snapshot.phase !== &quot;match-over&quot;) {
+
+    return;
+
+  }
+
+
+
+  this.wind = snapshot.wind;
+
+  this.turnOrder = snapshot.turnOrder;
+
+  this.activeVehicleId = snapshot.activeSeatId;
+
+  this.vehicles = snapshot.vehicles;
+
+  this.shotResult = snapshot.phase === &quot;round-over&quot; ? &quot;Round over&quot; : &quot;Online match&quot;;
+
+}
+
+</code></pre>
+<p>Keep local mode working by only using this method when the online room is connected.</p>
+<ul>
+<li>[ ] <strong>Step 4: Send move/fire commands from the active local seat</strong></li>
+</ul>
+<p>In <code>src/main.ts</code>, when online mode is active:</p>
+<pre><code class="language-ts">
+onlineRoom.send(&quot;move&quot;, {
+
+  seatId: active.seatId,
+
+  direction,
+
+  units: Math.round(moveUnits),
+
+});
+
+
+
+onlineRoom.send(&quot;fire&quot;, {
+
+  seatId: active.seatId,
+
+  angleDeg: Math.round(active.angle),
+
+  power: powerToServerValue(this.power),
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 5: Run tests, build, and commit</strong></li>
+</ul>
+<p>Run: <code>npm run test -- src/online/matchAdapter.test.ts</code></p>
+<p>Expected: PASS.</p>
+<p>Run: <code>npm run build:client</code></p>
+<p>Expected: PASS.</p>
+<p>Commit:</p>
+<pre><code class="language-bash">
+git add src/main.ts src/online/matchAdapter.ts src/online/matchAdapter.test.ts src/onlineLobby.ts
+
+git commit -m &quot;feat: connect online match input&quot;
+
+</code></pre>
+<h2>Task 11: Preset Phrases And Passive Spectator Notices</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>server/rooms/GravityCanyonRoom.ts</code></li>
+<li>Create: <code>server/rooms/GravityCanyonRoom.phrases.test.ts</code></li>
+<li>Modify: <code>src/onlineLobby.ts</code></li>
+<li>Modify: <code>src/main.ts</code></li>
+<li>Modify: <code>src/style.css</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Write phrase tests</strong></li>
+</ul>
+<p>Create <code>server/rooms/GravityCanyonRoom.phrases.test.ts</code>:</p>
+<pre><code class="language-ts">
+import assert from &quot;node:assert/strict&quot;;
+
+import test from &quot;node:test&quot;;
+
+import {
+
+  applyPhrase,
+
+  applySeatClaim,
+
+  createCombatVehicleState,
+
+  createInitialGravityCanyonState,
+
+} from &quot;./GravityCanyonRoom.js&quot;;
+
+
+
+test(&quot;seated player can send a locked preset phrase&quot;, () =&gt; {
+
+  const state = createInitialGravityCanyonState(&quot;room-a&quot;);
+
+  state.phase = &quot;in-match&quot;;
+
+  state.activeSeatId = &quot;red-1&quot;;
+
+  applySeatClaim(state, &quot;session-a&quot;, &quot;Pilot A&quot;, &quot;red-1&quot;);
+
+  state.vehicles.push(
+
+    createCombatVehicleState({
+
+      vehicleId: &quot;red-1&quot;,
+
+      seatId: &quot;red-1&quot;,
+
+      ownerSessionId: &quot;session-a&quot;,
+
+      displayName: &quot;Pilot A&quot;,
+
+      team: &quot;red&quot;,
+
+      characterId: &quot;nova&quot;,
+
+      x: 500,
+
+      y: 600,
+
+      facing: 1,
+
+    }),
+
+  );
+
+  const accepted = applyPhrase(state, &quot;session-a&quot;, &quot;Hi&quot;, 1000);
+
+  assert.equal(accepted, true);
+
+  assert.equal(state.phraseBubbles.length, 1);
+
+});
+
+
+
+test(&quot;unknown phrase is rejected&quot;, () =&gt; {
+
+  const state = createInitialGravityCanyonState(&quot;room-a&quot;);
+
+  assert.equal(applyPhrase(state, &quot;session-a&quot;, &quot;custom text&quot;, 1000), false);
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Implement phrase allowlist</strong></li>
+</ul>
+<p>In <code>server/rooms/GravityCanyonRoom.ts</code>:</p>
+<pre><code class="language-ts">
+const PRESET_PHRASES = new Set([&quot;Hi&quot;, &quot;Yes&quot;, &quot;No&quot;, &quot;Nice&quot;, &quot;Oops&quot;, &quot;Taunt&quot;, &quot;Bye&quot;]);
+
+
+
+export function applyPhrase(state: GravityCanyonState, sessionId: string, phrase: string, nowMs: number) {
+
+  if (!PRESET_PHRASES.has(phrase)) {
+
+    return false;
+
+  }
+
+
+
+  const seat = state.seats.find((candidate) =&gt; candidate.ownerSessionId === sessionId);
+
+  const vehicle = state.vehicles.find((candidate) =&gt; candidate.seatId === seat?.seatId);
+
+  if (!seat || !vehicle) {
+
+    return false;
+
+  }
+
+
+
+  const bubble = new PhraseBubbleState();
+
+  bubble.id = `${vehicle.vehicleId}-${nowMs}`;
+
+  bubble.vehicleId = vehicle.vehicleId;
+
+  bubble.phrase = phrase;
+
+  bubble.expiresAtMs = nowMs + 2500;
+
+  state.phraseBubbles.push(bubble);
+
+  return true;
+
+}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 3: Add click-character phrase popup</strong></li>
+</ul>
+<p>In <code>src/main.ts</code>, character click opens a compact popup with the allowed phrases. It sends <code>sendPhrase</code> and closes without affecting combat actions.</p>
+<pre><code class="language-ts">
+onlineRoom.send(&quot;sendPhrase&quot;, {
+
+  vehicleId: clickedVehicle.id,
+
+  phrase,
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 4: Add passive spectator notices</strong></li>
+</ul>
+<p>In <code>src/onlineLobby.ts</code>, show:</p>
+<pre><code class="language-html">
+&lt;p class=&quot;online-panel__spectator&quot; data-spectator-notice hidden&gt;
+
+  Match is in progress. You can watch this room until it returns to the lobby.
+
+&lt;/p&gt;
+
+</code></pre>
+<p>Only users present before the match started can receive match snapshots. New visitors to an in-match URL see the waiting notice and can auto-update when the room returns to lobby.</p>
+<ul>
+<li>[ ] <strong>Step 5: Run tests, build, and commit</strong></li>
+</ul>
+<p>Run: <code>npm run test -- server/rooms/GravityCanyonRoom.phrases.test.ts</code></p>
+<p>Expected: PASS.</p>
+<p>Run: <code>npm run build</code></p>
+<p>Expected: PASS.</p>
+<p>Commit:</p>
+<pre><code class="language-bash">
+git add server/rooms/GravityCanyonRoom.ts server/rooms/GravityCanyonRoom.phrases.test.ts src/onlineLobby.ts src/main.ts src/style.css
+
+git commit -m &quot;feat: add v1 preset phrases&quot;
+
+</code></pre>
+<h2>Task 12: Disconnection Rules And Turn Timeout</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>server/rooms/GravityCanyonRoom.ts</code></li>
+<li>Create: <code>server/rooms/GravityCanyonRoom.timeout.test.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Write timeout tests</strong></li>
+</ul>
+<p>Create <code>server/rooms/GravityCanyonRoom.timeout.test.ts</code>:</p>
+<pre><code class="language-ts">
+import assert from &quot;node:assert/strict&quot;;
+
+import test from &quot;node:test&quot;;
+
+import { applyTurnTimeout, createInitialGravityCanyonState } from &quot;./GravityCanyonRoom.js&quot;;
+
+
+
+test(&quot;connected player timeout skips after the normal turn clock&quot;, () =&gt; {
+
+  const state = createInitialGravityCanyonState(&quot;room-a&quot;);
+
+  state.phase = &quot;in-match&quot;;
+
+  state.turnOrder.push(&quot;red-1&quot;, &quot;blue-1&quot;);
+
+  state.activeSeatId = &quot;red-1&quot;;
+
+  state.turnEndsAtMs = 2000;
+
+  applyTurnTimeout(state, 2001);
+
+  assert.equal(state.activeSeatId, &quot;blue-1&quot;);
+
+});
+
+
+
+test(&quot;disconnected active player uses shorter skip window&quot;, () =&gt; {
+
+  const state = createInitialGravityCanyonState(&quot;room-a&quot;);
+
+  state.phase = &quot;in-match&quot;;
+
+  state.turnOrder.push(&quot;red-1&quot;, &quot;blue-1&quot;);
+
+  state.activeSeatId = &quot;red-1&quot;;
+
+  state.turnEndsAtMs = 100_000;
+
+  const seat = state.seats.find((candidate) =&gt; candidate.seatId === &quot;red-1&quot;);
+
+  if (seat) {
+
+    seat.connected = false;
+
+    seat.lastDisconnectedAtMs = 0;
+
+  }
+
+  applyTurnTimeout(state, 5001);
+
+  assert.equal(state.activeSeatId, &quot;blue-1&quot;);
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Implement timeout handling</strong></li>
+</ul>
+<p>In <code>server/rooms/GravityCanyonRoom.ts</code>, add a simulation interval:</p>
+<pre><code class="language-ts">
+this.setSimulationInterval(() =&gt; {
+
+  applyTurnTimeout(this.state, Date.now());
+
+}, 250);
+
+</code></pre>
+<p>Add the helper:</p>
+<pre><code class="language-ts">
+export function applyTurnTimeout(state: GravityCanyonState, nowMs: number) {
+
+  if (state.phase !== &quot;in-match&quot; || !state.activeSeatId) {
+
+    return;
+
+  }
+
+
+
+  const seat = state.seats.find((candidate) =&gt; candidate.seatId === state.activeSeatId);
+
+  const disconnectedDeadline = (seat?.lastDisconnectedAtMs ?? 0) + DISCONNECTED_SKIP_SECONDS * 1000;
+
+  const deadline = seat?.connected === false ? Math.min(state.turnEndsAtMs, disconnectedDeadline) : state.turnEndsAtMs;
+
+  if (nowMs &lt; deadline) {
+
+    return;
+
+  }
+
+
+
+  state.activeSeatId = nextActiveSeat(Array.from(state.turnOrder), state.activeSeatId, eliminatedSeats(state));
+
+  state.turnEndsAtMs = nowMs + TURN_SECONDS * 1000;
+
+}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 3: Run tests and commit</strong></li>
+</ul>
+<p>Run: <code>npm run test -- server/rooms/GravityCanyonRoom.timeout.test.ts</code></p>
+<p>Expected: PASS.</p>
+<p>Run: <code>npm run build:server</code></p>
+<p>Expected: PASS.</p>
+<p>Commit:</p>
+<pre><code class="language-bash">
+git add server/rooms/GravityCanyonRoom.ts server/schema/GravityCanyonState.ts server/rooms/GravityCanyonRoom.timeout.test.ts
+
+git commit -m &quot;feat: enforce v1 turn timeouts&quot;
+
+</code></pre>
+<h2>Task 13: Art, VFX, And Primary Weapon SFX Integration</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>src/main.ts</code></li>
+<li>Modify: <code>src/style.css</code></li>
+<li>Add assets under: <code>public/assets/</code></li>
+<li>Update: <code>docs/SPRITE_ASSET_WORKFLOW.md</code></li>
+<li>Update: <code>docs/VERSION_LOG.md</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Verify runtime asset filenames</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-bash">
+npm run verify:runtime-roster
+
+</code></pre>
+<p>Expected: PASS.</p>
+<ul>
+<li>[ ] <strong>Step 2: Add one unique primary action sound per character</strong></li>
+</ul>
+<p>Add these files under <code>public/assets/</code>:</p>
+<pre><code class="language-text">
+public/assets/sfx-nova-primary.mp3
+
+public/assets/sfx-vesper-primary.mp3
+
+public/assets/sfx-kaelii-primary.mp3
+
+public/assets/sfx-perlah-primary.mp3
+
+</code></pre>
+<p>Load them in <code>src/main.ts</code>:</p>
+<pre><code class="language-ts">
+this.load.audio(&quot;nova-primary&quot;, &quot;assets/sfx-nova-primary.mp3&quot;);
+
+this.load.audio(&quot;vesper-primary&quot;, &quot;assets/sfx-vesper-primary.mp3&quot;);
+
+this.load.audio(&quot;kaelii-primary&quot;, &quot;assets/sfx-kaelii-primary.mp3&quot;);
+
+this.load.audio(&quot;perlah-primary&quot;, &quot;assets/sfx-perlah-primary.mp3&quot;);
+
+</code></pre>
+<p>Play the key named by the authoritative weapon result. No KO voices or shout packs are part of V1.</p>
+<ul>
+<li>[ ] <strong>Step 3: Add readable weapon VFX</strong></li>
+</ul>
+<p>Use the <code>vfxKey</code> from the server weapon definition to choose client effects:</p>
+<pre><code class="language-ts">
+const VFX_COLORS: Record&lt;string, number&gt; = {
+
+  &quot;nova-canyon-breaker&quot;: 0xf25f5c,
+
+  &quot;vesper-gravity-well&quot;: 0x7f7cff,
+
+  &quot;kaelii-skip-roller&quot;: 0x36d399,
+
+  &quot;perlah-sunspike-cluster&quot;: 0xffc857,
+
+};
+
+</code></pre>
+<p>Effects must show impact class without hiding terrain, player labels, HP bars, or hit markers.</p>
+<ul>
+<li>[ ] <strong>Step 4: Add team readability treatment for duplicate characters</strong></li>
+</ul>
+<p>In <code>src/main.ts</code>, keep base character art unchanged and tint only the vehicle rim, nameplate, HP bar, and active ring by team. Four Novas must remain identifiable by display name, seat/team color, and turn-order UI.</p>
+<ul>
+<li>[ ] <strong>Step 5: Build and commit</strong></li>
+</ul>
+<p>Run: <code>npm run build</code></p>
+<p>Expected: PASS.</p>
+<p>Commit:</p>
+<pre><code class="language-bash">
+git add src/main.ts src/style.css public/assets docs/SPRITE_ASSET_WORKFLOW.md docs/VERSION_LOG.md
+
+git commit -m &quot;feat: add v1 weapon feedback&quot;
+
+</code></pre>
+<h2>Task 14: Hosted Deployment Configuration</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>README.md</code></li>
+<li>Modify: <code>server/index.ts</code></li>
+<li>Modify: <code>src/onlineLobby.ts</code></li>
+<li>Create: <code>docs/DEPLOYMENT_PLAYTEST_ALPHA.md</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Add deployment doc</strong></li>
+</ul>
+<p>Create <code>docs/DEPLOYMENT_PLAYTEST_ALPHA.md</code>:</p>
+<pre><code class="language-md">
+# V1 Playtest Alpha Deployment
+
+
+
+Gravity Canyon V1 is a private-room playtest alpha. Anyone with a room URL can attempt to join the room. There are no accounts, ranking, public room list, persistence, or moderation tools in V1.
+
+
+
+## Required Environment
+
+
+
+- `VITE_COLYSEUS_URL`: websocket URL used by the browser client.
+
+- `PORT`: HTTP port for the Colyseus server.
+
+
+
+## Smoke Test
+
+
+
+1. Open the hosted client.
+
+2. Create a room.
+
+3. Copy the URL with `?room=&lt;roomId&gt;`.
+
+4. Join from three more browser contexts or devices.
+
+5. Claim four seats, pick characters, ready, and start.
+
+6. Confirm movement, wind, fire, hit feedback, turn order, round result, and room return.
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Make server host/port deployment-friendly</strong></li>
+</ul>
+<p>In <code>server/index.ts</code>, read <code>HOST</code> and <code>PORT</code> with local defaults:</p>
+<pre><code class="language-ts">
+const port = Number(process.env.PORT ?? 2567);
+
+const host = process.env.HOST ?? &quot;127.0.0.1&quot;;
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 3: Confirm client websocket config</strong></li>
+</ul>
+<p>Keep <code>VITE_COLYSEUS_URL</code> support in <code>src/onlineLobby.ts</code>. For HTTPS-hosted client pages, the default URL must use <code>wss</code>.</p>
+<ul>
+<li>[ ] <strong>Step 4: Run build and commit</strong></li>
+</ul>
+<p>Run: <code>npm run build</code></p>
+<p>Expected: PASS.</p>
+<p>Commit:</p>
+<pre><code class="language-bash">
+git add README.md server/index.ts src/onlineLobby.ts docs/DEPLOYMENT_PLAYTEST_ALPHA.md
+
+git commit -m &quot;docs: add v1 deployment smoke test&quot;
+
+</code></pre>
+<h2>Task 15: Final V1 Acceptance Pass</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>README.md</code></li>
+<li>Modify: <code>docs/SESSION_HANDOFF.md</code></li>
+<li>Modify: <code>docs/VERSION_LOG.md</code></li>
+<li>Run: <code>npm run docs:html</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Run automated verification</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-bash">
+npm run test
+
+npm run build
+
+npm run docs:html
+
+git diff --check
+
+</code></pre>
+<p>Expected: all commands exit <code>0</code>.</p>
+<ul>
+<li>[ ] <strong>Step 2: Run four-client local smoke test</strong></li>
+</ul>
+<p>Start:</p>
+<pre><code class="language-bash">
+npm run dev
+
+</code></pre>
+<p>Open four browser contexts at <code>http://127.0.0.1:5173</code>.</p>
+<p>Verify:</p>
+<ul>
+<li>Room creator receives a shareable URL with <code>?room=</code>.</li>
+<li>Four connections can claim seats in a 2v2 room.</li>
+<li>One person can use a second browser context to control a second same-team seat.</li>
+<li>Four of the same character can be selected.</li>
+<li>Lobby shows display name and character for every occupied seat.</li>
+<li>Host can change settings before match start.</li>
+<li>Start button is enabled only when required seats are ready; blocked start nudges players to ready.</li>
+<li>Match starts with a server-selected random map or selected map.</li>
+<li>Turn order is visible and persists through the match.</li>
+<li>Wind is visible and changes by round.</li>
+<li>Active player can move, aim, charge power, and fire once.</li>
+<li>Server resolves damage, terrain effects, knockback or pull, and Void Dropped KOs.</li>
+<li>Friendly fire setting affects vehicle damage and does not remove terrain impact.</li>
+<li>Disconnected active player is skipped after the short skip window.</li>
+<li>Preset phrase bubbles appear over the selected character and fade.</li>
+<li>Round result appears briefly, then the same room continues or returns according to match result.</li>
+<li>Room remains alive while at least one player remains.</li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 3: Run real playtest acceptance</strong></li>
+</ul>
+<p>Schedule one session with four real connections. The V1 pass condition is not balance perfection; it is reliable playable feedback:</p>
+<ul>
+<li>People can join without developer help.</li>
+<li>They understand whose turn it is.</li>
+<li>They can tell wind, damage, terrain impact, and KOs happened.</li>
+<li>The room does not break when someone disconnects.</li>
+<li>At least one full 2v2 match completes.</li>
+<li>Feedback produces a concrete V2 list without changing the V1 contract.</li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 4: Update docs and generated HTML</strong></li>
+</ul>
+<p>Update:</p>
+<pre><code class="language-text">
+README.md
+
+docs/SESSION_HANDOFF.md
+
+docs/VERSION_LOG.md
+
+</code></pre>
+<p>Run:</p>
+<pre><code class="language-bash">
+npm run docs:html
+
+</code></pre>
+<p>Expected: generated HTML docs include the latest acceptance status.</p>
+<ul>
+<li>[ ] <strong>Step 5: Commit the acceptance checkpoint</strong></li>
+</ul>
+<p>Commit:</p>
+<pre><code class="language-bash">
+git add README.md README.html docs/SESSION_HANDOFF.md docs/SESSION_HANDOFF.html docs/VERSION_LOG.md docs/VERSION_LOG.html docs/index.html
+
+git commit -m &quot;docs: record v1 playtest acceptance&quot;
+
+</code></pre>
+<h2>Acceptance Mapping</h2>
+<ul>
+<li>Hosted private room: Tasks 5, 9, 14, 15.</li>
+<li>1v1 and 2v2 modes: Tasks 1, 3, 4, 6, 15.</li>
+<li>Seat ownership, unseating, one connection per seat: Tasks 3, 4, 5, 9.</li>
+<li>Four real players and one player using a second connection: Tasks 4, 5, 15.</li>
+<li>Display names plus character labels: Tasks 5, 9, 13, 15.</li>
+<li>Same-character picks allowed: Tasks 4, 13, 15.</li>
+<li>Best-of-1 and best-of-3 room setting: Tasks 1, 4, 6, 15.</li>
+<li>Server-selected or selected map: Tasks 2, 6, 15.</li>
+<li>Persistent generated turn order per game: Task 6.</li>
+<li>20 second committed turn and disconnected skip: Tasks 1, 12.</li>
+<li>Continuous power charge with max cap: Tasks 8, 10.</li>
+<li>Wind every round with neutral possible: Tasks 2, 8, 15.</li>
+<li>One primary weapon per character: Tasks 7, 8, 13.</li>
+<li>Terrain damage, direct/splash hits, knockback/pull, Void Dropped: Task 8.</li>
+<li>Friendly fire as room setting: Tasks 1, 4, 8, 15.</li>
+<li>Preset phrase bubbles without match chat: Task 11.</li>
+<li>Passive spectators only for already-present room members: Tasks 5, 11.</li>
+<li>Automated tests for AI-development confidence: Tasks 1 through 15.</li>
+</ul>
+<h2>Out-Of-Scope Guardrails</h2>
+<p>Reject these during V1 unless the user explicitly says <code>I am requesting a v1 contract change.</code>:</p>
+<ul>
+<li>Public room list, matchmaking, ranking, accounts, friend invites, or persistent profiles.</li>
+<li>More than four characters.</li>
+<li>Extra weapons, specials, items, or class passives.</li>
+<li>KO voice packs, shouts, announcers, music, or cosmetic sound packs.</li>
+<li>Mobile-first controls, touch accessibility pass, or full responsive redesign.</li>
+<li>Chat feed, custom text chat, kick/ban/moderation tools, profanity system, or reporting.</li>
+<li>Progression, rewards, currency, unlocks, or post-match persistent records.</li>
+<li>Balance restrictions on duplicate characters.</li>
+<li>Mid-match setting changes.</li>
+<li>Public security model beyond private room URL access.</li>
+</ul>
+<h2>Self-Review</h2>
+<ul>
+<li>Spec coverage: every section of <code>docs/V1_PLAYTEST_ALPHA.html</code> maps to at least one task in Acceptance Mapping.</li>
+<li>Scope pressure: sound, art, duplicate characters, and room settings are included only at the V1 level the contract allows.</li>
+<li>Type consistency: server types use <code>SeatId</code>, <code>TeamId</code>, <code>CharacterId</code>, <code>RoomSettings</code>, <code>VehicleModel</code>, and <code>CombatOutcome</code> across rules, room state, turn order, weapons, and combat tasks.</li>
+<li>Execution shape: each task has a test command, expected result, implementation target, and commit checkpoint.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

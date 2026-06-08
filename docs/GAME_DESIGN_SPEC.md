@@ -1,11 +1,16 @@
 # Gravity Canyon Game Design Spec
 
-Canonical source of truth for the current product direction.
+Broad product direction for Gravity Canyon across multiple versions.
 
-Last updated: 2026-06-06
-Confidence: 95% for the next build milestone, with later milestone details intentionally left flexible.
+Last updated: 2026-06-08
+Confidence: 95% for broad product direction. Current v1 scope is governed by the v1 playtest-alpha contract.
 
 Working title: Gravity Canyon.
+
+## V1 Authority Note
+
+The locked current-build scope lives in [V1_PLAYTEST_ALPHA.html](V1_PLAYTEST_ALPHA.html).
+This document describes the broader product vision and future direction. If this file and the v1 contract disagree about current v1 scope, the v1 contract wins.
 
 ## 1. Product North Star
 
@@ -48,8 +53,8 @@ Rules:
 - Multiplayer: Node.js + TypeScript + Colyseus.
 - Durable backend: Supabase.
 - Live matches: server authoritative.
-- First real online mode: private-room 1v1.
-- True MVP team mode: online 2v2.
+- Current v1 playtest-alpha target: hosted private-room online 2v2, with 1v1 supported for easier testing.
+- True multiplayer proof point: four humans on separate connections completing a private-room 2v2 match.
 - Economy: cosmetic-only, soft currency first, no real-money MVP.
 - Guests: can play quickly; permanent rewards require registration.
 - Login target: Guest, Google, Email Magic Link.
@@ -92,26 +97,27 @@ Current result:
 - Colyseus room now owns a lightweight combat preview with round, turn, wind, active vehicle, HP, winner, and validated active-player preview shots.
 - Browser client loads a vendored Colyseus browser SDK bundle while the server uses the installed Colyseus packages.
 
-### Milestone 1: Online 1v1 Plus Cosmetic Unlock Sandbox
+### Milestone 1: V1 Playtest Alpha - Hosted Private-Room 2v2
 
 Goal:
 
-- Prove the real online combat foundation while adding a small reward/unlock taste early.
+- Prove reliable hosted private-room online 2v2 combat with the existing four-character roster, while supporting 1v1 as a practical testing mode.
 
 Scope:
 
 - Private room creation. Started.
 - Join by room code. Started with Colyseus room id.
-- Two browser clients connect. Started.
-- Server-authoritative room, round, turn, movement, aim, fire, projectile, terrain, HP, and win result. Combat sync still next.
+- Invite links with guest display names.
+- 1v1 and 2v2 room modes.
+- Best-of-1 and best-of-3 match length settings.
+- Two to four browser clients can participate depending on seat ownership.
+- Server-authoritative room, round, turn, movement, aim, fire, projectile, terrain, HP, KO, Void Dropped, and win result. Combat sync still next.
 - Guest display names. Started.
-- Basic post-round reward grant. Started as test capsule state.
-- Tiny cosmetic unlock sandbox:
-  - award test tokens or a test capsule after match completion. Started manually in room alpha.
-  - reveal one cosmetic from a small placeholder pool. Started.
-  - show inventory. Started for nameplates.
-  - equip vehicle skin, pilot skin, or nameplate if available. Started for nameplates.
-- Rewards may be session-only at first, but the data model should be compatible with later Supabase persistence.
+- Four existing v1 characters: Nova, Vesper, Kaelii, and Perlah.
+- One primary weapon/action per v1 character.
+- Fixed v1 map pool with server-owned map/seed selection.
+- Minimal non-voice SFX and readable VFX for each v1 weapon.
+- Preset phrase bubbles for seated players.
 
 Out of scope:
 
@@ -122,36 +128,36 @@ Out of scope:
 - Global lobby chat.
 - Full collection shelf.
 - Ranked matchmaking.
+- Durable accounts or persistence.
+- Public matchmaking.
+- Free-text chat.
+- Extra playable characters.
 
 Exit criteria:
 
-- Two remote players can complete a 1v1 round without desync.
-- Server, not client, decides movement legality, projectile result, terrain changes, damage, KOs, rewards, and round result.
+- Four remote players can complete a 2v2 match without desync.
+- Server, not client, decides movement legality, projectile result, terrain changes, damage, KOs, Void Dropped eliminations, and round/match result.
 - Current online preview already demonstrates server-owned turn, wind, HP, winner, and reward state before Phaser terrain/projectiles are synced.
-- After a completed round, players receive a small cosmetic/reward moment.
-- At least one equipped cosmetic is visible somewhere meaningful.
+- One 1v1 playtest, one 2v2-format playtest, and a four-human gold network validation complete successfully.
 
-### Milestone 2: Online 2v2 And Four Classes
+### Milestone 2: Post-V1 Combat Expansion
 
 Goal:
 
-- Prove the actual MVP team fantasy.
+- Expand the v1 online combat foundation after the private-room playtest alpha is accepted.
 
 Scope:
 
-- Four player slots.
-- Team selection.
-- Interleaved team turn order.
-- Four classes with one primary weapon and one class weapon each.
-- Better spawn logic.
-- Team win when one team has no alive vehicles.
-- Round summary.
+- Additional maps, mode options, character/weapon polish, and combat tuning informed by v1 playtests.
+- Optional next roster expansion.
+- Possible second weapons or special shots.
+- More mature class naming and role communication.
+- Better post-match summary and feedback capture.
 
 Exit criteria:
 
-- Four remote players can finish a 2v2 match.
-- Each class role is understandable from play.
-- 2v2 feels more fun than 1v1 without becoming unreadable.
+- V1 feedback has been reviewed and translated into an explicit v2 contract.
+- New combat additions improve replayability without undermining readability or server authority.
 
 ### Milestone 3: Durable Accounts And Progression
 
@@ -353,9 +359,9 @@ Strict rule:
 
 - Cosmetics never affect combat stats or hitboxes.
 
-Early cosmetic unlock sandbox:
+Post-v1 cosmetic unlock sandbox:
 
-- Exists in Milestone 1 so the game has reward flavor early.
+- Belongs after the v1 playtest alpha unless the v1 contract is explicitly changed.
 - Can use placeholder cosmetics.
 - Can be session-only before Supabase persistence.
 - Should prove the reveal/equip feeling without building full economy complexity.
@@ -469,10 +475,10 @@ Terrain:
 
 ## 12. Immediate Next Build Recommendation
 
-Next milestone should be:
+Next milestone should be governed by:
 
 ```text
-Milestone 1: Online 1v1 Plus Cosmetic Unlock Sandbox
+docs/V1_PLAYTEST_ALPHA.html
 ```
 
 Recommended first implementation slices:
@@ -481,12 +487,12 @@ Recommended first implementation slices:
 2. Add Colyseus server with health check and room creation. Started.
 3. Connect Phaser client to a private room. Started.
 4. Sync two players in room lobby. Started.
-5. Server-authoritative turn start/end.
-6. Server-authoritative fire event and projectile simulation.
-7. Server-broadcast terrain/damage/round result.
-8. Add post-round placeholder reward. Started as test capsule state.
-9. Add tiny inventory/equip state. Started with nameplates.
-10. Push a playable checkpoint.
+5. Implement v1 room lobby settings, seats, guest names, ready/start, and invite links.
+6. Implement server-authoritative 1v1 and 2v2 match setup with persistent match turn order.
+7. Wire server-authoritative fire events, projectile results, terrain updates, damage, KOs, Void Dropped, and round/match results into Phaser.
+8. Add the four v1 primary weapon actions and their readable VFX/SFX.
+9. Add v1 match HUD, turn order, scoreboard, wind, power, movement, and preset phrase bubbles.
+10. Push a playable v1 checkpoint and run real-person playtests.
 
 ## 13. Open Decisions That Do Not Block Milestone 1
 

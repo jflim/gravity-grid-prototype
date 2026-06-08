@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gravity Canyon Game Design Spec</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        Generated from <a href="GAME_DESIGN_SPEC.md">docs/GAME_DESIGN_SPEC.md</a> on 2026-06-08.
+        Edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Gravity Canyon Game Design Spec</h1>
+<p>Broad product direction for Gravity Canyon across multiple versions.</p>
+<p>Last updated: 2026-06-08</p>
+<p>Confidence: 95% for broad product direction. Current v1 scope is governed by the v1 playtest-alpha contract.</p>
+<p>Working title: Gravity Canyon.</p>
+<h2>V1 Authority Note</h2>
+<p>The locked current-build scope lives in <a href="V1_PLAYTEST_ALPHA.html">V1_PLAYTEST_ALPHA.html</a>.</p>
+<p>This document describes the broader product vision and future direction. If this file and the v1 contract disagree about current v1 scope, the v1 contract wins.</p>
+<h2>1. Product North Star</h2>
+<p>Gravity Canyon is a desktop browser, turn-based artillery game with anime arcade style, readable vehicle combat, destructible terrain, team tactics, and cosmetic collection.</p>
+<p>The player promise:</p>
+<ul>
+<li>Play comfortably with keyboard-first, low-APM controls.</li>
+<li>Win through angle mastery, terrain shaping, wind reads, and team synergy.</li>
+<li>Collect expressive pilots, vehicle skins, nameplates, trails, effects, cards, and shelf items.</li>
+<li>Jump in quickly as a guest, then register to preserve progress.</li>
+<li>Hang out in nostalgic room/lobby spaces once the combat loop is stable.</li>
+</ul>
+<p>Current lore seed:</p>
+<ul>
+<li>Gravity Canyon is the first named battle region and working product title.</li>
+<li>The world is made of fractured canyon chains, gravity shelves, arch fields, and suspended terrain.</li>
+<li>Gravity anomalies are part of the core fantasy: shots arc through unstable fields, terrain shelves hang in the air, and knockback/falls feel tied to the world instead of only to arcade rules.</li>
+<li>&quot;Sparks&quot; can be used as the early energy/reward term without requiring final lore yet.</li>
+</ul>
+<h2>2. Build Philosophy</h2>
+<p>The game should be built as a sequence of playable checkpoints, not as one giant v1.</p>
+<p>Rules:</p>
+<ul>
+<li>Each milestone has one main goal.</li>
+<li>Main branch should stay playable.</li>
+<li>Feature branches are preferred for nontrivial work.</li>
+<li>Code changes need a build check before pushing.</li>
+<li>New systems should be thin but real before they become polished.</li>
+<li>Combat readability comes before cosmetic spectacle inside the match screen.</li>
+</ul>
+<h2>3. Locked Product Decisions</h2>
+<ul>
+<li>Platform: desktop web browser first.</li>
+<li>Combat view: 2D side-view artillery.</li>
+<li>Combat controls: keyboard-first; mouse can be used for menus.</li>
+<li>First engine: TypeScript + Phaser.</li>
+<li>Multiplayer: Node.js + TypeScript + Colyseus.</li>
+<li>Durable backend: Supabase.</li>
+<li>Live matches: server authoritative.</li>
+<li>Current v1 playtest-alpha target: hosted private-room online 2v2, with 1v1 supported for easier testing.</li>
+<li>True multiplayer proof point: four humans on separate connections completing a private-room 2v2 match.</li>
+<li>Economy: cosmetic-only, soft currency first, no real-money MVP.</li>
+<li>Guests: can play quickly; permanent rewards require registration.</li>
+<li>Login target: Guest, Google, Email Magic Link.</li>
+<li>Art direction: premium anime arcade for collection surfaces, compact readable vehicle sprites for gameplay.</li>
+<li>Tone: stylish adult anime arcade with a decent amount of fan service, but not explicit or platform-risky.</li>
+<li>Character/vehicle unit model: each pilot has a signature vehicle family so the player experiences one authored combat unit, while sprites remain layered for customization and production.</li>
+</ul>
+<h2>4. Build Milestones</h2>
+<h3>Milestone 0: Local Combat Feel</h3>
+<p>Status: current prototype.</p>
+<p>Goal:</p>
+<ul>
+<li>Prove movement, aim, launch power, wind, destructible terrain, bunge KOs, round reset, and readable HUD.</li>
+</ul>
+<p>Current result:</p>
+<ul>
+<li>Local 1v1 prototype exists.</li>
+<li>Local play now uses a 2v2-style test roster with Nova, Vesper, Kaelii, and Perlah so the first four unit identities can be checked in match context.</li>
+<li>Gameplay sprites and high-detail portraits are separated.</li>
+<li>Gameplay rendering layers a standalone vehicle sprite under a standalone playable-character sprite.</li>
+<li>Nova and Vesper now have generated character gameplay states for default, Defeated KO, and intense shooting.</li>
+<li>Nova and Vesper now have full-unit intense runtime test aliases so concept-preview charging can show a distinct state.</li>
+<li>Full-unit concept preview sprites and prototype combat hulls are intentionally smaller than the first large pass to preserve playable battlefield space.</li>
+<li>Nova and Vesper now have destroyed vehicle gameplay sprites for defeated/KO states.</li>
+<li>Kaelii and Perlah now have accepted v1 test runtime aliases for default, intense, Defeated KO, vehicle default, and vehicle destroyed states.</li>
+<li>Command deck, launch power, movement range, timer, wind, aim arrow, and terrain effects are playable.</li>
+<li>A shot commits the turn immediately; the shooter cannot move during projectile flight or impact resolution.</li>
+<li>Projectile collision now checks along the shot path, and post-impact settling is localized to nearby or affected vehicles.</li>
+<li>Prototype direct-hit collision now uses visible combat hulls around the larger pilot-plus-vehicle unit concepts, so shots that visually strike the unit read more fairly.</li>
+<li>Impact readability includes temporary crater/splash radius rings and character-specific KO/faint feedback for destroyed vehicles.</li>
+<li>Round terrain now moves toward varied map/spawn archetypes that reduce flat direct-fire duels and encourage artillery lobs over cover.</li>
+<li>Movement allows downhill travel and falling, while steep uphill movement is limited by a climb-angle rule.</li>
+<li>Vehicle sprites tilt to match the local terrain slope while combat labels remain readable.</li>
+<li>Terrain can now be punched through into a visible void below the stage.</li>
+<li>Crater, splash, and Bunger knockback radii are tuned smaller so ring-outs reward precision over one-shot blast size.</li>
+<li>Colyseus online foundation exists for room creation, player presence, ready checks, and placeholder cosmetic rewards.</li>
+<li>Colyseus room now owns a lightweight combat preview with round, turn, wind, active vehicle, HP, winner, and validated active-player preview shots.</li>
+<li>Browser client loads a vendored Colyseus browser SDK bundle while the server uses the installed Colyseus packages.</li>
+</ul>
+<h3>Milestone 1: V1 Playtest Alpha - Hosted Private-Room 2v2</h3>
+<p>Goal:</p>
+<ul>
+<li>Prove reliable hosted private-room online 2v2 combat with the existing four-character roster, while supporting 1v1 as a practical testing mode.</li>
+</ul>
+<p>Scope:</p>
+<ul>
+<li>Private room creation. Started.</li>
+<li>Join by room code. Started with Colyseus room id.</li>
+<li>Invite links with guest display names.</li>
+<li>1v1 and 2v2 room modes.</li>
+<li>Best-of-1 and best-of-3 match length settings.</li>
+<li>Two to four browser clients can participate depending on seat ownership.</li>
+<li>Server-authoritative room, round, turn, movement, aim, fire, projectile, terrain, HP, KO, Void Dropped, and win result. Combat sync still next.</li>
+<li>Guest display names. Started.</li>
+<li>Four existing v1 characters: Nova, Vesper, Kaelii, and Perlah.</li>
+<li>One primary weapon/action per v1 character.</li>
+<li>Fixed v1 map pool with server-owned map/seed selection.</li>
+<li>Minimal non-voice SFX and readable VFX for each v1 weapon.</li>
+<li>Preset phrase bubbles for seated players.</li>
+</ul>
+<p>Out of scope:</p>
+<ul>
+<li>Full shop.</li>
+<li>Full gacha odds UI.</li>
+<li>Real-money purchases.</li>
+<li>Public room list.</li>
+<li>Global lobby chat.</li>
+<li>Full collection shelf.</li>
+<li>Ranked matchmaking.</li>
+<li>Durable accounts or persistence.</li>
+<li>Public matchmaking.</li>
+<li>Free-text chat.</li>
+<li>Extra playable characters.</li>
+</ul>
+<p>Exit criteria:</p>
+<ul>
+<li>Four remote players can complete a 2v2 match without desync.</li>
+<li>Server, not client, decides movement legality, projectile result, terrain changes, damage, KOs, Void Dropped eliminations, and round/match result.</li>
+<li>Current online preview already demonstrates server-owned turn, wind, HP, winner, and reward state before Phaser terrain/projectiles are synced.</li>
+<li>One 1v1 playtest, one 2v2-format playtest, and a four-human gold network validation complete successfully.</li>
+</ul>
+<h3>Milestone 2: Post-V1 Combat Expansion</h3>
+<p>Goal:</p>
+<ul>
+<li>Expand the v1 online combat foundation after the private-room playtest alpha is accepted.</li>
+</ul>
+<p>Scope:</p>
+<ul>
+<li>Additional maps, mode options, character/weapon polish, and combat tuning informed by v1 playtests.</li>
+<li>Optional next roster expansion.</li>
+<li>Possible second weapons or special shots.</li>
+<li>More mature class naming and role communication.</li>
+<li>Better post-match summary and feedback capture.</li>
+</ul>
+<p>Exit criteria:</p>
+<ul>
+<li>V1 feedback has been reviewed and translated into an explicit v2 contract.</li>
+<li>New combat additions improve replayability without undermining readability or server authority.</li>
+</ul>
+<h3>Milestone 3: Durable Accounts And Progression</h3>
+<p>Goal:</p>
+<ul>
+<li>Preserve player identity, rewards, and equipped cosmetics.</li>
+</ul>
+<p>Scope:</p>
+<ul>
+<li>Supabase auth.</li>
+<li>Guest, Google, Email Magic Link.</li>
+<li>Anonymous/session player id where useful.</li>
+<li>Registered profile.</li>
+<li>Currency ledger.</li>
+<li>Inventory.</li>
+<li>Equipped cosmetics.</li>
+<li>Profile points and rank titles.</li>
+<li>Guest session rewards can be claimed by registering before leaving.</li>
+</ul>
+<p>Exit criteria:</p>
+<ul>
+<li>Registered users keep progress across sessions.</li>
+<li>Guests can play immediately.</li>
+<li>The game clearly encourages registration without making guest play feel fake.</li>
+</ul>
+<h3>Milestone 4: Social Lobby</h3>
+<p>Goal:</p>
+<ul>
+<li>Capture the old web-game lobby feeling after core matches are stable.</li>
+</ul>
+<p>Scope:</p>
+<ul>
+<li>Public room list.</li>
+<li>Room lobby chat.</li>
+<li>Public Arcade Lobby chat.</li>
+<li>Guest chat with stricter limits.</li>
+<li>Registered chat with normal limits.</li>
+<li>No DMs in MVP.</li>
+<li>Rate limits, filtering, mute/block-ready architecture, and report-ready data model.</li>
+</ul>
+<p>Exit criteria:</p>
+<ul>
+<li>Players can find games without Discord.</li>
+<li>Chat feels social but not unmanageable.</li>
+</ul>
+<h3>Milestone 5: Collection MVP</h3>
+<p>Goal:</p>
+<ul>
+<li>Make cosmetics motivating without affecting gameplay fairness.</li>
+</ul>
+<p>Scope:</p>
+<ul>
+<li>Soft currency.</li>
+<li>Cosmetic-only blind boxes.</li>
+<li>Rarity odds shown by capsule.</li>
+<li>Duplicate shards.</li>
+<li>Fixed starter shop.</li>
+<li>Rotating featured shop.</li>
+<li>Basic profile shelf.</li>
+<li>Weekly and all-time casual leaderboards for registered users.</li>
+</ul>
+<p>Exit criteria:</p>
+<ul>
+<li>Players can earn, open, equip, and display cosmetics.</li>
+<li>No cosmetic changes HP, damage, projectile behavior, wind, movement, hitbox, visibility advantage, matchmaking, or rewards.</li>
+</ul>
+<h2>5. Core Gameplay Rules</h2>
+<p>Terms:</p>
+<ul>
+<li>Turn: one active vehicle's action window.</li>
+<li>Round: one fresh battlefield from spawn until one team has no alive vehicles left.</li>
+<li>Match: in MVP, one round. Best-of match formats can come later.</li>
+</ul>
+<p>Default round rules:</p>
+<ul>
+<li>Team Elimination.</li>
+<li>1v1 first, 2v2 MVP.</li>
+<li>30 second turn timer.</li>
+<li>100 HP per vehicle.</li>
+<li>Limited movement range per turn.</li>
+<li>Downhill and falling movement is allowed within movement range.</li>
+<li>Uphill movement is blocked when the terrain is steeper than the climb limit.</li>
+<li>One shot per turn.</li>
+<li>Releasing a shot commits the turn immediately.</li>
+<li>Wind changes each turn.</li>
+<li>KO by HP reaching 0 or falling below the death plane.</li>
+<li>Fallen vehicles are set to 0 HP and not alive.</li>
+<li>Players can intentionally drive into holes or off the stage; this is a valid self-KO.</li>
+</ul>
+<p>Stalemate protection target:</p>
+<ul>
+<li>Add a soft turn limit once online 2v2 exists.</li>
+<li>After the limit, use sudden-death pressure such as stronger wind, shrinking terrain safety, or HP tiebreak.</li>
+</ul>
+<h2>6. Controls And Match UX</h2>
+<p>Combat controls:</p>
+<ul>
+<li>Left/Right: face and move.</li>
+<li>Up/Down: adjust barrel elevation.</li>
+<li>Space hold/release: charge and fire.</li>
+<li>Enter: chat once chat exists.</li>
+<li>Tab: scoreboard once scoreboard exists.</li>
+<li>Esc: settings/pause menu.</li>
+</ul>
+<p>Combat UX requirements:</p>
+<ul>
+<li>Whose turn it is must be obvious.</li>
+<li>Wind is shared round information.</li>
+<li>Turn timer should appear above the active vehicle, not as a separate floating global timer.</li>
+<li>Active player needs clear angle, movement range, launch power, HP, and weapon info.</li>
+<li>Command panel content must fit inside the visible browser viewport, with safe margin above the bottom edge.</li>
+<li>Aim should show direction without giving a full landing prediction.</li>
+<li>Direct-hit collision should be readable against the visible unit. Prototype combat hulls may be shown during tuning, but final combat hitboxes must remain cosmetic-fair and not change with cosmetic detail.</li>
+<li>Impact feedback should briefly show crater/terrain range and splash damage range.</li>
+<li>Disabled vehicles should read as fainted/knocked out, not only desaturated.</li>
+<li>Defeated KO and intense shooting expressions should be character-specific generated art, not universal generic faces or code-drawn overlays.</li>
+<li>Defeated KO character expressions should use literal crossed or rolled-up eyes, not spiral/hypnotic eyes.</li>
+<li>Dead vehicles should pair the Defeated KO character sprite with a destroyed vehicle sprite.</li>
+<li>Opened terrain should expose a readable void/background beneath the stage.</li>
+<li>Projectile camera should follow shots and preserve impact context.</li>
+<li>Large character banners do not belong in the live match screen.</li>
+</ul>
+<h2>7. Classes</h2>
+<p>Current internal ids:</p>
+<ul>
+<li><code>excavator</code>: terrain carving, pits, bowls, bunge setups.</li>
+<li><code>glitch</code>: disruption, movement denial, temporary fields/barriers.</li>
+<li><code>bouncer</code>: ricochet, rolling mines, slope exploitation.</li>
+<li><code>spark</code>: splash, fire/magma, area denial.</li>
+</ul>
+<p>Public class names are not final.</p>
+<p>Naming goals:</p>
+<ul>
+<li>Easy to pronounce.</li>
+<li>Easy to understand from the name and icon.</li>
+<li>Expandable into lore.</li>
+<li>Less awkward than &quot;Bungers&quot; if that word keeps feeling risky.</li>
+</ul>
+<p>MVP class rule:</p>
+<ul>
+<li>Classes should differ by weapon behavior, not by gacha stats.</li>
+<li>If base stat differences are added later, they must be class-readable and non-cosmetic.</li>
+</ul>
+<h2>8. Art Direction And Content Boundary</h2>
+<p>Primary visual target:</p>
+<ul>
+<li>Premium anime arcade gacha.</li>
+<li>Compact cyber-toy artillery vehicles in gameplay.</li>
+<li>Full or half-body anime pilots in collection, gacha, profile, shop, and banner surfaces.</li>
+<li>Gameplay sprites prioritize readable silhouettes over illustration detail.</li>
+</ul>
+<p>Roster direction:</p>
+<ul>
+<li>Mixed gender roster, mostly women.</li>
+<li>First production-ish roster planning target: 10 signature pilot-plus-vehicle units, roughly 7 women, 2 men, and 1 androgynous/customizable character.</li>
+<li>All characters should be original, adult, and clearly separated from existing IP.</li>
+</ul>
+<p>Fan-service boundary:</p>
+<ul>
+<li>A decent amount of fan service is allowed.</li>
+<li>Characters may be attractive, stylish, flirty, confident, and fashion-forward.</li>
+<li>Swimsuit, nightlife, sci-fi bodysuit, idol, racer, tactical, and showpiece outfits are acceptable when tasteful.</li>
+<li>Avoid explicit nudity, sex acts, lingerie-only defaults, underage-coded sexuality, or poses that make the game hard to stream or market.</li>
+<li>Keep combat sprites readable and not dependent on body-focused detail.</li>
+</ul>
+<p>Signature unit asset model:</p>
+<ul>
+<li>Each pilot has a signature vehicle family: Nova with her red arcade artillery rig, Vesper with her blue tech/glitch rig, and future pilots with similarly authored pair identities.</li>
+<li>The player-facing fantasy is a character-plus-vehicle combat unit, not two unrelated choices.</li>
+<li>Runtime implementation still uses separate sprite layers so outfits, vehicle skins, and state art can be customized without baking every pair into one image.</li>
+<li>Vehicle gameplay sprite: one standalone vehicle sprite per vehicle look, with no pilot baked in by default.</li>
+<li>Vehicle damage state: each vehicle look needs at least default and destroyed gameplay sprites.</li>
+<li>Character gameplay sprite set: one standalone playable-character sprite per state, usually designed as a mounted or vehicle-interaction pose layered in front of/on the vehicle.</li>
+<li>Required first character states: default, Defeated KO, and intense shooting.</li>
+<li>Active prototype sprites use stable runtime aliases in <code>public/assets</code>; generation experiments live under <code>public/assets/sprite-variants</code>.</li>
+<li>Current runtime assets are the v0 baseline; do not overwrite them during art-direction probes.</li>
+<li>Gameplay sprites should be compact, tight-cropped, outlined, and readable.</li>
+<li>Character states must be generated/painted as integrated artwork rather than drawn on top of the default sprite in code.</li>
+<li>Active/default character poses may be seated, kneeling, crouched, leaning on the cannon, bracing behind the weapon, or otherwise clearly riding/using the vehicle.</li>
+<li>The vehicle remains the gameplay anchor. Character art can show legs when compact and mounted, but full standing characters beside the vehicle are not the default-state target.</li>
+<li>Gameplay character concepts should use adult anime proportions, not semi-chibi or super-deformed face/body proportions, unless a separate cosmetic line explicitly calls for it.</li>
+<li>Defeated KO sprites should prioritize instant facial readability at gameplay scale: rolled-up/crossed pupils, sleepy compressed white eyes, and a small tongue blep where allowed.</li>
+<li>Defeated KO staging should usually keep the unit relationship visible, such as the pilot collapsed over, draped on, or slumped against their signature vehicle.</li>
+<li>The active Nova Defeated KO direction is shifting from a standalone prone sprite toward Nova collapsed over her damaged red vehicle. Vesper should get a distinct Defeated KO pose that fits her blue tech/glitch rig instead of copying Nova's exact pose.</li>
+<li>Portrait/card art: higher detail and more character-forward.</li>
+<li>Gacha reveal art: most expressive and premium.</li>
+<li>Equipment screen: show both pilot and vehicle.</li>
+</ul>
+<h2>9. Cosmetics And Economy</h2>
+<p>Strict rule:</p>
+<ul>
+<li>Cosmetics never affect combat stats or hitboxes.</li>
+</ul>
+<p>Post-v1 cosmetic unlock sandbox:</p>
+<ul>
+<li>Belongs after the v1 playtest alpha unless the v1 contract is explicitly changed.</li>
+<li>Can use placeholder cosmetics.</li>
+<li>Can be session-only before Supabase persistence.</li>
+<li>Should prove the reveal/equip feeling without building full economy complexity.</li>
+</ul>
+<p>Durable economy:</p>
+<ul>
+<li>Game Tokens: spendable soft currency.</li>
+<li>Profile Points: visible non-spendable progression.</li>
+<li>Rank Titles: derived from profile points.</li>
+<li>Shards: duplicate compensation.</li>
+</ul>
+<p>First visible cosmetic slots:</p>
+<ul>
+<li>Vehicle skin.</li>
+<li>Pilot skin/outfit.</li>
+<li>Nameplate/banner.</li>
+</ul>
+<p>Cosmetic set rule:</p>
+<ul>
+<li>Themed sets may unlock matching character outfits and vehicle skins together.</li>
+<li>Loadout still exposes character outfit and vehicle skin as separate equip slots within a pilot's signature vehicle family.</li>
+<li>Characters and vehicles are authored as signature combat units, even though their outfit and vehicle-skin sprites remain separate implementation layers.</li>
+<li>The selectable gameplay pick is the authored pilot-plus-vehicle unit. The unit may define movement, weapon kit, cannon behavior, terrain interaction, durability, or other class-readable combat attributes.</li>
+<li>Pilot identity should not be separately statted apart from that authored unit, and cosmetics must remain cosmetic-only.</li>
+</ul>
+<p>Second wave:</p>
+<ul>
+<li>Projectile trail.</li>
+<li>Explosion/KO effect.</li>
+<li>Profile shelf item.</li>
+<li>Card frame.</li>
+</ul>
+<p>Gacha:</p>
+<ul>
+<li>Cosmetic-only.</li>
+<li>Soft currency first.</li>
+<li>Rarity odds visible by capsule type.</li>
+<li>Every capsule grants a cosmetic or duplicate shards.</li>
+<li>Real-money blind boxes are out of MVP and require separate legal/compliance review.</li>
+</ul>
+<h2>10. Social And Auth</h2>
+<p>Guest play:</p>
+<ul>
+<li>Guests can play immediately.</li>
+<li>Guests can chat with stricter limits once chat exists.</li>
+<li>Guests earn small/session-limited rewards.</li>
+<li>Guests can claim current-session rewards if they register before leaving.</li>
+<li>Guests do not appear permanently on public leaderboards.</li>
+</ul>
+<p>Registered users:</p>
+<ul>
+<li>Keep durable currency, inventory, cosmetics, equipped items, rank, leaderboard placement, and profile shelf.</li>
+</ul>
+<p>Login methods:</p>
+<ul>
+<li>Guest.</li>
+<li>Google.</li>
+<li>Email Magic Link.</li>
+</ul>
+<p>Later optional:</p>
+<ul>
+<li>Discord login.</li>
+<li>Apple login.</li>
+</ul>
+<p>Chat:</p>
+<ul>
+<li>Room chat first.</li>
+<li>Public lobby chat after accounts and safety scaffolding.</li>
+<li>Guests can type with stricter rate limits and no links.</li>
+<li>Registered users get normal limits.</li>
+<li>No DMs in MVP.</li>
+</ul>
+<h2>11. Technical Architecture</h2>
+<p>Client:</p>
+<ul>
+<li>TypeScript.</li>
+<li>Vite.</li>
+<li>Phaser for match rendering, input, camera, sprites, and effects.</li>
+<li>DOM/React-style overlay can be introduced for lobby, auth, inventory, shop, and shelf if useful.</li>
+</ul>
+<p>Multiplayer:</p>
+<ul>
+<li>Node.js + TypeScript.</li>
+<li>Colyseus rooms.</li>
+<li>Server owns authoritative match state.</li>
+<li>Client sends intent only.</li>
+</ul>
+<p>Durable backend:</p>
+<ul>
+<li>Supabase Auth.</li>
+<li>Supabase Postgres for profiles, inventory, currency, rewards, leaderboards, cosmetics, moderation, and room/match history.</li>
+<li>Supabase storage can hold uploaded/managed assets later if needed.</li>
+</ul>
+<p>Server authority:</p>
+<ul>
+<li>Server validates room membership, turn ownership, movement, angle, power, weapon choice, timing, terrain changes, damage, KOs, rewards, and match results.</li>
+<li>Client never grants rewards or decides final combat results.</li>
+</ul>
+<p>Terrain:</p>
+<ul>
+<li>Current prototype uses a heightmap for speed.</li>
+<li>Online MVP should begin with deterministic, serializable terrain.</li>
+<li>Every weapon should affect terrain; Bunger-class weapons affect terrain the most.</li>
+<li>Explosion, crater, and knockback tuning should generally require precise setup and 2-3 good shots for map KOs.</li>
+<li>Terrain should be fully destroyable vertically; deep enough craters open into the void rather than stopping at a safe floor.</li>
+<li>Void/fall-through areas should be visually readable under the battlefield.</li>
+<li>Post-impact vehicle settling should be driven by the changed terrain area and directly affected vehicles, not by unrelated distant slopes.</li>
+<li>Pixel-mask terrain can replace heightmap when performance and sync complexity are justified.</li>
+</ul>
+<h2>12. Immediate Next Build Recommendation</h2>
+<p>Next milestone should be governed by:</p>
+<pre><code class="language-text">
+docs/V1_PLAYTEST_ALPHA.html
+
+</code></pre>
+<p>Recommended first implementation slices:</p>
+<ol>
+<li>Split project into client/server packages or a simple monorepo layout. Started.</li>
+<li>Add Colyseus server with health check and room creation. Started.</li>
+<li>Connect Phaser client to a private room. Started.</li>
+<li>Sync two players in room lobby. Started.</li>
+<li>Implement v1 room lobby settings, seats, guest names, ready/start, and invite links.</li>
+<li>Implement server-authoritative 1v1 and 2v2 match setup with persistent match turn order.</li>
+<li>Wire server-authoritative fire events, projectile results, terrain updates, damage, KOs, Void Dropped, and round/match results into Phaser.</li>
+<li>Add the four v1 primary weapon actions and their readable VFX/SFX.</li>
+<li>Add v1 match HUD, turn order, scoreboard, wind, power, movement, and preset phrase bubbles.</li>
+<li>Push a playable v1 checkpoint and run real-person playtests.</li>
+</ol>
+<h2>13. Open Decisions That Do Not Block Milestone 1</h2>
+<ul>
+<li>Final public class names.</li>
+<li>Exact final gacha odds.</li>
+<li>Exact shop rotation cadence.</li>
+<li>Whether global lobby chat is MVP or beta.</li>
+<li>Final character roster names and lore.</li>
+<li>Whether match formats later become best-of-3.</li>
+<li>Whether terrain should become pixel-mask after the online heightmap proves out.</li>
+</ul>
+<h2>14. Build-Ready Status</h2>
+<p>The project is ready to start the next real build milestone.</p>
+<p>The current confidence is 95% for:</p>
+<ul>
+<li>what the game is,</li>
+<li>what the next milestone should prove,</li>
+<li>what tech stack to use,</li>
+<li>what to avoid overbuilding,</li>
+<li>how cosmetics should enter early without derailing combat,</li>
+<li>and what content/art boundary to target.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

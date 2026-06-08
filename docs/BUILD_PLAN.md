@@ -8,6 +8,8 @@ Build a browser-based online multiplayer artillery game with anime character/veh
 
 Canonical design reference: [GAME_DESIGN_SPEC.md](GAME_DESIGN_SPEC.md)
 
+Locked current v1 scope: [V1_PLAYTEST_ALPHA.html](V1_PLAYTEST_ALPHA.html)
+
 ## Current Definition Of The Prototype
 
 The current build is a local-feel prototype with the first online room foundation. It should prove that turn flow, aiming, movement, readable characters, terrain destruction, knockback, room creation, player presence, ready checks, and the first cosmetic reward loop are fun before multiplayer combat simulation expands.
@@ -77,41 +79,46 @@ Next:
 Exit criteria:
 - A new player can understand whose turn it is, where they are aiming, how much they can move, how much power they are charging, and why a round ended.
 
-## Phase 1: Online 1v1 Plus Cosmetic Unlock Sandbox
+## Phase 1: V1 Playtest Alpha - Hosted Private-Room 2v2
 
-Goal: prove the real online foundation while adding a small reward/unlock taste early.
+Goal: prove reliable hosted private-room online 2v2 combat with the existing four-character roster. 1v1 is supported as a practical testing mode, but 2v2 is the v1 promise.
 
 Scope:
 - Private room creation. Started.
 - Join by room code. Started with Colyseus room id.
-- Two browser clients connect. Started.
-- Server-authoritative room, round, turn, movement, aim, fire, projectile, terrain, HP, KOs, and round result.
+- Invite links and editable guest display names.
+- 1v1 and 2v2 room modes.
+- Best-of-1 and best-of-3 match length settings.
+- Two to four browser clients participate depending on seat ownership.
+- Server-authoritative room, round, turn, movement, aim, fire, projectile, terrain, HP, KOs, Void Dropped eliminations, and round/match result.
 - Server-owned combat preview round/turn/HP state. Started.
 - Guest display names. Started.
-- Post-round placeholder reward grant. Started as a server-owned test capsule.
-- Tiny cosmetic unlock sandbox: test token/capsule, reveal one placeholder cosmetic, inventory view, and equip one visible cosmetic. Started with nameplates.
+- Four existing v1 characters only: Nova, Vesper, Kaelii, and Perlah.
+- One primary weapon/action per v1 character.
+- Five fixed maps with 1v1 and 2v2 spawn layouts.
+- Classic readable HUD with turn order, score, HP, wind, angle, power, movement, timer, and weapon info.
+- Preset phrase bubbles for seated players.
+- One readable VFX and one non-voice SFX per v1 weapon.
 
 Exit criteria:
-- Two remote players can complete a 1v1 round without desync.
-- Server owns combat results and reward grants.
-- A completed round gives a small cosmetic/reward moment.
+- Four remote players can complete a 2v2 match without desync.
+- Server owns combat results.
+- One 1v1 playtest, one 2v2-format playtest, and a four-human gold network validation complete successfully.
 
-## Phase 2: Online 2v2 And Four Classes
+## Phase 2: Post-V1 Combat Expansion
 
-Goal: validate team chaos, strategy, and class synergy.
+Goal: expand the accepted v1 online combat foundation based on playtest feedback.
 
 Scope:
-- Four player slots.
-- Team selection.
-- Four classes with one primary weapon and one class weapon each.
-- Interleaved team turn order.
-- Better spawn placement.
-- Round summary screen.
+- Additional maps, mode settings, character/weapon polish, and combat tuning.
+- Optional next roster expansion.
+- Possible second weapons or special shots.
+- Mature class names and role communication.
+- Better post-match summary and feedback capture.
 
 Exit criteria:
-- Four remote players can complete a 2v2 match.
-- Each class has a recognizable role.
-- 2v2 feels more fun than 1v1 without making turns confusing.
+- V1 feedback has been reviewed and translated into a v2 contract.
+- New additions improve replayability without undermining readability or server authority.
 
 ## Phase 3: Accounts And Progression
 

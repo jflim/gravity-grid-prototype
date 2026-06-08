@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Character Roster</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        Generated from <a href="CHARACTER_ROSTER.md">docs/CHARACTER_ROSTER.md</a> on 2026-06-08.
+        Edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Character Roster</h1>
+<p>Living character bible for Gravity Canyon's playable pilot-plus-vehicle units.</p>
+<p>Use this document to keep names, silhouettes, personality, lore, vehicle class, sprite prompts, and approved visual probes consistent across generation passes.</p>
+<h2>Roster Rules</h2>
+<ul>
+<li>The selectable gameplay pick is a signature pilot-plus-vehicle unit.</li>
+<li>Use first names in match UI and roster picker.</li>
+<li>Pilot identity supplies personality, mounted pose, voice, lore, portrait fantasy, and KO style.</li>
+<li>Vehicle family supplies class role, movement feel, weapon kit, cannon behavior, terrain interaction, and combat readability.</li>
+<li>Nova and Vesper use their existing runtime assets as visual baselines. Do not restart them from scratch.</li>
+<li>New units should begin as probes under <code>work/asset-lab/</code> before any promotion to <code>public/assets</code>.</li>
+<li>Match sprites should be compact, readable, adult anime arcade, thick outlined, and streamable.</li>
+<li>Approved gameplay candidates should be transparent PNGs. Green chroma-key images are raw workshop sources, not game-ready assets.</li>
+<li>Portrait and gacha art can later be more detailed, glamorous, and adult fantasy-forward than match sprites.</li>
+</ul>
+<h2>Transparent PNG Workflow</h2>
+<p>Gravity Canyon's real sprite format is transparent PNG.</p>
+<p>Use this production model:</p>
+<pre><code class="language-text">
+exploration -&gt; flat green source -&gt; remove green -&gt; transparent PNG candidate
+
+refinement -&gt; use transparent PNG as visual base/reference -&gt; save another transparent PNG
+
+runtime integration -&gt; transparent PNG in public/assets
+
+</code></pre>
+<p>Recommendation for now:</p>
+<ul>
+<li>Use green/chroma-key for first concepts of new units, new poses, or big redesigns.</li>
+<li>Use transparent PNG variants as the base/reference once a candidate is liked.</li>
+<li>Use only transparent PNGs for runtime aliases in <code>public/assets</code>.</li>
+</ul>
+<p>The shared prompts below still mention <code>#00ff00</code> because that is useful for brand-new generated concepts. Once a candidate is liked, prefer using its transparent PNG variant as the base/reference for future edits. If an edit returns with a flattened background, clean it back to transparency before preserving it.</p>
+<h2>Required Gameplay Assets</h2>
+<p>Each runtime-complete unit needs:</p>
+<ol>
+<li><code>vehicle-default</code></li>
+<li><code>vehicle-destroyed</code></li>
+<li><code>character-default</code></li>
+<li><code>character-intense</code></li>
+<li><code>character-ko</code></li>
+</ol>
+<p>Current roster generation status:</p>
+<table>
+<thead><tr>
+<th>Unit</th>
+<th>Vehicle Default</th>
+<th>Character Default</th>
+<th>Character Intense</th>
+<th>Vehicle Destroyed</th>
+<th>Character KO</th>
+<th>Notes</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Nova</td>
+<td>Runtime baseline</td>
+<td>Runtime baseline</td>
+<td>Runtime test alias</td>
+<td>Runtime baseline</td>
+<td>Runtime baseline</td>
+<td>Existing layered assets remain the baseline; new full-unit intense alias is active for concept-preview charging.</td>
+</tr>
+<tr>
+<td>Vesper</td>
+<td>Runtime baseline</td>
+<td>Runtime baseline</td>
+<td>Runtime test alias</td>
+<td>Runtime baseline</td>
+<td>Runtime baseline</td>
+<td>Existing layered assets remain the baseline; new full-unit intense alias is active for concept-preview charging. KO may still receive a future quality pass.</td>
+</tr>
+<tr>
+<td>Kaelii</td>
+<td>Runtime test alias</td>
+<td>Runtime test alias</td>
+<td>Runtime test alias</td>
+<td>Runtime test alias</td>
+<td>Runtime test alias</td>
+<td>Accepted for v1 runtime testing with real vehicle wheels and animation-linked intense. Artist polish still later; KO right-eye pupil remains an open note.</td>
+</tr>
+<tr>
+<td>Perlah</td>
+<td>Runtime test alias</td>
+<td>Runtime test alias</td>
+<td>Runtime test alias</td>
+<td>Runtime test alias</td>
+<td>Runtime test alias</td>
+<td>Accepted for v1 runtime testing using the selected v2/v1 gap-fill set. Artist polish still later.</td>
+</tr>
+<tr>
+<td>Ari</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>First concept pass pending.</td>
+</tr>
+<tr>
+<td>Lani</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>First concept pass pending.</td>
+</tr>
+<tr>
+<td>Rook</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>First concept pass pending.</td>
+</tr>
+<tr>
+<td>Mako</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>First concept pass pending.</td>
+</tr>
+<tr>
+<td>Sable</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>First concept pass pending.</td>
+</tr>
+<tr>
+<td>Talia</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>Not started</td>
+<td>First concept pass pending.</td>
+</tr>
+</tbody></table>
+<p>Do not mark a unit runtime-complete until all five required assets exist as transparent PNGs and have been checked at match scale.</p>
+<h2>Shared Sprite Prompt Anchors</h2>
+<p>Use these short anchors inside each character prompt to improve consistency.</p>
+<p><strong>Gameplay Unit Style</strong></p>
+<pre><code class="language-text">
+Original 2D cel-shaded adult anime arcade artillery game sprite, compact match-readable silhouette, thick dark outline, crisp cel shading, saturated but controlled colors, side-view 2D browser artillery composition, vehicle and pilot designed as one signature combat unit on a perfectly flat solid #00ff00 chroma-key background.
+
+</code></pre>
+<p><strong>Vehicle-Only Style</strong></p>
+<pre><code class="language-text">
+Original 2D cel-shaded compact cyber-toy artillery vehicle sprite, side-view silhouette, thick dark outline, crisp clean mechanical shapes, clear cannon direction, readable ground contact, no pilot baked in, perfectly flat solid #00ff00 chroma-key background.
+
+</code></pre>
+<p><strong>Mounted Character Rule</strong></p>
+<pre><code class="language-text">
+The vehicle is the gameplay anchor. The pilot must be visibly mounted on, perched on, crouched on, seated on, braced against, or collapsed on/against the vehicle. The unit must not read as a full-body character standing separately beside a vehicle.
+
+</code></pre>
+<p><strong>Intense Animation Rule</strong></p>
+<pre><code class="language-text">
+The intense sprite should feel like the next animation keyframe from the default pose. Preserve the same main foot, hand, hip, and vehicle contact anchors unless the unit's kit explicitly requires a full-body movement. Add intensity through grip, expression, recoil, hair/cloth motion, and vehicle charge rather than inventing a separate action illustration.
+
+</code></pre>
+<p><strong>Content Boundary</strong></p>
+<pre><code class="language-text">
+Original adult character only, no existing IP, no text, no watermark, no blood, no visible injury, no explicit nudity, no sex act, no lingerie-only default outfit, no underage-coded body or face, no drugging or non-consensual framing.
+
+</code></pre>
+<h2>Current Visual Probe Links</h2>
+<p>Kaelii and Perlah probes are preserved as selected sprite variants, and the current selected v1 test set has also been promoted to stable runtime aliases under <code>public/assets</code>.</p>
+<table>
+<thead><tr>
+<th>Unit</th>
+<th>Raw Source</th>
+<th>Transparent Probe</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Nova full-unit intense v1</td>
+<td><a href="../public/assets/sprite-variants/units/nova/intense/nova-unit-intense-bunger-rig-probe-01-alpha.png">variant</a></td>
+<td><a href="../work/asset-lab/2026-06-07-nova-vesper-intense-unit-prompts/source/nova-unit-intense-bunger-rig-probe-01.png">lab source</a></td>
+</tr>
+<tr>
+<td>Vesper full-unit intense v8 subtle tension scale-stable</td>
+<td><a href="../public/assets/sprite-variants/units/vesper/intense/vesper-unit-intense-glitch-rover-probe-08-subtle-tension-scale-stable-normalized-alpha.png">variant</a></td>
+<td><a href="../work/asset-lab/2026-06-07-nova-vesper-intense-unit-prompts/source/vesper-unit-intense-glitch-rover-probe-08-subtle-tension-scale-stable.png">lab source</a></td>
+</tr>
+<tr>
+<td>Kaelii vehicle default</td>
+<td><a href="../public/assets/sprite-variants/units/kaelii/vehicle-default/kaelii-vehicle-default-flashkick-skip-rig-probe-01-alpha.png">variant</a></td>
+<td><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/source/kaelii-vehicle-default-flashkick-skip-rig-probe-01.png">lab source</a></td>
+</tr>
+<tr>
+<td>Kaelii mounted default</td>
+<td><a href="../public/assets/sprite-variants/units/kaelii/default/kaelii-unit-default-flashkick-skip-rig-probe-01-alpha.png">variant</a></td>
+<td><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/source/kaelii-mounted-default-flashkick-skip-rig-probe-01.png">lab source</a></td>
+</tr>
+<tr>
+<td>Kaelii vehicle default v2 compact</td>
+<td><a href="../public/assets/sprite-variants/units/kaelii/vehicle-default/kaelii-vehicle-default-flashkick-skip-rig-probe-02-compact-alpha.png">variant</a></td>
+<td><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/source/kaelii-vehicle-default-flashkick-skip-rig-probe-02-compact.png">lab source</a></td>
+</tr>
+<tr>
+<td>Kaelii mounted default v2 compact hair</td>
+<td><a href="../public/assets/sprite-variants/units/kaelii/default/kaelii-unit-default-flashkick-skip-rig-probe-02-tritone-hair-compact-alpha.png">variant</a></td>
+<td><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/source/kaelii-mounted-default-flashkick-skip-rig-probe-02-tritone-hair-compact.png">lab source</a></td>
+</tr>
+<tr>
+<td>Kaelii vehicle default v3 no shoe-wheels</td>
+<td><a href="../public/assets/sprite-variants/units/kaelii/vehicle-default/kaelii-vehicle-default-flashkick-skip-rig-probe-03-no-shoe-wheels-alpha.png">variant</a></td>
+<td><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/source/kaelii-vehicle-default-flashkick-skip-rig-probe-03-no-shoe-wheels.png">lab source</a></td>
+</tr>
+<tr>
+<td>Kaelii mounted default v3 pupil fixed</td>
+<td><a href="../public/assets/sprite-variants/units/kaelii/default/kaelii-unit-default-flashkick-skip-rig-probe-03-no-shoe-wheels-pupil-alpha.png">variant</a></td>
+<td><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/source/kaelii-mounted-default-flashkick-skip-rig-probe-03-no-shoe-wheels-pupil.png">lab source</a></td>
+</tr>
+<tr>
+<td>Kaelii intense v5 animation-linked</td>
+<td><a href="../public/assets/sprite-variants/units/kaelii/intense/kaelii-unit-intense-flashkick-skip-rig-probe-05-animation-linked-alpha.png">variant</a></td>
+<td><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/source/kaelii-character-intense-flashkick-skip-rig-probe-05-animation-linked.png">lab source</a></td>
+</tr>
+<tr>
+<td>Kaelii vehicle destroyed v3 no shoe-wheels</td>
+<td><a href="../public/assets/sprite-variants/units/kaelii/vehicle-destroyed/kaelii-vehicle-destroyed-flashkick-skip-rig-probe-03-no-shoe-wheels-alpha.png">variant</a></td>
+<td><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/source/kaelii-vehicle-destroyed-flashkick-skip-rig-probe-03-no-shoe-wheels.png">lab source</a></td>
+</tr>
+<tr>
+<td>Kaelii Defeated KO v5 user pupil placement</td>
+<td><a href="../public/assets/sprite-variants/units/kaelii/defeated-ko/kaelii-unit-defeated-ko-flashkick-skip-rig-probe-05-user-pupil-placement-alpha.png">variant</a></td>
+<td><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/source/kaelii-character-ko-flashkick-skip-rig-probe-05-user-pupil-placement.png">lab source</a></td>
+</tr>
+<tr>
+<td>Perlah vehicle default</td>
+<td><a href="../public/assets/sprite-variants/units/perlah/vehicle-default/perlah-vehicle-default-sunspike-embercart-probe-01-alpha.png">variant</a></td>
+<td><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/source/perlah-vehicle-default-sunspike-embercart-probe-01.png">lab source</a></td>
+</tr>
+<tr>
+<td>Perlah mounted default</td>
+<td><a href="../public/assets/sprite-variants/units/perlah/default/perlah-unit-default-sunspike-embercart-probe-01-alpha.png">variant</a></td>
+<td><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/source/perlah-mounted-default-sunspike-embercart-probe-01.png">lab source</a></td>
+</tr>
+<tr>
+<td>Perlah vehicle default v2 compact</td>
+<td><a href="../public/assets/sprite-variants/units/perlah/vehicle-default/perlah-vehicle-default-sunspike-embercart-probe-02-compact-alpha.png">variant</a></td>
+<td><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/source/perlah-vehicle-default-sunspike-embercart-probe-02-compact.png">lab source</a></td>
+</tr>
+<tr>
+<td>Perlah mounted default v2 compact</td>
+<td><a href="../public/assets/sprite-variants/units/perlah/default/perlah-unit-default-sunspike-embercart-probe-02-compact-alpha.png">variant</a></td>
+<td><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/source/perlah-mounted-default-sunspike-embercart-probe-02-compact.png">lab source</a></td>
+</tr>
+<tr>
+<td>Perlah intense v2 footprint-locked</td>
+<td><a href="../public/assets/sprite-variants/units/perlah/intense/perlah-unit-intense-sunspike-embercart-probe-02-default-anchored-normalized-alpha.png">variant</a></td>
+<td><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/source/perlah-character-intense-sunspike-embercart-probe-02-default-anchored.png">lab source</a></td>
+</tr>
+<tr>
+<td>Perlah vehicle destroyed v1</td>
+<td><a href="../public/assets/sprite-variants/units/perlah/vehicle-destroyed/perlah-vehicle-destroyed-sunspike-embercart-probe-01-alpha.png">variant</a></td>
+<td><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/source/perlah-vehicle-destroyed-sunspike-embercart-probe-01.png">lab source</a></td>
+</tr>
+<tr>
+<td>Perlah Defeated KO v2 pupil repaired</td>
+<td><a href="../public/assets/sprite-variants/units/perlah/defeated-ko/perlah-unit-defeated-ko-sunspike-embercart-probe-02-pupil-repaired-alpha.png">variant</a></td>
+<td><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/source/perlah-character-ko-sunspike-embercart-probe-02-pupil-repaired.png">lab source</a></td>
+</tr>
+</tbody></table>
+<p>Comparison sheet:</p>
+<ul>
+<li><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/mockups/kaelii-perlah-nova-vesper-probe-contact-sheet.png">Kaelii/Perlah/Nova/Vesper contact sheet</a></li>
+<li><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/mockups/kaelii-v1-v2-nova-vesper-contact-sheet.png">Kaelii v1/v2/Nova/Vesper contact sheet</a></li>
+<li><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/mockups/perlah-v1-v2-nova-vesper-contact-sheet.png">Perlah v1/v2/Nova/Vesper contact sheet</a></li>
+<li><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/mockups/kaelii-gap-fill-no-shoe-animation-contact-sheet.png">Kaelii selected state contact sheet</a></li>
+<li><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/mockups/perlah-gap-fill-contact-sheet.png">Perlah selected state contact sheet</a></li>
+<li><a href="../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/mockups/kaelii-perlah-gap-fill-contact-sheet.png">Kaelii/Perlah selected gap-fill contact sheet</a></li>
+<li><a href="../work/asset-lab/2026-06-07-nova-vesper-intense-unit-prompts/mockups/unit-runtime-scale-contact-sheet.png">Runtime scale contact sheet</a></li>
+</ul>
+<p>Detailed prompt pack:</p>
+<ul>
+<li><a href="superpowers/specs/2026-06-07-nova-vesper-intense-sprite-prompt-pack.html">Nova and Vesper full-unit intense sprite prompt pack</a></li>
+<li><a href="superpowers/specs/2026-06-07-kaelii-perlah-sprite-prompt-pack.html">Kaelii and Perlah sprite prompt pack</a></li>
+</ul>
+<h2>Unit Cards</h2>
+<h3>Nova</h3>
+<ul>
+<li>Class family: <code>bunger</code></li>
+<li>Signature vehicle: Redline Bunger Rig</li>
+<li>Visual identity: Red-haired adult hotshot with goggles, red-black pilot gear, gloves, heavy boots, and an aggressive mounted silhouette.</li>
+<li>Personality: Daring, impatient, competitive, happiest when the terrain gives way.</li>
+<li>Tiny lore: A canyon circuit ace who made her name blasting rivals off suspended shelves.</li>
+<li>Active stance: Crouched on top of her Redline Bunger Rig, one boot planted on the chassis, leaning forward like she is about to launch herself with the shot.</li>
+<li>Intense stance: Same crouched anchor, shoulders lower, goggles glinting, both hands braced as the cannon kicks forward.</li>
+<li>Defeated KO stance: Loses balance after impact and falls face-first over the front of the damaged rig, goggles crooked, body flat and spent.</li>
+<li>Tight generation anchor: <code>Nova, red-haired adult canyon hotshot, goggles, red-black pilot gear, heavy boots, crouched aggressively on a red arcade bunger artillery rig, crater-class terrain-shove identity.</code></li>
+<li>Baseline images: <code>public/assets/nova-character-default.png</code>, <code>public/assets/nova-character-intense.png</code>, <code>public/assets/nova-character-ko.png</code>, <code>public/assets/nova-vehicle-sprite.png</code>, <code>public/assets/nova-vehicle-destroyed.png</code>, <code>public/assets/nova-unit-intense.png</code>.</li>
+</ul>
+<h3>Vesper</h3>
+<ul>
+<li>Class family: <code>glitch</code></li>
+<li>Signature vehicle: Blue Glitch Rover</li>
+<li>Visual identity: Cyan-blue hair, short twin-braid accents, blue headset, blue-black tech outfit, gloves, and chunky blue-white sneakers.</li>
+<li>Personality: Cool, precise, surgical, smug when enemies walk into her fields.</li>
+<li>Tiny lore: A signal engineer who learned to weaponize broken gravity relays.</li>
+<li>Active stance: Low seated or crouched on the side of her Glitch Rover, one hand on a glowing control panel, calm and precise.</li>
+<li>Intense stance: Same apparent unit size as default, but with believable power-shot tension: joystick grip tight, deck-control hand active, front leg pressing down slightly, the rover allowed a small recoil/compression read, headset lit, cannon reticle active, and compact glitch UI wrapped tightly around the rover.</li>
+<li>Defeated KO stance: Slumped over the console with her headset askew, blue panels flickering around her like the vehicle crashed mid-signal.</li>
+<li>Tight generation anchor: <code>Vesper, cyan-blue adult glitch engineer, short twin-braid accents, blue headset, blue-black tech outfit, chunky blue-white sneakers, crouched at a blue glitch rover console, disruption-field identity.</code></li>
+<li>Baseline images: <code>public/assets/vesper-character-default.png</code>, <code>public/assets/vesper-character-intense.png</code>, <code>public/assets/vesper-character-ko.png</code>, <code>public/assets/vesper-vehicle-sprite.png</code>, <code>public/assets/vesper-vehicle-destroyed.png</code>, <code>public/assets/vesper-unit-intense.png</code>.</li>
+</ul>
+<h3>Kaelii</h3>
+<ul>
+<li>Class family: <code>bouncer</code></li>
+<li>Signature vehicle: Flashkick Skip-Rig</li>
+<li>Visual identity: Bronze-skinned adult stunt pilot with golden eyes, playful smirk, pink-black techwear, white sneakers with pink laces, thigh straps, fingerless gloves, and a stage-ready silhouette.</li>
+<li>Vehicle visual lock: The Flashkick Skip-Rig uses real compact circular wheels, mechanical rim covers, spring suspension, rails, and bounce pads. Kaelii wears sneakers; the vehicle must not have shoe-shaped wheels, sneaker wheel guards, toe-box armor, sole-like plates, or lace-like vehicle parts.</li>
+<li>Hair lock: Tri-tone black, deep purple, and hot pink hair. Use high twin buns with braided wrap loops around each bun, hot pink streaks, long black-purple bangs, loose stray strands, and glossy anime highlights. This is based on the user-provided hair reference.</li>
+<li>Personality: Loud, cocky, flirtatious, expressive, reckless when watched, and theatrically annoyed when outplayed.</li>
+<li>Tiny lore: A former stunt-stream idol who turned ricochet artillery into performance art.</li>
+<li>Active stance: Perched showily on the Flashkick Skip-Rig, one foot on a cannon rail, hips angled toward the camera, taunting like the match is a stage.</li>
+<li>Intense stance: Same perch as default, compressed into an animation-linked recoil keyframe: hands grip tighter, shoulders lower, hips and knees tense, hair and jacket react, and both sneakers stay close to their default vehicle anchors.</li>
+<li>Defeated KO stance: Slid sideways off her perch, sprawled across the chassis with one sneaker dangling, the rig's spotlight strip dimmed out.</li>
+<li>Tight generation anchor: <code>Kaelii, bronze-skinned adult stunt idol, golden eyes, tri-tone black/deep-purple/hot-pink high twin buns with braided wrap loops and pink streaks, pink-black techwear, white sneakers with pink laces, perched on a pink-black springy bouncer skip-rig, ricochet trick-shot identity.</code></li>
+<li>Current probe images: see Current Visual Probe Links above. The v3 no-shoe-wheel default and v5 animation-linked intense/KO probes are the current stronger match-scale candidates.</li>
+<li>Open art note: Kaelii Defeated KO v5 is useful as a candidate, but the KO pupil placement still needs a future artist or refinement pass. The right-eye pupil placement in particular does not feel quite right yet.</li>
+<li>Runtime test aliases: <code>public/assets/kaelii-vehicle-sprite.png</code>, <code>public/assets/kaelii-vehicle-destroyed.png</code>, <code>public/assets/kaelii-unit-default.png</code>, <code>public/assets/kaelii-unit-intense.png</code>, <code>public/assets/kaelii-unit-ko.png</code>.</li>
+</ul>
+<h3>Perlah</h3>
+<ul>
+<li>Class family: <code>spark</code></li>
+<li>Signature vehicle: Sunspike Embercart</li>
+<li>Visual identity: Shorter Filipina-inspired adult pilot with golden-brown skin, slim athletic build, long legs, curly black hair with orange highlights, orange-black island salvage racer styling, heatproof gloves, compact boots, and wrap-tech details.</li>
+<li>Personality: Warm, teasing, scrappy, underestimated, and very happy to make the canyon too hot to stand on.</li>
+<li>Tiny lore: She salvaged old Spark engines from canyon wrecks and rebuilt them into a festival-bright artillery cart.</li>
+<li>Active stance: Kneeling low against the Sunspike Embercart's heat shield, one hand braced on the cannon housing, compact and ready.</li>
+<li>Intense stance: Braced behind the heat shield as orange vents flare, hair and wrap details kicked by furnace wind.</li>
+<li>Defeated KO stance: Draped belly-down across the warm engine cover, hair messy, vehicle vents puffing smoke as if the heat finally overwhelmed the cart.</li>
+<li>Tight generation anchor: <code>Perlah, shorter Filipina-inspired adult spark pilot, golden-brown skin, curly black hair with orange highlights, orange-black island salvage racer outfit, kneeling behind an orange-black volcanic embercart heat shield, warm teasing heat-zone identity.</code></li>
+<li>Current probe images: see Current Visual Probe Links above. The v2 compact default probes and v1/v2 gap-fill state probes are the current strongest match-scale candidates.</li>
+<li>Runtime test aliases: <code>public/assets/perlah-vehicle-sprite.png</code>, <code>public/assets/perlah-vehicle-destroyed.png</code>, <code>public/assets/perlah-unit-default.png</code>, <code>public/assets/perlah-unit-intense.png</code>, <code>public/assets/perlah-unit-ko.png</code>.</li>
+</ul>
+<h3>Ari</h3>
+<ul>
+<li>Class family: <code>glitch</code></li>
+<li>Signature vehicle: Moonlace Relay</li>
+<li>Visual identity: Adult white-haired twin with cool silver-blue styling, elegant tech-fabric outfit, soft glamorous silhouette, and calm gravity-ribbon effects.</li>
+<li>Personality: Quiet, precise, protective, difficult to read.</li>
+<li>Tiny lore: One half of the Solenne twins, Ari studies gravity fields like music.</li>
+<li>Active stance: Elegantly seated on the Moonlace Relay's side ring, hands guiding thin gravity ribbons, posture calm and almost dancer-like.</li>
+<li>Intense stance: Same side-ring seat, hair sweeping forward, both hands pulling a bright ribbon taut before firing.</li>
+<li>Defeated KO stance: Folded forward against the relay ring, long white hair spilling over the controls, gravity ribbons collapsed around her.</li>
+<li>Tight generation anchor: <code>Ari, elegant adult white-haired twin, cool silver-blue tech-fabric outfit, calm moonlit gravity-ribbon effects, seated on a Moonlace Relay side ring, precise glitch field-control identity.</code></li>
+</ul>
+<h3>Lani</h3>
+<ul>
+<li>Class family: <code>spark</code></li>
+<li>Signature vehicle: Sunlace Flarepod</li>
+<li>Visual identity: Adult white-haired twin with warmer sun-gold accents, brighter styling, athletic stage energy, and a more impulsive silhouette than Ari.</li>
+<li>Personality: Loud, impulsive, competitive, affectionate with Ari, and allergic to being treated as the lesser twin.</li>
+<li>Tiny lore: Ari maps the field; Lani lights it up. Their rivalry is affectionate but very real.</li>
+<li>Active stance: Half-standing, half-braced on the Sunlace Flarepod with one knee on the vehicle and one hand thrown back for flair.</li>
+<li>Intense stance: Leaning hard into the shot, one knee locked on the flarepod, sun panels open around her.</li>
+<li>Defeated KO stance: Tumbled backward into the flarepod's seat well, limbs loose, hair fanned out, burst panels popped open around her.</li>
+<li>Tight generation anchor: <code>Lani, bright adult white-haired twin, sun-gold accents, athletic stage-energy pose, half-braced on a Sunlace Flarepod, impulsive spark flare-burst identity.</code></li>
+</ul>
+<h3>Rook</h3>
+<ul>
+<li>Class family: <code>bunger</code></li>
+<li>Signature vehicle: Quarryback Mortar</li>
+<li>Visual identity: Broad adult male pilot with dust-coated armor jacket, heavy boots, miner-mechanic gear, practical gloves, and a grounded silhouette.</li>
+<li>Personality: Patient, dry, stubborn, terrifyingly calm under fire.</li>
+<li>Tiny lore: A canyon quarry veteran who joined the circuit after the mines started floating away.</li>
+<li>Active stance: Seated heavily behind the Quarryback Mortar, shoulders squared, both boots planted, one hand gripping a stabilizer handle.</li>
+<li>Intense stance: Braced hard with both hands on the mortar handles, vehicle suspension compressed into the dirt.</li>
+<li>Defeated KO stance: Slumped forward over the mortar shield, helmet or goggles lowered, the rig nose-down in broken dirt.</li>
+<li>Tight generation anchor: <code>Rook, broad adult quarry veteran, dust-coated armor jacket, heavy boots, miner-mechanic gear, seated behind a rugged Quarryback Mortar, heavy bunger crater-control identity.</code></li>
+</ul>
+<h3>Mako</h3>
+<ul>
+<li>Class family: <code>bouncer</code></li>
+<li>Signature vehicle: Railfin Roller</li>
+<li>Visual identity: Lean adult male pilot with sea-racer and canyon-boarder gear, teal accents, wind-tossed hair, and a long trick-shot silhouette.</li>
+<li>Personality: Charming, slippery, evasive, impossible to pin down.</li>
+<li>Tiny lore: He grew up riding gravity rails between canyon islands and treats artillery like surfing.</li>
+<li>Active stance: Surf-like crouch on the Railfin Roller, one foot forward and one back, riding the vehicle as if it is a gravity board.</li>
+<li>Intense stance: Lower surf crouch with one hand cutting through the air and the roller fins glowing during the shot.</li>
+<li>Defeated KO stance: Knocked off rhythm and collapsed sideways along the roller track, one arm over the wheel housing, rail fins bent.</li>
+<li>Tight generation anchor: <code>Mako, lean adult gravity-rail surfer, teal canyon-boarder gear, wind-tossed hair, surf-crouched on a Railfin Roller, slope-riding bouncer trick-shot identity.</code></li>
+</ul>
+<h3>Sable</h3>
+<ul>
+<li>Class family: <code>glitch</code></li>
+<li>Signature vehicle: Null-Kite Crawler</li>
+<li>Visual identity: Androgynous adult pilot with black-white asymmetrical coat, sharp eyes, floating scarf or cable shapes, and a compact crouched silhouette.</li>
+<li>Personality: Detached, poetic, quietly menacing.</li>
+<li>Tiny lore: A banned cartographer who charts places where gravity forgets the rules.</li>
+<li>Active stance: Compact crouch atop the Null-Kite Crawler, coat and scarf shapes floating slightly, one hand hovering over a dark gravity marker.</li>
+<li>Intense stance: Crouched lower with cables pulled taut around the marker, vehicle legs spread like a survey instrument.</li>
+<li>Defeated KO stance: Folded beside the crawler like gravity switched off, scarf and cables limp, vehicle legs tucked in and inert.</li>
+<li>Tight generation anchor: <code>Sable, androgynous adult banned cartographer, black-white asymmetrical coat, sharp eyes, floating scarf cables, compact crouch on a Null-Kite Crawler, dark glitch dead-zone identity.</code></li>
+</ul>
+<h3>Talia</h3>
+<ul>
+<li>Class family: <code>spark</code></li>
+<li>Signature vehicle: Kilnback Howitzer</li>
+<li>Visual identity: Adult forge-tech pilot with dark hair, amber goggles, soot-black and brass outfit, gloves, and a confident cannon-brace silhouette.</li>
+<li>Personality: Blunt, warm, big-sister energy, dangerous when cornered.</li>
+<li>Tiny lore: She builds tournament rigs from cracked furnace cores and sells repairs to rivals after beating them.</li>
+<li>Active stance: Seated sideways against the Kilnback Howitzer, one boot braced on the furnace plate, hand on the firing lever, relaxed but dominant.</li>
+<li>Intense stance: Leaning into the lever as the kiln glow rises, goggles lit amber, furnace panels open.</li>
+<li>Defeated KO stance: Slumped back against the cracked kiln cannon, goggles tilted, forge glow reduced to dull embers.</li>
+<li>Tight generation anchor: <code>Talia, adult forge-tech pilot, dark hair, amber goggles, soot-black brass outfit, seated against a Kilnback Howitzer furnace cannon, molten spark-forge identity.</code></li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

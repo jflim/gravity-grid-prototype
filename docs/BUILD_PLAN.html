@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gravity Canyon Build Plan</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        Generated from <a href="BUILD_PLAN.md">docs/BUILD_PLAN.md</a> on 2026-06-08.
+        Edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Gravity Canyon Build Plan</h1>
+<p>This plan is meant to keep the game moving through playable iterations instead of chasing a perfect v1.</p>
+<h2>Product North Star</h2>
+<p>Build a browser-based online multiplayer artillery game with anime character/vehicle identity, terrain destruction, team tactics, collectible cosmetics, and room-based play.</p>
+<p>Canonical design reference: <a href="GAME_DESIGN_SPEC.html">GAME_DESIGN_SPEC.md</a></p>
+<p>Locked current v1 scope: <a href="V1_PLAYTEST_ALPHA.html">V1_PLAYTEST_ALPHA.html</a></p>
+<h2>Current Definition Of The Prototype</h2>
+<p>The current build is a local-feel prototype with the first online room foundation. It should prove that turn flow, aiming, movement, readable characters, terrain destruction, knockback, room creation, player presence, ready checks, and the first cosmetic reward loop are fun before multiplayer combat simulation expands.</p>
+<h2>Iteration Rules</h2>
+<ul>
+<li>Ship in small versions.</li>
+<li>Each version needs one clear gameplay or planning goal.</li>
+<li>Each code version should end with a build check.</li>
+<li>Each version should be committed with a descriptive message.</li>
+<li>Add reward/cosmetic flavor early, but do not build full economy, gacha, matchmaking, or production art pipelines until the online combat loop works.</li>
+</ul>
+<h2>Terms</h2>
+<ul>
+<li>Turn: one active vehicle's action window.</li>
+<li>Round: one fresh battlefield from spawn until one team has no alive vehicles left.</li>
+<li>Match: a future multiplayer room/session made of one or more rounds.</li>
+<li>Prototype version: a committed, playable checkpoint.</li>
+</ul>
+<h2>Phase 0: Local Combat Feel</h2>
+<p>Goal: make the core artillery loop readable and fun with two local players on one browser.</p>
+<p>Done:</p>
+<ul>
+<li>Browser-based Phaser prototype.</li>
+<li>Four local test units in a 2v2-style roster: Nova, Vesper, Kaelii, and Perlah.</li>
+<li>Facing-aware movement and aim.</li>
+<li>Downhill/fall-friendly movement with an uphill climb-angle limit.</li>
+<li>Vehicle sprites tilt to match terrain slope.</li>
+<li>5-90 degree elevation aiming.</li>
+<li>Hold/release launch power.</li>
+<li>Wind display and active-vehicle turn timer.</li>
+<li>Destructible heightmap terrain.</li>
+<li>Bunger knockback and fall/bunge KOs.</li>
+<li>Round win condition and automatic reset.</li>
+<li>Gameplay sprites separate from portrait art.</li>
+<li>Layered gameplay rendering with one vehicle sprite and one playable-character sprite.</li>
+<li>Generated Nova and Vesper character state sprites: default, KO, and intense shooting.</li>
+<li>Accepted Nova and Vesper full-unit intense runtime test aliases for concept-preview charging.</li>
+<li>Generated Nova and Vesper destroyed vehicle sprites for KO/dead states.</li>
+<li>Accepted Kaelii and Perlah v1 test runtime aliases for local play: unit default, unit intense, unit Defeated KO, vehicle default, and vehicle destroyed.</li>
+<li>Full-unit concept preview sprites and prototype combat hulls are scaled down from the first large pass so the local 2v2-style roster covers less battlefield.</li>
+<li>Stable runtime sprite aliases plus versioned sprite-variant folders for faster art iteration.</li>
+<li>Command panel with movement range, launch power, aim, active identity, timer, and wind.</li>
+<li>Working title updated to Gravity Canyon.</li>
+<li>Turn commits immediately when a shot is fired, with no post-shot movement window.</li>
+<li>Swept projectile collision and localized post-impact settling make hits and falls more predictable.</li>
+<li>Temporary crater/splash radius rings make impact ranges visible.</li>
+<li>Terrain can be punched through into the visible void beneath the stage.</li>
+<li>Crater, splash, and Bunger knockback radii are smaller so ring-outs require more precise setup.</li>
+<li>Destroyed vehicles now pair destroyed vehicle sprites with character-specific generated KO character sprites instead of overlay effects.</li>
+<li>Command panel is raised with a bottom safe margin so gameplay controls remain visible.</li>
+<li>Colyseus server added.</li>
+<li>Online panel can create/join private rooms, show player slots, ready state, placeholder rewards, and equipped nameplates.</li>
+<li>Online room now starts a server-owned combat preview when both players ready.</li>
+<li>Server combat preview tracks round, turn, wind, active vehicle, HP, winner, and validated active-player test shots.</li>
+<li>Colyseus browser SDK is vendored as a static browser bundle for stable Vite dev behavior on Windows.</li>
+</ul>
+<p>Next:</p>
+<ul>
+<li>Improve battlefield readability at common viewport sizes.</li>
+<li>Tune vehicle scale, camera framing, and UI spacing.</li>
+<li>Continue tuning hit, damage, KO, and round-end feedback.</li>
+<li>Replace first-pass generated gameplay sprites with production per-character and per-vehicle sprite sets.</li>
+<li>Tune the local 2v2-style test roster now that Kaelii and Perlah are visible in the playable prototype.</li>
+<li>Wire server-authoritative combat state into the Phaser match scene.</li>
+</ul>
+<p>Exit criteria:</p>
+<ul>
+<li>A new player can understand whose turn it is, where they are aiming, how much they can move, how much power they are charging, and why a round ended.</li>
+</ul>
+<h2>Phase 1: V1 Playtest Alpha - Hosted Private-Room 2v2</h2>
+<p>Goal: prove reliable hosted private-room online 2v2 combat with the existing four-character roster. 1v1 is supported as a practical testing mode, but 2v2 is the v1 promise.</p>
+<p>Scope:</p>
+<ul>
+<li>Private room creation. Started.</li>
+<li>Join by room code. Started with Colyseus room id.</li>
+<li>Invite links and editable guest display names.</li>
+<li>1v1 and 2v2 room modes.</li>
+<li>Best-of-1 and best-of-3 match length settings.</li>
+<li>Two to four browser clients participate depending on seat ownership.</li>
+<li>Server-authoritative room, round, turn, movement, aim, fire, projectile, terrain, HP, KOs, Void Dropped eliminations, and round/match result.</li>
+<li>Server-owned combat preview round/turn/HP state. Started.</li>
+<li>Guest display names. Started.</li>
+<li>Four existing v1 characters only: Nova, Vesper, Kaelii, and Perlah.</li>
+<li>One primary weapon/action per v1 character.</li>
+<li>Five fixed maps with 1v1 and 2v2 spawn layouts.</li>
+<li>Classic readable HUD with turn order, score, HP, wind, angle, power, movement, timer, and weapon info.</li>
+<li>Preset phrase bubbles for seated players.</li>
+<li>One readable VFX and one non-voice SFX per v1 weapon.</li>
+</ul>
+<p>Exit criteria:</p>
+<ul>
+<li>Four remote players can complete a 2v2 match without desync.</li>
+<li>Server owns combat results.</li>
+<li>One 1v1 playtest, one 2v2-format playtest, and a four-human gold network validation complete successfully.</li>
+</ul>
+<h2>Phase 2: Post-V1 Combat Expansion</h2>
+<p>Goal: expand the accepted v1 online combat foundation based on playtest feedback.</p>
+<p>Scope:</p>
+<ul>
+<li>Additional maps, mode settings, character/weapon polish, and combat tuning.</li>
+<li>Optional next roster expansion.</li>
+<li>Possible second weapons or special shots.</li>
+<li>Mature class names and role communication.</li>
+<li>Better post-match summary and feedback capture.</li>
+</ul>
+<p>Exit criteria:</p>
+<ul>
+<li>V1 feedback has been reviewed and translated into a v2 contract.</li>
+<li>New additions improve replayability without undermining readability or server authority.</li>
+</ul>
+<h2>Phase 3: Accounts And Progression</h2>
+<p>Goal: support persistent identity without overbuilding.</p>
+<p>Scope:</p>
+<ul>
+<li>Supabase auth.</li>
+<li>Guest play.</li>
+<li>Google login.</li>
+<li>Email Magic Link.</li>
+<li>Username/profile.</li>
+<li>Soft currency ledger.</li>
+<li>Profile points and rank titles.</li>
+<li>Collection shelf.</li>
+<li>Equipped cosmetics visible in-game.</li>
+<li>Claim current-session guest rewards after registering.</li>
+</ul>
+<p>Exit criteria:</p>
+<ul>
+<li>Players can play quickly, then register to save progress.</li>
+</ul>
+<h2>Phase 4: Economy, Gacha, And Cosmetics</h2>
+<p>Goal: add collection motivation without touching gameplay fairness.</p>
+<p>Scope:</p>
+<ul>
+<li>Soft currency rewards.</li>
+<li>Transparent-enough drop tables.</li>
+<li>Cosmetic-only gacha.</li>
+<li>Shop rotation.</li>
+<li>Collection/equipment UI.</li>
+<li>Visible rarity odds.</li>
+<li>Duplicate shards.</li>
+</ul>
+<p>Exit criteria:</p>
+<ul>
+<li>Cosmetics are desirable and visible, but combat stays fair.</li>
+</ul>
+<h2>Phase 5: Public Lobby And Social Layer</h2>
+<p>Goal: bring back the old web-game lobby feeling after rooms are stable.</p>
+<p>Scope:</p>
+<ul>
+<li>Public lobby list.</li>
+<li>Create/join room flow.</li>
+<li>Public lobby chat with stricter guest filtering.</li>
+<li>Room chat.</li>
+<li>Mute/block/report-ready safety scaffolding.</li>
+<li>Leaderboard and visible rank.</li>
+</ul>
+<p>Exit criteria:</p>
+<ul>
+<li>Players can find games without Discord, while Discord remains optional.</li>
+</ul>
+<h2>Working Cadence</h2>
+<p>Recommended loop:</p>
+<ol>
+<li>Pick one version goal.</li>
+<li>Implement only that goal.</li>
+<li>Run <code>npm run build</code>.</li>
+<li>Update <code>docs/VERSION_LOG.md</code>.</li>
+<li>Commit with a descriptive message.</li>
+<li>Push to GitHub.</li>
+<li>Decide the next version goal.</li>
+</ol>
+    </article>
+  </main>
+</body>
+</html>

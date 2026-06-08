@@ -42,6 +42,9 @@ Highlights:
 - Clarified the sprite workflow: green chroma-key images are workshop sources, approved candidates and runtime sprites should be transparent PNGs, and the current recommendation is green for exploration plus transparent PNG bases for refinement.
 - Added a required unit asset checklist and roster generation status table so missing intense, destroyed, and KO sprites are visible.
 - Added a combat readability design and Slice 1 implementation plan for combat hulls, damage markers, wind bands, and lob-focused map prototypes.
+- Added a locked v1 playtest-alpha HTML contract for hosted private-room 2v2 scope, with change-control rules, V2 parking lot boundaries, and acceptance gates.
+- Added generated HTML reading copies for human-facing markdown docs via `npm run docs:html`, plus an HTML docs index.
+- Updated planning docs so `docs/V1_PLAYTEST_ALPHA.html` is the authority for current v1 scope while `docs/GAME_DESIGN_SPEC.md` remains broader product vision.
 - Added visible prototype combat hulls, shown by default and toggleable with `H`, so direct-hit collision better matches the larger pilot-plus-vehicle unit concepts.
 - Added floating combat markers for direct damage, splash damage, knockback, HP KOs, and terrain/fall bunge defeats.
 - Added randomized terrain/spawn archetypes for local rounds to reduce flat direct-fire duels and encourage high-angle lob play.

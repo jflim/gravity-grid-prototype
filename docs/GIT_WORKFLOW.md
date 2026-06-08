@@ -49,6 +49,7 @@ Before pushing code changes:
 - Check `git status --short` so only intended files are included.
 
 Docs-only commits do not require `npm run build`, but should still be reviewed for accuracy.
+If markdown docs changed, run `npm run docs:html` so generated HTML reading copies stay current.
 
 ## How Often To Commit
 

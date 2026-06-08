@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gravity Canyon Version Log</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        Generated from <a href="VERSION_LOG.md">docs/VERSION_LOG.md</a> on 2026-06-08.
+        Edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Gravity Canyon Version Log</h1>
+<p>Use this as the human-readable checkpoint history. Every meaningful commit should add an entry.</p>
+<h2>Unreleased</h2>
+<p>Highlights:</p>
+<ul>
+<li>Adopted Gravity Canyon as the working product title.</li>
+<li>Added Colyseus, Express, and TypeScript server tooling.</li>
+<li>Added the Colyseus browser SDK as a vendored static browser bundle for stable local Vite development.</li>
+<li>Added Gravity Canyon room state with two player slots, guest display names, ready checks, and placeholder nameplate rewards.</li>
+<li>Added an online alpha panel to create/join private rooms from the browser client.</li>
+<li>Added server-owned online combat preview state for round number, turn number, wind, active vehicle, HP, winner, and validated preview shots.</li>
+<li>Added an online panel combat snapshot with active turn, wind, vehicle HP rows, server-shot action, and next-round action.</li>
+<li>Replaced Nova's active KO runtime sprite with the selected prone v16 KO asset.</li>
+<li>Added a sprite-variant folder convention and workflow doc for frequent sprite iteration.</li>
+<li>Added a session handoff document with current repo state, active branch, sprite status, Vesper KO generation prompt, next steps, and verification notes.</li>
+<li>Added repo-level Codex project guidance in <code>AGENTS.md</code> so new local Codex chats inherit setup, commands, docs, and working rules.</li>
+<li>Added adult-playable sprite probe design and implementation planning for deciding whether Nova and Vesper gameplay sprites should move beyond compact/semi-chibi style.</li>
+<li>Added cosmetic set/loadout direction: themed sets can unlock matching character outfits and vehicle skins, while characters remain identity/presentation and vehicles carry gameplay mechanics.</li>
+<li>Added mounted gameplay asset direction: current assets stay as the v0 baseline while future probes explore characters riding, kneeling on, leaning on, or otherwise interacting with vehicles.</li>
+<li>Preserved selected paired-unit concept candidates for Nova's head-over-heels Defeated KO direction and Vesper's tech-shorts default/Defeated KO direction.</li>
+<li>Added playable roster sprite direction for 10 signature pilot-plus-vehicle units, plus Kaelii and Perlah gameplay sprite prompt packs for the first new-unit generation pass.</li>
+<li>Added a living character roster document with selected visual probe links, tight generation anchors, and Kaelii's tri-tone hair reference lock.</li>
+<li>Added Kaelii v2 compact vehicle and mounted default sprite candidates using the tri-tone hair lock.</li>
+<li>Added Perlah v2 compact vehicle and mounted default sprite candidates for comparison against the first Spark-unit probes.</li>
+<li>Added Kaelii v3/v5 selected gap-fill sprite candidates: corrected real-wheel Flashkick Skip-Rig, mounted default pupil fix, animation-linked intense state, destroyed vehicle, and Defeated KO with user-marked pupil placement.</li>
+<li>Recorded an open art-review note that Kaelii Defeated KO v5 still needs a future pupil-placement pass, especially the right eye.</li>
+<li>Added Perlah selected gap-fill sprite candidates for intense, destroyed vehicle, and Defeated KO with user-marked pupil placement.</li>
+<li>Promoted Kaelii and Perlah selected candidates to stable v1 runtime test aliases and integrated them into the local playable roster as red/blue support units.</li>
+<li>Added a runtime-roster verification script to check runtime unit aliases, preload keys, class IDs, and local turn order.</li>
+<li>Generated Nova and Vesper full-unit intense sprite probes, promoted them to <code>nova-unit-intense.png</code> and <code>vesper-unit-intense.png</code>, and wired concept-preview charging to use them.</li>
+<li>Expanded runtime-roster verification to check Nova and Vesper full-unit intense aliases.</li>
+<li>Replaced Vesper's first full-unit intense alias with a compact v3 power-hold candidate, trimmed transparent padding so it no longer shrinks at runtime, and documented the selected prompt.</li>
+<li>Reduced full-unit concept-preview display sizes, active frames, combat-marker offsets, HP/label offsets, and prototype combat hulls to give the local four-unit roster more playable battlefield space.</li>
+<li>Replaced Vesper and Perlah intense runtime aliases with footprint-locked variants so default and intense states keep identical apparent unit size while showing compact power-hold reactions.</li>
+<li>Iterated Vesper intense to the v6 cool glitch-control candidate, preserving the default visible footprint while adding a stronger joystick/deck-control charge action, cannon reticle, headset glow, and compact glitch UI.</li>
+<li>Superseded Vesper intense v6 with v8 subtle tension scale-stable after visual review showed that same alpha footprint alone was not enough; v8 allows small pilot/rover motion while reducing the apparent power-shot size pop.</li>
+<li>Expanded runtime-roster verification to compare default/intense visible alpha footprints for Vesper and Perlah, preventing future intense sprites from silently growing, shrinking, or widening.</li>
+<li>Clarified that character-intense sprites should usually be animation-linked keyframes from default poses, preserving the main contact anchors instead of becoming unrelated action poses.</li>
+<li>Corrected Kaelii prompt guidance so her sneakers remain character clothing only; the Flashkick Skip-Rig uses real wheels, mechanical rim covers, rails, springs, and bounce pads.</li>
+<li>Clarified the sprite workflow: green chroma-key images are workshop sources, approved candidates and runtime sprites should be transparent PNGs, and the current recommendation is green for exploration plus transparent PNG bases for refinement.</li>
+<li>Added a required unit asset checklist and roster generation status table so missing intense, destroyed, and KO sprites are visible.</li>
+<li>Added a combat readability design and Slice 1 implementation plan for combat hulls, damage markers, wind bands, and lob-focused map prototypes.</li>
+<li>Added a locked v1 playtest-alpha HTML contract for hosted private-room 2v2 scope, with change-control rules, V2 parking lot boundaries, and acceptance gates.</li>
+<li>Added generated HTML reading copies for human-facing markdown docs via <code>npm run docs:html</code>, plus an HTML docs index.</li>
+<li>Updated planning docs so <code>docs/V1_PLAYTEST_ALPHA.html</code> is the authority for current v1 scope while <code>docs/GAME_DESIGN_SPEC.md</code> remains broader product vision.</li>
+<li>Added visible prototype combat hulls, shown by default and toggleable with <code>H</code>, so direct-hit collision better matches the larger pilot-plus-vehicle unit concepts.</li>
+<li>Added floating combat markers for direct damage, splash damage, knockback, HP KOs, and terrain/fall bunge defeats.</li>
+<li>Added randomized terrain/spawn archetypes for local rounds to reduce flat direct-fire duels and encourage high-angle lob play.</li>
+<li>Clarified Git workflow with branch strategy, quality gates, commit cadence, and push cadence.</li>
+<li>Updated GitHub management notes now that the private remote and GitHub CLI are configured.</li>
+<li>Added canonical game design spec with 95% confidence direction for the next build milestone.</li>
+<li>Updated build plan so Phase 1 is online 1v1 plus a lightweight cosmetic unlock sandbox.</li>
+<li>Clarified art tone: premium anime arcade with a decent amount of tasteful adult fan service.</li>
+<li>Fixed turn commitment so firing immediately ends the active vehicle's movement window.</li>
+<li>Added swept projectile collision checks, tighter splash radii, and localized post-impact vehicle settling.</li>
+<li>Added temporary impact rings for crater and splash damage readability.</li>
+<li>Added fainted/KO visual feedback for destroyed vehicles.</li>
+<li>Changed terrain movement so downhill/falling is allowed, while steep uphill movement is blocked by a climb-angle rule.</li>
+<li>Allowed vehicles to intentionally drive into holes or off the map and self-KO.</li>
+<li>Allowed deep crater cuts to punch through into a visible void beneath the terrain.</li>
+<li>Replaced the generic KO face with character-specific KO feedback.</li>
+<li>Replaced KO expression overlays with dedicated Nova and Vesper KO sprite variants.</li>
+<li>Removed the global floating turn timer; turn time now only appears above the active vehicle.</li>
+<li>Added terrain-slope tilt to vehicle sprites.</li>
+<li>Raised the command panel with a bottom safe margin for better viewport visibility.</li>
+<li>Updated the void background treatment so exposed holes read as empty air beneath the terrain.</li>
+<li>Reduced crater, splash, and Bunger knockback radii so knock-off KOs require more precise setup.</li>
+<li>Reworked gameplay assets into separate vehicle and playable-character sprite layers.</li>
+<li>Generated standalone Nova and Vesper vehicle sprites.</li>
+<li>Generated standalone Nova and Vesper character sprites for default, KO, and intense shooting states.</li>
+<li>Regenerated Nova and Vesper KO sprites with crossed/rolled-up eyes instead of spiral eyes.</li>
+<li>Added destroyed vehicle sprites for Nova and Vesper and paired them with KO character rendering.</li>
+<li>Lowered character seating offsets so riders sit closer to the vehicle chassis.</li>
+<li>Removed the old combined gameplay sprites and derived KO sprites from the active asset set.</li>
+</ul>
+<p>Verification:</p>
+<ul>
+<li><code>npm run build</code> passed.</li>
+<li>Two-client Colyseus smoke test reached <code>round-over</code>, set the losing vehicle to 0 HP, and granted the preview token reward.</li>
+</ul>
+<h2>v0.4.0 - Planning, Git, And Readability Checkpoint</h2>
+<p>Status: local commit checkpoint.</p>
+<p>Highlights:</p>
+<ul>
+<li>Added project build plan and iteration cadence.</li>
+<li>Added version log for committed playable checkpoints.</li>
+<li>Added Git workflow and GitHub remote setup notes.</li>
+<li>Added Git ignore rules for generated dependencies and build output.</li>
+<li>Current prototype includes layered vehicle/character gameplay sprites, separated portrait art, round logic, improved command panel, visual aim arrow, movement range meter, launch-power meter, wind, timer, and terrain destruction.</li>
+</ul>
+<p>Verification:</p>
+<ul>
+<li><code>npm run build</code> should pass before this version is committed.</li>
+</ul>
+<h2>v0.3.0 - Gameplay Sprite And HUD Readability Pass</h2>
+<p>Highlights:</p>
+<ul>
+<li>Added tight-cropped <code>nova-gameplay.png</code> and <code>vesper-gameplay.png</code>.</li>
+<li>Battlefield uses gameplay sprites.</li>
+<li>Command panel portraits keep the high-detail art.</li>
+<li>Replaced movement pips with a move range meter.</li>
+<li>Kept launch power as a prominent command panel meter.</li>
+</ul>
+<p>Verification:</p>
+<ul>
+<li><code>npm run build</code> passed.</li>
+</ul>
+<h2>v0.2.0 - Round Logic And Combat UI Pass</h2>
+<p>Highlights:</p>
+<ul>
+<li>Defined turn, round, and match terminology.</li>
+<li>Round ends when one team has no alive vehicles.</li>
+<li>Fallen/bunged-out vehicles are set to 0 HP and not alive.</li>
+<li>Rounds auto-reset after a short result message.</li>
+<li>Added 5-90 degree aiming.</li>
+<li>Added active vehicle timer badge, visual aim arrow, and movement range rail.</li>
+</ul>
+<p>Verification:</p>
+<ul>
+<li><code>npm run build</code> passed.</li>
+</ul>
+<h2>v0.1.0 - First Playable Local Prototype</h2>
+<p>Highlights:</p>
+<ul>
+<li>Phaser browser prototype.</li>
+<li>Two local vehicles.</li>
+<li>Terrain generation and crater deformation.</li>
+<li>Turn-based movement, aim, wind, launch power, projectile flight, damage, and HP.</li>
+<li>First-pass generated anime vehicle/pilot art.</li>
+</ul>
+<p>Verification:</p>
+<ul>
+<li><code>npm run build</code> passed.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

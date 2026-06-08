@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cosmetic Set And Loadout Design</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        Generated from <a href="2026-06-07-cosmetic-set-loadout-design.md">docs/superpowers/specs/2026-06-07-cosmetic-set-loadout-design.md</a> on 2026-06-08.
+        Edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Cosmetic Set And Loadout Design</h1>
+<p>Date: 2026-06-07</p>
+<p>Project: Gravity Canyon</p>
+<h2>Goal</h2>
+<p>Preserve the original fantasy of dressing pilots and changing vehicles while keeping match visuals coherent and readable.</p>
+<p>The core decision: cosmetics may be unlocked as themed sets, but they should equip through separate loadout slots.</p>
+<h2>Design Decision</h2>
+<p>Gravity Canyon cosmetics should use a hybrid bundle/slot model:</p>
+<ul>
+<li>A themed set can unlock multiple matching cosmetics at once.</li>
+<li>The loadout UI still treats character outfits and vehicle skins as distinct rewards.</li>
+<li>Players should feel like they can dress a pilot and customize a vehicle, even when those items were earned from the same set.</li>
+</ul>
+<p>Example:</p>
+<ul>
+<li><code>Nova Redline Set</code> unlocks <code>Nova Redline Outfit</code>, <code>Redline Vehicle Skin</code>, and optional matching effects or collection art.</li>
+<li>The player can equip the outfit and vehicle skin separately, unless a future art rule marks a specific item as set-locked.</li>
+</ul>
+<h2>Character And Vehicle Roles</h2>
+<p>Character selection should define identity and presentation. Vehicle selection should define gameplay kit.</p>
+<p>Characters control:</p>
+<ul>
+<li>visible pilot identity,</li>
+<li>character-specific outfit inventory,</li>
+<li>mounted pose style,</li>
+<li>KO, victory, defeat, and expression variants,</li>
+<li>voice barks, text quips, and profile/card art,</li>
+<li>character affinity and collection progression.</li>
+</ul>
+<p>Characters should not affect combat stats in MVP. A favorite character should never feel mechanically wrong because of a stat table.</p>
+<p>Vehicles control:</p>
+<ul>
+<li>movement profile,</li>
+<li>weapon/class kit,</li>
+<li>cannon behavior,</li>
+<li>terrain interaction,</li>
+<li>durability or other combat attributes if those become vehicle-class rules.</li>
+</ul>
+<p>This keeps loadout readable: pick the character because you like them, and pick the vehicle because you want its gameplay.</p>
+<h2>First Loadout Slots</h2>
+<p>MVP-facing slots:</p>
+<ul>
+<li>Character Outfit: character-specific visual outfit or mounted-pose variant.</li>
+<li>Vehicle Skin: paint, cannon look, decals, glow accents, or destroyed-state skin.</li>
+<li>Nameplate/Banner: already compatible with the current online reward sandbox.</li>
+</ul>
+<p>Later slots:</p>
+<ul>
+<li>Projectile Trail.</li>
+<li>Muzzle Flash or Impact Effect.</li>
+<li>KO Variant.</li>
+<li>Victory/Defeat Flourish.</li>
+<li>Profile/Card Art.</li>
+<li>Collection Shelf Item.</li>
+</ul>
+<h2>Match-Screen Art Rule</h2>
+<p>Combat readability remains the limit.</p>
+<p>Playable units should be composed as:</p>
+<ul>
+<li>a vehicle gameplay sprite, plus</li>
+<li>a character gameplay sprite layered in front of or mounted on the vehicle.</li>
+</ul>
+<p>Default/active poses may vary by outfit or set:</p>
+<ul>
+<li>seated in or on the vehicle,</li>
+<li>kneeling or crouching on the chassis,</li>
+<li>leaning on the large cannon,</li>
+<li>bracing behind the weapon,</li>
+<li>otherwise riding/using the vehicle in a compact pose.</li>
+</ul>
+<p>The vehicle remains the gameplay anchor. The character may show legs if the pose is compact and clearly mounted on the vehicle, but full standing characters beside the vehicle are not the default-state target.</p>
+<p>KO poses may break the mounted rule when useful, such as a pilot collapsed beside or in front of a damaged vehicle, as long as the KO state is readable and does not change hitboxes.</p>
+<h2>Collection Art Rule</h2>
+<p>Collection, reward, profile, shop, and gacha surfaces can show larger and more detailed character art than the match screen.</p>
+<p>This is where stronger outfit fashion, fan-service-forward variants, full-body poses, and premium illustration detail should live. Match sprites should be stricter, cleaner, and readable.</p>
+<h2>Cosmetic Fairness Rule</h2>
+<p>Cosmetics must not affect:</p>
+<ul>
+<li>HP,</li>
+<li>damage,</li>
+<li>projectile behavior,</li>
+<li>wind,</li>
+<li>movement,</li>
+<li>hitboxes,</li>
+<li>terrain interaction,</li>
+<li>matchmaking,</li>
+<li>reward rates,</li>
+<li>visibility advantage.</li>
+</ul>
+<p>If a cosmetic pose changes the apparent silhouette, the gameplay hitbox still follows the same vehicle/unit rules.</p>
+<h2>Production Guidance</h2>
+<p>For MVP, favor complete themed set drops for art direction and readability:</p>
+<ul>
+<li>one outfit,</li>
+<li>one vehicle skin,</li>
+<li>optional nameplate/effect,</li>
+<li>optional larger collection art.</li>
+</ul>
+<p>Allow mix-and-match at the loadout slot level where it remains readable. If a specific outfit and vehicle skin only work together visually, mark that pairing as a set-specific exception later rather than making the entire cosmetic system inseparable by default.</p>
+<h2>Open Follow-Up</h2>
+<p>The sprite pipeline still needs a separate production plan for mounted character poses:</p>
+<ul>
+<li>define default active pose rules,</li>
+<li>define character/vehicle layering order,</li>
+<li>define KO-with-damaged-vehicle rules,</li>
+<li>generate purpose-built mounted probes instead of cropping full-body art.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

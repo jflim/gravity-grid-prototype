@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Session Handoff</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        Generated from <a href="SESSION_HANDOFF.md">docs/SESSION_HANDOFF.md</a> on 2026-06-08.
+        Edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Session Handoff</h1>
+<p>Use this as the quick restart note if all Codex/browser sessions are closed.</p>
+<h2>Repository</h2>
+<ul>
+<li>GitHub remote: <code>https://github.com/jflim/gravity-grid-prototype.git</code></li>
+<li>Active branch: <code>feature/gravity-canyon-online-foundation</code></li>
+<li>Project folder: <code>C:\Users\jflim\Code\gravity-canyon</code></li>
+<li>Previous OneDrive project folder: <code>C:\Users\jflim\OneDrive\Documents\Gravity Canyon Game</code></li>
+<li>Older projectless Codex output folder: <code>C:\Users\jflim\Documents\Codex\2026-06-04\files-mentioned-by-the-user-pasted\outputs\gravity-grid-prototype</code></li>
+<li>Treat the <code>C:\Users\jflim\Code\gravity-canyon</code> folder above as the canonical local workspace for new Codex chats.</li>
+</ul>
+<h2>Current Product Direction</h2>
+<ul>
+<li>Product name: Gravity Canyon.</li>
+<li>Browser-based online multiplayer artillery game.</li>
+<li>Current locked v1 scope is the hosted private-room playtest alpha in <code>docs/V1_PLAYTEST_ALPHA.html</code>.</li>
+<li><code>docs/V1_PLAYTEST_ALPHA.html</code> supersedes broader planning docs for current v1 scope.</li>
+<li>Local Phaser prototype proves movement, aiming, wind, destructible terrain, fall KOs, round reset, and readable HUD.</li>
+<li>Online foundation uses Colyseus with private rooms, ready checks, placeholder rewards, and a server-owned combat preview.</li>
+<li>Cosmetics are fun/collectible only and must not affect combat stats, hitboxes, projectile behavior, wind, movement, matchmaking, or rewards.</li>
+<li>Player-facing art direction now treats each pilot and vehicle as a signature combat unit, while keeping sprites layered for customization.</li>
+</ul>
+<h2>Current Implementation State</h2>
+<ul>
+<li>Phaser local 1v1 combat is playable locally.</li>
+<li>Colyseus room create/join, display names, ready checks, placeholder capsule/nameplate rewards are implemented.</li>
+<li>Server-owned online combat preview is implemented:</li>
+<li>round number,</li>
+<li>turn number,</li>
+<li>wind,</li>
+<li>active vehicle,</li>
+<li>vehicle HP/alive state,</li>
+<li>winner,</li>
+<li>validated active-player preview shots,</li>
+<li>preview token reward on round end.</li>
+<li>The online preview is visible in the floating Online Alpha panel.</li>
+<li>Phaser projectile and terrain simulation are not yet synced to the server-owned combat model.</li>
+<li>Local combat readability now has prototype combat hulls, floating combat markers, and randomized terrain/spawn archetypes:</li>
+<li>Direct-hit projectile collision uses visible ellipse combat hulls around the pilot-plus-vehicle unit concepts instead of the old small center-radius check.</li>
+<li>Combat hulls are shown by default for tuning and can be toggled with <code>H</code>.</li>
+<li>Floating markers call out direct damage, splash damage, Bunger shove, HP KO, and terrain/fall bunge defeat.</li>
+<li>Round start randomly picks one of five map/spawn archetypes: Twin Ridges, Shelf Duel, Canyon Basin, Broken Center Wall, or Staggered Shelves.</li>
+<li>The combat readability design is saved at <code>docs/superpowers/specs/2026-06-07-combat-readability-wind-lobs-design.md</code>.</li>
+<li>Slice 1 implementation notes are saved at <code>docs/superpowers/plans/2026-06-07-combat-readability-slice-1.md</code>.</li>
+</ul>
+<h2>Current Sprite State</h2>
+<ul>
+<li>Runtime sprites use stable filenames in <code>public/assets</code>.</li>
+<li>Variant/history sprites live under <code>public/assets/sprite-variants</code>.</li>
+<li>Active Nova Defeated KO runtime sprite is:</li>
+<li>runtime alias: <code>public/assets/nova-character-ko.png</code></li>
+<li>selected source: <code>public/assets/sprite-variants/characters/nova/ko/nova-character-ko-v16-marker-aligned-left-pupil.png</code></li>
+<li>Nova KO display size in <code>src/main.ts</code> is <code>250 x 94</code> because the active pose is wide/prone.</li>
+<li>New Nova Defeated KO concept direction is adult-anime Nova tumbling head-over-heels from her mounted crouch and collapsed over her damaged red signature vehicle:</li>
+<li><code>public/assets/sprite-variants/units/nova/defeated-ko/nova-unit-defeated-ko-head-over-heels-v1.png</code></li>
+<li>Selected Vesper paired-unit concept candidates:</li>
+<li>default mounted tech-shorts look: <code>public/assets/sprite-variants/units/vesper/default/vesper-unit-default-mounted-tech-shorts-v9.png</code></li>
+<li>Defeated KO tech-shorts look: <code>public/assets/sprite-variants/units/vesper/defeated-ko/vesper-unit-defeated-ko-tech-shorts-v10.png</code></li>
+<li>Nova and Vesper now have full-unit intense runtime test aliases used by the default concept-preview charging state:</li>
+<li><code>public/assets/nova-unit-intense.png</code></li>
+<li><code>public/assets/vesper-unit-intense.png</code></li>
+<li>Vesper intense uses the v8 subtle tension scale-stable footprint-locked candidate. Earlier intense candidates either had a too-wide/low alpha box, read as visually shrunken, or made Vesper/rover feel like a different-size unit during the power-shot swap. The v8 normalized alias matches the default visible alpha footprint while allowing small pilot/rover recoil, leg tension, joystick/deck-control charge action, cannon reticle, headset glow, and compact glitch UI.</li>
+<li>Perlah intense uses the v2 footprint-locked candidate. It keeps the same apparent size and default leg/vehicle anchors while showing a compact heat-charge reaction.</li>
+<li>Default concept-preview unit display boxes and prototype combat hulls are now about 10-12% smaller so local 2v2-style play has more open battlefield space.</li>
+<li>Destroyed vehicle sprites exist for Nova and Vesper:</li>
+<li><code>public/assets/nova-vehicle-destroyed.png</code></li>
+<li><code>public/assets/vesper-vehicle-destroyed.png</code></li>
+<li>Kaelii and Perlah are now accepted as v1 local runtime test units, with stable aliases:</li>
+<li><code>public/assets/kaelii-vehicle-sprite.png</code></li>
+<li><code>public/assets/kaelii-vehicle-destroyed.png</code></li>
+<li><code>public/assets/kaelii-unit-default.png</code></li>
+<li><code>public/assets/kaelii-unit-intense.png</code></li>
+<li><code>public/assets/kaelii-unit-ko.png</code></li>
+<li><code>public/assets/perlah-vehicle-sprite.png</code></li>
+<li><code>public/assets/perlah-vehicle-destroyed.png</code></li>
+<li><code>public/assets/perlah-unit-default.png</code></li>
+<li><code>public/assets/perlah-unit-intense.png</code></li>
+<li><code>public/assets/perlah-unit-ko.png</code></li>
+<li>Local play now spawns Nova, Vesper, Kaelii, and Perlah as a 2v2-style test roster. Online alpha remains private-room 1v1 preview.</li>
+<li>Kaelii Defeated KO v5 remains acceptable for v1 testing, but its right-eye pupil placement is an open future artist/refinement note.</li>
+<li>Vesper default/KO unit candidates still need production cleanup before replacing the older layered baseline set. Vesper full-unit intense v8 subtle tension scale-stable is active as a runtime test alias.</li>
+</ul>
+<h2>Next Best Step</h2>
+<p>For v1 scope discipline, use <code>docs/V1_PLAYTEST_ALPHA.html</code> as the authority before accepting any new gameplay, roster, asset, UI, economy, social, or polish work as v1. If the request is not required for v1 acceptance, preserve it in the V2 parking lot/context notes instead of expanding v1.</p>
+<p>For combat feel, keep tuning visible combat hulls and terrain/spawn archetypes only where they support v1 readability. Advanced wind bands and high-angle/plunge reward rules are future ideas unless the v1 contract is explicitly changed.</p>
+<p>For online v1, the next best build direction is to move from the current Colyseus combat preview toward real private-room 1v1/2v2 room settings, seat ownership, persistent match turn order, and server-owned combat results wired into the Phaser match scene.</p>
+<p>For sprites, use the committed Vesper v9/v10 unit candidates as references for the next production pass. The next pass should simplify detail, preserve the light full gloves/tech shorts/chunky sneaker identity, remove the chroma key, split or size layers as needed, and only then promote runtime aliases.</p>
+<p>Recommended Vesper direction:</p>
+<pre><code class="language-text">
+Create a brand-new original 2D cel-shaded adult anime arcade game sprite concept on a perfectly flat solid #00ff00 chroma-key background.
+
+
+
+Depict Vesper as a cohesive character-plus-signature-vehicle unit in a Defeated KO state. Preserve the cyan-blue hair, short twin-braid accents, blue headset, blue-and-black tech outfit, gloves, chunky blue-white sneakers, thick dark outline, and polished anime game sprite rendering. Use adult anime proportions, not semi-chibi or super-deformed proportions.
+
+
+
+Vesper should be collapsed over, draped on, or slumped against her damaged blue tech/glitch hover artillery rig. Keep the character in front of/on top of the vehicle so the unit relationship is visible. The pose should feel defeated, dazed, and readable without looking dumb or like a generic goofy collapse.
+
+
+
+Face is the most important detail. Heavy sleepy eyelids, open mouth with a small tongue blep. Eyes are thin slit-shaped white KO eyes, vertically compressed on the Y-axis. Add visible small oval pupils inside both white slit eyes. Both pupils are rolled upward toward the forehead and crossed inward, clearly inside the eye whites. The expression should read knocked out senseless, dazed, and comically defeated.
+
+
+
+Style: mainstream adult anime game sprite, clean cel shading, crisp face details, thick dark outline, wide full-unit silhouette with generous padding.
+
+
+
+Asset constraints: flat uniform #00ff00 background, character and vehicle only, no text, no watermark, no blood or visible injury, no nudity, no explicit exposure.
+
+</code></pre>
+<p>After generation:</p>
+<ol>
+<li>Save the chosen candidate under <code>public/assets/sprite-variants/characters/vesper/ko/</code>.</li>
+<li>Remove the green chroma background and trim padding.</li>
+<li>Copy the winner into <code>public/assets/vesper-character-ko.png</code>.</li>
+<li>Update Vesper KO display size in <code>src/main.ts</code> if the aspect ratio changes.</li>
+<li>Run <code>npm run build</code>.</li>
+</ol>
+<h2>Verification Already Run</h2>
+<ul>
+<li><code>npm run build</code> passed after the online preview and Nova KO sprite changes.</li>
+<li><code>npm run verify:runtime-roster</code> checks Kaelii/Perlah runtime aliases, preload keys, class IDs, and local turn order.</li>
+<li>A two-client Colyseus smoke test reached <code>round-over</code>, set the losing vehicle to 0 HP, and granted the preview token reward.</li>
+</ul>
+<h2>Known Environment Note</h2>
+<p>Detached dev-server startup from Codex PowerShell hit a Windows <code>Path</code>/<code>PATH</code> <code>Start-Process</code> issue. Running <code>npm run dev</code> directly in a normal terminal is the reliable local path.</p>
+    </article>
+  </main>
+</body>
+</html>

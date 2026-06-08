@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gravity Canyon V1 Playtest Alpha</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --red: #b63d3d;
+      --blue: #2866a8;
+      --gold: #c57d1c;
+      --green: #547b42;
+      --code: #2a2723;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 32px 20px 72px;
+    }
+
+    header {
+      border: 1px solid var(--line);
+      background: var(--paper);
+      padding: 28px;
+      border-radius: 8px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+
+    h1, h2, h3 {
+      line-height: 1.15;
+      margin: 0 0 12px;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 4vw, 3.25rem);
+    }
+
+    h2 {
+      font-size: 1.55rem;
+      margin-top: 40px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--line);
+    }
+
+    h3 {
+      font-size: 1.12rem;
+      margin-top: 24px;
+    }
+
+    p {
+      margin: 0 0 12px;
+    }
+
+    a {
+      color: #245d96;
+    }
+
+    code, pre {
+      font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace;
+    }
+
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+
+    ul {
+      padding-left: 1.4rem;
+    }
+
+    li {
+      margin: 4px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0 22px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #efe7dc;
+    }
+
+    nav {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 8px;
+      margin-top: 22px;
+    }
+
+    nav a {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fbf8f1;
+      padding: 9px 11px;
+      text-decoration: none;
+      font-weight: 650;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 16px 0 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      border-radius: 999px;
+      padding: 4px 10px;
+      color: #fff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .locked { background: var(--red); }
+    .contract { background: var(--blue); }
+    .context { background: var(--green); }
+    .future { background: var(--gold); }
+
+    .section {
+      margin-top: 24px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 20px;
+    }
+
+    .callout {
+      border-left: 5px solid var(--blue);
+      background: #eef5fb;
+      padding: 14px 16px;
+      margin: 16px 0;
+      border-radius: 6px;
+    }
+
+    .warning {
+      border-left-color: var(--red);
+      background: #fbefed;
+    }
+
+    .future-box {
+      border-left-color: var(--gold);
+      background: #fbf3e6;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="muted">Gravity Canyon documentation</p>
+      <h1>V1 Playtest Alpha Contract</h1>
+      <p>
+        This document defines the locked v1 target for Gravity Canyon: a hosted private-room playtest alpha
+        centered on reliable online 2v2 artillery combat.
+      </p>
+      <div class="meta">
+        <span class="badge locked">Locked Scope</span>
+        <span class="badge contract">V1 Authority</span>
+        <span class="badge future">V2 Parking Lot</span>
+        <span class="badge context">Context Notes</span>
+      </div>
+      <nav aria-label="Table of contents">
+        <a href="#scope-authority">Scope Authority</a>
+        <a href="#v1-promise">V1 Promise</a>
+        <a href="#room-flow">Room Flow</a>
+        <a href="#match-rules">Match Rules</a>
+        <a href="#combat">Combat</a>
+        <a href="#roster-weapons">Roster And Weapons</a>
+        <a href="#acceptance">Acceptance</a>
+        <a href="#out-of-scope">Out Of Scope</a>
+        <a href="#change-control">Change Control</a>
+      </nav>
+    </header>
+
+    <section id="scope-authority" class="section">
+      <h2>Scope Authority</h2>
+      <div class="callout warning">
+        <strong>Only the locked v1 sections define scope.</strong>
+        The decision log, discovery notes, and V2 parking lot preserve context and ideas. They do not change v1.
+      </div>
+      <p>
+        This file is the authority for v1. <a href="GAME_DESIGN_SPEC.html">GAME_DESIGN_SPEC.md</a> remains the broad,
+        multi-version product vision. <a href="BUILD_PLAN.html">BUILD_PLAN.md</a> tracks implementation order.
+      </p>
+      <p>
+        New gameplay, roster, asset, UI, economy, social, or polish requests must be classified against this document
+        before being accepted as v1 work.
+      </p>
+    </section>
+
+    <section id="v1-promise" class="section">
+      <h2>V1 Promise</h2>
+      <p>
+        Gravity Canyon v1 is a hosted private-room playtest alpha. The core promise is reliable online 2v2 artillery
+        combat with real people. 1v1 is supported for easier testing, but it does not replace the 2v2 target.
+      </p>
+      <ul>
+        <li>People can open a hosted URL without installing the project locally.</li>
+        <li>Players can create or join a private room by invite link/code.</li>
+        <li>Players can complete private-room 1v1 or 2v2 matches.</li>
+        <li>The 2v2 gold validation is four humans on separate connections completing a match.</li>
+        <li>The build is playtest-clear and shareable with invited friends, not public-launch complete.</li>
+      </ul>
+    </section>
+
+    <section id="room-flow" class="section">
+      <h2>Room Flow</h2>
+      <h3>Access And Join</h3>
+      <ul>
+        <li>Anyone with the URL can open the game. No login, whitelist, or access code is required in v1.</li>
+        <li>Invite links open a lightweight join screen with an auto-generated editable display name.</li>
+        <li>Rooms are ephemeral. A room stays alive while at least one joined player remains connected.</li>
+        <li>No database persistence is required for rooms, profiles, match history, rewards, or inventory.</li>
+      </ul>
+
+      <h3>Lobby</h3>
+      <ul>
+        <li>The earliest connected player is host. If the host leaves, host passes to the next earliest connected player.</li>
+        <li>Host can change pre-match settings only: mode, match length, and map.</li>
+        <li>Settings are locked once the match starts.</li>
+        <li>Ready is per connected player, not per seat.</li>
+        <li>Host Start is valid when required seats are filled and all seated players are ready.</li>
+        <li>If Start is pressed early, the lobby shows missing seats and/or unready players.</li>
+      </ul>
+
+      <h3>Seats And Names</h3>
+      <ul>
+        <li>Mode means combat slots, not human count.</li>
+        <li>1v1 has two units total: Red 1 and Blue 1.</li>
+        <li>2v2 has four units total: Red 1, Red 2, Blue 1, Blue 2.</li>
+        <li>One connection may control one or two same-team characters, but cannot control both teams.</li>
+        <li>All required seats must be filled before a match can start.</li>
+        <li>Lobby seats show team/seat, player display name, selected character, weapon summary, and ready state.</li>
+        <li>Display names can be edited in lobby before each match and are locked during active matches.</li>
+        <li>Display names use simple limits: max length, trimmed whitespace, no empty names, and safe rendering.</li>
+      </ul>
+
+      <h3>Spectators And Capacity</h3>
+      <ul>
+        <li>V1 room capacity is 8 joined room members total.</li>
+        <li>Unseated members in the lobby may passively watch if they were present before match start.</li>
+        <li>Passive spectators cannot emote, control units, change settings, ready, or join seats mid-match.</li>
+        <li>New visitors during an active match are not joined. They see a match-in-progress screen with retry/light polling.</li>
+        <li>Only seated players with valid reconnect tokens can rejoin an active match.</li>
+      </ul>
+    </section>
+
+    <section id="match-rules" class="section">
+      <h2>Match Rules</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Area</th>
+            <th>V1 Rule</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Modes</td>
+            <td>Private-room 2v2 and 1v1. 2v2 is the primary v1 promise.</td>
+          </tr>
+          <tr>
+            <td>Match length</td>
+            <td>Host chooses best-of-1 or best-of-3 before match start.</td>
+          </tr>
+          <tr>
+            <td>Round flow</td>
+            <td>Between rounds, show a short result screen, update score, reset terrain/spawns/HP, then continue.</td>
+          </tr>
+          <tr>
+            <td>Post-match</td>
+            <td>Return to the same room lobby. Preserve seat ownership where possible and reset ready states.</td>
+          </tr>
+          <tr>
+            <td>Turn order</td>
+            <td>Server generates one fair, team-alternating turn order at match start. It persists across all rounds.</td>
+          </tr>
+          <tr>
+            <td>Turn timer</td>
+            <td>30 seconds. Timeout skips the turn. Movement already committed remains committed.</td>
+          </tr>
+          <tr>
+            <td>Shot commitment</td>
+            <td>Firing commits the turn immediately. There is no post-shot movement window.</td>
+          </tr>
+          <tr>
+            <td>Sudden death</td>
+            <td>Predictable cycle-based HP pressure after a round turn limit. Terrain hazards are v2.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Disconnects</h3>
+      <ul>
+        <li>Seat ownership is tied to a temporary room/session reconnect token, not an account.</li>
+        <li>Disconnected seated players have a 3-minute reconnect grace.</li>
+        <li>If a disconnected player's turn begins, the game waits up to 5 seconds, then skips that turn.</li>
+        <li>If reconnect grace expires, that player's controlled seats forfeit/KO.</li>
+        <li>The match does not pause for disconnects.</li>
+      </ul>
+    </section>
+
+    <section id="combat" class="section">
+      <h2>Combat</h2>
+      <h3>Controls</h3>
+      <ul>
+        <li>Combat is keyboard-first.</li>
+        <li>Left/Right move continuously while held, constrained by movement range and terrain legality.</li>
+        <li>Up/Down adjust aim.</li>
+        <li>Hold Space to charge power; release Space to fire.</li>
+        <li>The HUD shows a live power bar while charging.</li>
+        <li>Mouse is used for lobby/UI and the social phrase popup, not combat aiming or firing.</li>
+      </ul>
+
+      <h3>Server Authority</h3>
+      <ul>
+        <li>Server owns final combat results: turn ownership, legal movement, shot validation, terrain result, damage, KOs, round wins, and match wins.</li>
+        <li>Client may render and animate for responsiveness.</li>
+        <li>Server validates active player, angle range, power range, weapon, and turn state on fire.</li>
+        <li>Full charge-timing anti-cheat, rollback, and advanced lag compensation are v2.</li>
+      </ul>
+
+      <h3>Terrain, Wind, And Gravity</h3>
+      <ul>
+        <li>Terrain uses server result authority. The server broadcasts crater/result updates for client rendering.</li>
+        <li>Gravity is constant across v1. Gravity Canyon identity comes from terrain, voids, arcs, knockback, and Void Drops.</li>
+        <li>Wind is server-owned RNG selected at the start of each round and remains constant for that round.</li>
+        <li>Wind values are tuning, but non-neutral wind should matter without preventing game progress.</li>
+        <li>No advanced wind bands, gravity wells, map-specific physics, or local gravity zones in v1.</li>
+      </ul>
+
+      <h3>Aiming And Camera</h3>
+      <ul>
+        <li>Aiming uses a broad Gunbound-style upper arc. Exact limits are tuning values.</li>
+        <li>No trajectory line, landing marker, auto-aim, target lock, or full shot preview.</li>
+        <li>Global tactical context beats cinematic camera.</li>
+        <li>The view should usually show the battlefield clearly like a classic artillery game.</li>
+        <li>Projectile follow is restrained and only for impact readability.</li>
+      </ul>
+
+      <h3>Damage, Hitboxes, And KOs</h3>
+      <ul>
+        <li>Direct-hit collision and HP damage use one shared fixed vehicle combat hull for all v1 characters.</li>
+        <li>Pilot art and cosmetic detail do not define damageable pixels.</li>
+        <li>Enemy units are valid direct-hit targets and can body-block shots.</li>
+        <li>Allied units do not block allied projectiles.</li>
+        <li>Allied units are immune to allied direct HP damage, splash HP damage, and weapon knockback.</li>
+        <li>Terrain deformation affects everyone, including allies.</li>
+        <li>Units can be KO'd by HP reaching 0 or by being <strong>Void Dropped</strong>.</li>
+        <li>Void Dropped means the unit falls below the playable battlefield/death plane into the canyon void.</li>
+        <li>Multi-KOs, self-KOs, and teammate Void Drops from terrain mistakes are valid.</li>
+        <li>Unsupported units fall/settle immediately after terrain destruction. No slope sliding and no fall damage.</li>
+      </ul>
+
+      <h3>HUD And Feedback</h3>
+      <ul>
+        <li>V1 uses a classic all-info-visible artillery HUD.</li>
+        <li>HUD must show turn order, active player/seat/character, team scores, round tracker, HP, wind, angle, power, movement, weapon info, and timer.</li>
+        <li>Feedback distinguishes Direct Hit, Splash Hit, KO, and Void Dropped.</li>
+        <li>When units overlap, the active/moving unit renders in front and gets the strongest active marker.</li>
+        <li>Duplicate characters are distinguished by player display name, team/seat label, HP/nameplate color, and active markers, not sprite recolors.</li>
+      </ul>
+    </section>
+
+    <section id="roster-weapons" class="section">
+      <h2>Roster And Weapons</h2>
+      <p>
+        V1 roster is exactly Nova, Vesper, Kaelii, and Perlah. Duplicate picks are allowed, including four of the
+        same character. No new playable characters enter v1.
+      </p>
+      <p>
+        Character art may be refined only to reach a readable, consistent, playtest-ready baseline for the four v1
+        characters and their required runtime states.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Character</th>
+            <th>Role Tag</th>
+            <th>Working Weapon</th>
+            <th>V1 Behavior Lock</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Nova</td>
+            <td>Terrain</td>
+            <td>Canyon Breaker</td>
+            <td>Single heavy crater shot with the strongest terrain carve and Void Drop setup potential.</td>
+          </tr>
+          <tr>
+            <td>Vesper</td>
+            <td>Disrupt</td>
+            <td>Gravity Well</td>
+            <td>Gravity-tech pull field at impact that drags enemies toward the impact point.</td>
+          </tr>
+          <tr>
+            <td>Kaelii</td>
+            <td>Trick Shot</td>
+            <td>Skip Roller</td>
+            <td>Terrain-following rolling projectile that punishes enemies stuck in craters or behind small lips.</td>
+          </tr>
+          <tr>
+            <td>Perlah</td>
+            <td>Cluster</td>
+            <td>Sunspike Cluster</td>
+            <td>Impact-splitting cluster shot that creates compact small blasts for reliable area damage.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ul>
+        <li>Weapon names are working names until final v1 doc approval. Behaviors are the design lock.</li>
+        <li>Each weapon gets one matching readable VFX and one matching non-voice SFX.</li>
+        <li>Damage, crater size, pull strength, roll duration, cluster count, knockback, wind bounds, and aim limits are tuning values.</li>
+        <li>No secondary weapons, passives, upgrades, ultimate attacks, cosmetic VFX variants, voice barks, or music in v1.</li>
+      </ul>
+    </section>
+
+    <section id="maps-social" class="section">
+      <h2>Maps And Social</h2>
+      <h3>Maps</h3>
+      <ul>
+        <li>V1 ships with 5 fixed maps.</li>
+        <li>Each map has a name/theme and fixed 1v1 and 2v2 spawn layouts.</li>
+        <li>Host can choose a specific map or Random.</li>
+        <li>If Random is selected, the server may choose a fresh map each round.</li>
+        <li>If a specific map is selected, that map repeats each round with fresh reset state.</li>
+        <li>No map voting, custom maps, procedural sliders, or player-placed spawns in v1.</li>
+      </ul>
+
+      <h3>Preset Phrases</h3>
+      <ul>
+        <li>No free-text chat in v1.</li>
+        <li>Seated players can click one of their controlled characters to open a small social popup.</li>
+        <li>The popup allows preset phrase bubbles only.</li>
+        <li>Phrase bubbles appear temporarily above the selected controlled character.</li>
+        <li>No phrase feed, phrase history, custom text, spectator emotes, or emote cosmetics in v1.</li>
+      </ul>
+    </section>
+
+    <section id="acceptance" class="section">
+      <h2>Testing And Acceptance</h2>
+      <h3>Automated Verification</h3>
+      <p>
+        Automated tests cover deterministic game rules and server-owned multiplayer state. Visual feel, art, SFX,
+        camera readability, and fun are verified through manual smoke tests and real playtests.
+      </p>
+      <ul>
+        <li>Room creation/join and settings.</li>
+        <li>Seat claiming, same-team two-character ownership, and duplicate character picks.</li>
+        <li>Ready/start validation.</li>
+        <li>1v1 and 2v2 setup.</li>
+        <li>Persistent match turn order.</li>
+        <li>Best-of-1 and best-of-3 scoring.</li>
+        <li>Movement legality basics.</li>
+        <li>Shot result, damage, KO, Void Dropped, and win resolution.</li>
+        <li>Reconnect token recovery and disconnect skip/forfeit behavior.</li>
+        <li>Map selection and Random map rules.</li>
+      </ul>
+
+      <h3>Acceptance Gates</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Gate</th>
+            <th>Requirement</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Build Complete</td>
+            <td>Automated tests and build pass. Controlled multi-client smoke tests complete the core room/match flow.</td>
+          </tr>
+          <tr>
+            <td>Playtest Accepted</td>
+            <td>Real people complete supported private-room playtests and provide feedback.</td>
+          </tr>
+          <tr>
+            <td>Gold Network Validation</td>
+            <td>Four humans on separate connections complete a private-room online 2v2 match.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="out-of-scope" class="section">
+      <h2>Out Of Scope For V1</h2>
+      <div class="callout future-box">
+        Good ideas belong here until v1 is accepted. Parking an idea preserves it without changing the v1 contract.
+      </div>
+      <ul>
+        <li>Accounts, login, durable profiles, inventory, rewards, currency, gacha, shop, rankings, and match history.</li>
+        <li>Public lobby, public room list, matchmaking, queues, MMR, auto-fill, and bots.</li>
+        <li>Free-text chat, moderation tools, kick/ban, reporting, host transfer UI, and room ownership persistence.</li>
+        <li>Mid-match setting changes, custom room rules, configurable turn timers, best-of-5, and custom maps.</li>
+        <li>New playable characters beyond Nova, Vesper, Kaelii, and Perlah.</li>
+        <li>Friendly-fire room setting and full allied damage mode.</li>
+        <li>Second weapons, special shots, passives, upgrades, ultimates, and character stat sheets.</li>
+        <li>Advanced wind bands, local gravity zones, gravity wells as map hazards, and map-specific physics rules.</li>
+        <li>Mobile/touch, gamepad, remappable controls, and full accessibility pass.</li>
+        <li>Voice barks, KO shouts, music, ambient audio, cosmetic SFX, alternate VFX, and character audio identity pass.</li>
+        <li>Full spectator mode, spectator camera controls, spectator emotes, waiting room, and mid-match join spectators.</li>
+        <li>Interactive tutorial, practice range, polished launch UX, public marketing page, and trailer/social-media polish.</li>
+      </ul>
+    </section>
+
+    <section id="decision-log" class="section">
+      <h2>Decision Log</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Decision</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>V1 is playtest alpha, not full release.</td>
+            <td>Reliable online 2v2 must be proven before accounts, economy, and public discovery.</td>
+          </tr>
+          <tr>
+            <td>1v1 is supported but not the primary promise.</td>
+            <td>It helps practical playtesting without replacing the 2v2 target.</td>
+          </tr>
+          <tr>
+            <td>No public matchmaking in v1.</td>
+            <td>Private rooms are enough to get real feedback from friends and early testers.</td>
+          </tr>
+          <tr>
+            <td>No durable rewards in v1.</td>
+            <td>Session-only playtest alpha does not need accounts or inventory.</td>
+          </tr>
+          <tr>
+            <td>No new playable characters in v1.</td>
+            <td>Four existing characters are enough to test 2v2, and extra roster content would multiply balance and asset work.</td>
+          </tr>
+          <tr>
+            <td>Weapon names are working names.</td>
+            <td>Behavior matters more than final copy while the v1 contract is being finalized.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="change-control" class="section">
+      <h2>Change Control</h2>
+      <p>
+        After approval, the v1 design can be clarified often but changed rarely.
+      </p>
+      <h3>Allowed Without Contract Change</h3>
+      <ul>
+        <li>Fixing wording, typos, or ambiguity.</li>
+        <li>Adding implementation notes that match existing scope.</li>
+        <li>Recording discoveries, risks, or playtest notes.</li>
+        <li>Adding ideas to the V2 parking lot.</li>
+        <li>Tuning numeric values that are explicitly marked as tuning values.</li>
+      </ul>
+
+      <h3>Requires Explicit Contract Change</h3>
+      <ul>
+        <li>Adding or removing v1 features.</li>
+        <li>Changing supported modes, match rules, room rules, or acceptance gates.</li>
+        <li>Adding playable characters, accounts, persistence, public matchmaking, or economy systems.</li>
+        <li>Changing the core one-weapon identity of a v1 character.</li>
+      </ul>
+
+      <div class="callout warning">
+        To change v1, the user must explicitly say: <strong>"I am requesting a v1 contract change."</strong>
+        Codex should push back, ask what v1 acceptance test fails without the change, require a tradeoff or deferral,
+        and record the decision before editing locked scope.
+      </div>
+    </section>
+  </main>
+</body>
+</html>

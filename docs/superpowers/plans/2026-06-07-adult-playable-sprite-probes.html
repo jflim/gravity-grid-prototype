@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Adult Playable Sprite Probes Implementation Plan</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        Generated from <a href="2026-06-07-adult-playable-sprite-probes.md">docs/superpowers/plans/2026-06-07-adult-playable-sprite-probes.md</a> on 2026-06-08.
+        Edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Adult Playable Sprite Probes Implementation Plan</h1>
+<blockquote>
+<p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (<code>- [ ]</code>) syntax for tracking.</p>
+</blockquote>
+<p><strong>Goal:</strong> Generate disposable adult-anime gameplay sprite probes for Nova and Vesper, then compare them against the current compact sprites at match scale before replacing any runtime assets.</p>
+<p><strong>Architecture:</strong> Treat generated images as probe artifacts, not production assets. Keep source generations, processed transparent cutouts, and comparison mockups under ignored <code>work/</code> paths until the user chooses a direction. Use the existing visual companion server to review probes in context.</p>
+<p><strong>Tech Stack:</strong> Built-in <code>image_gen</code> tool, local <code>view_image</code>, Python/Pillow image processing through the installed imagegen chroma-key helper, PowerShell checks, static HTML for visual comparison.</p>
+<p>---</p>
+<h2>Files And Responsibilities</h2>
+<ul>
+<li><code>docs/superpowers/specs/2026-06-07-adult-playable-sprite-probes-design.md</code>: Approved design constraints and preservation rules.</li>
+<li><code>work/sprite-probes/source/</code>: Raw generated probe images copied from the image generation output location.</li>
+<li><code>work/sprite-probes/processed/</code>: Transparent, alpha-trimmed PNG probe cutouts used in mockups.</li>
+<li><code>work/sprite-probes/trim_alpha.py</code>: Local disposable alpha-bound trimming helper for probe images.</li>
+<li><code>work/.superpowers/brainstorm/wmi-check/content/adult-probe-results.html</code>: Visual companion comparison page.</li>
+<li><code>work/.superpowers/brainstorm/wmi-check/content/*.png</code>: Preview copies served by the companion.</li>
+<li><code>public/assets/*</code>: Reference images only. Do not modify during this probe.</li>
+</ul>
+<h2>Task 1: Prepare Probe Workspace</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>work/sprite-probes/source/</code></li>
+<li>Create: <code>work/sprite-probes/processed/</code></li>
+<li>Create: <code>work/sprite-probes/README.md</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Create probe folders</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+New-Item -ItemType Directory -Force -Path work\sprite-probes\source,work\sprite-probes\processed | Out-Null
+
+</code></pre>
+<p>Expected: command exits <code>0</code>.</p>
+<ul>
+<li>[ ] <strong>Step 2: Create a probe README</strong></li>
+</ul>
+<p>Create <code>work/sprite-probes/README.md</code> with this exact content:</p>
+<pre><code class="language-markdown">
+# Sprite Probe Workspace
+
+
+
+Temporary adult-anime playable sprite probes for Gravity Canyon.
+
+
+
+Rules:
+
+- Do not copy these files into `public/assets` until the user chooses a direction.
+
+- Keep raw image generation outputs in `source/`.
+
+- Keep transparent, trimmed preview cutouts in `processed/`.
+
+- Use the visual companion page to judge match-scale readability.
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 3: Confirm runtime reference dimensions</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+$paths = @(
+
+  'public/assets/nova-character-default.png',
+
+  'public/assets/nova-character-ko.png',
+
+  'public/assets/vesper-character-default.png',
+
+  'public/assets/vesper-character-ko.png',
+
+  'public/assets/nova-vehicle-sprite.png',
+
+  'public/assets/vesper-vehicle-sprite.png'
+
+)
+
+Add-Type -AssemblyName System.Drawing
+
+foreach ($p in $paths) {
+
+  $img = [System.Drawing.Image]::FromFile((Resolve-Path $p))
+
+  [pscustomobject]@{ Path = $p; Width = $img.Width; Height = $img.Height }
+
+  $img.Dispose()
+
+}
+
+</code></pre>
+<p>Expected: the command prints dimensions for all six reference files without errors.</p>
+<h2>Task 2: Generate Nova Default Adult-Playable Probe</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Reference: <code>public/assets/nova-character-default.png</code></li>
+<li>Reference: <code>public/assets/nova-character-ko.png</code></li>
+<li>Create: <code>work/sprite-probes/source/nova-default-adult-playable-source.png</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Inspect reference images</strong></li>
+</ul>
+<p>Use <code>view_image</code> on:</p>
+<pre><code class="language-text">
+C:\Users\jflim\Code\gravity-canyon\public\assets\nova-character-default.png
+
+C:\Users\jflim\Code\gravity-canyon\public\assets\nova-character-ko.png
+
+</code></pre>
+<p>Expected: confirm Nova's red hair, high ponytail, goggles, red-and-black pilot outfit, gloves, heavy boots, and adult KO identity are visible.</p>
+<ul>
+<li>[ ] <strong>Step 2: Generate the probe</strong></li>
+</ul>
+<p>Use the built-in <code>image_gen</code> tool with this prompt:</p>
+<pre><code class="language-text">
+Use case: stylized-concept
+
+Asset type: disposable adult-anime gameplay sprite probe for Gravity Canyon
+
+Primary request: Create a brand-new original 2D cel-shaded adult-anime gameplay character sprite on a perfectly flat solid #00ff00 chroma-key background.
+
+
+
+Input images: Use the current Nova default sprite as the identity reference for hair, goggles, outfit, gloves, boots, compact pilot silhouette, and arcade game rendering. Use the current Nova KO sprite only as the adult-anime maturity/style reference; do not copy its KO pose for this default pose.
+
+
+
+Subject: Nova, an adult anime arcade combat pilot with red hair, high ponytail, goggles, red-and-black armored arcade pilot outfit, gloves, and heavy boots.
+
+
+
+Pose: compact seated/ready gameplay pose compatible with being composited beside or on a sci-fi artillery vehicle. She should look alert, confident, and ready to aim/fire, with hands posed as if gripping imaginary compact vehicle controls. Keep the full body readable. Do not render any vehicle or control props.
+
+
+
+Style/medium: mainstream adult anime game sprite, clean cel shading, crisp face details, thick dark outline, simplified costume details for gameplay readability. Tasteful/lightly suggestive adult-anime character appeal is allowed through mature proportions, confident styling, fitted arcade pilot outfit details, legs/boots/silhouette, and expressive face language, while staying stream-safe and readable as a match sprite. Avoid pin-up framing, cleavage focus, underwear focus, or sexualized camera angles.
+
+
+
+Composition/framing: centered with generous padding, full-body readable silhouette, but designed to export as a compact battlefield sprite around 120-155 px display height.
+
+
+
+Constraints: flat uniform #00ff00 background with no shadows, gradients, texture, floor plane, or lighting variation. Character only. No vehicle. No text. No watermark. No blood. No injury. No nudity. No explicit exposure. Do not use #00ff00 anywhere in the character.
+
+</code></pre>
+<p>Expected: one generated image that clearly reads as adult-anime Nova in a compact playable default pose.</p>
+<ul>
+<li>[ ] <strong>Step 3: Save the selected raw output</strong></li>
+</ul>
+<p>Copy the selected generated image returned by <code>image_gen</code> to:</p>
+<pre><code class="language-text">
+work/sprite-probes/source/nova-default-adult-playable-source.png
+
+</code></pre>
+<p>Expected: the file exists and has a flat green background.</p>
+<h2>Task 3: Generate Nova KO Playable-Pass Probe</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Reference: <code>public/assets/nova-character-ko.png</code></li>
+<li>Create: <code>work/sprite-probes/source/nova-ko-adult-playable-source.png</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Inspect the locked KO reference</strong></li>
+</ul>
+<p>Use <code>view_image</code> on:</p>
+<pre><code class="language-text">
+C:\Users\jflim\Code\gravity-canyon\public\assets\nova-character-ko.png
+
+</code></pre>
+<p>Expected: confirm the prone pose and crossed rolled-up pupil expression are visible. Treat this as the pose/expression anchor.</p>
+<ul>
+<li>[ ] <strong>Step 2: Generate the playable-pass probe</strong></li>
+</ul>
+<p>Use the built-in <code>image_gen</code> tool with this prompt:</p>
+<pre><code class="language-text">
+Use case: stylized-concept
+
+Asset type: disposable adult-anime gameplay KO sprite probe for Gravity Canyon
+
+Primary request: Create a gameplay-readable adult-anime KO status sprite variant on a perfectly flat solid #00ff00 chroma-key background.
+
+
+
+Input images: Use the current Nova KO sprite as the primary pose and expression reference. Preserve the pose and eye mechanic closely. This is a playable export pass, not a redesign.
+
+
+
+Subject: Nova, an adult anime arcade combat pilot with red hair, high ponytail, goggles, red-and-black armored arcade pilot outfit, gloves, and heavy boots.
+
+
+
+Pose preservation: Full-body sprawled face-down in a horizontal/prone pose with no visible floor, head low, arms slack, legs awkwardly collapsed, posture clearly knocked out and overwhelmed. Gear loosened from impact, straps slightly displaced, buckles dangling, goggles hanging low from the head without covering the eyes, hair messy and fallen across the forehead while both eyes and crossed rolled-up pupils remain unobstructed and readable.
+
+
+
+Face preservation: Heavy sleepy eyelids, comedic overheated/dazed blush that is not flirty or sensual, open mouth with a small tongue blep. Eyes are thin slit-shaped white KO eyes, vertically compressed on the Y-axis. Add visible small oval pupils inside both white slit eyes. Both pupils are rolled upward toward the forehead and crossed inward, clearly inside the eye whites. Expression reads knocked out senseless, dazed, and comically defeated.
+
+
+
+Gameplay pass adjustments: Keep the core pose, face, and adult-anime identity, but simplify tiny costume details, strengthen the outer silhouette, thicken dark outline edges, reduce excess illustration density, and make the face readable at match scale. Keep the attractive adult-anime character styling, but do not let pin-up framing or erotic detail become the primary read of the vulnerable KO state. Do not change the pose into a different KO.
+
+
+
+Style/medium: mainstream adult anime game sprite, clean cel shading, crisp face details, thick dark outline.
+
+
+
+Composition/framing: centered with generous padding, full-body wide prone silhouette, intended to export as a wide KO gameplay sprite that fits inside the active unit frame.
+
+
+
+Constraints: flat uniform #00ff00 background with no shadows, gradients, texture, floor plane, or lighting variation. Character only. No vehicle. No text. No watermark. No blood. No visible injury. No nudity. No explicit exposure. Do not use #00ff00 anywhere in the character.
+
+</code></pre>
+<p>Expected: one generated image that preserves Nova's KO pose/eyes while reducing visual density for gameplay.</p>
+<ul>
+<li>[ ] <strong>Step 3: Save the selected raw output</strong></li>
+</ul>
+<p>Copy the selected generated image returned by <code>image_gen</code> to:</p>
+<pre><code class="language-text">
+work/sprite-probes/source/nova-ko-adult-playable-source.png
+
+</code></pre>
+<p>Expected: the file exists and has a flat green background.</p>
+<h2>Task 4: Generate Vesper KO Adult-Playable Probe</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Reference: <code>public/assets/vesper-character-default.png</code></li>
+<li>Create: <code>work/sprite-probes/source/vesper-ko-adult-playable-source.png</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Inspect the Vesper reference</strong></li>
+</ul>
+<p>Use <code>view_image</code> on:</p>
+<pre><code class="language-text">
+C:\Users\jflim\Code\gravity-canyon\public\assets\vesper-character-default.png
+
+</code></pre>
+<p>Expected: confirm cyan-blue hair, short braid accents, headset, blue-and-black hoodie outfit, gloves, chunky sneakers, and compact pilot silhouette are visible.</p>
+<ul>
+<li>[ ] <strong>Step 2: Generate the Vesper KO probe</strong></li>
+</ul>
+<p>Use the built-in <code>image_gen</code> tool with this prompt:</p>
+<pre><code class="language-text">
+Use case: stylized-concept
+
+Asset type: disposable adult-anime gameplay KO sprite probe for Gravity Canyon
+
+Primary request: Create a brand-new original 2D cel-shaded adult-anime game character KO status sprite on a perfectly flat solid #00ff00 chroma-key background.
+
+
+
+Input images: Use the current Vesper default sprite as the identity and style reference. Preserve the cyan-blue hair, short twin-braid accents, blue headset, blue-and-black tech hoodie outfit, gloves, chunky blue-white sneakers, compact sci-fi arcade pilot silhouette, thick dark outline, and polished anime game sprite rendering.
+
+
+
+Subject: Vesper, an adult anime arcade combat pilot.
+
+
+
+Pose: goofy glitch-overloaded collapse unique to Vesper. Limbs loose, headset slightly crooked, hair messy, and 2-3 tiny harmless blue pixel-glitch accents attached to her gear and kept inside the character silhouette. The pose should feel silly, defeated, and instantly readable as a combat loss status sprite. Do not copy Nova's face-down prone pose.
+
+
+
+Face: Heavy sleepy eyelids, open mouth with a small tongue blep. Eyes are thin slit-shaped white KO eyes, vertically compressed on the Y-axis. Add visible small oval pupils inside both white slit eyes. Both pupils are rolled upward toward the forehead and crossed inward, clearly inside the eye whites. Expression reads knocked out senseless, dazed, and comically defeated.
+
+
+
+Gameplay pass adjustments: Adult-anime proportions, compact battlefield silhouette, thick dark outline, simplified gear detail, crisp face readability, no high-detail collection-art density. Attractive adult-anime fan-service cues are allowed in silhouette and styling, but do not let pin-up framing or erotic detail become the primary read of the vulnerable KO state.
+
+
+
+Style/medium: mainstream adult anime game sprite, clean cel shading, crisp face details, thick dark outline.
+
+
+
+Composition/framing: centered with generous padding, full-body readable silhouette, intended to export as a compact KO gameplay sprite that fits inside the active unit frame.
+
+
+
+Constraints: flat uniform #00ff00 background with no shadows, gradients, texture, floor plane, or lighting variation. Character only, except for 2-3 tiny gear-attached blue glitch accents inside the character silhouette. No separate props. No vehicle. No text. No watermark. No blood. No visible injury. No nudity. No explicit exposure. Do not use #00ff00 anywhere in the character.
+
+</code></pre>
+<p>Expected: one generated image that reads as Vesper in a distinct glitch-collapse KO pose.</p>
+<ul>
+<li>[ ] <strong>Step 3: Save the selected raw output</strong></li>
+</ul>
+<p>Copy the selected generated image returned by <code>image_gen</code> to:</p>
+<pre><code class="language-text">
+work/sprite-probes/source/vesper-ko-adult-playable-source.png
+
+</code></pre>
+<p>Expected: the file exists and has a flat green background.</p>
+<h2>Task 5: Remove Chroma Key And Trim Transparent Bounds</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>work/sprite-probes/trim_alpha.py</code></li>
+<li>Create: <code>work/sprite-probes/processed/nova-default-adult-playable.png</code></li>
+<li>Create: <code>work/sprite-probes/processed/nova-ko-adult-playable.png</code></li>
+<li>Create: <code>work/sprite-probes/processed/vesper-ko-adult-playable.png</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Remove chroma key from all probes</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+python C:\Users\jflim\.codex\skills\.system\imagegen\scripts\remove_chroma_key.py --input work\sprite-probes\source\nova-default-adult-playable-source.png --out work\sprite-probes\processed\nova-default-adult-playable-uncropped.png --auto-key border --soft-matte --transparent-threshold 12 --opaque-threshold 220 --despill --force
+
+python C:\Users\jflim\.codex\skills\.system\imagegen\scripts\remove_chroma_key.py --input work\sprite-probes\source\nova-ko-adult-playable-source.png --out work\sprite-probes\processed\nova-ko-adult-playable-uncropped.png --auto-key border --soft-matte --transparent-threshold 12 --opaque-threshold 220 --despill --force
+
+python C:\Users\jflim\.codex\skills\.system\imagegen\scripts\remove_chroma_key.py --input work\sprite-probes\source\vesper-ko-adult-playable-source.png --out work\sprite-probes\processed\vesper-ko-adult-playable-uncropped.png --auto-key border --soft-matte --transparent-threshold 12 --opaque-threshold 220 --despill --force
+
+</code></pre>
+<p>Expected: three <code>*-uncropped.png</code> files exist in <code>work/sprite-probes/processed/</code>.</p>
+<ul>
+<li>[ ] <strong>Step 2: Create alpha trimming helper</strong></li>
+</ul>
+<p>Create <code>work/sprite-probes/trim_alpha.py</code> with this exact content:</p>
+<pre><code class="language-python">
+from __future__ import annotations
+
+
+
+from pathlib import Path
+
+import sys
+
+
+
+from PIL import Image
+
+
+
+
+
+PADDING = 8
+
+
+
+
+
+def main() -&gt; int:
+
+    if len(sys.argv) != 3:
+
+        print(&quot;Usage: trim_alpha.py &lt;input.png&gt; &lt;output.png&gt;&quot;, file=sys.stderr)
+
+        return 2
+
+
+
+    src = Path(sys.argv[1])
+
+    out = Path(sys.argv[2])
+
+    image = Image.open(src).convert(&quot;RGBA&quot;)
+
+    alpha = image.getchannel(&quot;A&quot;)
+
+    bbox = alpha.getbbox()
+
+    if bbox is None:
+
+        print(f&quot;No opaque pixels found in {src}&quot;, file=sys.stderr)
+
+        return 1
+
+
+
+    left, top, right, bottom = bbox
+
+    left = max(0, left - PADDING)
+
+    top = max(0, top - PADDING)
+
+    right = min(image.width, right + PADDING)
+
+    bottom = min(image.height, bottom + PADDING)
+
+
+
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    image.crop((left, top, right, bottom)).save(out)
+
+    print(f&quot;{src} -&gt; {out} ({right - left}x{bottom - top})&quot;)
+
+    return 0
+
+
+
+
+
+if __name__ == &quot;__main__&quot;:
+
+    raise SystemExit(main())
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 3: Trim transparent bounds</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+python work\sprite-probes\trim_alpha.py work\sprite-probes\processed\nova-default-adult-playable-uncropped.png work\sprite-probes\processed\nova-default-adult-playable.png
+
+python work\sprite-probes\trim_alpha.py work\sprite-probes\processed\nova-ko-adult-playable-uncropped.png work\sprite-probes\processed\nova-ko-adult-playable.png
+
+python work\sprite-probes\trim_alpha.py work\sprite-probes\processed\vesper-ko-adult-playable-uncropped.png work\sprite-probes\processed\vesper-ko-adult-playable.png
+
+</code></pre>
+<p>Expected: command output prints dimensions for all three final processed files.</p>
+<ul>
+<li>[ ] <strong>Step 4: Validate transparency and dimensions</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+Add-Type -AssemblyName System.Drawing
+
+$paths = @(
+
+  'work/sprite-probes/processed/nova-default-adult-playable.png',
+
+  'work/sprite-probes/processed/nova-ko-adult-playable.png',
+
+  'work/sprite-probes/processed/vesper-ko-adult-playable.png'
+
+)
+
+foreach ($p in $paths) {
+
+  $img = [System.Drawing.Bitmap]::FromFile((Resolve-Path $p))
+
+  $corner = $img.GetPixel(0, 0)
+
+  [pscustomobject]@{ Path = $p; Width = $img.Width; Height = $img.Height; CornerAlpha = $corner.A }
+
+  $img.Dispose()
+
+}
+
+</code></pre>
+<p>Expected: <code>CornerAlpha</code> is <code>0</code> for each processed probe.</p>
+<h2>Task 6: Build Match-Scale Probe Comparison Screen</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>work/.superpowers/brainstorm/wmi-check/content/adult-probe-results.html</code></li>
+<li>Copy: <code>work/.superpowers/brainstorm/wmi-check/content/nova-default-adult-playable.png</code></li>
+<li>Copy: <code>work/.superpowers/brainstorm/wmi-check/content/nova-ko-adult-playable.png</code></li>
+<li>Copy: <code>work/.superpowers/brainstorm/wmi-check/content/vesper-ko-adult-playable.png</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Copy processed probes into companion content folder</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+Copy-Item work\sprite-probes\processed\nova-default-adult-playable.png work\.superpowers\brainstorm\wmi-check\content\nova-default-adult-playable.png -Force
+
+Copy-Item work\sprite-probes\processed\nova-ko-adult-playable.png work\.superpowers\brainstorm\wmi-check\content\nova-ko-adult-playable.png -Force
+
+Copy-Item work\sprite-probes\processed\vesper-ko-adult-playable.png work\.superpowers\brainstorm\wmi-check\content\vesper-ko-adult-playable.png -Force
+
+</code></pre>
+<p>Expected: three probe files exist in the companion content folder.</p>
+<ul>
+<li>[ ] <strong>Step 2: Create the comparison screen</strong></li>
+</ul>
+<p>Create <code>work/.superpowers/brainstorm/wmi-check/content/adult-probe-results.html</code> with a split comparison:</p>
+<pre><code class="language-html">
+&lt;h2&gt;Adult-Anime Playable Probe Results&lt;/h2&gt;
+
+&lt;p class=&quot;subtitle&quot;&gt;Judge these at match scale beside the vehicle, not as standalone illustrations.&lt;/p&gt;
+
+
+
+&lt;div class=&quot;cards&quot;&gt;
+
+  &lt;div class=&quot;card&quot; data-choice=&quot;nova-default&quot; onclick=&quot;toggleSelect(this)&quot;&gt;
+
+    &lt;div class=&quot;card-image&quot; style=&quot;height:260px;display:flex;align-items:end;justify-content:center;background:#101827&quot;&gt;
+
+      &lt;img src=&quot;/files/nova-vehicle-sprite.png&quot; style=&quot;position:absolute;width:250px;transform:translateY(18px)&quot; /&gt;
+
+      &lt;img src=&quot;/files/nova-default-adult-playable.png&quot; style=&quot;position:relative;width:138px;z-index:2&quot; /&gt;
+
+    &lt;/div&gt;
+
+    &lt;div class=&quot;card-body&quot;&gt;
+
+      &lt;h3&gt;Nova Adult Default Probe&lt;/h3&gt;
+
+      &lt;p&gt;Check whether adult proportions still feel playable and readable.&lt;/p&gt;
+
+    &lt;/div&gt;
+
+  &lt;/div&gt;
+
+
+
+  &lt;div class=&quot;card&quot; data-choice=&quot;nova-ko&quot; onclick=&quot;toggleSelect(this)&quot;&gt;
+
+    &lt;div class=&quot;card-image&quot; style=&quot;height:260px;display:flex;align-items:center;justify-content:center;background:#101827&quot;&gt;
+
+      &lt;img src=&quot;/files/nova-ko-adult-playable.png&quot; style=&quot;max-width:270px;max-height:150px&quot; /&gt;
+
+    &lt;/div&gt;
+
+    &lt;div class=&quot;card-body&quot;&gt;
+
+      &lt;h3&gt;Nova KO Playable Pass&lt;/h3&gt;
+
+      &lt;p&gt;Check whether the preserved pose and eyes survive gameplay simplification.&lt;/p&gt;
+
+    &lt;/div&gt;
+
+  &lt;/div&gt;
+
+
+
+  &lt;div class=&quot;card&quot; data-choice=&quot;vesper-ko&quot; onclick=&quot;toggleSelect(this)&quot;&gt;
+
+    &lt;div class=&quot;card-image&quot; style=&quot;height:260px;display:flex;align-items:center;justify-content:center;background:#101827&quot;&gt;
+
+      &lt;img src=&quot;/files/vesper-ko-adult-playable.png&quot; style=&quot;max-width:210px;max-height:160px&quot; /&gt;
+
+    &lt;/div&gt;
+
+    &lt;div class=&quot;card-body&quot;&gt;
+
+      &lt;h3&gt;Vesper KO Probe&lt;/h3&gt;
+
+      &lt;p&gt;Check whether glitch-collapse reads distinctly from Nova.&lt;/p&gt;
+
+    &lt;/div&gt;
+
+  &lt;/div&gt;
+
+&lt;/div&gt;
+
+
+
+&lt;h3&gt;Decision&lt;/h3&gt;
+
+&lt;div class=&quot;options&quot;&gt;
+
+  &lt;div class=&quot;option&quot; data-choice=&quot;compact&quot; onclick=&quot;toggleSelect(this)&quot;&gt;
+
+    &lt;div class=&quot;letter&quot;&gt;A&lt;/div&gt;
+
+    &lt;div class=&quot;content&quot;&gt;&lt;h3&gt;Stay Compact&lt;/h3&gt;&lt;p&gt;Adult-anime probes lose too much readability.&lt;/p&gt;&lt;/div&gt;
+
+  &lt;/div&gt;
+
+  &lt;div class=&quot;option&quot; data-choice=&quot;adult&quot; onclick=&quot;toggleSelect(this)&quot;&gt;
+
+    &lt;div class=&quot;letter&quot;&gt;B&lt;/div&gt;
+
+    &lt;div class=&quot;content&quot;&gt;&lt;h3&gt;Commit Adult Playable&lt;/h3&gt;&lt;p&gt;The probes work; define a formal export pipeline.&lt;/p&gt;&lt;/div&gt;
+
+  &lt;/div&gt;
+
+  &lt;div class=&quot;option&quot; data-choice=&quot;hybrid&quot; onclick=&quot;toggleSelect(this)&quot;&gt;
+
+    &lt;div class=&quot;letter&quot;&gt;C&lt;/div&gt;
+
+    &lt;div class=&quot;content&quot;&gt;&lt;h3&gt;Use Hybrid Rule&lt;/h3&gt;&lt;p&gt;Adult identity with compact simplification and larger face cues.&lt;/p&gt;&lt;/div&gt;
+
+  &lt;/div&gt;
+
+&lt;/div&gt;
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 3: Verify companion serves the results screen</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+$resp = Invoke-WebRequest -UseBasicParsing http://127.0.0.1:56074/ -TimeoutSec 3
+
+[pscustomobject]@{
+
+  StatusCode = $resp.StatusCode
+
+  HasTitle = $resp.Content.Contains('Adult-Anime Playable Probe Results')
+
+  HasDecision = $resp.Content.Contains('Use Hybrid Rule')
+
+}
+
+</code></pre>
+<p>Expected: <code>StatusCode</code> is <code>200</code>, <code>HasTitle</code> is <code>True</code>, and <code>HasDecision</code> is <code>True</code>.</p>
+<h2>Task 7: User Review And Decision</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Read: <code>work/.superpowers/brainstorm/wmi-check/state/events</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Ask the user to review the companion</strong></li>
+</ul>
+<p>Tell the user:</p>
+<pre><code class="language-text">
+The adult-playable probe comparison is live at http://127.0.0.1:56074. Please judge the sprites at match scale and pick Stay Compact, Commit Adult Playable, or Use Hybrid Rule.
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Read the companion click events</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+if (Test-Path work\.superpowers\brainstorm\wmi-check\state\events) {
+
+  Get-Content -Raw work\.superpowers\brainstorm\wmi-check\state\events
+
+} else {
+
+  'NO_EVENTS_FILE'
+
+}
+
+</code></pre>
+<p>Expected: the output either shows the user's clicked choice or <code>NO_EVENTS_FILE</code>, in which case use the user's terminal response.</p>
+<ul>
+<li>[ ] <strong>Step 3: Record the decision before touching runtime assets</strong></li>
+</ul>
+<p>If the user chooses <code>adult</code> or <code>hybrid</code>, create a follow-up implementation plan for production asset pipeline and runtime alias changes.</p>
+<p>If the user chooses <code>compact</code>, create a follow-up plan for compact KO regeneration only.</p>
+<p>Expected: no runtime asset file in <code>public/assets</code> has changed during this probe plan.</p>
+<h2>Verification Checklist</h2>
+<ul>
+<li>[ ] <code>git status --short</code> shows no tracked runtime asset changes from this probe.</li>
+<li>[ ] All generated probe files are under <code>work/</code>.</li>
+<li>[ ] The visual companion returns HTTP <code>200</code>.</li>
+<li>[ ] The user has seen the probes at match scale before any runtime replacement.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

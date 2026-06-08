@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Playable Roster Sprite Design</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        Generated from <a href="2026-06-07-playable-roster-sprite-design.md">docs/superpowers/specs/2026-06-07-playable-roster-sprite-design.md</a> on 2026-06-08.
+        Edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Playable Roster Sprite Design</h1>
+<p>Date: 2026-06-07</p>
+<p>Project: Gravity Canyon</p>
+<h2>Goal</h2>
+<p>Define the first 10 signature pilot plus vehicle units clearly enough to generate playable sprites without losing the character identity work already done for Nova and Vesper.</p>
+<p>This is a roster and sprite-production spec, not a balance-final gameplay spec. Weapon names and exact numbers can change after playtesting.</p>
+<h2>Core Decision</h2>
+<p>Gravity Canyon should treat each selectable gameplay pick as a signature unit:</p>
+<pre><code class="language-text">
+pilot + vehicle family + class kit + special shot
+
+</code></pre>
+<p>The pilot gives the unit its personality, silhouette, voice, mounted pose, KO style, lore hook, and portrait fantasy. The vehicle gives the unit its class role, movement feel, weapon family, cannon behavior, terrain interaction, and combat readability.</p>
+<p>This preserves the Gunbound-like feeling of choosing a vehicle class while making each vehicle feel authored around a character rather than generic.</p>
+<h2>Naming Rule</h2>
+<p>Use first names in the match UI and roster picker.</p>
+<p>Longer names, surnames, titles, and region tags can exist later for lore cards, profile pages, and collection text, but combat labels should stay short:</p>
+<ul>
+<li>Nova</li>
+<li>Vesper</li>
+<li>Kaelii</li>
+<li>Perlah</li>
+<li>Ari</li>
+<li>Lani</li>
+<li>Rook</li>
+<li>Mako</li>
+<li>Sable</li>
+<li>Talia</li>
+</ul>
+<h2>Nova And Vesper Baseline Rule</h2>
+<p>Nova and Vesper should not be restarted from scratch.</p>
+<p>The current Nova and Vesper runtime assets remain the visual baseline for their production identity:</p>
+<ul>
+<li><code>public/assets/nova-character-default.png</code></li>
+<li><code>public/assets/nova-character-intense.png</code></li>
+<li><code>public/assets/nova-character-ko.png</code></li>
+<li><code>public/assets/nova-vehicle-sprite.png</code></li>
+<li><code>public/assets/nova-vehicle-destroyed.png</code></li>
+<li><code>public/assets/vesper-character-default.png</code></li>
+<li><code>public/assets/vesper-character-intense.png</code></li>
+<li><code>public/assets/vesper-character-ko.png</code></li>
+<li><code>public/assets/vesper-vehicle-sprite.png</code></li>
+<li><code>public/assets/vesper-vehicle-destroyed.png</code></li>
+</ul>
+<p>Future Nova or Vesper refreshes should use these as reference images and should be saved as probes or variants first. Do not overwrite their stable runtime aliases unless the user explicitly chooses a replacement.</p>
+<h2>Sprite Asset Set</h2>
+<p>Each signature unit needs these gameplay assets:</p>
+<ul>
+<li><code>vehicle-default</code>: standalone vehicle gameplay sprite with no pilot baked in.</li>
+<li><code>vehicle-destroyed</code>: damaged version of the same vehicle.</li>
+<li><code>character-default</code>: mounted, perched, seated, crouched, or braced character sprite designed to layer with the vehicle.</li>
+<li><code>character-intense</code>: same unit identity with stronger firing energy.</li>
+<li><code>character-ko</code>: Defeated KO sprite that keeps the pilot and damaged vehicle relationship readable.</li>
+</ul>
+<p>Portrait, card, gacha, and adult fantasy collection art can come later and can use higher detail, stronger fashion, and more character-forward posing than match sprites.</p>
+<h2>Background And Transparency Workflow</h2>
+<p>The final game asset should be a transparent PNG. Green chroma-key images are source/workshop images only.</p>
+<p>Use this rule:</p>
+<pre><code class="language-text">
+green source = useful for generating and workshopping
+
+transparent PNG = preserved candidate or runtime-ready sprite
+
+</code></pre>
+<p>For brand-new AI sprite concepts, it is acceptable to generate on a flat <code>#00ff00</code> background because it gives a predictable cleanup path. After generation, remove the green, validate the alpha channel, and preserve the transparent PNG as the candidate under <code>public/assets/sprite-variants/...</code>.</p>
+<p>For approved candidates, future iterations should increasingly use the transparent PNG as the visual base or reference. This is closer to a normal game-art workflow: revise the current sprite, keep the pose and silhouette, and export another transparent PNG. If the generator flattens the result onto a background, clean it back to transparency before review or promotion.</p>
+<p>Do not promote green-background images to runtime aliases. Runtime aliases in <code>public/assets</code> should be transparent PNGs.</p>
+<h2>Match Sprite Style Rule</h2>
+<p>Playable sprites should be:</p>
+<ul>
+<li>original adult anime arcade characters,</li>
+<li>compact and readable at match scale,</li>
+<li>outlined with strong silhouettes,</li>
+<li>chroma-key or transparent-background friendly,</li>
+<li>designed around the vehicle as the gameplay anchor,</li>
+<li>stylish and attractive without relying on body-focused details for readability.</li>
+</ul>
+<p>Avoid explicit nudity, sex acts, lingerie-only defaults, underage-coded sexuality, visible injury, blood, drugging framing, or defeat poses that feel non-consensual rather than arcade KO. Defeated KO sprites can be dramatic, silly, dazed, or theatrical, but should read as game-state feedback.</p>
+<h2>Class Families</h2>
+<p>Internal class families remain:</p>
+<ul>
+<li><code>bunger</code>: terrain excavation, pits, bowls, shove setups, fall KOs.</li>
+<li><code>glitch</code>: disruption, temporary fields, shot or movement denial.</li>
+<li><code>bouncer</code>: ricochets, rolling mines, slope exploitation, trick shots.</li>
+<li><code>spark</code>: splash, heat, flare, magma, lingering area denial.</li>
+</ul>
+<p>Public class names can be improved later. For now, the class family is more important than final terminology.</p>
+<h2>Roster V0.1</h2>
+<h3>Nova</h3>
+<ul>
+<li>Class family: <code>bunger</code></li>
+<li>Signature vehicle: Redline Bunger Rig</li>
+<li>Visual identity: Red-haired adult hotshot with goggles, red-black pilot gear, gloves, heavy boots, and an aggressive mounted silhouette.</li>
+<li>Personality: Daring, impatient, competitive, happiest when the terrain gives way.</li>
+<li>Tiny lore: A canyon circuit ace who made her name blasting rivals off suspended shelves.</li>
+<li>Primary shot: Heavy crater shell.</li>
+<li>Special shot: Fault Pop, a delayed terrain shove that rewards setup shots.</li>
+<li>Active stance: Crouched on top of her Redline Bunger Rig, one boot planted on the chassis, leaning forward like she is about to launch herself with the shot.</li>
+<li>Intense stance: Same crouched anchor, shoulders lower, goggles glinting, both hands braced as the cannon kicks forward.</li>
+<li>Defeated KO stance: Loses balance after impact and falls face-first over the front of the damaged rig, goggles crooked, body flat and spent.</li>
+<li>Sprite note: Reuse existing Nova images as baseline identity and alignment references.</li>
+</ul>
+<h3>Vesper</h3>
+<ul>
+<li>Class family: <code>glitch</code></li>
+<li>Signature vehicle: Blue Glitch Rover</li>
+<li>Visual identity: Cyan-blue hair, short twin-braid accents, blue headset, blue-black tech outfit, gloves, and chunky blue-white sneakers.</li>
+<li>Personality: Cool, precise, surgical, smug when enemies walk into her fields.</li>
+<li>Tiny lore: A signal engineer who learned to weaponize broken gravity relays.</li>
+<li>Primary shot: Disruption bolt.</li>
+<li>Special shot: Blue Screen Field, a temporary field that weakens enemy movement or shot control.</li>
+<li>Active stance: Low seated or crouched on the side of her Glitch Rover, one hand on a glowing control panel, calm and precise.</li>
+<li>Intense stance: Leaning tighter into the console, headset active, fingers moving fast over flickering blue controls.</li>
+<li>Defeated KO stance: Slumped over the console with her headset askew, blue panels flickering around her like the vehicle crashed mid-signal.</li>
+<li>Sprite note: Reuse existing Vesper images as baseline identity and alignment references.</li>
+</ul>
+<h3>Kaelii</h3>
+<ul>
+<li>Class family: <code>bouncer</code></li>
+<li>Signature vehicle: Flashkick Skip-Rig</li>
+<li>Visual identity: Bronze-skinned adult stunt pilot with tri-tone black, deep purple, and hot pink high twin buns, golden eyes, pink-black techwear, white sneakers, pink laces, thigh straps, fingerless gloves, and a stage-ready silhouette.</li>
+<li>Hair lock: Use the user-provided hair reference as the anchor: glossy black and deep purple hair, hot pink streaks, high twin buns with braided wrap loops around each bun, long bangs, and loose stray strands.</li>
+<li>Personality: Loud, cocky, flirtatious, expressive, reckless when watched, and theatrically annoyed when outplayed.</li>
+<li>Tiny lore: A former stunt-stream idol who turned ricochet artillery into performance art.</li>
+<li>Primary shot: One-bounce skip shot.</li>
+<li>Special shot: Spotlight Rebound, a shell that gains stronger splash after bouncing off terrain.</li>
+<li>Active stance: Perched showily on the Flashkick Skip-Rig, one foot on a cannon rail, hips angled toward the camera, taunting like the match is a stage.</li>
+<li>Intense stance: Same perch as default, compressed into an animation-linked recoil keyframe: hands grip tighter, shoulders lower, hips and knees tense, hair and jacket react, and both sneakers stay close to their default vehicle anchors.</li>
+<li>Defeated KO stance: Slid sideways off her perch, sprawled across the chassis with one sneaker dangling, the rig's spotlight strip dimmed out.</li>
+<li>Sprite note: Preserve the old Kaelii DNA: tri-tone black/deep-purple/hot-pink twin buns, golden eyes, pink-black fashion, bratty confidence, and attention-seeking energy. Translate the old reckless defeat energy into arcade KO staging. The Flashkick Skip-Rig uses real compact circular wheels, mechanical rim covers, rails, springs, and bounce pads; Kaelii's sneakers are clothing only, not vehicle parts.</li>
+</ul>
+<h3>Perlah</h3>
+<ul>
+<li>Class family: <code>spark</code></li>
+<li>Signature vehicle: Sunspike Embercart</li>
+<li>Visual identity: Shorter Filipina-inspired adult pilot with golden-brown skin, slim athletic build, long legs, curly black hair with orange highlights, orange-black island salvage racer styling, heatproof gloves, compact boots, and wrap-tech details.</li>
+<li>Personality: Warm, teasing, scrappy, underestimated, and very happy to make the canyon too hot to stand on.</li>
+<li>Tiny lore: She salvaged old Spark engines from canyon wrecks and rebuilt them into a festival-bright artillery cart.</li>
+<li>Primary shot: Ember shell with splash damage.</li>
+<li>Special shot: Sunspike Bloom, a lingering heat zone that softens terrain.</li>
+<li>Active stance: Kneeling low against the Sunspike Embercart's heat shield, one hand braced on the cannon housing, compact and ready.</li>
+<li>Intense stance: Braced behind the heat shield as orange vents flare, hair and wrap details kicked by furnace wind.</li>
+<li>Defeated KO stance: Draped belly-down across the warm engine cover, hair messy, vehicle vents puffing smoke as if the heat finally overwhelmed the cart.</li>
+<li>Sprite note: Preserve the old Perlah DNA: golden-brown skin, curly black hair with orange highlights, orange-black styling, tropical heat identity, and attractive adult portrait potential. Keep match outfit streamable and vehicle-connected.</li>
+</ul>
+<h3>Ari</h3>
+<ul>
+<li>Class family: <code>glitch</code></li>
+<li>Signature vehicle: Moonlace Relay</li>
+<li>Visual identity: Adult white-haired twin with cool silver-blue styling, elegant tech-fabric outfit, soft glamorous silhouette, and calm gravity-ribbon effects.</li>
+<li>Personality: Quiet, precise, protective, difficult to read.</li>
+<li>Tiny lore: One half of the Solenne twins, Ari studies gravity fields like music.</li>
+<li>Primary shot: Thread shot that places a small gravity ribbon.</li>
+<li>Special shot: Moon Veil, a soft drag field that blunts incoming pressure.</li>
+<li>Active stance: Elegantly seated on the Moonlace Relay's side ring, hands guiding thin gravity ribbons, posture calm and almost dancer-like.</li>
+<li>Intense stance: Same side-ring seat, hair sweeping forward, both hands pulling a bright ribbon taut before firing.</li>
+<li>Defeated KO stance: Folded forward against the relay ring, long white hair spilling over the controls, gravity ribbons collapsed around her.</li>
+<li>Sprite note: Preserve the twin hook and long white hair. Give Ari the cooler, quieter, field-control identity.</li>
+</ul>
+<h3>Lani</h3>
+<ul>
+<li>Class family: <code>spark</code></li>
+<li>Signature vehicle: Sunlace Flarepod</li>
+<li>Visual identity: Adult white-haired twin with warmer sun-gold accents, brighter styling, athletic stage energy, and a more impulsive silhouette than Ari.</li>
+<li>Personality: Loud, impulsive, competitive, affectionate with Ari, and allergic to being treated as the lesser twin.</li>
+<li>Tiny lore: Ari maps the field; Lani lights it up. Their rivalry is affectionate but very real.</li>
+<li>Primary shot: Fast flare shot.</li>
+<li>Special shot: Solar Split, a shell that bursts into smaller spark impacts near landing.</li>
+<li>Active stance: Half-standing, half-braced on the Sunlace Flarepod with one knee on the vehicle and one hand thrown back for flair.</li>
+<li>Intense stance: Leaning hard into the shot, one knee locked on the flarepod, sun panels open around her.</li>
+<li>Defeated KO stance: Tumbled backward into the flarepod's seat well, limbs loose, hair fanned out, burst panels popped open around her.</li>
+<li>Sprite note: Preserve the twin hook and long white hair. Give Lani the brighter, louder, burst-damage identity.</li>
+</ul>
+<h3>Rook</h3>
+<ul>
+<li>Class family: <code>bunger</code></li>
+<li>Signature vehicle: Quarryback Mortar</li>
+<li>Visual identity: Broad adult male pilot with dust-coated armor jacket, heavy boots, miner-mechanic gear, practical gloves, and a grounded silhouette.</li>
+<li>Personality: Patient, dry, stubborn, terrifyingly calm under fire.</li>
+<li>Tiny lore: A canyon quarry veteran who joined the circuit after the mines started floating away.</li>
+<li>Primary shot: Deep drill crater.</li>
+<li>Special shot: Anchor Slam, a low-arc shot that caves ledges downward.</li>
+<li>Active stance: Seated heavily behind the Quarryback Mortar, shoulders squared, both boots planted, one hand gripping a stabilizer handle.</li>
+<li>Intense stance: Braced hard with both hands on the mortar handles, vehicle suspension compressed into the dirt.</li>
+<li>Defeated KO stance: Slumped forward over the mortar shield, helmet or goggles lowered, the rig nose-down in broken dirt.</li>
+<li>Sprite note: Use him to make the roster feel less like only flashy idols. He should read as dependable heavy terrain control.</li>
+</ul>
+<h3>Mako</h3>
+<ul>
+<li>Class family: <code>bouncer</code></li>
+<li>Signature vehicle: Railfin Roller</li>
+<li>Visual identity: Lean adult male pilot with sea-racer and canyon-boarder gear, teal accents, wind-tossed hair, and a long trick-shot silhouette.</li>
+<li>Personality: Charming, slippery, evasive, impossible to pin down.</li>
+<li>Tiny lore: He grew up riding gravity rails between canyon islands and treats artillery like surfing.</li>
+<li>Primary shot: Rolling mine that follows slopes.</li>
+<li>Special shot: Rail Skip, a shot that accelerates after banking off terrain.</li>
+<li>Active stance: Surf-like crouch on the Railfin Roller, one foot forward and one back, riding the vehicle as if it is a gravity board.</li>
+<li>Intense stance: Lower surf crouch with one hand cutting through the air and the roller fins glowing during the shot.</li>
+<li>Defeated KO stance: Knocked off rhythm and collapsed sideways along the roller track, one arm over the wheel housing, rail fins bent.</li>
+<li>Sprite note: Give bouncer players a cooler trick-shot archetype next to Kaelii's attention-seeking performance style.</li>
+</ul>
+<h3>Sable</h3>
+<ul>
+<li>Class family: <code>glitch</code></li>
+<li>Signature vehicle: Null-Kite Crawler</li>
+<li>Visual identity: Androgynous adult pilot with black-white asymmetrical coat, sharp eyes, floating scarf or cable shapes, and a compact crouched silhouette.</li>
+<li>Personality: Detached, poetic, quietly menacing.</li>
+<li>Tiny lore: A banned cartographer who charts places where gravity forgets the rules.</li>
+<li>Primary shot: Null marker shot.</li>
+<li>Special shot: Dead Zone, a temporary strip that denies climbing or clean footing.</li>
+<li>Active stance: Compact crouch atop the Null-Kite Crawler, coat and scarf shapes floating slightly, one hand hovering over a dark gravity marker.</li>
+<li>Intense stance: Crouched lower with cables pulled taut around the marker, vehicle legs spread like a survey instrument.</li>
+<li>Defeated KO stance: Folded beside the crawler like gravity switched off, scarf and cables limp, vehicle legs tucked in and inert.</li>
+<li>Sprite note: Use Sable to add mystery and an androgynous/customizable-feeling roster slot.</li>
+</ul>
+<h3>Talia</h3>
+<ul>
+<li>Class family: <code>spark</code></li>
+<li>Signature vehicle: Kilnback Howitzer</li>
+<li>Visual identity: Adult forge-tech pilot with dark hair, amber goggles, soot-black and brass outfit, gloves, and a confident cannon-brace silhouette.</li>
+<li>Personality: Blunt, warm, big-sister energy, dangerous when cornered.</li>
+<li>Tiny lore: She builds tournament rigs from cracked furnace cores and sells repairs to rivals after beating them.</li>
+<li>Primary shot: Molten shell with medium crater.</li>
+<li>Special shot: Glassfall, a delayed heat fracture that opens fragile shelves.</li>
+<li>Active stance: Seated sideways against the Kilnback Howitzer, one boot braced on the furnace plate, hand on the firing lever, relaxed but dominant.</li>
+<li>Intense stance: Leaning into the lever as the kiln glow rises, goggles lit amber, furnace panels open.</li>
+<li>Defeated KO stance: Slumped back against the cracked kiln cannon, goggles tilted, forge glow reduced to dull embers.</li>
+<li>Sprite note: Give spark players a heavier forge archetype next to Perlah's salvage-heat agility and Lani's flare burst.</li>
+</ul>
+<h2>First Generation Recommendation</h2>
+<p>Generate Kaelii and Perlah first before scaling to all 10 units.</p>
+<p>Reason:</p>
+<ul>
+<li>They adapt the user's older character concepts directly into the new Gravity Canyon unit model.</li>
+<li>They test two distinct class families: <code>bouncer</code> and <code>spark</code>.</li>
+<li>They test two distinct stance problems: a perched stunt-pilot composition and a low kneeling heat-shield composition.</li>
+<li>They let the team validate adult anime readability, streamable outfit boundaries, vehicle attachment, and match-scale silhouette before producing a full roster batch.</li>
+</ul>
+<p>Do not generate final runtime aliases immediately. Save first outputs under <code>work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/</code> or versioned <code>public/assets/sprite-variants/...</code> after review.</p>
+    </article>
+  </main>
+</body>
+</html>

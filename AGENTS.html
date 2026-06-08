@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AGENTS.md</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        Generated from <a href="AGENTS.md">AGENTS.md</a> on 2026-06-08.
+        Edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>AGENTS.md</h1>
+<h2>Project</h2>
+<ul>
+<li>Gravity Canyon is a browser-based TypeScript/Phaser artillery game with a Node.js/Colyseus multiplayer foundation.</li>
+<li>Treat this repository as the active project root. The GitHub remote is <code>https://github.com/jflim/gravity-grid-prototype.git</code>.</li>
+<li>Current working branch is usually <code>feature/gravity-canyon-online-foundation</code>; check <code>git status --short --branch</code> before editing.</li>
+</ul>
+<h2>Start Here</h2>
+<ul>
+<li>Read <code>README.md</code> for the current runnable state and controls.</li>
+<li>Read <code>docs/SESSION_HANDOFF.md</code> for the latest handoff, next best step, known environment notes, and verification already run.</li>
+<li>Read <code>docs/V1_PLAYTEST_ALPHA.html</code> for the locked v1 playtest-alpha scope, acceptance tests, out-of-scope list, and change-control rules.</li>
+<li>Read <code>docs/GAME_DESIGN_SPEC.md</code> for product direction and locked decisions.</li>
+<li>Read <code>docs/BUILD_PLAN.md</code> before choosing the next milestone.</li>
+<li>Follow <code>docs/GIT_WORKFLOW.md</code> for commit cadence, branch strategy, and quality gates.</li>
+</ul>
+<h2>Commands</h2>
+<ul>
+<li>Install dependencies: <code>npm install</code></li>
+<li>Run both local services: <code>npm run dev</code></li>
+<li>Run only the client: <code>npm run dev:client -- --port 5173</code></li>
+<li>Production build and type check: <code>npm run build</code></li>
+</ul>
+<p>Expected local endpoints:</p>
+<ul>
+<li>Client: <code>http://127.0.0.1:5173</code></li>
+<li>Colyseus server: <code>ws://127.0.0.1:2567</code></li>
+</ul>
+<p>On Windows inside managed Codex shells, detached watch-mode startup can exit silently. If that happens, run <code>npm run dev</code> in the Codex integrated terminal or a normal PowerShell window and keep that terminal open.</p>
+<h2>Working Rules</h2>
+<ul>
+<li>Keep the prototype playable after each coherent iteration.</li>
+<li>Run <code>npm run build</code> before committing gameplay, UI, networking, or asset integration changes.</li>
+<li>Run <code>npm run docs:html</code> after editing markdown docs that have generated HTML reading copies.</li>
+<li>Update <code>docs/VERSION_LOG.md</code> for meaningful playable checkpoints or project-management changes.</li>
+<li>Update docs when controls, terminology, rules, assets, setup, or planning change.</li>
+<li>Do not commit <code>node_modules/</code>, <code>dist/</code>, <code>.vite/</code>, logs, or throwaway files under <code>work/</code>.</li>
+<li>Preserve user or prior-session changes; do not revert unrelated local modifications.</li>
+</ul>
+<h2>V1 Scope Lock</h2>
+<ul>
+<li><code>docs/V1_PLAYTEST_ALPHA.html</code> is the authority for current v1 scope.</li>
+<li><code>docs/GAME_DESIGN_SPEC.md</code> is broader multi-version product vision and does not override the v1 contract.</li>
+<li>Before accepting new gameplay, roster, asset, UI, economy, social, or polish work as v1, classify it against <code>docs/V1_PLAYTEST_ALPHA.html</code>.</li>
+<li>If a request is not required for v1 acceptance, add it to the V2 parking lot or context notes instead of changing v1.</li>
+<li>To change locked v1 scope, the user must explicitly say: &quot;I am requesting a v1 contract change.&quot;</li>
+<li>When that phrase is used, push back, identify which v1 acceptance test fails without the change, require a tradeoff or deferral, then update the v1 contract and decision log if the change is accepted.</li>
+</ul>
+<h2>Product Constraints</h2>
+<ul>
+<li>Combat readability comes before cosmetic spectacle inside the match screen.</li>
+<li>Cosmetics must remain cosmetic only. They must not affect combat stats, hitboxes, projectile behavior, wind, movement, matchmaking, or rewards.</li>
+<li>Current v1 target is hosted private-room online 2v2 playtest alpha, with 1v1 supported for easier testing.</li>
+<li>Live matches should move toward server-authoritative combat.</li>
+<li>Gameplay sprites use stable runtime filenames in <code>public/assets</code>; variant/history sprites live under <code>public/assets/sprite-variants</code>.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>
