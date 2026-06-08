@@ -60,8 +60,9 @@ Highlights:
 - Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.
 - Changed projectile camera behavior to keep the battlefield stable while shots are readable, recentering only when a projectile leaves the readable frame.
 - Converted the default `ring-basin` demo pass into Ringworks Basin: a B+C weapon-readable novelty map with side bowls/high lips, two readable bridge gaps, and a central destructible ring bridge island.
+- Added a combat scale and void readability pass: smaller match-view full-unit art, scaled combat hulls/frames/labels, active contact cue, persistent void danger layer, and distinct HP KO versus Void Dropped presentation.
 - Added visible prototype combat hulls, toggleable with `H`, so direct-hit collision better matches the larger pilot-plus-vehicle unit concepts.
-- Added floating combat markers for direct damage, splash damage, knockback, HP KOs, and terrain/fall bunge defeats.
+- Added floating combat markers for direct damage, splash damage, knockback, HP KOs, and terrain/fall Void Dropped defeats.
 - Added randomized terrain/spawn archetypes for local rounds to reduce flat direct-fire duels and encourage high-angle lob play.
 - Clarified Git workflow with branch strategy, quality gates, commit cadence, and push cadence.
 - Updated GitHub management notes now that the private remote and GitHub CLI are configured.

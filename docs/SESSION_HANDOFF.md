@@ -38,10 +38,11 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
 - The online preview is available in the floating Online Alpha panel when the local URL includes `?onlinePanel=1`; the default local demo hides that panel for map-review clarity.
 - Phaser projectile and terrain simulation are not yet synced to the server-owned combat model.
 - Local combat readability now has prototype combat hulls, floating combat markers, and playable v1 map terrain:
-  - Direct-hit projectile collision uses optional ellipse combat hulls around the pilot-plus-vehicle unit concepts instead of the old small center-radius check.
+  - Direct-hit projectile collision uses optional ellipse combat hulls around the pilot-plus-vehicle units instead of the old small center-radius check; match-view hulls and full-unit concept sprites are scaled down together for map readability.
   - Combat hulls are hidden by default for map review, can be toggled with `H`, and can start visible with `?combatHulls=1`.
-  - Floating markers call out direct damage, splash damage, Bunger shove, HP KO, and terrain/fall bunge defeat.
+  - Floating markers call out direct damage, splash damage, Bunger shove, HP KO, and Void Dropped eliminations.
   - Round start defaults to Ringworks Basin from the committed v1 map pool under the stable `ring-basin` id, using exact four-seat spawns, side bowls/high lips, two readable bridge gaps, a central destructible ring bridge island, and faint ring/bridge landmarks.
+  - The void now has a persistent visual danger layer, floating terrain presentation, and suspended Void Dropped unit treatment distinct from HP KO.
   - The command deck now uses explicit viewport layout rules and the browser's smallest reliable visible viewport size so the active player info stays inside the visible browser area on wide/short screens.
   - Projectile flight keeps the full battlefield framed while the shot is readable, with recentering reserved for shots that leave the readable frame.
   - The combat readability design is saved at `docs/superpowers/specs/2026-06-07-combat-readability-wind-lobs-design.md`.
@@ -65,7 +66,7 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
   - `public/assets/vesper-unit-intense.png`
 - Vesper intense uses the v8 subtle tension scale-stable footprint-locked candidate. Earlier intense candidates either had a too-wide/low alpha box, read as visually shrunken, or made Vesper/rover feel like a different-size unit during the power-shot swap. The v8 normalized alias matches the default visible alpha footprint while allowing small pilot/rover recoil, leg tension, joystick/deck-control charge action, cannon reticle, headset glow, and compact glitch UI.
 - Perlah intense uses the v2 footprint-locked candidate. It keeps the same apparent size and default leg/vehicle anchors while showing a compact heat-charge reaction.
-- Default concept-preview unit display boxes and prototype combat hulls are now about 10-12% smaller so local 2v2-style play has more open battlefield space.
+- Default concept-preview unit display boxes and prototype combat hulls are scaled down for match readability so local 2v2-style play has more open battlefield space while full-detail art can remain valuable in HUD/presentation surfaces.
 - Destroyed vehicle sprites exist for Nova and Vesper:
   - `public/assets/nova-vehicle-destroyed.png`
   - `public/assets/vesper-vehicle-destroyed.png`

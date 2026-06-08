@@ -17,20 +17,21 @@ First playable local artillery prototype for Gravity Canyon.
 - Raised command deck with a bottom safe margin so controls stay visible in the browser viewport.
 - Turn timer badge above the active vehicle.
 - Vehicle sprites tilt with terrain slope for clearer ground contact.
+- Battlefield unit art is scaled as readable game pieces, while high-detail art remains available in HUD/presentation surfaces.
 - World-space muzzle aim arrow and ground movement range rail for the active player while positioning.
 - Projectile physics with gravity and turn-based wind.
 - Full-battlefield aiming camera so both teams stay visible before firing.
 - Stable full-battlefield projectile view after firing, with camera recentering only if a shot leaves the readable frame.
 - Firing commits the turn immediately, so the active vehicle cannot move during projectile flight or impact resolution.
 - Swept projectile collision checks to make fast shots hit terrain/vehicles more predictably.
-- Visible prototype combat hulls define direct-hit collision for the larger pilot-plus-vehicle unit concepts.
-- Full-unit concept preview sprites and prototype combat hulls have been scaled down from the first large pass to keep more playable battlefield space visible.
+- Visible prototype combat hulls define direct-hit collision for the pilot-plus-vehicle units.
+- Full-unit concept preview sprites, active frames, labels, and prototype combat hulls are scaled down in the match view to keep terrain and movement readable.
 - Crater deformation on impact.
-- Terrain can be blasted through into a visible void beneath the stage.
+- Terrain can be blasted through into a visible void beneath the stage, with a persistent void danger layer under the floating platforms.
 - Temporary impact rings showing crater size and splash damage range.
-- Floating combat markers call out direct hits, splash hits, knockback, KOs, and bunge defeats.
+- Floating combat markers call out direct hits, splash hits, knockback, HP KOs, and Void Dropped eliminations.
 - Round starts now use the playable Ringworks Basin v1 map, with exact four-seat spawns, two readable bridge gaps, a central ring bridge island, and weapon-readable side bowls/lips for map-feel testing.
-- Prototype Bunger shot behavior: larger/deeper excavation, knockback, slope sliding, and fall/bunge KOs, now tuned toward precise 2-3 shot ring-outs.
+- Prototype Bunger shot behavior: larger/deeper excavation, knockback, slope sliding, and Void Dropped KOs, now tuned toward precise 2-3 shot ring-outs.
 - Localized post-impact vehicle settling so distant vehicles are not randomly displaced by unrelated craters.
 - Splash/direct damage, HP bars, turn switching, timeout, round win detection, and automatic round reset.
 - Layered gameplay sprites: one standalone vehicle sprite plus one standalone playable-character sprite.
@@ -130,7 +131,7 @@ dist/index.html
 ## Terms
 
 - Turn: one active vehicle's action window. The turn ends when that vehicle fires, times out, or can no longer act.
-- Round: one fresh battlefield from spawn until one team has no alive vehicles left. Falling or being bunged off the map sets that vehicle to 0 HP and not alive.
+- Round: one fresh battlefield from spawn until one team has no alive vehicles left. Falling into the void creates a Void Dropped elimination and sets that vehicle to 0 HP and not alive.
 - Match: a future multiplayer room/session made of one or more rounds. The local prototype does not track match score yet, so it currently loops into the next round automatically.
 
 ## Notes

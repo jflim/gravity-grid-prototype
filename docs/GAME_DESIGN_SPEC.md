@@ -70,7 +70,7 @@ Status: current prototype.
 
 Goal:
 
-- Prove movement, aim, launch power, wind, destructible terrain, bunge KOs, round reset, and readable HUD.
+- Prove movement, aim, launch power, wind, destructible terrain, Void Dropped KOs, round reset, and readable HUD.
 
 Current result:
 
@@ -288,7 +288,7 @@ Combat UX requirements:
 
 Current internal ids:
 
-- `excavator`: terrain carving, pits, bowls, bunge setups.
+- `excavator`: terrain carving, pits, bowls, Void Drop setups.
 - `glitch`: disruption, movement denial, temporary fields/barriers.
 - `bouncer`: ricochet, rolling mines, slope exploitation.
 - `spark`: splash, fire/magma, area denial.

@@ -1,5 +1,14 @@
 import Phaser from "phaser";
 import {
+  BATTLEFIELD_UNIT_SCALE,
+  VOID_DROP_DISPLAY_Y,
+  defeatPresentationFor,
+  scaleBattlefieldCombatHull,
+  scaleBattlefieldDisplay,
+  scaleBattlefieldOffset,
+  type DefeatReason,
+} from "./combatPresentation";
+import {
   computeBattlefieldFrameLayout,
   computeCommandPanelLayout,
   getGameViewportSize,
@@ -70,6 +79,7 @@ interface VehicleState {
   facing: 1 | -1;
   moveUnits: number;
   alive: boolean;
+  defeatReason?: DefeatReason;
   color: number;
   accent: number;
   vehicleSpriteKey: string;
@@ -162,6 +172,9 @@ const COMBAT_MARKER_SECONDS = 1.15;
 const TURN_SECONDS = 30;
 const VOID_SURFACE_Y = WORLD_HEIGHT + 260;
 const DEATH_SURFACE_Y = WORLD_HEIGHT - 6;
+const VISIBLE_VOID_TOP_Y = WORLD_HEIGHT - 80;
+const TERRAIN_PLATFORM_BOTTOM_Y = WORLD_HEIGHT - 48;
+const TERRAIN_BREAKTHROUGH_Y = TERRAIN_PLATFORM_BOTTOM_Y - 6;
 const MAX_TERRAIN_SPRITE_TILT_DEG = 20;
 const USE_UNIT_CONCEPT_PREVIEW = !new URLSearchParams(window.location.search).has("runtimeAssets");
 
@@ -448,17 +461,17 @@ class GravityGridScene extends Phaser.Scene {
     horizon.lineBetween(0, 390, WORLD_WIDTH, 390);
 
     const voidLayer = this.add.graphics();
-    voidLayer.fillStyle(0x071326, 0.96);
-    voidLayer.fillRect(0, 520, WORLD_WIDTH, WORLD_HEIGHT - 520);
-    voidLayer.fillStyle(0x123152, 0.22);
+    voidLayer.fillStyle(0x050b1a, 0.98);
+    voidLayer.fillRect(0, 500, WORLD_WIDTH, WORLD_HEIGHT - 500);
+    voidLayer.fillStyle(0x123152, 0.32);
     for (let y = 548; y < WORLD_HEIGHT; y += 46) {
       voidLayer.fillRect(0, y, WORLD_WIDTH, 16);
     }
-    voidLayer.lineStyle(3, 0x8be9ff, 0.14);
+    voidLayer.lineStyle(3, 0x8be9ff, 0.2);
     for (let y = 548; y < WORLD_HEIGHT; y += 38) {
       voidLayer.lineBetween(0, y, WORLD_WIDTH, y + Math.sin(y * 0.023) * 18);
     }
-    voidLayer.lineStyle(2, 0xffd166, 0.1);
+    voidLayer.lineStyle(2, 0xffd166, 0.12);
     for (let x = 80; x < WORLD_WIDTH; x += 170) {
       voidLayer.lineBetween(x, 540, x - 90, WORLD_HEIGHT);
     }
@@ -975,6 +988,7 @@ class GravityGridScene extends Phaser.Scene {
         this.addVehicleCombatMarker(vehicle, directHit ? "direct" : "splash", `${directHit ? "DIRECT" : "SPLASH"} -${damage}`);
         if (vehicle.hp <= 0) {
           vehicle.alive = false;
+          vehicle.defeatReason = "damage";
           defeatMarkedIds.add(vehicle.id);
           this.addVehicleCombatMarker(vehicle, "ko", "KO", 1);
         }
@@ -1001,7 +1015,7 @@ class GravityGridScene extends Phaser.Scene {
     });
     for (const vehicle of this.vehicles) {
       if (aliveBeforeSettle.has(vehicle.id) && !vehicle.alive && !defeatMarkedIds.has(vehicle.id)) {
-        this.addVehicleCombatMarker(vehicle, "bunged", "BUNGED");
+        this.addVehicleCombatMarker(vehicle, "bunged", "VOID DROPPED");
       }
     }
     this.shotResult = damaged.length > 0 ? damaged.join(" / ") : "Terrain carved.";
@@ -1031,7 +1045,7 @@ class GravityGridScene extends Phaser.Scene {
         continue;
       }
       const carvedSurface = centerY + Math.sqrt(inside) * depthFactor;
-      const breaksThrough = carvedSurface >= WORLD_HEIGHT - 36;
+      const breaksThrough = carvedSurface >= TERRAIN_BREAKTHROUGH_Y;
       this.terrain[x] = breaksThrough
         ? VOID_SURFACE_Y
         : Math.min(VOID_SURFACE_Y, Math.max(this.terrain[x], carvedSurface));
@@ -1061,7 +1075,7 @@ class GravityGridScene extends Phaser.Scene {
       }
 
       if (this.placeVehicleOnSurface(vehicle)) {
-        fallEvents.push(`${vehicle.username} bunged out`);
+        fallEvents.push(`${vehicle.username} Void Dropped`);
       }
     }
     return fallEvents;
@@ -1188,6 +1202,8 @@ class GravityGridScene extends Phaser.Scene {
     if (surface >= DEATH_SURFACE_Y) {
       vehicle.alive = false;
       vehicle.hp = 0;
+      vehicle.defeatReason = "void";
+      vehicle.y = VOID_DROP_DISPLAY_Y;
       return true;
     }
 
@@ -1297,6 +1313,7 @@ class GravityGridScene extends Phaser.Scene {
   private drawTerrain(): void {
     const gfx = this.terrainGfx;
     gfx.clear();
+    this.drawVoidHazard(gfx);
     this.drawMapLandmarks(gfx, "backdrop");
 
     let segment: Array<{ x: number; y: number }> = [];
@@ -1310,11 +1327,11 @@ class GravityGridScene extends Phaser.Scene {
       const last = segment[segment.length - 1];
       gfx.fillStyle(0x3c2f2f, 1);
       gfx.beginPath();
-      gfx.moveTo(first.x, WORLD_HEIGHT);
+      gfx.moveTo(first.x, TERRAIN_PLATFORM_BOTTOM_Y);
       for (const point of segment) {
         gfx.lineTo(point.x, point.y);
       }
-      gfx.lineTo(last.x, WORLD_HEIGHT);
+      gfx.lineTo(last.x, TERRAIN_PLATFORM_BOTTOM_Y);
       gfx.closePath();
       gfx.fillPath();
 
@@ -1330,7 +1347,7 @@ class GravityGridScene extends Phaser.Scene {
 
     for (let x = 0; x <= WORLD_WIDTH; x += TERRAIN_STEP) {
       const surface = this.surfaceAt(x);
-      if (surface >= WORLD_HEIGHT) {
+      if (surface >= TERRAIN_BREAKTHROUGH_Y) {
         flushSegment();
         continue;
       }
@@ -1338,6 +1355,21 @@ class GravityGridScene extends Phaser.Scene {
     }
     flushSegment();
     this.drawMapLandmarks(gfx, "highlight");
+  }
+
+  private drawVoidHazard(gfx: Phaser.GameObjects.Graphics): void {
+    gfx.fillStyle(0x020613, 0.74);
+    gfx.fillRect(0, VISIBLE_VOID_TOP_Y, WORLD_WIDTH, WORLD_HEIGHT - VISIBLE_VOID_TOP_Y);
+    gfx.lineStyle(5, 0x8be9ff, 0.38);
+    gfx.lineBetween(0, VISIBLE_VOID_TOP_Y, WORLD_WIDTH, VISIBLE_VOID_TOP_Y);
+    gfx.lineStyle(2, 0xff5c7a, 0.22);
+    for (let y = VISIBLE_VOID_TOP_Y + 18; y < WORLD_HEIGHT; y += 28) {
+      gfx.lineBetween(0, y, WORLD_WIDTH, y + Math.sin(y * 0.033) * 14);
+    }
+    gfx.fillStyle(0x8be9ff, 0.2);
+    for (let x = 46; x < WORLD_WIDTH; x += 118) {
+      gfx.fillRect(x, VISIBLE_VOID_TOP_Y + 14 + ((x * 19) % 78), 4, 28);
+    }
   }
 
   private drawMapLandmarks(gfx: Phaser.GameObjects.Graphics, pass: "backdrop" | "highlight"): void {
@@ -1553,19 +1585,37 @@ class GravityGridScene extends Phaser.Scene {
   }
 
   private combatHullCenter(vehicle: VehicleState): Phaser.Math.Vector2 {
-    const hull = vehicle.combatHull;
+    const hull = this.combatHullFor(vehicle);
     return new Phaser.Math.Vector2(
       vehicle.x + this.orientedOffset(vehicle, hull.offsetX, 1),
       vehicle.y + hull.offsetY,
     );
   }
 
+  private combatHullFor(vehicle: VehicleState): CombatHull {
+    return scaleBattlefieldCombatHull(vehicle.combatHull);
+  }
+
   private projectileHitsCombatHull(x: number, y: number, vehicle: VehicleState): boolean {
-    const hull = vehicle.combatHull;
+    const hull = this.combatHullFor(vehicle);
     const center = this.combatHullCenter(vehicle);
     const normalizedX = (x - center.x) / hull.radiusX;
     const normalizedY = (y - center.y) / hull.radiusY;
     return normalizedX * normalizedX + normalizedY * normalizedY <= 1;
+  }
+
+  private drawFootingMarker(gfx: Phaser.GameObjects.Graphics, vehicle: VehicleState, active: boolean): void {
+    if (!active || !vehicle.alive) {
+      return;
+    }
+
+    const surface = this.surfaceAt(vehicle.x);
+    const leftX = vehicle.x - VEHICLE_HALF_WIDTH;
+    const rightX = vehicle.x + VEHICLE_HALF_WIDTH;
+    gfx.lineStyle(8, 0x020613, 0.62);
+    gfx.lineBetween(leftX, surface - 2, rightX, surface - 2);
+    gfx.lineStyle(3, vehicle.accent, 0.86);
+    gfx.lineBetween(leftX, surface - 4, rightX, surface - 4);
   }
 
   private drawVehicles(): void {
@@ -1578,7 +1628,9 @@ class GravityGridScene extends Phaser.Scene {
     this.vehicleLabels = [];
 
     for (const vehicle of this.vehicles) {
-      const alpha = vehicle.alive ? 1 : 0.96;
+      const defeatPresentation = vehicle.alive ? undefined : defeatPresentationFor(vehicle.defeatReason);
+      const alpha = vehicle.alive ? 1 : defeatPresentation?.alpha ?? 0.9;
+      const renderY = defeatPresentation?.y ?? vehicle.y;
       const active =
         this.activeVehicle()?.id === vehicle.id &&
         !this.projectile &&
@@ -1587,13 +1639,15 @@ class GravityGridScene extends Phaser.Scene {
         this.isMovable(vehicle);
       const vehicleKey = vehicle.alive ? vehicle.vehicleSpriteKey : vehicle.vehicleDestroyedSpriteKey;
       const vehicleDisplay = vehicle.alive ? vehicle.vehicleDisplay : vehicle.vehicleDestroyedDisplay;
-      const slopeAngle = this.terrainAngleAt(vehicle.x);
+      const slopeAngle = vehicle.defeatReason === "void" ? 0 : this.terrainAngleAt(vehicle.x);
       const koTilt = vehicle.alive ? 0 : vehicle.team === "red" ? -8 : 8;
-      const vehicleSprite = this.vehicleSprites.get(vehicle.id) ?? this.add.image(vehicle.x, vehicle.y, vehicleKey);
+      const vehicleSprite = this.vehicleSprites.get(vehicle.id) ?? this.add.image(vehicle.x, renderY, vehicleKey);
       if (!this.vehicleSprites.has(vehicle.id)) {
         vehicleSprite.setDepth(11);
         this.vehicleSprites.set(vehicle.id, vehicleSprite);
       }
+
+      this.drawFootingMarker(gfx, vehicle, active);
 
       if (
         USE_UNIT_CONCEPT_PREVIEW &&
@@ -1603,28 +1657,36 @@ class GravityGridScene extends Phaser.Scene {
       ) {
         const conceptPose = this.characterPoseFor(vehicle, active);
         const conceptKey = vehicle.unitConceptSpriteKeys[conceptPose];
-        const conceptDisplay = vehicle.unitConceptDisplays[conceptPose];
+        const conceptDisplay = scaleBattlefieldDisplay(vehicle.unitConceptDisplays[conceptPose]);
         vehicleSprite
           .setTexture(conceptKey)
           .setOrigin(0.5, 0.86)
-          .setPosition(vehicle.x, vehicle.y + (vehicle.unitConceptOffsetY ?? 24))
+          .setPosition(vehicle.x, renderY + scaleBattlefieldOffset(vehicle.unitConceptOffsetY ?? 24))
           .setDisplaySize(conceptDisplay.width, conceptDisplay.height)
           .setFlipX(vehicle.facing !== vehicle.unitConceptSpriteFaces)
           .setAlpha(alpha)
           .setAngle(slopeAngle + koTilt);
-        vehicleSprite.clearTint();
+        if (defeatPresentation?.tint) {
+          vehicleSprite.setTint(defeatPresentation.tint);
+        } else {
+          vehicleSprite.clearTint();
+        }
         this.characterSprites.get(vehicle.id)?.setAlpha(0);
       } else {
         vehicleSprite
           .setTexture(vehicleKey)
           .setOrigin(0.5, 0.86)
-          .setPosition(vehicle.x, vehicle.y + 20)
+          .setPosition(vehicle.x, renderY + 20)
           .setDisplaySize(vehicleDisplay.width, vehicleDisplay.height)
           .setFlipX(vehicle.facing !== vehicle.vehicleSpriteFaces)
-          .setAlpha(vehicle.alive ? 1 : 0.96)
+          .setAlpha(alpha)
           .setAngle(slopeAngle + koTilt);
 
-        vehicleSprite.clearTint();
+        if (defeatPresentation?.tint) {
+          vehicleSprite.setTint(defeatPresentation.tint);
+        } else {
+          vehicleSprite.clearTint();
+        }
 
         const characterPose = this.characterPoseFor(vehicle, active);
         const characterKey = vehicle.characterSpriteKeys[characterPose];
@@ -1632,7 +1694,7 @@ class GravityGridScene extends Phaser.Scene {
         const characterX =
           vehicle.x + this.orientedOffset(vehicle, vehicle.characterOffsetX, vehicle.characterSpriteFaces);
         const characterSprite =
-          this.characterSprites.get(vehicle.id) ?? this.add.image(characterX, vehicle.y, characterKey);
+          this.characterSprites.get(vehicle.id) ?? this.add.image(characterX, renderY, characterKey);
         if (!this.characterSprites.has(vehicle.id)) {
           characterSprite.setDepth(12);
           this.characterSprites.set(vehicle.id, characterSprite);
@@ -1640,26 +1702,31 @@ class GravityGridScene extends Phaser.Scene {
         characterSprite
           .setTexture(characterKey)
           .setOrigin(0.5, 0.88)
-          .setPosition(characterX, vehicle.y + vehicle.characterOffsetY)
+          .setPosition(characterX, renderY + vehicle.characterOffsetY)
           .setDisplaySize(characterDisplay.width, characterDisplay.height)
           .setFlipX(vehicle.facing !== vehicle.characterSpriteFaces)
           .setAlpha(alpha)
           .setAngle(slopeAngle + koTilt);
-        characterSprite.clearTint();
+        if (defeatPresentation?.tint) {
+          characterSprite.setTint(defeatPresentation.tint);
+        } else {
+          characterSprite.clearTint();
+        }
       }
 
-      const frameWidth = USE_UNIT_CONCEPT_PREVIEW ? 404 : 232;
-      const frameHeight = USE_UNIT_CONCEPT_PREVIEW ? 258 : 138;
-      const frameTopOffset = USE_UNIT_CONCEPT_PREVIEW ? 202 : 106;
+      const frameScale = USE_UNIT_CONCEPT_PREVIEW ? BATTLEFIELD_UNIT_SCALE : 1;
+      const frameWidth = Math.round((USE_UNIT_CONCEPT_PREVIEW ? 404 : 232) * frameScale);
+      const frameHeight = Math.round((USE_UNIT_CONCEPT_PREVIEW ? 258 : 138) * frameScale);
+      const frameTopOffset = Math.round((USE_UNIT_CONCEPT_PREVIEW ? 202 : 106) * frameScale);
       if (active) {
         gfx.fillStyle(0xffffff, USE_UNIT_CONCEPT_PREVIEW ? 0.07 : 0.04);
-        gfx.fillRoundedRect(vehicle.x - frameWidth / 2, vehicle.y - frameTopOffset, frameWidth, frameHeight, 24);
+        gfx.fillRoundedRect(vehicle.x - frameWidth / 2, renderY - frameTopOffset, frameWidth, frameHeight, 18);
       }
       gfx.lineStyle(active ? 3 : 2, active ? 0xffffff : vehicle.accent, active ? 0.44 : 0.28);
-      gfx.strokeRoundedRect(vehicle.x - frameWidth / 2, vehicle.y - frameTopOffset, frameWidth, frameHeight, 24);
+      gfx.strokeRoundedRect(vehicle.x - frameWidth / 2, renderY - frameTopOffset, frameWidth, frameHeight, 18);
 
       if (this.showCombatHulls && vehicle.alive) {
-        const hull = vehicle.combatHull;
+        const hull = this.combatHullFor(vehicle);
         const hullCenter = this.combatHullCenter(vehicle);
         const hullColor = active ? 0xffffff : vehicle.accent;
         gfx.fillStyle(hullColor, active ? 0.1 : 0.055);
@@ -1668,13 +1735,17 @@ class GravityGridScene extends Phaser.Scene {
         gfx.strokeEllipse(hullCenter.x, hullCenter.y, hull.radiusX * 2, hull.radiusY * 2);
       }
 
-      gfx.fillStyle(0x0f172a, 0.88);
-      const hpY = vehicle.y - (USE_UNIT_CONCEPT_PREVIEW ? 174 : 76);
-      gfx.fillRoundedRect(vehicle.x - 44, hpY, 88, 14, 5);
-      gfx.fillStyle(vehicle.team === "red" ? 0xff4d5d : 0x4cc9f0, 0.92);
-      gfx.fillRoundedRect(vehicle.x - 42, hpY + 2, 84 * (vehicle.hp / MAX_HP), 10, 4);
+      if (vehicle.alive || vehicle.defeatReason === "damage") {
+        gfx.fillStyle(0x0f172a, 0.88);
+        const hpOffset = USE_UNIT_CONCEPT_PREVIEW ? scaleBattlefieldOffset(174) : 76;
+        const hpY = renderY - hpOffset;
+        gfx.fillRoundedRect(vehicle.x - 44, hpY, 88, 14, 5);
+        gfx.fillStyle(vehicle.team === "red" ? 0xff4d5d : 0x4cc9f0, 0.92);
+        gfx.fillRoundedRect(vehicle.x - 42, hpY + 2, 84 * (vehicle.hp / MAX_HP), 10, 4);
+      }
 
-      const labelY = vehicle.y - (USE_UNIT_CONCEPT_PREVIEW ? 214 : 118);
+      const labelOffset = USE_UNIT_CONCEPT_PREVIEW ? scaleBattlefieldOffset(214) : 118;
+      const labelY = renderY - labelOffset;
       const label = this.add
         .text(vehicle.x, labelY, vehicle.username, {
           fontFamily: "Inter, Arial, sans-serif",
@@ -1688,11 +1759,12 @@ class GravityGridScene extends Phaser.Scene {
         .setDepth(16);
       this.vehicleLabels.push(label);
 
+      const stateLabel = defeatPresentation?.label ?? vehicle.className;
       const classLabel = this.add
-        .text(vehicle.x, labelY + 21, vehicle.className, {
+        .text(vehicle.x, labelY + 21, stateLabel, {
           fontFamily: "Consolas, 'SFMono-Regular', monospace",
           fontSize: "12px",
-          color: vehicle.team === "red" ? "#ffd166" : "#8be9ff",
+          color: vehicle.defeatReason === "void" ? "#8be9ff" : vehicle.team === "red" ? "#ffd166" : "#8be9ff",
           stroke: "#10131b",
           strokeThickness: 4,
         })
@@ -1701,7 +1773,8 @@ class GravityGridScene extends Phaser.Scene {
       this.vehicleLabels.push(classLabel);
 
       if (active) {
-        const timerY = vehicle.y - 178;
+        const timerOffset = USE_UNIT_CONCEPT_PREVIEW ? scaleBattlefieldOffset(178) : 178;
+        const timerY = renderY - timerOffset;
         gfx.fillStyle(0x0b1020, 0.88);
         gfx.fillRoundedRect(vehicle.x - 52, timerY - 18, 104, 40, 10);
         gfx.lineStyle(2, vehicle.accent, 0.72);

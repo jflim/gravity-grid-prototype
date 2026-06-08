@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Combat Scale And Void Readability Implementation Plan</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        Generated from <a href="2026-06-08-combat-scale-void-readability.md">docs/superpowers/plans/2026-06-08-combat-scale-void-readability.md</a> on 2026-06-08.
+        Edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Combat Scale And Void Readability Implementation Plan</h1>
+<blockquote>
+<p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (<code>- [ ]</code>) syntax for tracking.</p>
+</blockquote>
+<p><strong>Goal:</strong> Make the playable map readable by shrinking battlefield units, clarifying the void, and separating HP KO from Void Dropped presentation.</p>
+<p><strong>Architecture:</strong> Add a small <code>src/combatPresentation.ts</code> helper for tested presentation rules, then wire <code>src/main.ts</code> to those rules. Keep this as readability/presentation work, not a new gameplay system or map redesign.</p>
+<p><strong>Tech Stack:</strong> TypeScript, Phaser, Node test runner, generated HTML docs.</p>
+<p>---</p>
+<h3>Task 1: Presentation Rules</h3>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/combatPresentation.ts</code></li>
+<li>Create: <code>src/combatPresentation.test.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Write failing tests</strong></li>
+</ul>
+<p>Add tests proving that battlefield unit art scales down, combat hulls scale with the art, and Void Dropped has a distinct suspended presentation from HP KO.</p>
+<ul>
+<li>[ ] <strong>Step 2: Verify the tests fail</strong></li>
+</ul>
+<p>Run: <code>npx tsx --test src/combatPresentation.test.ts</code></p>
+<p>Expected: FAIL because <code>src/combatPresentation.ts</code> does not exist yet.</p>
+<ul>
+<li>[ ] <strong>Step 3: Implement presentation helpers</strong></li>
+</ul>
+<p>Implement <code>scaleBattlefieldDisplay</code>, <code>scaleBattlefieldCombatHull</code>, <code>scaleBattlefieldOffset</code>, and <code>defeatPresentationFor</code>.</p>
+<ul>
+<li>[ ] <strong>Step 4: Verify focused tests pass</strong></li>
+</ul>
+<p>Run: <code>npx tsx --test src/combatPresentation.test.ts</code></p>
+<p>Expected: PASS.</p>
+<h3>Task 2: Wire Scene Rendering</h3>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>src/main.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Add defeat reason state</strong></li>
+</ul>
+<p>Add <code>defeatReason?: &quot;damage&quot; | &quot;void&quot;</code> to <code>VehicleState</code>. Set <code>damage</code> for HP KOs and <code>void</code> for falls through terrain.</p>
+<ul>
+<li>[ ] <strong>Step 2: Scale battlefield sprites and hulls</strong></li>
+</ul>
+<p>Apply presentation helpers to concept display sizes, offsets, active frames, labels, HP bars, and combat hull collision/rendering.</p>
+<ul>
+<li>[ ] <strong>Step 3: Clarify void dropped visuals</strong></li>
+</ul>
+<p>Show Void Dropped units suspended at a consistent void display Y with lower alpha/tint and a <code>VOID DROPPED</code> label. Keep HP KOs collapsed on terrain with KO presentation.</p>
+<ul>
+<li>[ ] <strong>Step 4: Add a subtle active contact cue</strong></li>
+</ul>
+<p>Draw a small active-only contact line at the real movement footprint. This is removable if it feels too debug-like after playtesting.</p>
+<h3>Task 3: Void Layer And Docs</h3>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>src/main.ts</code></li>
+<li>Modify: <code>README.md</code></li>
+<li>Modify: <code>docs/BUILD_PLAN.md</code></li>
+<li>Modify: <code>docs/SESSION_HANDOFF.md</code></li>
+<li>Modify: <code>docs/VERSION_LOG.md</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Make void visually persistent</strong></li>
+</ul>
+<p>Draw an obvious void danger band below terrain and make terrain platforms visually float above it.</p>
+<ul>
+<li>[ ] <strong>Step 2: Update docs</strong></li>
+</ul>
+<p>Record that the local demo now uses smaller battlefield units, distinct KO/Void Dropped presentation, and a clearer void layer.</p>
+<ul>
+<li>[ ] <strong>Step 3: Regenerate docs and verify</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+npm run docs:html
+
+npm run test
+
+npm run build
+
+git diff --check
+
+</code></pre>
+<p>Expected: all commands exit 0.</p>
+<ul>
+<li>[ ] <strong>Step 4: Commit</strong></li>
+</ul>
+<p>Commit message:</p>
+<pre><code class="language-text">
+fix: improve combat scale and void readability
+
+</code></pre>
+    </article>
+  </main>
+</body>
+</html>
