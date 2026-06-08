@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import {
   computeBattlefieldFrameLayout,
   computeCommandPanelLayout,
+  getGameViewportSize,
   shouldMountOnlineLobby,
   shouldShowCombatHulls,
 } from "./demoLayout";
@@ -2121,12 +2122,14 @@ class GravityGridScene extends Phaser.Scene {
   }
 }
 
+const initialViewport = getGameViewportSize(window, document.documentElement);
+
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   parent: "app",
   backgroundColor: "#10131b",
-  width: window.innerWidth,
-  height: window.innerHeight,
+  width: initialViewport.width,
+  height: initialViewport.height,
   scale: {
     mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -2140,7 +2143,19 @@ const config: Phaser.Types.Core.GameConfig = {
   scene: GravityGridScene,
 };
 
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
+syncGameViewportSize();
+window.addEventListener("resize", syncGameViewportSize);
+window.visualViewport?.addEventListener("resize", syncGameViewportSize);
+window.visualViewport?.addEventListener("scroll", syncGameViewportSize);
+
 if (shouldMountOnlineLobby(window.location.search)) {
   mountOnlineLobby();
+}
+
+function syncGameViewportSize(): void {
+  const viewport = getGameViewportSize(window, document.documentElement);
+  document.documentElement.style.setProperty("--game-viewport-width", `${viewport.width}px`);
+  document.documentElement.style.setProperty("--game-viewport-height", `${viewport.height}px`);
+  game.scale.resize(viewport.width, viewport.height);
 }

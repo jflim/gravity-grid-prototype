@@ -3,6 +3,20 @@ export interface ViewportSize {
   height: number;
 }
 
+export interface BrowserViewportSource {
+  innerWidth?: number;
+  innerHeight?: number;
+  visualViewport?: {
+    width?: number;
+    height?: number;
+  } | null;
+}
+
+export interface DocumentViewportSource {
+  clientWidth?: number;
+  clientHeight?: number;
+}
+
 export interface CommandPanelLayout {
   panelY: number;
   panelHeight: number;
@@ -56,6 +70,18 @@ export function shouldShowCombatHulls(search: string): boolean {
   return value === "1" || value === "true";
 }
 
+export function getGameViewportSize(
+  browserViewport: BrowserViewportSource,
+  documentViewport?: DocumentViewportSource,
+): ViewportSize {
+  return {
+    width: Math.floor(smallestPositive(320, browserViewport.visualViewport?.width, documentViewport?.clientWidth, browserViewport.innerWidth)),
+    height: Math.floor(
+      smallestPositive(320, browserViewport.visualViewport?.height, documentViewport?.clientHeight, browserViewport.innerHeight),
+    ),
+  };
+}
+
 export function computeCommandPanelLayout(viewport: ViewportSize): CommandPanelLayout {
   const compactHeight = viewport.height < 760;
   const panelHeight = compactHeight ? COMPACT_PANEL_HEIGHT : WIDE_PANEL_HEIGHT;
@@ -100,4 +126,13 @@ export function computeBattlefieldFrameLayout(input: BattlefieldFrameInput): Bat
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
+}
+
+function smallestPositive(fallback: number, ...values: Array<number | null | undefined>): number {
+  const candidates = values.filter(isPositiveNumber);
+  return candidates.length > 0 ? Math.min(...candidates) : fallback;
+}
+
+function isPositiveNumber(value: number | null | undefined): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value > 0;
 }
