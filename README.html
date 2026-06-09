@@ -143,7 +143,7 @@
 <li>placeholder capsule reward and nameplate equip state,</li>
 <li>server-owned combat preview state with round, turn, wind, active vehicle, HP, winner, and validated preview shot actions.</li>
 <li>Browser client uses the vendored Colyseus browser SDK at <code>public/vendor/colyseus.js</code> to keep Vite dev mode stable on Windows.</li>
-<li>The local map-review demo hides the Online Alpha room panel by default; add <code>?onlinePanel=1</code> on localhost when checking room create/join work. Public/tunnel hosts show the Online Alpha panel automatically.</li>
+<li>The local map-review demo hides the Online Alpha room panel by default; playtest launch mode shows it automatically.</li>
 <li>Public preview mode can serve the built client and Colyseus room server from one local port for internet sharing through a trusted tunnel, while staying localhost-only unless <code>HOST=0.0.0.0</code> is explicitly set.</li>
 </ul>
 <h2>Run</h2>
@@ -190,25 +190,28 @@ npm run docs:html
 npm run verify:runtime-roster
 
 </code></pre>
-<p>Public internet preview from this computer:</p>
+<p>Public internet playtest from this computer:</p>
 <pre><code class="language-powershell">
-npm run build
-
-npm run start:public
+npm run playtest
 
 </code></pre>
-<p>This serves the built game and Colyseus server at:</p>
+<p>This builds the project, serves the built game and Colyseus server locally, starts a Cloudflare quick tunnel, and prints the public URL to share. The local game is also available at:</p>
 <pre><code class="language-text">
 http://127.0.0.1:2567
 
 </code></pre>
-<p>For safest sharing, expose that local URL through a trusted tunnel and send friends the tunnel URL directly. Public/tunnel hosts show the Online Alpha panel automatically. This keeps the game server bound to <code>127.0.0.1</code> on your machine; the tunnel is the public entry point.</p>
+<p>For a playtest server without a tunnel, run:</p>
+<pre><code class="language-powershell">
+npm run playtest:local
+
+</code></pre>
+<p>This keeps the game server bound to <code>127.0.0.1</code> on your machine; the tunnel is the public entry point when <code>npm run playtest</code> is used.</p>
 <p>Security boundary for public preview:</p>
 <ul>
 <li>Only the built <code>dist</code> game files, <code>/healthz</code>, and the Colyseus room endpoint are served.</li>
 <li>Directory listing is not enabled.</li>
 <li>The server does not expose your source tree, shell, editor, local files outside <code>dist</code>, or machine admin access.</li>
-<li>Stop the terminal running <code>npm run start:public</code> when the playtest is over.</li>
+<li>Stop the terminal running <code>npm run playtest</code> when the playtest is over.</li>
 <li>Do not run the command from an elevated/admin terminal.</li>
 <li>Prefer a tunnel over router port forwarding. If you intentionally need direct network binding, set <code>HOST=0.0.0.0</code> yourself and only forward the single chosen game port.</li>
 </ul>
@@ -276,9 +279,19 @@ dist/index.html
 <td>Checks stable runtime sprite aliases and roster wiring.</td>
 </tr>
 <tr>
+<td><code>npm run playtest</code></td>
+<td>Trusted internet playtest from this computer</td>
+<td>Builds the project, serves the built client and Colyseus server from <code>http://127.0.0.1:2567</code>, starts a Cloudflare quick tunnel, and prints the share URL.</td>
+</tr>
+<tr>
+<td><code>npm run playtest:local</code></td>
+<td>Local playtest server without a tunnel</td>
+<td>Builds the project and serves playtest mode locally at <code>http://127.0.0.1:2567</code>.</td>
+</tr>
+<tr>
 <td><code>npm run start:public</code></td>
-<td>Trusted public preview after <code>npm run build</code></td>
-<td>Serves the built client and Colyseus server from <code>http://127.0.0.1:2567</code> for tunnel-based sharing.</td>
+<td>Lower-level preview server only</td>
+<td>Serves the built client and Colyseus server from <code>http://127.0.0.1:2567</code>; <code>npm run playtest</code> is preferred for normal sharing.</td>
 </tr>
 <tr>
 <td><code>npm run preview</code></td>
@@ -286,19 +299,6 @@ dist/index.html
 <td>Runs Vite's local preview server for the built client only; it is not the multiplayer preview server.</td>
 </tr>
 </tbody></table>
-<p>For internet playtests from this computer, the current manual two-terminal flow is:</p>
-<pre><code class="language-powershell">
-npm run build
-
-npm run start:public
-
-</code></pre>
-<p>Then in another terminal:</p>
-<pre><code class="language-powershell">
-cloudflared tunnel --url http://127.0.0.1:2567
-
-</code></pre>
-<p>Future command direction: replace the two-terminal public-preview flow with an intentional launcher such as <code>npm run playtest</code> and <code>npm run playtest:tunnel</code>, so the launch command controls local-vs-online playtest mode instead of URL parameters.</p>
 <h2>Planning</h2>
 <ul>
 <li>Locked v1 playtest-alpha contract: <a href="docs/V1_PLAYTEST_ALPHA.html">docs/V1_PLAYTEST_ALPHA.html</a></li>

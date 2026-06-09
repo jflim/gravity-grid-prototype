@@ -25,14 +25,14 @@
 - Run all tests: `npm test`
 - Regenerate HTML docs: `npm run docs:html`
 - Verify runtime roster assets: `npm run verify:runtime-roster`
-- Serve a built internet-share preview for a trusted tunnel: `npm run build` then `npm run start:public`
-- Expose the public preview through a quick tunnel: `cloudflared tunnel --url http://127.0.0.1:2567`
+- Start one-terminal internet playtest through a Cloudflare quick tunnel: `npm run playtest`
+- Start playtest mode locally without a tunnel: `npm run playtest:local`
 
 Expected local endpoints:
 
 - Client: `http://127.0.0.1:5173`
 - Colyseus server: `ws://127.0.0.1:2567`
-- Public preview origin after `npm run start:public`: `http://127.0.0.1:2567`
+- Playtest origin after `npm run playtest` or `npm run playtest:local`: `http://127.0.0.1:2567`
 
 On Windows inside managed Codex shells, detached watch-mode startup can exit silently. If that happens, run `npm run dev` in the Codex integrated terminal or a normal PowerShell window and keep that terminal open.
 

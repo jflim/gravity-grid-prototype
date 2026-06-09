@@ -25,6 +25,15 @@ const gameServer = new Server({
       });
     });
 
+    app.get("/runtime-config.js", (_request, response) => {
+      response.type("text/javascript");
+      response.send(
+        `window.__GRAVITY_CANYON_CONFIG__ = ${JSON.stringify({
+          onlinePanel: config.onlinePanel,
+        })};`,
+      );
+    });
+
     if (config.serveClient) {
       if (!existsSync(clientIndexPath)) {
         console.warn(`Built client not found at ${clientIndexPath}. Run npm run build before serving preview.`);

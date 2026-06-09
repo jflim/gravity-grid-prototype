@@ -23,8 +23,6 @@ import {
 test("map-review demo hides the online room panel by default", () => {
   assert.equal(shouldMountOnlineLobby(""), false);
   assert.equal(shouldMountOnlineLobby("?runtimeAssets"), false);
-  assert.equal(shouldMountOnlineLobby("", { protocol: "http:", hostname: "127.0.0.1" }), false);
-  assert.equal(shouldMountOnlineLobby("", { protocol: "http:", hostname: "localhost" }), false);
 });
 
 test("online room panel can be enabled explicitly for multiplayer checks", () => {
@@ -32,14 +30,17 @@ test("online room panel can be enabled explicitly for multiplayer checks", () =>
   assert.equal(shouldMountOnlineLobby("?onlinePanel=true"), true);
 });
 
-test("public preview URLs show the online room panel by default", () => {
-  assert.equal(shouldMountOnlineLobby("", { protocol: "https:", hostname: "random.trycloudflare.com" }), true);
-  assert.equal(shouldMountOnlineLobby("", { protocol: "https:", hostname: "play.jflim.dev" }), true);
+test("playtest runtime config shows the online room panel by default", () => {
+  assert.equal(shouldMountOnlineLobby("", { onlinePanel: true }), true);
 });
 
-test("online room panel can be disabled explicitly on public preview URLs", () => {
-  assert.equal(shouldMountOnlineLobby("?onlinePanel=0", { protocol: "https:", hostname: "play.jflim.dev" }), false);
-  assert.equal(shouldMountOnlineLobby("?onlinePanel=off", { protocol: "https:", hostname: "play.jflim.dev" }), false);
+test("public URLs do not decide online panel visibility by themselves", () => {
+  assert.equal(shouldMountOnlineLobby("", { onlinePanel: false }), false);
+});
+
+test("online room panel can be disabled explicitly even in playtest runtime config", () => {
+  assert.equal(shouldMountOnlineLobby("?onlinePanel=0", { onlinePanel: true }), false);
+  assert.equal(shouldMountOnlineLobby("?onlinePanel=off", { onlinePanel: true }), false);
 });
 
 test("map-review demo shows collision hull overlays by default", () => {

@@ -55,6 +55,14 @@ interface SpriteDisplaySize {
   height: number;
 }
 
+declare global {
+  interface Window {
+    __GRAVITY_CANYON_CONFIG__?: {
+      onlinePanel?: boolean;
+    };
+  }
+}
+
 interface CombatHull {
   offsetX: number;
   offsetY: number;
@@ -2481,7 +2489,7 @@ window.addEventListener("resize", syncGameViewportSize);
 window.visualViewport?.addEventListener("resize", syncGameViewportSize);
 window.visualViewport?.addEventListener("scroll", syncGameViewportSize);
 
-if (shouldMountOnlineLobby(window.location.search, window.location)) {
+if (shouldMountOnlineLobby(window.location.search, window.__GRAVITY_CANYON_CONFIG__)) {
   mountOnlineLobby();
 }
 

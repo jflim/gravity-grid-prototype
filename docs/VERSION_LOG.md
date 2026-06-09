@@ -63,8 +63,10 @@ Highlights:
 - Increased the command deck bottom safety gutter and framed the visible void bottom just above the command deck boundary to avoid clipped controls and stray gap bands.
 - Made the command deck content scale from the available browser dock width, with tested child-control geometry so the portrait, launch meter, movement meter, and aim dial stay inside the visible panel across supported desktop sizes.
 - Added an opt-in public preview startup path that serves the built client and Colyseus room server from one local port for tunnel-based internet sharing, while keeping default and preview hosting localhost-bound unless `HOST=0.0.0.0` is explicitly set.
-- Made public/tunnel preview hosts show the Online Alpha panel by default, while localhost map-review URLs still keep it hidden unless `?onlinePanel=1` is used.
+- Kept localhost map-review URLs clean by default while allowing explicit `?onlinePanel=1` debugging and playtest-mode runtime config to show the Online Alpha panel.
 - Added a README command reference explaining the current npm scripts, the manual Cloudflare tunnel flow, and why npm scripts are the project task-runner source of truth on Windows.
+- Added a one-terminal `npm run playtest` launcher that builds, starts playtest mode, starts a Cloudflare quick tunnel, prints the share URL, and shuts server/tunnel down together with Ctrl+C.
+- Added runtime config so playtest launch mode controls the Online Alpha panel instead of inferring it from the public URL hostname.
 - Added horizontal camera side bounds so the battlefield remains centered when the visible camera frame is wider than the world instead of leaving all extra space on one side.
 - Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.
 - Changed projectile camera behavior to keep the battlefield stable while shots are readable, recentering only when a projectile leaves the readable frame.

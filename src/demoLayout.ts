@@ -17,9 +17,8 @@ export interface DocumentViewportSource {
   clientHeight?: number;
 }
 
-export interface BrowserLocationSource {
-  protocol?: string;
-  hostname?: string;
+export interface RuntimeConfigSource {
+  onlinePanel?: boolean;
 }
 
 export interface CommandPanelLayout {
@@ -152,14 +151,14 @@ export const MIN_SUPPORTED_VIEWPORT: ViewportSize = { width: 1366, height: 768 }
 export const MAX_PRESENTATION_VIEWPORT: ViewportSize = { width: 2400, height: 1350 };
 export const GAMEPLAY_ASPECT_RATIO = 16 / 9;
 
-export function shouldMountOnlineLobby(search: string, location?: BrowserLocationSource): boolean {
+export function shouldMountOnlineLobby(search: string, runtimeConfig?: RuntimeConfigSource): boolean {
   const params = new URLSearchParams(search);
   const value = params.get("onlinePanel");
   if (value !== null) {
     return value === "1" || value === "true";
   }
 
-  return isPublicHttpHost(location);
+  return runtimeConfig?.onlinePanel === true;
 }
 
 export function shouldShowCombatHulls(search: string): boolean {
@@ -374,13 +373,4 @@ function smallestPositive(fallback: number, ...values: Array<number | null | und
 
 function isPositiveNumber(value: number | null | undefined): value is number {
   return typeof value === "number" && Number.isFinite(value) && value > 0;
-}
-
-function isPublicHttpHost(location: BrowserLocationSource | undefined): boolean {
-  if (!location || (location.protocol !== "http:" && location.protocol !== "https:")) {
-    return false;
-  }
-
-  const hostname = location.hostname?.toLowerCase() ?? "";
-  return hostname !== "" && hostname !== "localhost" && hostname !== "127.0.0.1" && hostname !== "::1";
 }

@@ -36,7 +36,7 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
   - validated active-player preview shots,
   - preview token reward on round end.
 - The online preview is available in the floating Online Alpha panel when the local URL includes `?onlinePanel=1`; the default local demo hides that panel for map-review clarity.
-- `npm run start:public` now serves the built client plus Colyseus from one localhost-bound port for tunnel-based internet playtests. Use `npm run build` first, then expose `http://127.0.0.1:2567` through a trusted tunnel and share the tunnel URL directly; public/tunnel hosts show the Online Alpha panel automatically. Default and public-preview startup stay bound to `127.0.0.1`; direct all-interface binding requires explicitly setting `HOST=0.0.0.0`.
+- `npm run playtest` now builds the project, serves the built client plus Colyseus from one localhost-bound port, starts a Cloudflare quick tunnel, and prints the public URL. `npm run playtest:local` starts the same playtest mode without a tunnel. Playtest launch mode, not the public URL hostname, controls the Online Alpha panel. Default and public-preview startup stay bound to `127.0.0.1`; direct all-interface binding requires explicitly setting `HOST=0.0.0.0`.
 - Phaser projectile and terrain simulation are not yet synced to the server-owned combat model.
 - Local combat readability now has prototype combat hulls, floating combat markers, and playable v1 map terrain:
   - Direct-hit projectile collision uses one shared rectangular vehicle-only hit zone instead of the old small center-radius check or pilot-plus-vehicle silhouette collision.

@@ -53,7 +53,7 @@ First playable local artillery prototype for Gravity Canyon.
   - placeholder capsule reward and nameplate equip state,
   - server-owned combat preview state with round, turn, wind, active vehicle, HP, winner, and validated preview shot actions.
 - Browser client uses the vendored Colyseus browser SDK at `public/vendor/colyseus.js` to keep Vite dev mode stable on Windows.
-- The local map-review demo hides the Online Alpha room panel by default; add `?onlinePanel=1` on localhost when checking room create/join work. Public/tunnel hosts show the Online Alpha panel automatically.
+- The local map-review demo hides the Online Alpha room panel by default; playtest launch mode shows it automatically.
 - Public preview mode can serve the built client and Colyseus room server from one local port for internet sharing through a trusted tunnel, while staying localhost-only unless `HOST=0.0.0.0` is explicitly set.
 
 ## Run
@@ -109,27 +109,32 @@ Runtime roster asset check:
 npm run verify:runtime-roster
 ```
 
-Public internet preview from this computer:
+Public internet playtest from this computer:
 
 ```powershell
-npm run build
-npm run start:public
+npm run playtest
 ```
 
-This serves the built game and Colyseus server at:
+This builds the project, serves the built game and Colyseus server locally, starts a Cloudflare quick tunnel, and prints the public URL to share. The local game is also available at:
 
 ```text
 http://127.0.0.1:2567
 ```
 
-For safest sharing, expose that local URL through a trusted tunnel and send friends the tunnel URL directly. Public/tunnel hosts show the Online Alpha panel automatically. This keeps the game server bound to `127.0.0.1` on your machine; the tunnel is the public entry point.
+For a playtest server without a tunnel, run:
+
+```powershell
+npm run playtest:local
+```
+
+This keeps the game server bound to `127.0.0.1` on your machine; the tunnel is the public entry point when `npm run playtest` is used.
 
 Security boundary for public preview:
 
 - Only the built `dist` game files, `/healthz`, and the Colyseus room endpoint are served.
 - Directory listing is not enabled.
 - The server does not expose your source tree, shell, editor, local files outside `dist`, or machine admin access.
-- Stop the terminal running `npm run start:public` when the playtest is over.
+- Stop the terminal running `npm run playtest` when the playtest is over.
 - Do not run the command from an elevated/admin terminal.
 - Prefer a tunnel over router port forwarding. If you intentionally need direct network binding, set `HOST=0.0.0.0` yourself and only forward the single chosen game port.
 
@@ -153,23 +158,10 @@ dist/index.html
 | `npm test` | Before commits or after behavior changes | Runs all server and client unit tests. |
 | `npm run docs:html` | After markdown doc edits | Regenerates HTML reading copies and map review pages. |
 | `npm run verify:runtime-roster` | After runtime asset or roster edits | Checks stable runtime sprite aliases and roster wiring. |
-| `npm run start:public` | Trusted public preview after `npm run build` | Serves the built client and Colyseus server from `http://127.0.0.1:2567` for tunnel-based sharing. |
+| `npm run playtest` | Trusted internet playtest from this computer | Builds the project, serves the built client and Colyseus server from `http://127.0.0.1:2567`, starts a Cloudflare quick tunnel, and prints the share URL. |
+| `npm run playtest:local` | Local playtest server without a tunnel | Builds the project and serves playtest mode locally at `http://127.0.0.1:2567`. |
+| `npm run start:public` | Lower-level preview server only | Serves the built client and Colyseus server from `http://127.0.0.1:2567`; `npm run playtest` is preferred for normal sharing. |
 | `npm run preview` | Local static build preview | Runs Vite's local preview server for the built client only; it is not the multiplayer preview server. |
-
-For internet playtests from this computer, the current manual two-terminal flow is:
-
-```powershell
-npm run build
-npm run start:public
-```
-
-Then in another terminal:
-
-```powershell
-cloudflared tunnel --url http://127.0.0.1:2567
-```
-
-Future command direction: replace the two-terminal public-preview flow with an intentional launcher such as `npm run playtest` and `npm run playtest:tunnel`, so the launch command controls local-vs-online playtest mode instead of URL parameters.
 
 ## Planning
 

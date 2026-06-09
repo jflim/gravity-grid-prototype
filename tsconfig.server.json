@@ -13,5 +13,5 @@
     "useDefineForClassFields": false,
     "noEmit": true
   },
-  "include": ["server"]
+  "include": ["server", "scripts/playtest.ts", "scripts/start-public-preview.ts"]
 }
