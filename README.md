@@ -28,7 +28,7 @@ First playable local artillery prototype for Gravity Canyon.
 - Full-unit concept preview sprites, active frames, labels, and prototype combat hulls are scaled down in the match view to keep terrain and movement readable.
 - Collision art review rules keep pilot poses visually compatible with the vehicle-only hit zone.
 - Crater deformation on impact.
-- Terrain can be blasted through into a visible void beneath the stage, with a persistent void danger layer under the floating platforms.
+- Terrain can be blasted through into a visible void beneath the stage, with a persistent danger layer anchored to the current map's lowest playable terrain.
 - Temporary impact rings showing crater size and splash damage range.
 - Floating combat markers call out direct hits, splash hits, knockback, HP KOs, and Void Dropped eliminations.
 - Round starts now use the playable Ringworks Basin v1 map, with exact four-seat spawns, two readable bridge gaps, a central ring bridge island, and weapon-readable side bowls/lips for map-feel testing.
@@ -148,7 +148,7 @@ dist/index.html
 - Every weapon affects terrain. Bunger weapons are tuned to affect terrain the most.
 - Nova is currently set up as the prototype Bunger class so terrain knock-off play can be tested.
 - Kaelii and Perlah are accepted as v1 runtime test units for local play; their Bouncer and Spark class-specific shot behavior is still future work, so they currently use the baseline non-Bunger projectile behavior.
-- Deep enough craters expose the void under the terrain instead of stopping at a safe floor.
+- Deep enough craters expose the void under the terrain instead of stopping at a safe floor; the visible void band starts below the lowest playable terrain shelf so land does not appear inside the danger zone.
 - The current crater, splash, and Bunger knockback radii are intentionally smaller so map KOs require more precision.
 - Impact rings are temporary debugging/readability feedback: inner ring is crater/terrain effect, outer ring is splash damage range.
 - Direct-hit and splash damage use the vehicle hit zone, not pilot hair, pose, outfit, or cosmetic silhouette.

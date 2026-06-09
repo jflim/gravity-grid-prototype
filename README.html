@@ -118,7 +118,7 @@
 <li>Full-unit concept preview sprites, active frames, labels, and prototype combat hulls are scaled down in the match view to keep terrain and movement readable.</li>
 <li>Collision art review rules keep pilot poses visually compatible with the vehicle-only hit zone.</li>
 <li>Crater deformation on impact.</li>
-<li>Terrain can be blasted through into a visible void beneath the stage, with a persistent void danger layer under the floating platforms.</li>
+<li>Terrain can be blasted through into a visible void beneath the stage, with a persistent danger layer anchored to the current map's lowest playable terrain.</li>
 <li>Temporary impact rings showing crater size and splash damage range.</li>
 <li>Floating combat markers call out direct hits, splash hits, knockback, HP KOs, and Void Dropped eliminations.</li>
 <li>Round starts now use the playable Ringworks Basin v1 map, with exact four-seat spawns, two readable bridge gaps, a central ring bridge island, and weapon-readable side bowls/lips for map-feel testing.</li>
@@ -229,7 +229,7 @@ dist/index.html
 <li>Every weapon affects terrain. Bunger weapons are tuned to affect terrain the most.</li>
 <li>Nova is currently set up as the prototype Bunger class so terrain knock-off play can be tested.</li>
 <li>Kaelii and Perlah are accepted as v1 runtime test units for local play; their Bouncer and Spark class-specific shot behavior is still future work, so they currently use the baseline non-Bunger projectile behavior.</li>
-<li>Deep enough craters expose the void under the terrain instead of stopping at a safe floor.</li>
+<li>Deep enough craters expose the void under the terrain instead of stopping at a safe floor; the visible void band starts below the lowest playable terrain shelf so land does not appear inside the danger zone.</li>
 <li>The current crater, splash, and Bunger knockback radii are intentionally smaller so map KOs require more precision.</li>
 <li>Impact rings are temporary debugging/readability feedback: inner ring is crater/terrain effect, outer ring is splash damage range.</li>
 <li>Direct-hit and splash damage use the vehicle hit zone, not pilot hair, pose, outfit, or cosmetic silhouette.</li>

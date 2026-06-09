@@ -23,6 +23,21 @@ interface VoidDropRenderInput {
   duration: number;
 }
 
+interface VisibleVoidZoneTopInput {
+  terrain: number[];
+  terrainBreakthroughY: number;
+  fallbackTopY: number;
+}
+
+interface VoidDropTargetInput {
+  visibleVoidTopY: number;
+  visibleVoidZoneHeight: number;
+  displayHeight: number;
+  padding?: number;
+}
+
+export const DRAMATIC_VOID_DROP_FALL_SECONDS = 1.55;
+
 export function chooseVoidDropDisplayX(input: VoidDropDisplayInput): number {
   const runs = collectVoidRuns(input);
   const halfWidth = input.displayWidth / 2 + input.padding;
@@ -49,6 +64,28 @@ export function chooseVoidDropDisplayX(input: VoidDropDisplayInput): number {
 
 export function requiredVoidZoneHeight(display: SpriteDisplaySize): number {
   return Math.max(240, Math.ceil(display.height * 1.5));
+}
+
+export function visibleVoidZoneTopY(input: VisibleVoidZoneTopInput): number {
+  const playableSurfaces = input.terrain.filter(
+    (surface) => Number.isFinite(surface) && surface < input.terrainBreakthroughY,
+  );
+  if (playableSurfaces.length === 0) {
+    return input.fallbackTopY;
+  }
+
+  return Math.max(...playableSurfaces);
+}
+
+export function visibleVoidZoneBottomY(visibleVoidTopY: number, visibleVoidZoneHeight: number): number {
+  return visibleVoidTopY + visibleVoidZoneHeight;
+}
+
+export function voidDropTargetY(input: VoidDropTargetInput): number {
+  const padding = input.padding ?? 10;
+  return Math.round(
+    input.visibleVoidTopY + input.visibleVoidZoneHeight - input.displayHeight / 2 - padding,
+  );
 }
 
 export function voidDropRenderPosition(input: VoidDropRenderInput): { x: number; y: number } {

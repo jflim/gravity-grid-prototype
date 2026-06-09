@@ -2,7 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   chooseVoidDropDisplayX,
+  DRAMATIC_VOID_DROP_FALL_SECONDS,
   requiredVoidZoneHeight,
+  visibleVoidZoneBottomY,
+  visibleVoidZoneTopY,
+  voidDropTargetY,
   voidDropRenderPosition,
 } from "./voidDropPresentation";
 import { scaleBattlefieldDisplay } from "./combatPresentation";
@@ -41,6 +45,32 @@ test("visible void zone is at least one and a half unit heights tall", () => {
   assert.equal(height, 240);
 });
 
+test("visible void zone starts at the lowest playable terrain surface", () => {
+  const top = visibleVoidZoneTopY({
+    terrain: [590, 642, 815, 1160, 704],
+    terrainBreakthroughY: 846,
+    fallbackTopY: 660,
+  });
+
+  assert.equal(top, 815);
+  assert.equal(visibleVoidZoneBottomY(top, 240), 1055);
+});
+
+test("void dropped units settle fully inside the visible void band", () => {
+  const scaledKo = scaleBattlefieldDisplay({ width: 354, height: 212 });
+  const top = 815;
+  const zoneHeight = requiredVoidZoneHeight(scaledKo);
+  const targetY = voidDropTargetY({
+    visibleVoidTopY: top,
+    visibleVoidZoneHeight: zoneHeight,
+    displayHeight: scaledKo.height,
+  });
+
+  assert.equal(targetY, 973);
+  assert.ok(targetY - scaledKo.height / 2 > top);
+  assert.ok(targetY + scaledKo.height / 2 < top + zoneHeight);
+});
+
 test("void drop render uses a slow-start fall animation", () => {
   const position = voidDropRenderPosition({
     fromX: 760,
@@ -53,4 +83,8 @@ test("void drop render uses a slow-start fall animation", () => {
 
   assert.ok(Math.abs(position.x - 790.75) < 0.01);
   assert.ok(Math.abs(position.y - 645) < 0.01);
+});
+
+test("void drop fall presentation is long enough to read as dramatic", () => {
+  assert.ok(DRAMATIC_VOID_DROP_FALL_SECONDS >= 1.35);
 });

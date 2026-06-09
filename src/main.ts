@@ -1,6 +1,5 @@
 import Phaser from "phaser";
 import {
-  VOID_DROP_DISPLAY_Y,
   defeatPresentationFor,
   scaleBattlefieldCombatHull,
   scaleBattlefieldDisplay,
@@ -12,9 +11,13 @@ import { COLLISION_ZONE_OVERLAY_DEPTH, collisionZoneOverlayStyle } from "./colli
 import { firstTerrainContact, firstVehicleContact } from "./projectileCollision";
 import { SHARED_V1_VEHICLE_HIT_ZONE } from "./v1CollisionProfiles";
 import {
+  DRAMATIC_VOID_DROP_FALL_SECONDS,
   chooseVoidDropDisplayX,
   requiredVoidZoneHeight,
+  visibleVoidZoneBottomY,
+  visibleVoidZoneTopY,
   voidDropRenderPosition,
+  voidDropTargetY,
 } from "./voidDropPresentation";
 import { distanceToVehicleHitZone, type VehicleHitZone } from "./vehicleHitZone";
 import {
@@ -193,10 +196,10 @@ const TURN_SECONDS = 30;
 const VOID_SURFACE_Y = WORLD_HEIGHT + 260;
 const DEATH_SURFACE_Y = WORLD_HEIGHT - 6;
 const VOID_DROP_DISPLAY_SIZE = scaleBattlefieldDisplay({ width: 354, height: 212 });
-const VISIBLE_VOID_TOP_Y = WORLD_HEIGHT - requiredVoidZoneHeight(VOID_DROP_DISPLAY_SIZE);
-const TERRAIN_PLATFORM_BOTTOM_Y = WORLD_HEIGHT - 48;
-const TERRAIN_BREAKTHROUGH_Y = TERRAIN_PLATFORM_BOTTOM_Y - 6;
-const VOID_DROP_FALL_SECONDS = 0.85;
+const VISIBLE_VOID_ZONE_HEIGHT = requiredVoidZoneHeight(VOID_DROP_DISPLAY_SIZE);
+const FALLBACK_VISIBLE_VOID_TOP_Y = WORLD_HEIGHT - VISIBLE_VOID_ZONE_HEIGHT;
+const WORLD_RENDER_HEIGHT = WORLD_HEIGHT + VISIBLE_VOID_ZONE_HEIGHT;
+const DEFAULT_TERRAIN_BREAKTHROUGH_Y = WORLD_HEIGHT - 54;
 const VOID_DROP_HORIZONTAL_PADDING = 24;
 const MAX_TERRAIN_SPRITE_TILT_DEG = 20;
 const USE_UNIT_CONCEPT_PREVIEW = !new URLSearchParams(window.location.search).has("runtimeAssets");
@@ -219,6 +222,7 @@ class GravityGridScene extends Phaser.Scene {
   private pendingRoundEvent?: Phaser.Time.TimerEvent;
   private showCombatHulls = shouldShowCombatHulls(window.location.search);
   private combatMarkers: CombatMarker[] = [];
+  private visibleVoidTopY = FALLBACK_VISIBLE_VOID_TOP_Y;
 
   private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
   private spaceKey?: Phaser.Input.Keyboard.Key;
@@ -296,8 +300,8 @@ class GravityGridScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-    this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+    this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_RENDER_HEIGHT);
+    this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_RENDER_HEIGHT);
     this.cursors = this.input.keyboard?.createCursorKeys();
     this.spaceKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.resetKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.R);
@@ -473,7 +477,7 @@ class GravityGridScene extends Phaser.Scene {
   }
 
   private createBackground(): void {
-    this.add.rectangle(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, WORLD_WIDTH, WORLD_HEIGHT, 0x111827);
+    this.add.rectangle(WORLD_WIDTH / 2, WORLD_RENDER_HEIGHT / 2, WORLD_WIDTH, WORLD_RENDER_HEIGHT, 0x111827);
     const reference = this.add
       .image(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, "style-reference")
       .setDisplaySize(WORLD_WIDTH, WORLD_HEIGHT)
@@ -486,25 +490,19 @@ class GravityGridScene extends Phaser.Scene {
     horizon.lineStyle(3, 0x42d9ff, 0.2);
     horizon.lineBetween(0, 390, WORLD_WIDTH, 390);
 
-    const voidLayer = this.add.graphics();
-    voidLayer.fillStyle(0x050b1a, 0.98);
-    voidLayer.fillRect(0, 500, WORLD_WIDTH, WORLD_HEIGHT - 500);
-    voidLayer.fillStyle(0x123152, 0.32);
-    for (let y = 548; y < WORLD_HEIGHT; y += 46) {
-      voidLayer.fillRect(0, y, WORLD_WIDTH, 16);
+    const lowerLayer = this.add.graphics();
+    lowerLayer.lineStyle(2, 0x27506f, 0.14);
+    for (let y = 548; y < WORLD_RENDER_HEIGHT; y += 46) {
+      lowerLayer.lineBetween(0, y, WORLD_WIDTH, y + Math.sin(y * 0.023) * 18);
     }
-    voidLayer.lineStyle(3, 0x8be9ff, 0.2);
-    for (let y = 548; y < WORLD_HEIGHT; y += 38) {
-      voidLayer.lineBetween(0, y, WORLD_WIDTH, y + Math.sin(y * 0.023) * 18);
-    }
-    voidLayer.lineStyle(2, 0xffd166, 0.12);
+    lowerLayer.lineStyle(2, 0xffd166, 0.08);
     for (let x = 80; x < WORLD_WIDTH; x += 170) {
-      voidLayer.lineBetween(x, 540, x - 90, WORLD_HEIGHT);
+      lowerLayer.lineBetween(x, 540, x - 90, WORLD_RENDER_HEIGHT);
     }
-    voidLayer.fillStyle(0xdff9ff, 0.28);
+    lowerLayer.fillStyle(0xdff9ff, 0.18);
     for (let x = 52; x < WORLD_WIDTH; x += 137) {
       const y = 575 + ((x * 37) % 260);
-      voidLayer.fillRect(x, y, 4, 18);
+      lowerLayer.fillRect(x, y, 4, 18);
     }
   }
 
@@ -550,6 +548,11 @@ class GravityGridScene extends Phaser.Scene {
     this.currentDemoMap = demoMap;
     this.terrain = [...demoMap.terrain];
     this.flattenDemoSpawnZones(demoMap);
+    this.visibleVoidTopY = visibleVoidZoneTopY({
+      terrain: this.terrain,
+      terrainBreakthroughY: DEFAULT_TERRAIN_BREAKTHROUGH_Y,
+      fallbackTopY: FALLBACK_VISIBLE_VOID_TOP_Y,
+    });
     const redOneSpawn = demoMap.map.spawns["red-1"];
     const blueOneSpawn = demoMap.map.spawns["blue-1"];
     const redTwoSpawn = demoMap.map.spawns["red-2"];
@@ -1112,7 +1115,7 @@ class GravityGridScene extends Phaser.Scene {
         continue;
       }
       const carvedSurface = centerY + Math.sqrt(inside) * depthFactor;
-      const breaksThrough = carvedSurface >= TERRAIN_BREAKTHROUGH_Y;
+      const breaksThrough = carvedSurface >= this.terrainBreakthroughY();
       this.terrain[x] = breaksThrough
         ? VOID_SURFACE_Y
         : Math.min(VOID_SURFACE_Y, Math.max(this.terrain[x], carvedSurface));
@@ -1264,12 +1267,13 @@ class GravityGridScene extends Phaser.Scene {
 
   private placeVehicleOnSurface(vehicle: VehicleState): boolean {
     const fallStartX = vehicle.x;
-    const fallStartY = vehicle.y > 0 ? vehicle.y : VISIBLE_VOID_TOP_Y - 40;
+    const fallStartY = vehicle.y > 0 ? vehicle.y : this.visibleVoidTopY - 40;
     const surface = this.surfaceAt(vehicle.x);
     vehicle.y = surface - VEHICLE_HALF_HEIGHT;
 
     if (surface >= DEATH_SURFACE_Y) {
       const targetX = this.nearestVoidDisplayX(fallStartX);
+      const targetY = this.voidDropTargetY();
       vehicle.alive = false;
       vehicle.hp = 0;
       vehicle.defeatReason = "void";
@@ -1277,12 +1281,12 @@ class GravityGridScene extends Phaser.Scene {
         fromX: fallStartX,
         fromY: fallStartY,
         targetX,
-        targetY: VOID_DROP_DISPLAY_Y,
+        targetY,
         age: 0,
-        duration: VOID_DROP_FALL_SECONDS,
+        duration: DRAMATIC_VOID_DROP_FALL_SECONDS,
       };
       vehicle.x = targetX;
-      vehicle.y = VOID_DROP_DISPLAY_Y;
+      vehicle.y = targetY;
       return true;
     }
 
@@ -1296,7 +1300,27 @@ class GravityGridScene extends Phaser.Scene {
       step: TERRAIN_STEP,
       displayWidth: VOID_DROP_DISPLAY_SIZE.width,
       padding: VOID_DROP_HORIZONTAL_PADDING,
-      isVoidAt: (x) => this.surfaceAt(x) >= TERRAIN_BREAKTHROUGH_Y,
+      isVoidAt: (x) => this.surfaceAt(x) >= this.terrainBreakthroughY(),
+    });
+  }
+
+  private terrainBreakthroughY(): number {
+    return this.visibleVoidTopY + 8;
+  }
+
+  private terrainPlatformBottomY(): number {
+    return this.visibleVoidTopY;
+  }
+
+  private visibleVoidBottomY(): number {
+    return visibleVoidZoneBottomY(this.visibleVoidTopY, VISIBLE_VOID_ZONE_HEIGHT);
+  }
+
+  private voidDropTargetY(): number {
+    return voidDropTargetY({
+      visibleVoidTopY: this.visibleVoidTopY,
+      visibleVoidZoneHeight: VISIBLE_VOID_ZONE_HEIGHT,
+      displayHeight: VOID_DROP_DISPLAY_SIZE.height,
     });
   }
 
@@ -1428,11 +1452,11 @@ class GravityGridScene extends Phaser.Scene {
       const last = segment[segment.length - 1];
       gfx.fillStyle(0x3c2f2f, 1);
       gfx.beginPath();
-      gfx.moveTo(first.x, TERRAIN_PLATFORM_BOTTOM_Y);
+      gfx.moveTo(first.x, this.terrainPlatformBottomY());
       for (const point of segment) {
         gfx.lineTo(point.x, point.y);
       }
-      gfx.lineTo(last.x, TERRAIN_PLATFORM_BOTTOM_Y);
+      gfx.lineTo(last.x, this.terrainPlatformBottomY());
       gfx.closePath();
       gfx.fillPath();
 
@@ -1448,7 +1472,7 @@ class GravityGridScene extends Phaser.Scene {
 
     for (let x = 0; x <= WORLD_WIDTH; x += TERRAIN_STEP) {
       const surface = this.surfaceAt(x);
-      if (surface >= TERRAIN_BREAKTHROUGH_Y) {
+      if (surface >= this.terrainBreakthroughY()) {
         flushSegment();
         continue;
       }
@@ -1459,17 +1483,19 @@ class GravityGridScene extends Phaser.Scene {
   }
 
   private drawVoidHazard(gfx: Phaser.GameObjects.Graphics): void {
+    const top = this.visibleVoidTopY;
+    const bottom = this.visibleVoidBottomY();
     gfx.fillStyle(0x020613, 0.74);
-    gfx.fillRect(0, VISIBLE_VOID_TOP_Y, WORLD_WIDTH, WORLD_HEIGHT - VISIBLE_VOID_TOP_Y);
+    gfx.fillRect(0, top, WORLD_WIDTH, bottom - top);
     gfx.lineStyle(5, 0x8be9ff, 0.38);
-    gfx.lineBetween(0, VISIBLE_VOID_TOP_Y, WORLD_WIDTH, VISIBLE_VOID_TOP_Y);
+    gfx.lineBetween(0, top, WORLD_WIDTH, top);
     gfx.lineStyle(2, 0xff5c7a, 0.22);
-    for (let y = VISIBLE_VOID_TOP_Y + 18; y < WORLD_HEIGHT; y += 28) {
+    for (let y = top + 18; y < bottom; y += 28) {
       gfx.lineBetween(0, y, WORLD_WIDTH, y + Math.sin(y * 0.033) * 14);
     }
     gfx.fillStyle(0x8be9ff, 0.2);
     for (let x = 46; x < WORLD_WIDTH; x += 118) {
-      gfx.fillRect(x, VISIBLE_VOID_TOP_Y + 14 + ((x * 19) % 78), 4, 28);
+      gfx.fillRect(x, top + 14 + ((x * 19) % 78), 4, 28);
     }
   }
 
