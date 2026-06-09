@@ -27,6 +27,7 @@ import {
   getGameViewportSize,
   isSupportedGameViewport,
   MIN_SUPPORTED_VIEWPORT,
+  readableWorldUiScale,
   shouldMountOnlineLobby,
   shouldRecenterProjectileCamera,
   shouldShowCombatHulls,
@@ -1356,6 +1357,7 @@ class GravityGridScene extends Phaser.Scene {
 
   private addCombatMarker(kind: CombatMarkerKind, label: string, x: number, y: number): void {
     const style = this.combatMarkerStyle(kind);
+    const worldUiScale = readableWorldUiScale(this.cameras.main.zoom);
     const text = this.add
       .text(x, y, label, {
         fontFamily: "Inter, Arial, sans-serif",
@@ -1366,6 +1368,7 @@ class GravityGridScene extends Phaser.Scene {
         strokeThickness: 7,
       })
       .setOrigin(0.5)
+      .setScale(worldUiScale)
       .setDepth(35);
 
     this.combatMarkers.push({
@@ -1406,6 +1409,7 @@ class GravityGridScene extends Phaser.Scene {
       const progress = Phaser.Math.Clamp(marker.age / marker.duration, 0, 1);
       marker.text
         .setPosition(marker.x, marker.y - marker.lift * Phaser.Math.Easing.Sine.Out(progress))
+        .setScale(readableWorldUiScale(this.cameras.main.zoom))
         .setAlpha(Phaser.Math.Clamp(1 - progress, 0, 1));
     }
 
@@ -1759,6 +1763,7 @@ class GravityGridScene extends Phaser.Scene {
   private drawVehicles(): void {
     const gfx = this.vehicleGfx;
     const collisionGfx = this.collisionGfx;
+    const worldUiScale = readableWorldUiScale(this.cameras.main.zoom);
     gfx.clear();
     collisionGfx.clear();
 
@@ -1902,12 +1907,13 @@ class GravityGridScene extends Phaser.Scene {
           strokeThickness: 5,
         })
         .setOrigin(0.5)
+        .setScale(worldUiScale)
         .setDepth(16);
       this.vehicleLabels.push(label);
 
       const stateLabel = defeatPresentation?.label ?? vehicle.className;
       const classLabel = this.add
-        .text(renderX, labelY + 21, stateLabel, {
+        .text(renderX, labelY + 21 * worldUiScale, stateLabel, {
           fontFamily: "Consolas, 'SFMono-Regular', monospace",
           fontSize: "12px",
           color: vehicle.defeatReason === "void" ? "#8be9ff" : vehicle.team === "red" ? "#ffd166" : "#8be9ff",
@@ -1915,16 +1921,32 @@ class GravityGridScene extends Phaser.Scene {
           strokeThickness: 4,
         })
         .setOrigin(0.5)
+        .setScale(worldUiScale)
         .setDepth(16);
       this.vehicleLabels.push(classLabel);
 
       if (active) {
         const timerOffset = USE_UNIT_CONCEPT_PREVIEW ? scaleBattlefieldOffset(178) : 178;
         const timerY = renderY - timerOffset;
+        const timerWidth = 104 * worldUiScale;
+        const timerHeight = 40 * worldUiScale;
+        const timerRadius = 10 * worldUiScale;
         gfx.fillStyle(0x0b1020, 0.88);
-        gfx.fillRoundedRect(renderX - 52, timerY - 18, 104, 40, 10);
+        gfx.fillRoundedRect(
+          renderX - timerWidth / 2,
+          timerY - timerHeight * 0.45,
+          timerWidth,
+          timerHeight,
+          timerRadius,
+        );
         gfx.lineStyle(2, vehicle.accent, 0.72);
-        gfx.strokeRoundedRect(renderX - 52, timerY - 18, 104, 40, 10);
+        gfx.strokeRoundedRect(
+          renderX - timerWidth / 2,
+          timerY - timerHeight * 0.45,
+          timerWidth,
+          timerHeight,
+          timerRadius,
+        );
 
         const timerTag = this.add
           .text(renderX, timerY, `${Math.ceil(this.turnTime)}s`, {
@@ -1936,11 +1958,12 @@ class GravityGridScene extends Phaser.Scene {
             strokeThickness: 6,
           })
           .setOrigin(0.5)
+          .setScale(worldUiScale)
           .setDepth(16);
         this.vehicleLabels.push(timerTag);
 
         const turnTag = this.add
-          .text(renderX, timerY + 30, "TURN", {
+          .text(renderX, timerY + 30 * worldUiScale, "TURN", {
             fontFamily: "Inter, Arial, sans-serif",
             fontSize: "11px",
             fontStyle: "700",
@@ -1949,6 +1972,7 @@ class GravityGridScene extends Phaser.Scene {
             strokeThickness: 4,
           })
           .setOrigin(0.5)
+          .setScale(worldUiScale)
           .setDepth(16);
         this.vehicleLabels.push(turnTag);
       }

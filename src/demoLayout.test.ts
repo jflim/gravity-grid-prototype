@@ -4,11 +4,13 @@ import {
   DESIGN_VIEWPORT,
   GAMEPLAY_ASPECT_RATIO,
   MIN_SUPPORTED_VIEWPORT,
+  MAX_PRESENTATION_VIEWPORT,
   computeBattlefieldFrameLayout,
   computeGameCanvasSize,
   computeCommandPanelLayout,
   getGameViewportSize,
   isSupportedGameViewport,
+  readableWorldUiScale,
   shouldRecenterProjectileCamera,
   shouldMountOnlineLobby,
   shouldShowCombatHulls,
@@ -62,6 +64,7 @@ test("game viewport uses the smallest reliable visible browser size", () => {
 test("viewport contract defines a fixed desktop game standard", () => {
   assert.deepEqual(DESIGN_VIEWPORT, { width: 1600, height: 900 });
   assert.deepEqual(MIN_SUPPORTED_VIEWPORT, { width: 1366, height: 768 });
+  assert.deepEqual(MAX_PRESENTATION_VIEWPORT, { width: 2400, height: 1350 });
   assert.equal(GAMEPLAY_ASPECT_RATIO, 16 / 9);
 });
 
@@ -71,10 +74,16 @@ test("minimum supported viewport blocks windows that would fold the UI", () => {
   assert.equal(isSupportedGameViewport({ width: 1600, height: 767 }), false);
 });
 
-test("game canvas caps at the design viewport on oversized browser windows", () => {
-  assert.deepEqual(computeGameCanvasSize({ width: 3440, height: 1440 }), DESIGN_VIEWPORT);
-  assert.deepEqual(computeGameCanvasSize({ width: 2048, height: 858 }), { width: 1600, height: 858 });
+test("game canvas can grow beyond the design viewport for readability", () => {
+  assert.deepEqual(computeGameCanvasSize({ width: 3440, height: 1440 }), MAX_PRESENTATION_VIEWPORT);
+  assert.deepEqual(computeGameCanvasSize({ width: 2048, height: 858 }), { width: 2048, height: 858 });
   assert.deepEqual(computeGameCanvasSize({ width: 1366, height: 768 }), MIN_SUPPORTED_VIEWPORT);
+});
+
+test("world-space UI can counter camera zoom so labels stay readable", () => {
+  assert.equal(readableWorldUiScale(1), 1);
+  assert.equal(readableWorldUiScale(0.5), 2);
+  assert.equal(readableWorldUiScale(0.25), 2.4);
 });
 
 test("battlefield framing keeps map scale consistent across common desktop widths", () => {
@@ -110,7 +119,7 @@ test("ultrawide browser windows do not expand the strategic battlefield view", (
     aliveVehicleXs: [310, 710, 1690, 2090],
   });
 
-  assert.equal(ultrawideCanvas.width, DESIGN_VIEWPORT.width);
+  assert.equal(ultrawideCanvas.width, MAX_PRESENTATION_VIEWPORT.width);
   assert.equal(Math.round(ultrawide.visibleWorldWidth), Math.round(design.visibleWorldWidth));
 });
 
