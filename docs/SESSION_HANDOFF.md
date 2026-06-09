@@ -41,7 +41,7 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
   - Direct-hit projectile collision uses one shared rectangular vehicle-only hit zone instead of the old small center-radius check or pilot-plus-vehicle silhouette collision.
   - Splash damage blooms from the impact point, then measures distance to the nearest edge of each vehicle hit zone.
   - Collision art review rules are documented in `docs/COLLISION_ART_RULE.md` and enforced by `src/collisionArtRule.test.ts`.
-  - Combat hulls are visible by default while collision and terrain scale are being tuned, can be toggled with `H`, and can start hidden with `?combatHulls=0`.
+  - Combat hulls are visible by default while collision and terrain scale are being tuned, can be toggled with `H` or the on-screen `Collision zones` checkbox, and can start hidden with `?collisionZones=0`.
   - Floating markers call out direct damage, splash damage, Bunger shove, HP KO, and Void Dropped eliminations.
   - Round start defaults to Ringworks Basin from the committed v1 map pool under the stable `ring-basin` id, using exact four-seat spawns, side bowls/high lips, widened readable bridge gaps, a central destructible ring bridge island, and faint ring/bridge landmarks.
   - The void now has a persistent visual danger layer, floating terrain presentation, and suspended Void Dropped unit treatment distinct from HP KO. Void Dropped units fall through a short slow-start presentation into a wide nearby void run without snapping farther than needed.

@@ -24,6 +24,8 @@ test("map-review demo shows collision hull overlays by default", () => {
   assert.equal(shouldShowCombatHulls("?runtimeAssets"), true);
   assert.equal(shouldShowCombatHulls("?combatHulls=1"), true);
   assert.equal(shouldShowCombatHulls("?combatHulls=0"), false);
+  assert.equal(shouldShowCombatHulls("?collisionZones=1"), true);
+  assert.equal(shouldShowCombatHulls("?collisionZones=0"), false);
   assert.equal(shouldShowCombatHulls("?hulls=false"), false);
 });
 

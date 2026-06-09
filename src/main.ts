@@ -243,6 +243,7 @@ class GravityGridScene extends Phaser.Scene {
   private aimDialText!: Phaser.GameObjects.Text;
   private movementLabelText!: Phaser.GameObjects.Text;
   private hudPortrait!: Phaser.GameObjects.Image;
+  private collisionZonesCheckbox?: HTMLInputElement;
 
   constructor() {
     super("GravityGridScene");
@@ -405,6 +406,7 @@ class GravityGridScene extends Phaser.Scene {
       .setDepth(52)
       .setOrigin(0.5);
 
+    this.mountCollisionZonesToggle();
     this.startRound();
     this.updateCameraViewport();
     this.scale.on("resize", () => {
@@ -426,9 +428,7 @@ class GravityGridScene extends Phaser.Scene {
     }
 
     if (this.hullToggleKey && Phaser.Input.Keyboard.JustDown(this.hullToggleKey)) {
-      this.showCombatHulls = !this.showCombatHulls;
-      this.shotResult = `Combat hulls ${this.showCombatHulls ? "shown" : "hidden"}.`;
-      this.drawWorld();
+      this.setCollisionZonesVisible(!this.showCombatHulls);
     }
 
     if (this.roundOver) {
@@ -503,6 +503,39 @@ class GravityGridScene extends Phaser.Scene {
       const y = 575 + ((x * 37) % 260);
       voidLayer.fillRect(x, y, 4, 18);
     }
+  }
+
+  private mountCollisionZonesToggle(): void {
+    document.querySelector("[data-collision-zones-toggle]")?.remove();
+
+    const label = document.createElement("label");
+    label.className = "collision-zones-toggle";
+    label.dataset.collisionZonesToggle = "true";
+
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = this.showCombatHulls;
+    input.setAttribute("aria-label", "Show collision zones");
+
+    const text = document.createElement("span");
+    text.textContent = "Collision zones";
+
+    input.addEventListener("change", () => {
+      this.setCollisionZonesVisible(input.checked);
+    });
+
+    label.append(input, text);
+    document.body.append(label);
+    this.collisionZonesCheckbox = input;
+  }
+
+  private setCollisionZonesVisible(visible: boolean): void {
+    this.showCombatHulls = visible;
+    if (this.collisionZonesCheckbox) {
+      this.collisionZonesCheckbox.checked = visible;
+    }
+    this.shotResult = `Collision zones ${visible ? "shown" : "hidden"}.`;
+    this.drawWorld();
   }
 
   private startRound(): void {
@@ -1791,16 +1824,21 @@ class GravityGridScene extends Phaser.Scene {
         const hull = this.combatHullFor(vehicle);
         const hullCenter = this.combatHullCenter(vehicle);
         const hullColor = active ? 0xffffff : vehicle.accent;
-        gfx.fillStyle(hullColor, active ? 0.1 : 0.055);
-        gfx.fillRoundedRect(hullCenter.x - hull.width / 2, hullCenter.y - hull.height / 2, hull.width, hull.height, 8);
-        gfx.lineStyle(active ? 3 : 2, hullColor, active ? 0.72 : 0.52);
+        const left = hullCenter.x - hull.width / 2;
+        const top = hullCenter.y - hull.height / 2;
+        gfx.fillStyle(hullColor, active ? 0.15 : 0.085);
+        gfx.fillRoundedRect(left, top, hull.width, hull.height, 8);
+        gfx.lineStyle(active ? 4 : 3, hullColor, active ? 0.86 : 0.64);
         gfx.strokeRoundedRect(
-          hullCenter.x - hull.width / 2,
-          hullCenter.y - hull.height / 2,
+          left,
+          top,
           hull.width,
           hull.height,
           8,
         );
+        gfx.lineStyle(2, 0xffffff, active ? 0.46 : 0.22);
+        gfx.lineBetween(left + 8, hullCenter.y, left + hull.width - 8, hullCenter.y);
+        gfx.lineBetween(hullCenter.x, top + 8, hullCenter.x, top + hull.height - 8);
       }
 
       if (vehicle.alive || vehicle.defeatReason === "damage") {

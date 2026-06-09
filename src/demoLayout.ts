@@ -80,7 +80,7 @@ export function shouldMountOnlineLobby(search: string): boolean {
 
 export function shouldShowCombatHulls(search: string): boolean {
   const params = new URLSearchParams(search);
-  const value = params.get("combatHulls") ?? params.get("hulls");
+  const value = params.get("collisionZones") ?? params.get("combatHulls") ?? params.get("hulls");
   return value !== "0" && value !== "false" && value !== "off";
 }
 

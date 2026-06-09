@@ -87,7 +87,7 @@
   <main>
     <article>
       <div class="generated">
-        Generated from <a href="SESSION_HANDOFF.md">docs/SESSION_HANDOFF.md</a> on 2026-06-08.
+        Generated from <a href="SESSION_HANDOFF.md">docs/SESSION_HANDOFF.md</a> on 2026-06-09.
         Edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Session Handoff</h1>
@@ -131,7 +131,7 @@
 <li>Direct-hit projectile collision uses one shared rectangular vehicle-only hit zone instead of the old small center-radius check or pilot-plus-vehicle silhouette collision.</li>
 <li>Splash damage blooms from the impact point, then measures distance to the nearest edge of each vehicle hit zone.</li>
 <li>Collision art review rules are documented in <code>docs/COLLISION_ART_RULE.md</code> and enforced by <code>src/collisionArtRule.test.ts</code>.</li>
-<li>Combat hulls are visible by default while collision and terrain scale are being tuned, can be toggled with <code>H</code>, and can start hidden with <code>?combatHulls=0</code>.</li>
+<li>Combat hulls are visible by default while collision and terrain scale are being tuned, can be toggled with <code>H</code> or the on-screen <code>Collision zones</code> checkbox, and can start hidden with <code>?collisionZones=0</code>.</li>
 <li>Floating markers call out direct damage, splash damage, Bunger shove, HP KO, and Void Dropped eliminations.</li>
 <li>Round start defaults to Ringworks Basin from the committed v1 map pool under the stable <code>ring-basin</code> id, using exact four-seat spawns, side bowls/high lips, widened readable bridge gaps, a central destructible ring bridge island, and faint ring/bridge landmarks.</li>
 <li>The void now has a persistent visual danger layer, floating terrain presentation, and suspended Void Dropped unit treatment distinct from HP KO. Void Dropped units fall through a short slow-start presentation into a wide nearby void run without snapping farther than needed.</li>

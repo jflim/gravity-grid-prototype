@@ -66,6 +66,7 @@ Highlights:
 - Switched prototype combat collision to one shared rectangular vehicle-only hit zone, with splash measuring to vehicle-zone edges and projectile impact resolving at first swept edge contact.
 - Added collision art review enforcement so standing/high pilot poses require a vehicle protection cue and v1 units cannot silently get custom hitboxes.
 - Enlarged the visible void band and added a short slow-start Void Dropped fall presentation so fallen units are readable before becoming suspended eye candy.
+- Added an on-screen `Collision zones` checkbox and clearer vehicle-zone overlays for demo/playtest toggling.
 - Added visible prototype combat hulls, toggleable with `H`, so vehicle-only collision truth can be tuned against larger unit art.
 - Added floating combat markers for direct damage, splash damage, knockback, HP KOs, and terrain/fall Void Dropped defeats.
 - Added randomized terrain/spawn archetypes for local rounds to reduce flat direct-fire duels and encourage high-angle lob play.

@@ -127,7 +127,7 @@ dist/index.html
 - Up/Down arrows: raise/lower barrel relative to the vehicle's facing direction, up to vertical 90-degree aim.
 - Hold/release Spacebar: charge and fire.
 - R: restart round.
-- H: show/hide prototype combat hulls. Hulls are visible by default while collision and map scale are being tuned; add `?combatHulls=0` to start hidden.
+- H or the `Collision zones` checkbox: show/hide prototype vehicle collision zones. Zones are visible by default while collision and map scale are being tuned; add `?collisionZones=0` to start hidden.
 
 ## Terms
 
@@ -158,7 +158,7 @@ dist/index.html
 - Wind is global round information; turn time is shown above the active vehicle.
 - Launch power, movement range, active vehicle identity, and aim angle live in a raised bottom command deck.
 - Active player also gets a world-space aim arrow, turn timer badge, and ground movement range rail so movement decisions can be read without covering the character art.
-- Prototype combat hulls are visible by default while collision and terrain scale are being tuned, and can be toggled off with `H` or `?combatHulls=0`.
+- Prototype vehicle collision zones are visible by default while collision and terrain scale are being tuned, and can be toggled off with `H`, the on-screen checkbox, or `?collisionZones=0`.
 - The game camera reserves space above a centered, capped-width command deck so the playable battlefield and active-player info stay readable across common desktop viewport sizes.
 - Current sprites are first-pass generated assets, not final production sprites.
 - Gameplay rendering uses separate layers for vehicle and playable character sprites.
