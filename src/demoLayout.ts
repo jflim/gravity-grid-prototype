@@ -28,10 +28,6 @@ export interface CommandPanelLayout {
   dockWidth: number;
 }
 
-export interface CommandPanelLayoutOptions {
-  preferredPanelY?: number;
-}
-
 export interface BattlefieldFrameInput {
   viewportWidth: number;
   playfieldHeight: number;
@@ -46,6 +42,17 @@ export interface BattlefieldFrameLayout {
   targetHeight: number;
   zoom: number;
   visibleWorldWidth: number;
+}
+
+export interface CameraWorldBoundsInput {
+  worldWidth: number;
+  visibleWorldWidth: number;
+}
+
+export interface CameraWorldBounds {
+  x: number;
+  width: number;
+  horizontalPadding: number;
 }
 
 export interface ProjectileCameraInput {
@@ -176,21 +183,11 @@ export function computeWindHudLayout(viewport: ViewportSize): WindHudLayout {
   };
 }
 
-export function computeCommandPanelLayout(
-  viewport: ViewportSize,
-  options: CommandPanelLayoutOptions = {},
-): CommandPanelLayout {
+export function computeCommandPanelLayout(viewport: ViewportSize): CommandPanelLayout {
   const compactHeight = viewport.height < 760;
   const panelHeight = compactHeight ? COMPACT_PANEL_HEIGHT : WIDE_PANEL_HEIGHT;
-  const minimumBottomMargin = compactHeight ? COMPACT_BOTTOM_MARGIN : WIDE_BOTTOM_MARGIN;
-  const lowestVisiblePanelY = Math.max(0, viewport.height - panelHeight - minimumBottomMargin);
-  const preferredPanelY =
-    typeof options.preferredPanelY === "number" && Number.isFinite(options.preferredPanelY)
-      ? options.preferredPanelY
-      : lowestVisiblePanelY;
-  // The void anchor is only a preference; fitting the command deck inside the viewport is the hard rule.
-  const panelY = Math.round(clamp(preferredPanelY, 0, lowestVisiblePanelY));
-  const bottomMargin = Math.max(minimumBottomMargin, viewport.height - panelY - panelHeight);
+  const bottomMargin = compactHeight ? COMPACT_BOTTOM_MARGIN : WIDE_BOTTOM_MARGIN;
+  const panelY = Math.max(0, viewport.height - panelHeight - bottomMargin);
   const sideMargin = viewport.width < 900 ? DOCK_SIDE_MARGIN_COMPACT : DOCK_SIDE_MARGIN;
   const dockWidth = Math.min(DOCK_MAX_WIDTH, Math.max(320, viewport.width - sideMargin * 2));
   const dockX = Math.max(0, (viewport.width - dockWidth) / 2);
@@ -204,6 +201,17 @@ export function computeCommandPanelLayout(
     playfieldHeight: panelY,
     dockX,
     dockWidth,
+  };
+}
+
+export function computeCameraWorldBounds(input: CameraWorldBoundsInput): CameraWorldBounds {
+  const overflowWidth = Math.max(0, input.visibleWorldWidth - input.worldWidth);
+  const horizontalPadding = overflowWidth / 2;
+
+  return {
+    x: horizontalPadding === 0 ? 0 : -horizontalPadding,
+    width: input.worldWidth + horizontalPadding * 2,
+    horizontalPadding,
   };
 }
 

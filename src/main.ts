@@ -22,6 +22,7 @@ import {
 import { distanceToVehicleHitZone, type VehicleHitZone } from "./vehicleHitZone";
 import {
   computeBattlefieldFrameLayout,
+  computeCameraWorldBounds,
   computeGameCanvasSize,
   computeCommandPanelLayout,
   computeUnitWorldOverlayLayout,
@@ -33,7 +34,6 @@ import {
   shouldMountOnlineLobby,
   shouldRecenterProjectileCamera,
   shouldShowCombatHulls,
-  type CommandPanelLayout,
 } from "./demoLayout";
 import { mountOnlineLobby } from "./onlineLobby";
 import {
@@ -208,7 +208,6 @@ const FALLBACK_VISIBLE_VOID_TOP_Y = WORLD_HEIGHT - VISIBLE_VOID_ZONE_HEIGHT;
 const WORLD_RENDER_HEIGHT = WORLD_HEIGHT + VISIBLE_VOID_ZONE_HEIGHT;
 const DEFAULT_TERRAIN_BREAKTHROUGH_Y = WORLD_HEIGHT - 54;
 const VOID_DROP_HORIZONTAL_PADDING = 24;
-const COMMAND_DECK_VOID_GAP = 12;
 const MAX_TERRAIN_SPRITE_TILT_DEG = 20;
 const USE_UNIT_CONCEPT_PREVIEW = !new URLSearchParams(window.location.search).has("runtimeAssets");
 let currentViewportSupported = true;
@@ -1246,26 +1245,6 @@ class GravityGridScene extends Phaser.Scene {
     return computeCommandPanelLayout({ width: this.scale.width, height: this.scale.height }).playfieldHeight;
   }
 
-  private commandPanelLayout(): CommandPanelLayout {
-    const projectedVoidBottomY = this.screenYForWorldY(this.visibleVoidBottomY());
-    return computeCommandPanelLayout(
-      { width: this.scale.width, height: this.scale.height },
-      {
-        preferredPanelY:
-          projectedVoidBottomY === undefined ? undefined : projectedVoidBottomY + COMMAND_DECK_VOID_GAP,
-      },
-    );
-  }
-
-  private screenYForWorldY(worldY: number): number | undefined {
-    const camera = this.cameras.main;
-    if (!Number.isFinite(worldY) || !Number.isFinite(camera.zoom) || camera.zoom <= 0) {
-      return undefined;
-    }
-
-    return camera.y + (worldY - camera.scrollY) * camera.zoom;
-  }
-
   private frameBattlefield(duration = 0): void {
     const aliveVehicles = this.vehicles.filter((vehicle) => vehicle.alive);
     if (aliveVehicles.length === 0) {
@@ -1278,6 +1257,11 @@ class GravityGridScene extends Phaser.Scene {
       worldWidth: WORLD_WIDTH,
       aliveVehicleXs: aliveVehicles.map((vehicle) => vehicle.x),
     });
+    const bounds = computeCameraWorldBounds({
+      worldWidth: WORLD_WIDTH,
+      visibleWorldWidth: frame.visibleWorldWidth,
+    });
+    this.cameras.main.setBounds(bounds.x, 0, bounds.width, WORLD_RENDER_HEIGHT);
 
     if (duration > 0) {
       this.cameras.main.pan(frame.centerX, frame.centerY, duration, "Sine.easeInOut");
@@ -2147,7 +2131,7 @@ class GravityGridScene extends Phaser.Scene {
   private drawControlPanel(active?: VehicleState, roundComplete = false): void {
     const width = this.scale.width;
     const height = this.scale.height;
-    const layout = this.commandPanelLayout();
+    const layout = computeCommandPanelLayout({ width, height });
     const panelWidth = layout.dockWidth;
     const panelHeight = layout.panelHeight;
     const panelX = layout.dockX;

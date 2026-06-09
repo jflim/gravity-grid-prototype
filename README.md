@@ -13,8 +13,8 @@ First playable local artillery prototype for Gravity Canyon.
 - Facing-aware aim controls so each side's Up/Down input feels consistent.
 - Terrain movement allows downhill travel and falling, while steep uphill climbs are blocked by a climb-angle limit.
 - Top-safe wind badge visible to everyone; active turn timing lives above the active vehicle only.
-- Void-adjacent command deck with active vehicle portrait, aim dial, movement range meter, and a prominent launch-power meter.
-- Command deck floats up under the visible void band when tall browser windows would otherwise leave it too low or cut off.
+- Fixed screen-space command deck with active vehicle portrait, aim dial, movement range meter, and a prominent launch-power meter.
+- The playable map renders only above the command deck so terrain and void visuals do not intersect the controls.
 - Desktop viewport contract: the game is designed around 1600 x 900, can present up to 2400 x 1350 for readability on larger displays, centers in larger browser windows, and blocks below a 1366 x 768 visible viewport.
 - Raised turn timer, team/HP bar, name, and class labels above playable unit art.
 - Vehicle sprites tilt with terrain slope for clearer ground contact.
@@ -157,10 +157,10 @@ dist/index.html
 - A round ends when one team has no alive vehicles left. In this prototype, alive means `alive = true` and HP above 0.
 - Finished rounds show the result briefly, then start a fresh round automatically. R still restarts immediately.
 - Wind is global round information shown in a fixed top HUD badge; turn time is shown above the active vehicle.
-- Launch power, movement range, active vehicle identity, and aim angle live in a raised command deck under the visible void band.
+- Launch power, movement range, active vehicle identity, and aim angle live in a fixed centered command deck.
 - Active player also gets a world-space aim arrow, raised turn timer badge, and ground movement range rail so movement decisions can be read without covering the character art.
 - Prototype vehicle collision zones are visible by default while collision and terrain scale are being tuned, and can be toggled off with `H`, the on-screen checkbox, or `?collisionZones=0`.
-- The game camera keeps battlefield framing stable while the centered command deck can float upward below the visible void band so active-player info stays readable across supported desktop viewport sizes.
+- The game camera reserves the playfield above a fixed centered command deck, and horizontal side bounds keep the battlefield centered when the camera view is wider than the map.
 - The browser shell is presentation-capped and centered so larger or ultrawide windows improve readability without changing terrain, spawns, collision, void placement, projectile behavior, or the strategic battlefield view.
 - Current sprites are first-pass generated assets, not final production sprites.
 - Gameplay rendering uses separate layers for vehicle and playable character sprites.

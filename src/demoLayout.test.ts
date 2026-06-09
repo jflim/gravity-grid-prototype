@@ -6,6 +6,7 @@ import {
   MIN_SUPPORTED_VIEWPORT,
   MAX_PRESENTATION_VIEWPORT,
   computeBattlefieldFrameLayout,
+  computeCameraWorldBounds,
   computeGameCanvasSize,
   computeCommandPanelLayout,
   computeUnitWorldOverlayLayout,
@@ -44,23 +45,20 @@ test("command panel stays fully visible on a wide short viewport", () => {
   assert.equal(layout.panelY, 654);
   assert.equal(layout.panelBottom, 818);
   assert.equal(layout.safeAreaBottom, 858);
-  assert.ok(layout.playfieldHeight <= layout.panelY);
+  assert.equal(layout.playfieldHeight, layout.panelY);
   assert.ok(layout.dockX > 0);
   assert.equal(layout.dockWidth, 1720);
 });
 
-test("command panel can float upward to sit just below the visible void", () => {
-  const defaultLayout = computeCommandPanelLayout({ width: 2048, height: 1152 });
-  const voidAnchoredLayout = computeCommandPanelLayout(
-    { width: 2048, height: 1152 },
-    { preferredPanelY: 884 },
-  );
+test("command panel stays fixed in screen space instead of following map anchors", () => {
+  const layout = computeCommandPanelLayout({ width: 2048, height: 1152 });
 
-  assert.equal(defaultLayout.panelY, 948);
-  assert.equal(voidAnchoredLayout.panelY, 884);
-  assert.equal(voidAnchoredLayout.panelBottom, 1048);
-  assert.equal(voidAnchoredLayout.bottomMargin, 104);
-  assert.equal(voidAnchoredLayout.safeAreaBottom, 1152);
+  assert.equal(layout.panelY, 948);
+  assert.equal(layout.panelBottom, 1112);
+  assert.equal(layout.bottomMargin, 40);
+  assert.equal(layout.safeAreaBottom, 1152);
+  assert.equal(layout.playfieldHeight, layout.panelY);
+  assert.equal(layout.dockX + layout.dockWidth / 2, 1024);
 });
 
 test("command panel never clips in supported viewport layouts", () => {
@@ -71,33 +69,19 @@ test("command panel never clips in supported viewport layouts", () => {
     { width: 2048, height: 1152 },
     MAX_PRESENTATION_VIEWPORT,
   ];
-  const preferredPanelYs = [
-    undefined,
-    -500,
-    0,
-    42,
-    604,
-    884,
-    5000,
-    Number.NaN,
-    Number.POSITIVE_INFINITY,
-  ];
 
   for (const viewport of viewports) {
-    for (const preferredPanelY of preferredPanelYs) {
-      const layout = computeCommandPanelLayout(
-        viewport,
-        preferredPanelY === undefined ? undefined : { preferredPanelY },
-      );
-      const label = `${viewport.width}x${viewport.height} preferred ${preferredPanelY}`;
+    const layout = computeCommandPanelLayout(viewport);
+    const label = `${viewport.width}x${viewport.height}`;
 
-      assert.ok(layout.panelY >= 0, `${label}: panel top must stay inside viewport`);
-      assert.ok(layout.panelBottom <= viewport.height, `${label}: panel bottom must stay inside viewport`);
-      assert.ok(layout.bottomMargin >= 0, `${label}: bottom margin must not go negative`);
-      assert.ok(layout.safeAreaBottom <= viewport.height, `${label}: safe area must not exceed viewport`);
-      assert.ok(layout.dockX >= 0, `${label}: dock left must stay inside viewport`);
-      assert.ok(layout.dockX + layout.dockWidth <= viewport.width, `${label}: dock right must stay inside viewport`);
-    }
+    assert.ok(layout.panelY >= 0, `${label}: panel top must stay inside viewport`);
+    assert.ok(layout.panelBottom <= viewport.height, `${label}: panel bottom must stay inside viewport`);
+    assert.equal(layout.playfieldHeight, layout.panelY, `${label}: playfield must end at command deck top`);
+    assert.ok(layout.bottomMargin >= 0, `${label}: bottom margin must not go negative`);
+    assert.ok(layout.safeAreaBottom <= viewport.height, `${label}: safe area must not exceed viewport`);
+    assert.ok(layout.dockX >= 0, `${label}: dock left must stay inside viewport`);
+    assert.ok(layout.dockX + layout.dockWidth <= viewport.width, `${label}: dock right must stay inside viewport`);
+    assert.equal(layout.dockX + layout.dockWidth / 2, viewport.width / 2);
   }
 });
 
@@ -178,6 +162,37 @@ test("battlefield framing keeps map scale consistent across common desktop width
 
   assert.ok(Math.abs(wide.visibleWorldWidth - standard.visibleWorldWidth) < 1);
   assert.equal(Math.round(wide.visibleWorldWidth), 2960);
+});
+
+test("camera world bounds preserve centered battlefield when visible frame is wider than the world", () => {
+  const frame = computeBattlefieldFrameLayout({
+    viewportWidth: 2048,
+    playfieldHeight: 654,
+    worldWidth: 2400,
+    aliveVehicleXs: [310, 710, 1690, 2090],
+  });
+  const bounds = computeCameraWorldBounds({
+    worldWidth: 2400,
+    visibleWorldWidth: frame.visibleWorldWidth,
+  });
+
+  assert.equal(Math.round(frame.visibleWorldWidth), 2960);
+  assert.equal(Math.round(bounds.horizontalPadding), 280);
+  assert.equal(Math.round(bounds.x), -280);
+  assert.equal(Math.round(bounds.width), 2960);
+});
+
+test("camera world bounds do not add side margins when the world already fills the frame", () => {
+  const bounds = computeCameraWorldBounds({
+    worldWidth: 2400,
+    visibleWorldWidth: 1800,
+  });
+
+  assert.deepEqual(bounds, {
+    x: 0,
+    width: 2400,
+    horizontalPadding: 0,
+  });
 });
 
 test("ultrawide browser windows do not expand the strategic battlefield view", () => {
