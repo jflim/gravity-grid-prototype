@@ -8,6 +8,7 @@ import {
   computeBattlefieldFrameLayout,
   computeCameraWorldBounds,
   computeGameCanvasSize,
+  computeCommandDeckElementLayout,
   computeCommandPanelLayout,
   computeUnitWorldOverlayLayout,
   computeWindHudLayout,
@@ -42,11 +43,11 @@ test("map-review demo shows collision hull overlays by default", () => {
 test("command panel stays fully visible on a wide short viewport", () => {
   const layout = computeCommandPanelLayout({ width: 2048, height: 858 });
 
-  assert.equal(layout.panelY, 606);
-  assert.equal(layout.panelBottom, 770);
+  assert.equal(layout.panelY, 622);
+  assert.equal(layout.panelBottom, 802);
   assert.equal(layout.safeAreaBottom, 858);
   assert.equal(layout.playfieldHeight, layout.panelY);
-  assert.equal(layout.bottomMargin, 88);
+  assert.equal(layout.bottomMargin, 56);
   assert.ok(layout.dockX > 0);
   assert.equal(layout.dockWidth, 1720);
 });
@@ -54,9 +55,9 @@ test("command panel stays fully visible on a wide short viewport", () => {
 test("command panel stays fixed in screen space instead of following map anchors", () => {
   const layout = computeCommandPanelLayout({ width: 2048, height: 1152 });
 
-  assert.equal(layout.panelY, 900);
-  assert.equal(layout.panelBottom, 1064);
-  assert.equal(layout.bottomMargin, 88);
+  assert.equal(layout.panelY, 916);
+  assert.equal(layout.panelBottom, 1096);
+  assert.equal(layout.bottomMargin, 56);
   assert.equal(layout.safeAreaBottom, 1152);
   assert.equal(layout.playfieldHeight, layout.panelY);
   assert.equal(layout.dockX + layout.dockWidth / 2, 1024);
@@ -86,6 +87,58 @@ test("command panel never clips in supported viewport layouts", () => {
   }
 });
 
+test("command deck content scales with available dock width", () => {
+  const minimum = computeCommandPanelLayout(MIN_SUPPORTED_VIEWPORT);
+  const design = computeCommandPanelLayout(DESIGN_VIEWPORT);
+  const wide = computeCommandPanelLayout({ width: 2048, height: 858 });
+
+  assert.ok(minimum.contentScale < design.contentScale);
+  assert.ok(design.contentScale < wide.contentScale);
+  assert.equal(wide.contentScale, 1);
+  assert.ok(minimum.contentScale > 0.7);
+});
+
+test("command deck children stay inside the visible panel at supported sizes", () => {
+  const viewports = [
+    MIN_SUPPORTED_VIEWPORT,
+    DESIGN_VIEWPORT,
+    { width: 2048, height: 858 },
+    { width: 2048, height: 1152 },
+    MAX_PRESENTATION_VIEWPORT,
+  ];
+
+  for (const viewport of viewports) {
+    const panel = computeCommandPanelLayout(viewport);
+    const deck = computeCommandDeckElementLayout(panel);
+    const label = `${viewport.width}x${viewport.height}`;
+    const bottomLimit = panel.panelBottom - deck.safePaddingBottom;
+    const elementBottoms = [
+      deck.portraitFrame.y + deck.portraitFrame.height,
+      deck.moveMeter.y + deck.moveMeter.height,
+      deck.launchMeter.y + deck.launchMeter.height,
+      deck.aimPanel.y + deck.aimPanel.height,
+    ];
+    const elementRights = [
+      deck.portraitFrame.x + deck.portraitFrame.width,
+      deck.moveMeter.x + deck.moveMeter.width,
+      deck.launchMeter.x + deck.launchMeter.width,
+      deck.aimPanel.x + deck.aimPanel.width,
+    ];
+
+    for (const bottom of elementBottoms) {
+      assert.ok(bottom <= bottomLimit, `${label}: command deck control must not clip below panel`);
+    }
+
+    for (const right of elementRights) {
+      assert.ok(right <= panel.dockX + panel.dockWidth, `${label}: command deck control must not clip right`);
+    }
+
+    assert.ok(deck.titleFontSize >= 15, `${label}: title text remains readable`);
+    assert.ok(deck.detailFontSize >= 10, `${label}: detail text remains readable`);
+    assert.ok(deck.commandFontSize >= 12, `${label}: command text remains readable`);
+  }
+});
+
 test("game viewport uses the smallest reliable visible browser size", () => {
   const viewport = getGameViewportSize(
     {
@@ -97,7 +150,7 @@ test("game viewport uses the smallest reliable visible browser size", () => {
   );
 
   assert.deepEqual(viewport, { width: 2048, height: 1024 });
-  assert.equal(computeCommandPanelLayout(viewport).panelY, 772);
+  assert.equal(computeCommandPanelLayout(viewport).panelY, 788);
 });
 
 test("viewport contract defines a fixed desktop game standard", () => {

@@ -26,6 +26,39 @@ export interface CommandPanelLayout {
   playfieldHeight: number;
   dockX: number;
   dockWidth: number;
+  contentScale: number;
+}
+
+export interface LayoutRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface CommandDeckElementLayout {
+  scale: number;
+  safePaddingBottom: number;
+  portraitFrame: LayoutRect;
+  portrait: LayoutRect;
+  title: {
+    x: number;
+    y: number;
+  };
+  detail: {
+    x: number;
+    y: number;
+  };
+  event: {
+    x: number;
+    y: number;
+  };
+  moveMeter: LayoutRect;
+  launchMeter: LayoutRect;
+  aimPanel: LayoutRect;
+  titleFontSize: number;
+  detailFontSize: number;
+  commandFontSize: number;
 }
 
 export interface BattlefieldFrameInput {
@@ -98,10 +131,9 @@ export interface WindHudLayout {
 const DOCK_MAX_WIDTH = 1720;
 const DOCK_SIDE_MARGIN = 48;
 const DOCK_SIDE_MARGIN_COMPACT = 18;
-const WIDE_PANEL_HEIGHT = 164;
-const COMPACT_PANEL_HEIGHT = 150;
-const WIDE_BOTTOM_MARGIN = 88;
-const COMPACT_BOTTOM_MARGIN = 56;
+const COMMAND_DECK_BASE_HEIGHT = 180;
+const WIDE_BOTTOM_MARGIN = 56;
+const COMPACT_BOTTOM_MARGIN = 40;
 const CAMERA_TARGET_HEIGHT = 760;
 const CAMERA_CENTER_Y = 470;
 const CAMERA_BOTTOM_SCREEN_GAP = 12;
@@ -186,12 +218,13 @@ export function computeWindHudLayout(viewport: ViewportSize): WindHudLayout {
 }
 
 export function computeCommandPanelLayout(viewport: ViewportSize): CommandPanelLayout {
-  const compactHeight = viewport.height < 760;
-  const panelHeight = compactHeight ? COMPACT_PANEL_HEIGHT : WIDE_PANEL_HEIGHT;
-  const bottomMargin = compactHeight ? COMPACT_BOTTOM_MARGIN : WIDE_BOTTOM_MARGIN;
-  const panelY = Math.max(0, viewport.height - panelHeight - bottomMargin);
   const sideMargin = viewport.width < 900 ? DOCK_SIDE_MARGIN_COMPACT : DOCK_SIDE_MARGIN;
   const dockWidth = Math.min(DOCK_MAX_WIDTH, Math.max(320, viewport.width - sideMargin * 2));
+  const compactHeight = viewport.height < 820;
+  const contentScale = Math.min(1, dockWidth / DOCK_MAX_WIDTH);
+  const panelHeight = Math.round(COMMAND_DECK_BASE_HEIGHT * contentScale);
+  const bottomMargin = Math.round((compactHeight ? COMPACT_BOTTOM_MARGIN : WIDE_BOTTOM_MARGIN) * contentScale);
+  const panelY = Math.max(0, viewport.height - panelHeight - bottomMargin);
   const dockX = Math.max(0, (viewport.width - dockWidth) / 2);
 
   return {
@@ -203,6 +236,70 @@ export function computeCommandPanelLayout(viewport: ViewportSize): CommandPanelL
     playfieldHeight: panelY,
     dockX,
     dockWidth,
+    contentScale,
+  };
+}
+
+export function computeCommandDeckElementLayout(panel: CommandPanelLayout): CommandDeckElementLayout {
+  const scale = panel.contentScale;
+  const scaled = (value: number): number => Math.round(value * scale);
+  const scaledFont = (baseSize: number, minSize: number): number => Math.max(minSize, Math.round(baseSize * scale));
+  const x = panel.dockX;
+  const y = panel.panelY;
+  const aimPanelWidth = scaled(198);
+  const aimPanelHeight = scaled(128);
+  const aimPanelX = x + panel.dockWidth - scaled(324);
+  const launchX = x + Math.min(scaled(390), Math.max(scaled(286), panel.dockWidth * 0.31));
+  const launchWidth = Math.min(scaled(960), Math.max(scaled(320), aimPanelX - launchX - scaled(28)));
+
+  return {
+    scale,
+    safePaddingBottom: scaled(12),
+    portraitFrame: {
+      x: x + scaled(18),
+      y: y + scaled(18),
+      width: scaled(104),
+      height: scaled(126),
+    },
+    portrait: {
+      x: x + scaled(70),
+      y: y + scaled(86),
+      width: scaled(118),
+      height: scaled(88),
+    },
+    title: {
+      x: x + scaled(140),
+      y: y + scaled(24),
+    },
+    detail: {
+      x: x + scaled(140),
+      y: y + scaled(54),
+    },
+    event: {
+      x: x + scaled(140),
+      y: y + scaled(92),
+    },
+    moveMeter: {
+      x: x + scaled(140),
+      y: y + scaled(126),
+      width: scaled(218),
+      height: scaled(42),
+    },
+    launchMeter: {
+      x: launchX,
+      y: y + scaled(42),
+      width: launchWidth,
+      height: scaled(76),
+    },
+    aimPanel: {
+      x: aimPanelX,
+      y: y + scaled(18),
+      width: aimPanelWidth,
+      height: aimPanelHeight,
+    },
+    titleFontSize: scaledFont(22, 15),
+    detailFontSize: scaledFont(13, 10),
+    commandFontSize: scaledFont(17, 12),
   };
 }
 

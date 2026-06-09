@@ -24,6 +24,7 @@ import {
   computeBattlefieldFrameLayout,
   computeCameraWorldBounds,
   computeGameCanvasSize,
+  computeCommandDeckElementLayout,
   computeCommandPanelLayout,
   computeUnitWorldOverlayLayout,
   computeWindHudLayout,
@@ -2137,6 +2138,10 @@ class GravityGridScene extends Phaser.Scene {
     const panelHeight = layout.panelHeight;
     const panelX = layout.dockX;
     const panelY = layout.panelY;
+    const deck = computeCommandDeckElementLayout(layout);
+    const deckScale = layout.contentScale;
+    const scaled = (value: number): number => Math.round(value * deckScale);
+    const rounded = (value: number): number => Math.max(4, scaled(value));
 
     this.hudGfx.clear();
     this.timerText.setText("");
@@ -2152,20 +2157,36 @@ class GravityGridScene extends Phaser.Scene {
     if (!active) {
       this.hudPortrait.setAlpha(0);
       this.hudText
-        .setPosition(panelX + 24, panelY + 28)
+        .setPosition(panelX + scaled(24), panelY + scaled(28))
         .setText(roundComplete ? "Round complete" : "Waiting")
         .setStyle({
           fontFamily: "Inter, Arial, sans-serif",
-          fontSize: "22px",
+          fontSize: `${deck.titleFontSize}px`,
           fontStyle: "700",
           color: "#ffffff",
           stroke: "#10131b",
           strokeThickness: 4,
         });
       this.rosterText
-        .setPosition(panelX + 24, panelY + 68)
-        .setText(roundComplete ? "Next round starts automatically. Press R to restart now." : "Waiting for turn.");
-      this.eventText.setPosition(panelX + 24, panelY + 104).setText(this.shotResult);
+        .setPosition(panelX + scaled(24), panelY + scaled(68))
+        .setText(roundComplete ? "Next round starts automatically. Press R to restart now." : "Waiting for turn.")
+        .setStyle({
+          fontFamily: "Consolas, 'SFMono-Regular', monospace",
+          fontSize: `${deck.detailFontSize}px`,
+          color: "#ffd166",
+          stroke: "#10131b",
+          strokeThickness: 4,
+        });
+      this.eventText
+        .setPosition(panelX + scaled(24), panelY + scaled(104))
+        .setText(this.shotResult)
+        .setStyle({
+          fontFamily: "Inter, Arial, sans-serif",
+          fontSize: `${Math.max(11, scaled(14))}px`,
+          color: "#ffd166",
+          stroke: "#10131b",
+          strokeThickness: 4,
+        });
       this.powerLabelText.setText("");
       this.powerHintText.setText("");
       this.movementLabelText.setText("");
@@ -2175,59 +2196,66 @@ class GravityGridScene extends Phaser.Scene {
     }
 
     const accentColor = active.team === "red" ? "#ffd166" : "#8be9ff";
-    const portraitX = panelX + 70;
-    const portraitY = panelY + 86;
     this.hudGfx.fillStyle(0x111827, 1);
-    this.hudGfx.fillRoundedRect(panelX + 18, panelY + 18, 104, 126, 8);
+    this.hudGfx.fillRoundedRect(
+      deck.portraitFrame.x,
+      deck.portraitFrame.y,
+      deck.portraitFrame.width,
+      deck.portraitFrame.height,
+      rounded(8),
+    );
     this.hudGfx.lineStyle(2, active.accent, 0.72);
-    this.hudGfx.strokeRoundedRect(panelX + 18, panelY + 18, 104, 126, 8);
+    this.hudGfx.strokeRoundedRect(
+      deck.portraitFrame.x,
+      deck.portraitFrame.y,
+      deck.portraitFrame.width,
+      deck.portraitFrame.height,
+      rounded(8),
+    );
     this.hudPortrait
       .setTexture(active.portraitKey)
-      .setPosition(portraitX, portraitY)
-      .setDisplaySize(118, 88)
+      .setPosition(deck.portrait.x, deck.portrait.y)
+      .setDisplaySize(deck.portrait.width, deck.portrait.height)
       .setAlpha(1);
 
     this.hudText
-      .setPosition(panelX + 140, panelY + 24)
+      .setPosition(deck.title.x, deck.title.y)
       .setText(active.username)
       .setStyle({
         fontFamily: "Inter, Arial, sans-serif",
-        fontSize: "22px",
+        fontSize: `${deck.titleFontSize}px`,
         fontStyle: "700",
         color: "#ffffff",
         stroke: "#10131b",
         strokeThickness: 4,
       });
     this.rosterText
-      .setPosition(panelX + 140, panelY + 54)
+      .setPosition(deck.detail.x, deck.detail.y)
       .setText(`${active.className}     HP ${active.hp}/${MAX_HP}`)
       .setStyle({
         fontFamily: "Consolas, 'SFMono-Regular', monospace",
-        fontSize: "13px",
+        fontSize: `${deck.detailFontSize}px`,
         color: accentColor,
         stroke: "#10131b",
         strokeThickness: 4,
       });
     this.eventText
-      .setPosition(panelX + 140, panelY + 92)
+      .setPosition(deck.event.x, deck.event.y)
       .setText(this.projectile ? "Shot in flight..." : this.shotResult)
       .setStyle({
         fontFamily: "Inter, Arial, sans-serif",
-        fontSize: "14px",
+        fontSize: `${Math.max(11, scaled(14))}px`,
         color: "#ffd166",
         stroke: "#10131b",
         strokeThickness: 4,
       });
 
-    this.drawMoveMeter(panelX + 140, panelY + 118, 218, active.moveUnits);
+    this.drawMoveMeter(deck.moveMeter.x, deck.moveMeter.y, deck.moveMeter.width, active.moveUnits, deckScale);
 
-    const aimPanelX = panelX + panelWidth - 324;
-    const launchX = panelX + Math.min(390, Math.max(286, panelWidth * 0.31));
-    const launchWidth = Math.min(960, Math.max(320, aimPanelX - launchX - 28));
     const power = this.charging ? this.charge / MAX_POWER : 0;
-    this.drawLaunchPowerMeter(launchX, panelY + 36, launchWidth, power);
+    this.drawLaunchPowerMeter(deck.launchMeter.x, deck.launchMeter.y, deck.launchMeter.width, power, deckScale);
 
-    this.drawPanelAimDial(active, aimPanelX, panelY + 18, 198, 128);
+    this.drawPanelAimDial(active, deck.aimPanel.x, deck.aimPanel.y, deck.aimPanel.width, deck.aimPanel.height, deckScale);
     this.drawGlobalRoundStatus(active, false);
   }
 
@@ -2268,27 +2296,31 @@ class GravityGridScene extends Phaser.Scene {
     this.hudGfx.strokeRoundedRect(x, y, width, height, 6);
   }
 
-  private drawLaunchPowerMeter(x: number, y: number, width: number, value: number): void {
+  private drawLaunchPowerMeter(x: number, y: number, width: number, value: number, scale = 1): void {
     const clamped = Phaser.Math.Clamp(value, 0, 1);
     const percent = Math.round(clamped * 100);
-    const compact = width < 320;
-    const meterX = x + 14;
-    const meterY = y + 34;
-    const meterWidth = width - 28;
-    const meterHeight = 28;
+    const scaled = (pixels: number): number => Math.round(pixels * scale);
+    const compact = width < 320 * scale;
+    const height = scaled(76);
+    const meterX = x + scaled(14);
+    const meterY = y + scaled(34);
+    const meterWidth = width - scaled(28);
+    const meterHeight = scaled(28);
+    const radius = Math.max(4, scaled(8));
+    const meterRadius = Math.max(4, scaled(7));
 
     this.hudGfx.fillStyle(0x111827, 1);
-    this.hudGfx.fillRoundedRect(x, y, width, 76, 8);
+    this.hudGfx.fillRoundedRect(x, y, width, height, radius);
     this.hudGfx.lineStyle(2, this.charging ? 0xffd166 : 0xffffff, this.charging ? 0.72 : 0.22);
-    this.hudGfx.strokeRoundedRect(x, y, width, 76, 8);
+    this.hudGfx.strokeRoundedRect(x, y, width, height, radius);
 
     this.powerLabelText
-      .setPosition(x + 14, y + 10)
+      .setPosition(x + scaled(14), y + scaled(10))
       .setOrigin(0, 0)
       .setText(`${compact ? "POWER" : "LAUNCH POWER"} ${percent}%`)
       .setStyle({
         fontFamily: "Inter, Arial, sans-serif",
-        fontSize: "17px",
+        fontSize: `${Math.max(12, scaled(17))}px`,
         fontStyle: "700",
         color: "#fff4c2",
         stroke: "#0b1020",
@@ -2296,12 +2328,12 @@ class GravityGridScene extends Phaser.Scene {
       });
 
     this.powerHintText
-      .setPosition(x + width - 14, y + 13)
+      .setPosition(x + width - scaled(14), y + scaled(13))
       .setOrigin(1, 0)
       .setText(this.charging ? (compact ? "FIRE" : "RELEASE TO FIRE") : compact ? "SPACE" : "HOLD SPACE")
       .setStyle({
         fontFamily: "Consolas, 'SFMono-Regular', monospace",
-        fontSize: "12px",
+        fontSize: `${Math.max(10, scaled(12))}px`,
         fontStyle: "700",
         color: this.charging ? "#ffffff" : "#aeb7c8",
         stroke: "#0b1020",
@@ -2309,84 +2341,105 @@ class GravityGridScene extends Phaser.Scene {
       });
 
     this.hudGfx.fillStyle(0x182033, 1);
-    this.hudGfx.fillRoundedRect(meterX, meterY, meterWidth, meterHeight, 7);
+    this.hudGfx.fillRoundedRect(meterX, meterY, meterWidth, meterHeight, meterRadius);
     this.hudGfx.fillStyle(0xffd166, 1);
-    this.hudGfx.fillRoundedRect(meterX, meterY, meterWidth * clamped, meterHeight, 7);
+    this.hudGfx.fillRoundedRect(meterX, meterY, meterWidth * clamped, meterHeight, meterRadius);
     this.hudGfx.fillStyle(0xffffff, this.charging ? 0.18 : 0.08);
-    this.hudGfx.fillRoundedRect(meterX, meterY + 4, meterWidth * clamped, 7, 4);
+    this.hudGfx.fillRoundedRect(meterX, meterY + scaled(4), meterWidth * clamped, Math.max(3, scaled(7)), Math.max(2, scaled(4)));
 
     for (let i = 1; i < 4; i += 1) {
       const tickX = meterX + (meterWidth * i) / 4;
       this.hudGfx.lineStyle(2, 0x0b1020, 0.42);
-      this.hudGfx.lineBetween(tickX, meterY + 4, tickX, meterY + meterHeight - 4);
+      this.hudGfx.lineBetween(tickX, meterY + scaled(4), tickX, meterY + meterHeight - scaled(4));
       this.hudGfx.lineStyle(1, 0xffffff, 0.2);
-      this.hudGfx.lineBetween(tickX + 1, meterY + 5, tickX + 1, meterY + meterHeight - 5);
+      this.hudGfx.lineBetween(tickX + 1, meterY + scaled(5), tickX + 1, meterY + meterHeight - scaled(5));
     }
 
     this.hudGfx.lineStyle(2, 0xfff4c2, 0.72);
-    this.hudGfx.strokeRoundedRect(meterX, meterY, meterWidth, meterHeight, 7);
+    this.hudGfx.strokeRoundedRect(meterX, meterY, meterWidth, meterHeight, meterRadius);
   }
 
-  private drawMoveMeter(x: number, y: number, width: number, remainingUnits: number): void {
+  private drawMoveMeter(x: number, y: number, width: number, remainingUnits: number, scale = 1): void {
     const clamped = Phaser.Math.Clamp(remainingUnits / MAX_MOVE_UNITS, 0, 1);
     const label = `${remainingUnits.toFixed(1)}u`;
+    const scaled = (pixels: number): number => Math.round(pixels * scale);
+    const height = scaled(42);
+    const radius = Math.max(4, scaled(8));
 
     this.hudGfx.fillStyle(0x111827, 0.96);
-    this.hudGfx.fillRoundedRect(x, y, width, 42, 8);
+    this.hudGfx.fillRoundedRect(x, y, width, height, radius);
     this.hudGfx.lineStyle(2, 0x57f287, 0.42);
-    this.hudGfx.strokeRoundedRect(x, y, width, 42, 8);
+    this.hudGfx.strokeRoundedRect(x, y, width, height, radius);
 
     this.movementLabelText
-      .setPosition(x + 12, y + 7)
+      .setPosition(x + scaled(12), y + scaled(7))
       .setOrigin(0, 0)
       .setText(`MOVE RANGE  ${label}`)
       .setStyle({
         fontFamily: "Consolas, 'SFMono-Regular', monospace",
-        fontSize: "13px",
+        fontSize: `${Math.max(10, scaled(13))}px`,
         fontStyle: "700",
         color: "#b9ffd0",
         stroke: "#0b1020",
         strokeThickness: 4,
       });
 
-    const meterX = x + 12;
-    const meterY = y + 27;
-    const meterWidth = width - 24;
+    const meterX = x + scaled(12);
+    const meterY = y + scaled(27);
+    const meterWidth = width - scaled(24);
+    const meterHeight = Math.max(5, scaled(8));
     this.hudGfx.fillStyle(0x182033, 1);
-    this.hudGfx.fillRoundedRect(meterX, meterY, meterWidth, 8, 4);
+    this.hudGfx.fillRoundedRect(meterX, meterY, meterWidth, meterHeight, Math.max(3, scaled(4)));
     this.hudGfx.fillStyle(0x57f287, 0.95);
-    this.hudGfx.fillRoundedRect(meterX, meterY, meterWidth * clamped, 8, 4);
+    this.hudGfx.fillRoundedRect(meterX, meterY, meterWidth * clamped, meterHeight, Math.max(3, scaled(4)));
     this.hudGfx.lineStyle(1, 0xffffff, 0.22);
-    this.hudGfx.strokeRoundedRect(meterX, meterY, meterWidth, 8, 4);
+    this.hudGfx.strokeRoundedRect(meterX, meterY, meterWidth, meterHeight, Math.max(3, scaled(4)));
   }
 
-  private drawPanelAimDial(active: VehicleState, panelX: number, panelY: number, panelWidth: number, panelHeight: number): void {
+  private drawPanelAimDial(
+    active: VehicleState,
+    panelX: number,
+    panelY: number,
+    panelWidth: number,
+    panelHeight: number,
+    scale = 1,
+  ): void {
+    const scaled = (pixels: number): number => Math.round(pixels * scale);
     const centerX = panelX + panelWidth / 2;
-    const centerY = panelY + panelHeight - 24;
-    const radius = 52;
+    const centerY = panelY + panelHeight - scaled(24);
+    const radius = scaled(52);
     const elevation = active.facing === 1 ? active.angle : 180 - active.angle;
     const radians = Phaser.Math.DegToRad(180 + elevation);
     const needleX = centerX - Math.cos(radians) * radius;
     const needleY = centerY + Math.sin(radians) * radius;
 
     this.hudGfx.fillStyle(0x111827, 1);
-    this.hudGfx.fillRoundedRect(panelX, panelY, panelWidth, panelHeight, 8);
+    this.hudGfx.fillRoundedRect(panelX, panelY, panelWidth, panelHeight, Math.max(4, scaled(8)));
     this.hudGfx.lineStyle(2, active.accent, 0.55);
-    this.hudGfx.strokeRoundedRect(panelX, panelY, panelWidth, panelHeight, 8);
+    this.hudGfx.strokeRoundedRect(panelX, panelY, panelWidth, panelHeight, Math.max(4, scaled(8)));
     this.hudGfx.lineStyle(3, 0x30405f, 1);
     this.hudGfx.beginPath();
     this.hudGfx.arc(centerX, centerY, radius, Math.PI, Math.PI * 2, false);
     this.hudGfx.strokePath();
-    this.hudGfx.lineStyle(6, active.accent, 1);
+    this.hudGfx.lineStyle(Math.max(3, scaled(6)), active.accent, 1);
     this.hudGfx.lineBetween(centerX, centerY, needleX, needleY);
     this.hudGfx.fillStyle(0xffffff, 1);
-    this.hudGfx.fillCircle(centerX, centerY, 5);
+    this.hudGfx.fillCircle(centerX, centerY, Math.max(3, scaled(5)));
     this.hudGfx.fillStyle(active.accent, 1);
-    this.hudGfx.fillCircle(needleX, needleY, 7);
+    this.hudGfx.fillCircle(needleX, needleY, Math.max(4, scaled(7)));
 
     this.aimDialText
-      .setPosition(centerX, panelY + 14)
-      .setText(`AIM ${Math.round(elevation)} deg\n${active.facing === 1 ? "right" : "left"}`);
+      .setPosition(centerX, panelY + scaled(14))
+      .setText(`AIM ${Math.round(elevation)} deg\n${active.facing === 1 ? "right" : "left"}`)
+      .setStyle({
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: `${Math.max(11, scaled(15))}px`,
+        fontStyle: "700",
+        color: "#ffffff",
+        align: "center",
+        stroke: "#0b1020",
+        strokeThickness: 4,
+      });
   }
 
   private windLabel(): string {
