@@ -1,9 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  DESIGN_VIEWPORT,
+  GAMEPLAY_ASPECT_RATIO,
+  MIN_SUPPORTED_VIEWPORT,
   computeBattlefieldFrameLayout,
+  computeGameCanvasSize,
   computeCommandPanelLayout,
   getGameViewportSize,
+  isSupportedGameViewport,
   shouldRecenterProjectileCamera,
   shouldMountOnlineLobby,
   shouldShowCombatHulls,
@@ -54,9 +59,27 @@ test("game viewport uses the smallest reliable visible browser size", () => {
   assert.equal(computeCommandPanelLayout(viewport).panelY, 820);
 });
 
+test("viewport contract defines a fixed desktop game standard", () => {
+  assert.deepEqual(DESIGN_VIEWPORT, { width: 1600, height: 900 });
+  assert.deepEqual(MIN_SUPPORTED_VIEWPORT, { width: 1366, height: 768 });
+  assert.equal(GAMEPLAY_ASPECT_RATIO, 16 / 9);
+});
+
+test("minimum supported viewport blocks windows that would fold the UI", () => {
+  assert.equal(isSupportedGameViewport({ width: 1366, height: 768 }), true);
+  assert.equal(isSupportedGameViewport({ width: 1365, height: 900 }), false);
+  assert.equal(isSupportedGameViewport({ width: 1600, height: 767 }), false);
+});
+
+test("game canvas caps at the design viewport on oversized browser windows", () => {
+  assert.deepEqual(computeGameCanvasSize({ width: 3440, height: 1440 }), DESIGN_VIEWPORT);
+  assert.deepEqual(computeGameCanvasSize({ width: 2048, height: 858 }), { width: 1600, height: 858 });
+  assert.deepEqual(computeGameCanvasSize({ width: 1366, height: 768 }), MIN_SUPPORTED_VIEWPORT);
+});
+
 test("battlefield framing keeps map scale consistent across common desktop widths", () => {
   const wide = computeBattlefieldFrameLayout({
-    viewportWidth: 2048,
+    viewportWidth: computeGameCanvasSize({ width: 2048, height: 858 }).width,
     playfieldHeight: 654,
     worldWidth: 2400,
     aliveVehicleXs: [310, 710, 1690, 2090],
@@ -70,6 +93,25 @@ test("battlefield framing keeps map scale consistent across common desktop width
 
   assert.ok(Math.abs(wide.visibleWorldWidth - standard.visibleWorldWidth) < 1);
   assert.equal(Math.round(wide.visibleWorldWidth), 2960);
+});
+
+test("ultrawide browser windows do not expand the strategic battlefield view", () => {
+  const ultrawideCanvas = computeGameCanvasSize({ width: 3440, height: 900 });
+  const design = computeBattlefieldFrameLayout({
+    viewportWidth: DESIGN_VIEWPORT.width,
+    playfieldHeight: 696,
+    worldWidth: 2400,
+    aliveVehicleXs: [310, 710, 1690, 2090],
+  });
+  const ultrawide = computeBattlefieldFrameLayout({
+    viewportWidth: ultrawideCanvas.width,
+    playfieldHeight: 696,
+    worldWidth: 2400,
+    aliveVehicleXs: [310, 710, 1690, 2090],
+  });
+
+  assert.equal(ultrawideCanvas.width, DESIGN_VIEWPORT.width);
+  assert.equal(Math.round(ultrawide.visibleWorldWidth), Math.round(design.visibleWorldWidth));
 });
 
 test("projectile camera stays stable while a shot is readable in the battlefield frame", () => {

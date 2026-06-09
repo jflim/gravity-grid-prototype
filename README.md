@@ -15,6 +15,7 @@ First playable local artillery prototype for Gravity Canyon.
 - Wind strip visible to everyone; the turn timer lives above the active vehicle only.
 - Docked bottom command deck with active vehicle portrait, aim dial, movement range meter, and a prominent launch-power meter.
 - Raised command deck with a bottom safe margin so controls stay visible in the browser viewport.
+- Desktop viewport contract: the game canvas is capped to a 1600 x 900 design viewport, centered in larger browser windows, and blocked below a 1366 x 768 visible viewport.
 - Turn timer badge above the active vehicle.
 - Vehicle sprites tilt with terrain slope for clearer ground contact.
 - Battlefield unit art is scaled as readable game pieces, while high-detail art remains available in HUD/presentation surfaces.
@@ -159,7 +160,8 @@ dist/index.html
 - Launch power, movement range, active vehicle identity, and aim angle live in a raised bottom command deck.
 - Active player also gets a world-space aim arrow, turn timer badge, and ground movement range rail so movement decisions can be read without covering the character art.
 - Prototype vehicle collision zones are visible by default while collision and terrain scale are being tuned, and can be toggled off with `H`, the on-screen checkbox, or `?collisionZones=0`.
-- The game camera reserves space above a centered, capped-width command deck so the playable battlefield and active-player info stay readable across common desktop viewport sizes.
+- The game camera reserves space above a centered, capped-width command deck so the playable battlefield and active-player info stay readable across supported desktop viewport sizes.
+- The browser shell is capped and centered so larger or ultrawide windows do not change terrain, spawns, collision, void placement, projectile behavior, or the strategic battlefield view.
 - Current sprites are first-pass generated assets, not final production sprites.
 - Gameplay rendering uses separate layers for vehicle and playable character sprites.
 - Active runtime sprites use stable filenames in `public/assets`; versioned experiments live under `public/assets/sprite-variants`.

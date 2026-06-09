@@ -72,6 +72,10 @@ const CAMERA_MIN_VISIBLE_WORLD_RATIO = 0.78;
 const CAMERA_MIN_ZOOM = 0.34;
 const CAMERA_MAX_ZOOM = 0.9;
 
+export const DESIGN_VIEWPORT: ViewportSize = { width: 1600, height: 900 };
+export const MIN_SUPPORTED_VIEWPORT: ViewportSize = { width: 1366, height: 768 };
+export const GAMEPLAY_ASPECT_RATIO = 16 / 9;
+
 export function shouldMountOnlineLobby(search: string): boolean {
   const params = new URLSearchParams(search);
   const value = params.get("onlinePanel");
@@ -93,6 +97,17 @@ export function getGameViewportSize(
     height: Math.floor(
       smallestPositive(320, browserViewport.visualViewport?.height, documentViewport?.clientHeight, browserViewport.innerHeight),
     ),
+  };
+}
+
+export function isSupportedGameViewport(viewport: ViewportSize): boolean {
+  return viewport.width >= MIN_SUPPORTED_VIEWPORT.width && viewport.height >= MIN_SUPPORTED_VIEWPORT.height;
+}
+
+export function computeGameCanvasSize(viewport: ViewportSize): ViewportSize {
+  return {
+    width: Math.min(viewport.width, DESIGN_VIEWPORT.width),
+    height: Math.min(viewport.height, DESIGN_VIEWPORT.height),
   };
 }
 

@@ -22,8 +22,11 @@ import {
 import { distanceToVehicleHitZone, type VehicleHitZone } from "./vehicleHitZone";
 import {
   computeBattlefieldFrameLayout,
+  computeGameCanvasSize,
   computeCommandPanelLayout,
   getGameViewportSize,
+  isSupportedGameViewport,
+  MIN_SUPPORTED_VIEWPORT,
   shouldMountOnlineLobby,
   shouldRecenterProjectileCamera,
   shouldShowCombatHulls,
@@ -203,6 +206,7 @@ const DEFAULT_TERRAIN_BREAKTHROUGH_Y = WORLD_HEIGHT - 54;
 const VOID_DROP_HORIZONTAL_PADDING = 24;
 const MAX_TERRAIN_SPRITE_TILT_DEG = 20;
 const USE_UNIT_CONCEPT_PREVIEW = !new URLSearchParams(window.location.search).has("runtimeAssets");
+let currentViewportSupported = true;
 
 class GravityGridScene extends Phaser.Scene {
   private terrain: number[] = [];
@@ -424,6 +428,10 @@ class GravityGridScene extends Phaser.Scene {
   }
 
   update(_: number, deltaMs: number): void {
+    if (!currentViewportSupported) {
+      return;
+    }
+
     const dt = Math.min(deltaMs / 1000, 0.033);
     this.updateImpactPreview(dt);
     this.updateCombatMarkers(dt);
@@ -2342,7 +2350,9 @@ class GravityGridScene extends Phaser.Scene {
   }
 }
 
-const initialViewport = getGameViewportSize(window, document.documentElement);
+const initialBrowserViewport = getGameViewportSize(window, document.documentElement);
+const initialViewport = computeGameCanvasSize(initialBrowserViewport);
+currentViewportSupported = isSupportedGameViewport(initialBrowserViewport);
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -2364,6 +2374,7 @@ const config: Phaser.Types.Core.GameConfig = {
 };
 
 const game = new Phaser.Game(config);
+const viewportGuard = mountViewportGuard();
 syncGameViewportSize();
 window.addEventListener("resize", syncGameViewportSize);
 window.visualViewport?.addEventListener("resize", syncGameViewportSize);
@@ -2374,8 +2385,43 @@ if (shouldMountOnlineLobby(window.location.search)) {
 }
 
 function syncGameViewportSize(): void {
-  const viewport = getGameViewportSize(window, document.documentElement);
-  document.documentElement.style.setProperty("--game-viewport-width", `${viewport.width}px`);
-  document.documentElement.style.setProperty("--game-viewport-height", `${viewport.height}px`);
-  game.scale.resize(viewport.width, viewport.height);
+  const browserViewport = getGameViewportSize(window, document.documentElement);
+  const gameViewport = computeGameCanvasSize(browserViewport);
+  currentViewportSupported = isSupportedGameViewport(browserViewport);
+  document.documentElement.style.setProperty("--game-viewport-width", `${gameViewport.width}px`);
+  document.documentElement.style.setProperty("--game-viewport-height", `${gameViewport.height}px`);
+  game.scale.resize(gameViewport.width, gameViewport.height);
+  updateViewportGuard(browserViewport);
+}
+
+function mountViewportGuard(): HTMLDivElement {
+  const guard = document.createElement("div");
+  guard.className = "viewport-guard";
+  guard.hidden = true;
+
+  const panel = document.createElement("div");
+  panel.className = "viewport-guard__panel";
+
+  const title = document.createElement("strong");
+  title.textContent = "Resize window to play";
+
+  const body = document.createElement("span");
+  body.textContent = `Gravity Canyon v1 needs at least ${MIN_SUPPORTED_VIEWPORT.width} x ${MIN_SUPPORTED_VIEWPORT.height} visible browser pixels.`;
+
+  const current = document.createElement("small");
+  current.dataset.viewportGuardCurrent = "true";
+
+  panel.append(title, body, current);
+  guard.append(panel);
+  document.body.append(guard);
+
+  return guard;
+}
+
+function updateViewportGuard(viewport: { width: number; height: number }): void {
+  viewportGuard.hidden = currentViewportSupported;
+  const current = viewportGuard.querySelector<HTMLElement>("[data-viewport-guard-current]");
+  if (current) {
+    current.textContent = `Current: ${viewport.width} x ${viewport.height}`;
+  }
 }

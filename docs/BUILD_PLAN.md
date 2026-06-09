@@ -69,6 +69,7 @@ Done:
 - Destroyed vehicles now pair destroyed vehicle sprites with character-specific generated KO character sprites instead of overlay effects.
 - Command panel is raised with a bottom safe margin so gameplay controls remain visible.
 - Local map-review layout hides the online panel by default, shows combat hull overlays by default while collision and map scale are being tuned, keeps both configurable through URL flags, hotkeys, or the on-screen `Collision zones` checkbox, and uses capped command-deck framing for more consistent desktop viewport composition.
+- Desktop viewport contract caps the game canvas at 1600 x 900, requires at least a 1366 x 768 visible browser viewport, and centers the fixed battlefield presentation inside larger windows so resizing does not change map strategy.
 - Colyseus server added.
 - Online panel can create/join private rooms, show player slots, ready state, placeholder rewards, and equipped nameplates.
 - Online room now starts a server-owned combat preview when both players ready.

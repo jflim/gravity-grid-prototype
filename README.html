@@ -105,6 +105,7 @@
 <li>Wind strip visible to everyone; the turn timer lives above the active vehicle only.</li>
 <li>Docked bottom command deck with active vehicle portrait, aim dial, movement range meter, and a prominent launch-power meter.</li>
 <li>Raised command deck with a bottom safe margin so controls stay visible in the browser viewport.</li>
+<li>Desktop viewport contract: the game canvas is capped to a 1600 x 900 design viewport, centered in larger browser windows, and blocked below a 1366 x 768 visible viewport.</li>
 <li>Turn timer badge above the active vehicle.</li>
 <li>Vehicle sprites tilt with terrain slope for clearer ground contact.</li>
 <li>Battlefield unit art is scaled as readable game pieces, while high-detail art remains available in HUD/presentation surfaces.</li>
@@ -240,7 +241,8 @@ dist/index.html
 <li>Launch power, movement range, active vehicle identity, and aim angle live in a raised bottom command deck.</li>
 <li>Active player also gets a world-space aim arrow, turn timer badge, and ground movement range rail so movement decisions can be read without covering the character art.</li>
 <li>Prototype vehicle collision zones are visible by default while collision and terrain scale are being tuned, and can be toggled off with <code>H</code>, the on-screen checkbox, or <code>?collisionZones=0</code>.</li>
-<li>The game camera reserves space above a centered, capped-width command deck so the playable battlefield and active-player info stay readable across common desktop viewport sizes.</li>
+<li>The game camera reserves space above a centered, capped-width command deck so the playable battlefield and active-player info stay readable across supported desktop viewport sizes.</li>
+<li>The browser shell is capped and centered so larger or ultrawide windows do not change terrain, spawns, collision, void placement, projectile behavior, or the strategic battlefield view.</li>
 <li>Current sprites are first-pass generated assets, not final production sprites.</li>
 <li>Gameplay rendering uses separate layers for vehicle and playable character sprites.</li>
 <li>Active runtime sprites use stable filenames in <code>public/assets</code>; versioned experiments live under <code>public/assets/sprite-variants</code>.</li>
