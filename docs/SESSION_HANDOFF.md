@@ -48,6 +48,7 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
   - The local browser shell now uses a desktop viewport contract: design around 1600 x 900, allow up to 2400 x 1350 presentation size for readability, require 1366 x 768 visible browser pixels, center the fixed game canvas inside larger windows, and show a resize guard below minimum.
   - The command deck now uses explicit viewport layout rules and the browser's smallest reliable visible viewport size so the active player info stays inside the visible browser area on wide/short screens.
   - On taller browser windows, the command deck can float upward below the projected visible void band instead of staying pinned low with excess empty space above it.
+  - Command-deck placement tests now enforce that supported viewport layouts never place the deck outside the visible browser area, even when the preferred void anchor is invalid or extreme.
   - Projectile flight keeps the full battlefield framed while the shot is readable, with recentering reserved for shots that leave the readable frame.
   - Wind now lives in a fixed top-safe HUD badge, while active timer badges, team/HP bars, names, and class labels are raised above playable unit art using tested world-overlay spacing.
   - The combat readability design is saved at `docs/superpowers/specs/2026-06-07-combat-readability-wind-lobs-design.md`.

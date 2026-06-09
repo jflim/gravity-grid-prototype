@@ -63,6 +63,44 @@ test("command panel can float upward to sit just below the visible void", () => 
   assert.equal(voidAnchoredLayout.safeAreaBottom, 1152);
 });
 
+test("command panel never clips in supported viewport layouts", () => {
+  const viewports = [
+    MIN_SUPPORTED_VIEWPORT,
+    DESIGN_VIEWPORT,
+    { width: 2048, height: 858 },
+    { width: 2048, height: 1152 },
+    MAX_PRESENTATION_VIEWPORT,
+  ];
+  const preferredPanelYs = [
+    undefined,
+    -500,
+    0,
+    42,
+    604,
+    884,
+    5000,
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+  ];
+
+  for (const viewport of viewports) {
+    for (const preferredPanelY of preferredPanelYs) {
+      const layout = computeCommandPanelLayout(
+        viewport,
+        preferredPanelY === undefined ? undefined : { preferredPanelY },
+      );
+      const label = `${viewport.width}x${viewport.height} preferred ${preferredPanelY}`;
+
+      assert.ok(layout.panelY >= 0, `${label}: panel top must stay inside viewport`);
+      assert.ok(layout.panelBottom <= viewport.height, `${label}: panel bottom must stay inside viewport`);
+      assert.ok(layout.bottomMargin >= 0, `${label}: bottom margin must not go negative`);
+      assert.ok(layout.safeAreaBottom <= viewport.height, `${label}: safe area must not exceed viewport`);
+      assert.ok(layout.dockX >= 0, `${label}: dock left must stay inside viewport`);
+      assert.ok(layout.dockX + layout.dockWidth <= viewport.width, `${label}: dock right must stay inside viewport`);
+    }
+  }
+});
+
 test("game viewport uses the smallest reliable visible browser size", () => {
   const viewport = getGameViewportSize(
     {

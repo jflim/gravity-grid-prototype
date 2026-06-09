@@ -60,6 +60,7 @@ Highlights:
 - Revised the viewport contract so larger displays can use up to a 2400 x 1350 presentation canvas and world-space labels counter-scale against camera zoom for readability without expanding the strategic battlefield view.
 - Synchronized Phaser and CSS sizing against the smallest reliable visible browser viewport measurement so fullscreen browser chrome/layout mismatches do not push the command deck below the visible screen.
 - Let the command deck float upward to sit just below the projected visible void band on taller windows while preserving stable battlefield camera framing.
+- Added command-deck viewport-fit regression coverage so void-anchored placement cannot push the deck off-screen or below the visible browser area.
 - Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.
 - Changed projectile camera behavior to keep the battlefield stable while shots are readable, recentering only when a projectile leaves the readable frame.
 - Converted the default `ring-basin` demo pass into Ringworks Basin: a B+C weapon-readable novelty map with side bowls/high lips, two readable bridge gaps, and a central destructible ring bridge island.

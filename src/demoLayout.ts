@@ -183,12 +183,13 @@ export function computeCommandPanelLayout(
   const compactHeight = viewport.height < 760;
   const panelHeight = compactHeight ? COMPACT_PANEL_HEIGHT : WIDE_PANEL_HEIGHT;
   const minimumBottomMargin = compactHeight ? COMPACT_BOTTOM_MARGIN : WIDE_BOTTOM_MARGIN;
-  const bottomAnchoredPanelY = Math.max(0, viewport.height - panelHeight - minimumBottomMargin);
+  const lowestVisiblePanelY = Math.max(0, viewport.height - panelHeight - minimumBottomMargin);
   const preferredPanelY =
     typeof options.preferredPanelY === "number" && Number.isFinite(options.preferredPanelY)
       ? options.preferredPanelY
-      : bottomAnchoredPanelY;
-  const panelY = Math.round(clamp(Math.min(preferredPanelY, bottomAnchoredPanelY), 0, bottomAnchoredPanelY));
+      : lowestVisiblePanelY;
+  // The void anchor is only a preference; fitting the command deck inside the viewport is the hard rule.
+  const panelY = Math.round(clamp(preferredPanelY, 0, lowestVisiblePanelY));
   const bottomMargin = Math.max(minimumBottomMargin, viewport.height - panelY - panelHeight);
   const sideMargin = viewport.width < 900 ? DOCK_SIDE_MARGIN_COMPACT : DOCK_SIDE_MARGIN;
   const dockWidth = Math.min(DOCK_MAX_WIDTH, Math.max(320, viewport.width - sideMargin * 2));
