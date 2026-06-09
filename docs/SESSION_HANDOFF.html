@@ -126,7 +126,7 @@
 <li>validated active-player preview shots,</li>
 <li>preview token reward on round end.</li>
 <li>The online preview is available in the floating Online Alpha panel when the local URL includes <code>?onlinePanel=1</code>; the default local demo hides that panel for map-review clarity.</li>
-<li><code>npm run start:public</code> now serves the built client plus Colyseus from one localhost-bound port for tunnel-based internet playtests. Use <code>npm run build</code> first, then expose <code>http://127.0.0.1:2567</code> through a trusted tunnel and share the tunnel URL with <code>?onlinePanel=1</code>. Default and public-preview startup stay bound to <code>127.0.0.1</code>; direct all-interface binding requires explicitly setting <code>HOST=0.0.0.0</code>.</li>
+<li><code>npm run start:public</code> now serves the built client plus Colyseus from one localhost-bound port for tunnel-based internet playtests. Use <code>npm run build</code> first, then expose <code>http://127.0.0.1:2567</code> through a trusted tunnel and share the tunnel URL directly; public/tunnel hosts show the Online Alpha panel automatically. Default and public-preview startup stay bound to <code>127.0.0.1</code>; direct all-interface binding requires explicitly setting <code>HOST=0.0.0.0</code>.</li>
 <li>Phaser projectile and terrain simulation are not yet synced to the server-owned combat model.</li>
 <li>Local combat readability now has prototype combat hulls, floating combat markers, and playable v1 map terrain:</li>
 <li>Direct-hit projectile collision uses one shared rectangular vehicle-only hit zone instead of the old small center-radius check or pilot-plus-vehicle silhouette collision.</li>

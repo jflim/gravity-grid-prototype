@@ -2481,7 +2481,7 @@ window.addEventListener("resize", syncGameViewportSize);
 window.visualViewport?.addEventListener("resize", syncGameViewportSize);
 window.visualViewport?.addEventListener("scroll", syncGameViewportSize);
 
-if (shouldMountOnlineLobby(window.location.search)) {
+if (shouldMountOnlineLobby(window.location.search, window.location)) {
   mountOnlineLobby();
 }
 
