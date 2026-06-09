@@ -24,6 +24,8 @@ import {
   computeBattlefieldFrameLayout,
   computeGameCanvasSize,
   computeCommandPanelLayout,
+  computeUnitWorldOverlayLayout,
+  computeWindHudLayout,
   getGameViewportSize,
   isSupportedGameViewport,
   MIN_SUPPORTED_VIEWPORT,
@@ -31,6 +33,7 @@ import {
   shouldMountOnlineLobby,
   shouldRecenterProjectileCamera,
   shouldShowCombatHulls,
+  type CommandPanelLayout,
 } from "./demoLayout";
 import { mountOnlineLobby } from "./onlineLobby";
 import {
@@ -205,6 +208,7 @@ const FALLBACK_VISIBLE_VOID_TOP_Y = WORLD_HEIGHT - VISIBLE_VOID_ZONE_HEIGHT;
 const WORLD_RENDER_HEIGHT = WORLD_HEIGHT + VISIBLE_VOID_ZONE_HEIGHT;
 const DEFAULT_TERRAIN_BREAKTHROUGH_Y = WORLD_HEIGHT - 54;
 const VOID_DROP_HORIZONTAL_PADDING = 24;
+const COMMAND_DECK_VOID_GAP = 12;
 const MAX_TERRAIN_SPRITE_TILT_DEG = 20;
 const USE_UNIT_CONCEPT_PREVIEW = !new URLSearchParams(window.location.search).has("runtimeAssets");
 let currentViewportSupported = true;
@@ -1242,6 +1246,26 @@ class GravityGridScene extends Phaser.Scene {
     return computeCommandPanelLayout({ width: this.scale.width, height: this.scale.height }).playfieldHeight;
   }
 
+  private commandPanelLayout(): CommandPanelLayout {
+    const projectedVoidBottomY = this.screenYForWorldY(this.visibleVoidBottomY());
+    return computeCommandPanelLayout(
+      { width: this.scale.width, height: this.scale.height },
+      {
+        preferredPanelY:
+          projectedVoidBottomY === undefined ? undefined : projectedVoidBottomY + COMMAND_DECK_VOID_GAP,
+      },
+    );
+  }
+
+  private screenYForWorldY(worldY: number): number | undefined {
+    const camera = this.cameras.main;
+    if (!Number.isFinite(worldY) || !Number.isFinite(camera.zoom) || camera.zoom <= 0) {
+      return undefined;
+    }
+
+    return camera.y + (worldY - camera.scrollY) * camera.zoom;
+  }
+
   private frameBattlefield(duration = 0): void {
     const aliveVehicles = this.vehicles.filter((vehicle) => vehicle.alive);
     if (aliveVehicles.length === 0) {
@@ -1764,6 +1788,10 @@ class GravityGridScene extends Phaser.Scene {
     const gfx = this.vehicleGfx;
     const collisionGfx = this.collisionGfx;
     const worldUiScale = readableWorldUiScale(this.cameras.main.zoom);
+    const overlayLayout = computeUnitWorldOverlayLayout({
+      useUnitConceptPreview: USE_UNIT_CONCEPT_PREVIEW,
+      worldUiScale,
+    });
     gfx.clear();
     collisionGfx.clear();
 
@@ -1888,15 +1916,22 @@ class GravityGridScene extends Phaser.Scene {
 
       if (vehicle.alive || vehicle.defeatReason === "damage") {
         gfx.fillStyle(0x0f172a, 0.88);
-        const hpOffset = USE_UNIT_CONCEPT_PREVIEW ? scaleBattlefieldOffset(174) : 76;
-        const hpY = renderY - hpOffset;
-        gfx.fillRoundedRect(renderX - 44, hpY, 88, 14, 5);
+        const hpY = renderY - overlayLayout.teamBarOffsetY;
+        const hpWidth = overlayLayout.teamBarWidth;
+        const hpHeight = overlayLayout.teamBarHeight;
+        const hpRadius = Math.max(4, hpHeight / 2);
+        gfx.fillRoundedRect(renderX - hpWidth / 2, hpY, hpWidth, hpHeight, hpRadius);
         gfx.fillStyle(vehicle.team === "red" ? 0xff4d5d : 0x4cc9f0, 0.92);
-        gfx.fillRoundedRect(renderX - 42, hpY + 2, 84 * (vehicle.hp / MAX_HP), 10, 4);
+        gfx.fillRoundedRect(
+          renderX - hpWidth / 2 + 2 * worldUiScale,
+          hpY + 2 * worldUiScale,
+          Math.max(0, (hpWidth - 4 * worldUiScale) * (vehicle.hp / MAX_HP)),
+          Math.max(3, hpHeight - 4 * worldUiScale),
+          hpRadius,
+        );
       }
 
-      const labelOffset = USE_UNIT_CONCEPT_PREVIEW ? scaleBattlefieldOffset(214) : 118;
-      const labelY = renderY - labelOffset;
+      const labelY = renderY - overlayLayout.nameOffsetY;
       const label = this.add
         .text(renderX, labelY, vehicle.username, {
           fontFamily: "Inter, Arial, sans-serif",
@@ -1913,7 +1948,7 @@ class GravityGridScene extends Phaser.Scene {
 
       const stateLabel = defeatPresentation?.label ?? vehicle.className;
       const classLabel = this.add
-        .text(renderX, labelY + 21 * worldUiScale, stateLabel, {
+        .text(renderX, renderY - overlayLayout.classOffsetY, stateLabel, {
           fontFamily: "Consolas, 'SFMono-Regular', monospace",
           fontSize: "12px",
           color: vehicle.defeatReason === "void" ? "#8be9ff" : vehicle.team === "red" ? "#ffd166" : "#8be9ff",
@@ -1926,11 +1961,10 @@ class GravityGridScene extends Phaser.Scene {
       this.vehicleLabels.push(classLabel);
 
       if (active) {
-        const timerOffset = USE_UNIT_CONCEPT_PREVIEW ? scaleBattlefieldOffset(178) : 178;
-        const timerY = renderY - timerOffset;
-        const timerWidth = 104 * worldUiScale;
-        const timerHeight = 40 * worldUiScale;
-        const timerRadius = 10 * worldUiScale;
+        const timerY = renderY - overlayLayout.timerOffsetY;
+        const timerWidth = overlayLayout.timerBadgeWidth;
+        const timerHeight = overlayLayout.timerBadgeHeight;
+        const timerRadius = overlayLayout.timerBadgeRadius;
         gfx.fillStyle(0x0b1020, 0.88);
         gfx.fillRoundedRect(
           renderX - timerWidth / 2,
@@ -1963,7 +1997,7 @@ class GravityGridScene extends Phaser.Scene {
         this.vehicleLabels.push(timerTag);
 
         const turnTag = this.add
-          .text(renderX, timerY + 30 * worldUiScale, "TURN", {
+          .text(renderX, timerY + overlayLayout.turnTagGapY, "TURN", {
             fontFamily: "Inter, Arial, sans-serif",
             fontSize: "11px",
             fontStyle: "700",
@@ -2113,7 +2147,7 @@ class GravityGridScene extends Phaser.Scene {
   private drawControlPanel(active?: VehicleState, roundComplete = false): void {
     const width = this.scale.width;
     const height = this.scale.height;
-    const layout = computeCommandPanelLayout({ width, height });
+    const layout = this.commandPanelLayout();
     const panelWidth = layout.dockWidth;
     const panelHeight = layout.panelHeight;
     const panelX = layout.dockX;
@@ -2213,20 +2247,25 @@ class GravityGridScene extends Phaser.Scene {
   }
 
   private drawGlobalRoundStatus(active?: VehicleState, roundComplete = false): void {
-    const width = this.scale.width;
+    void active;
+    void roundComplete;
+    const layout = computeWindHudLayout({ width: this.scale.width, height: this.scale.height });
     const windLabel = `WIND ${this.windLabel()}`;
     this.timerText.setText("");
 
-    this.hudGfx.fillStyle(0x0b1020, 0.78);
-    this.hudGfx.fillRoundedRect(18, 16, 224, 58, 8);
-    this.hudGfx.lineStyle(2, 0x8be9ff, 0.28);
-    this.hudGfx.strokeRoundedRect(18, 16, 224, 58, 8);
+    this.hudGfx.fillStyle(0x06111f, 0.9);
+    this.hudGfx.fillRoundedRect(layout.x - layout.width / 2, layout.y, layout.width, layout.height, 8);
+    this.hudGfx.fillStyle(0x8be9ff, 0.09);
+    this.hudGfx.fillRoundedRect(layout.x - layout.width / 2 + 5, layout.y + 5, layout.width - 10, 12, 6);
+    this.hudGfx.lineStyle(2, 0x8be9ff, 0.5);
+    this.hudGfx.strokeRoundedRect(layout.x - layout.width / 2, layout.y, layout.width, layout.height, 8);
     this.windText
-      .setPosition(32, 24)
+      .setOrigin(0.5)
+      .setPosition(layout.x, layout.y + layout.height / 2)
       .setText(windLabel)
       .setStyle({
         fontFamily: "Inter, Arial, sans-serif",
-        fontSize: "28px",
+        fontSize: "26px",
         fontStyle: "700",
         color: "#8be9ff",
         stroke: "#0b1020",

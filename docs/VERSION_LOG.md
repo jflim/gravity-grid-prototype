@@ -59,6 +59,7 @@ Highlights:
 - Added a desktop viewport contract: 1600 x 900 design canvas cap, 1366 x 768 minimum supported visible viewport, centered larger-window presentation, and resize guard for undersized windows.
 - Revised the viewport contract so larger displays can use up to a 2400 x 1350 presentation canvas and world-space labels counter-scale against camera zoom for readability without expanding the strategic battlefield view.
 - Synchronized Phaser and CSS sizing against the smallest reliable visible browser viewport measurement so fullscreen browser chrome/layout mismatches do not push the command deck below the visible screen.
+- Let the command deck float upward to sit just below the projected visible void band on taller windows while preserving stable battlefield camera framing.
 - Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.
 - Changed projectile camera behavior to keep the battlefield stable while shots are readable, recentering only when a projectile leaves the readable frame.
 - Converted the default `ring-basin` demo pass into Ringworks Basin: a B+C weapon-readable novelty map with side bowls/high lips, two readable bridge gaps, and a central destructible ring bridge island.
@@ -73,6 +74,7 @@ Highlights:
 - Moved collision-zone overlays to a translucent foreground hue layer so vehicle-only hit zones stay readable over playable unit art.
 - Added visible prototype combat hulls, toggleable with `H`, so vehicle-only collision truth can be tuned against larger unit art.
 - Added floating combat markers for direct damage, splash damage, knockback, HP KOs, and terrain/fall Void Dropped defeats.
+- Raised world-space unit labels, team/HP bars, and active timer badges above playable unit art, and moved wind into a fixed top-safe HUD badge.
 - Added randomized terrain/spawn archetypes for local rounds to reduce flat direct-fire duels and encourage high-angle lob play.
 - Clarified Git workflow with branch strategy, quality gates, commit cadence, and push cadence.
 - Updated GitHub management notes now that the private remote and GitHub CLI are configured.

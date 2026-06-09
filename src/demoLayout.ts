@@ -28,6 +28,10 @@ export interface CommandPanelLayout {
   dockWidth: number;
 }
 
+export interface CommandPanelLayoutOptions {
+  preferredPanelY?: number;
+}
+
 export interface BattlefieldFrameInput {
   viewportWidth: number;
   playfieldHeight: number;
@@ -56,6 +60,31 @@ export interface ProjectileCameraInput {
   visibleWorldWidth: number;
   visibleWorldHeight: number;
   marginRatio?: number;
+}
+
+export interface UnitWorldOverlayInput {
+  useUnitConceptPreview: boolean;
+  worldUiScale: number;
+}
+
+export interface UnitWorldOverlayLayout {
+  classOffsetY: number;
+  nameOffsetY: number;
+  teamBarOffsetY: number;
+  teamBarWidth: number;
+  teamBarHeight: number;
+  timerOffsetY: number;
+  timerBadgeWidth: number;
+  timerBadgeHeight: number;
+  timerBadgeRadius: number;
+  turnTagGapY: number;
+}
+
+export interface WindHudLayout {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 const DOCK_MAX_WIDTH = 1720;
@@ -120,11 +149,47 @@ export function readableWorldUiScale(cameraZoom: number): number {
   return clamp(1 / cameraZoom, 1, 2.4);
 }
 
-export function computeCommandPanelLayout(viewport: ViewportSize): CommandPanelLayout {
+export function computeUnitWorldOverlayLayout(input: UnitWorldOverlayInput): UnitWorldOverlayLayout {
+  const scale = Math.max(1, input.worldUiScale);
+  const unitClearance = input.useUnitConceptPreview ? 136 : 112;
+
+  return {
+    classOffsetY: Math.round(unitClearance * scale),
+    nameOffsetY: Math.round((unitClearance + 28) * scale),
+    teamBarOffsetY: Math.round((unitClearance + 55) * scale),
+    teamBarWidth: Math.round(96 * scale),
+    teamBarHeight: Math.round(12 * scale),
+    timerOffsetY: Math.round((unitClearance + 96) * scale),
+    timerBadgeWidth: Math.round(112 * scale),
+    timerBadgeHeight: Math.round(42 * scale),
+    timerBadgeRadius: Math.round(10 * scale),
+    turnTagGapY: Math.round(30 * scale),
+  };
+}
+
+export function computeWindHudLayout(viewport: ViewportSize): WindHudLayout {
+  return {
+    x: Math.round(viewport.width / 2),
+    y: 24,
+    width: 244,
+    height: 54,
+  };
+}
+
+export function computeCommandPanelLayout(
+  viewport: ViewportSize,
+  options: CommandPanelLayoutOptions = {},
+): CommandPanelLayout {
   const compactHeight = viewport.height < 760;
   const panelHeight = compactHeight ? COMPACT_PANEL_HEIGHT : WIDE_PANEL_HEIGHT;
-  const bottomMargin = compactHeight ? COMPACT_BOTTOM_MARGIN : WIDE_BOTTOM_MARGIN;
-  const panelY = Math.max(0, viewport.height - panelHeight - bottomMargin);
+  const minimumBottomMargin = compactHeight ? COMPACT_BOTTOM_MARGIN : WIDE_BOTTOM_MARGIN;
+  const bottomAnchoredPanelY = Math.max(0, viewport.height - panelHeight - minimumBottomMargin);
+  const preferredPanelY =
+    typeof options.preferredPanelY === "number" && Number.isFinite(options.preferredPanelY)
+      ? options.preferredPanelY
+      : bottomAnchoredPanelY;
+  const panelY = Math.round(clamp(Math.min(preferredPanelY, bottomAnchoredPanelY), 0, bottomAnchoredPanelY));
+  const bottomMargin = Math.max(minimumBottomMargin, viewport.height - panelY - panelHeight);
   const sideMargin = viewport.width < 900 ? DOCK_SIDE_MARGIN_COMPACT : DOCK_SIDE_MARGIN;
   const dockWidth = Math.min(DOCK_MAX_WIDTH, Math.max(320, viewport.width - sideMargin * 2));
   const dockX = Math.max(0, (viewport.width - dockWidth) / 2);

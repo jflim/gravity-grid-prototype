@@ -8,6 +8,8 @@ import {
   computeBattlefieldFrameLayout,
   computeGameCanvasSize,
   computeCommandPanelLayout,
+  computeUnitWorldOverlayLayout,
+  computeWindHudLayout,
   getGameViewportSize,
   isSupportedGameViewport,
   readableWorldUiScale,
@@ -47,6 +49,20 @@ test("command panel stays fully visible on a wide short viewport", () => {
   assert.equal(layout.dockWidth, 1720);
 });
 
+test("command panel can float upward to sit just below the visible void", () => {
+  const defaultLayout = computeCommandPanelLayout({ width: 2048, height: 1152 });
+  const voidAnchoredLayout = computeCommandPanelLayout(
+    { width: 2048, height: 1152 },
+    { preferredPanelY: 884 },
+  );
+
+  assert.equal(defaultLayout.panelY, 948);
+  assert.equal(voidAnchoredLayout.panelY, 884);
+  assert.equal(voidAnchoredLayout.panelBottom, 1048);
+  assert.equal(voidAnchoredLayout.bottomMargin, 104);
+  assert.equal(voidAnchoredLayout.safeAreaBottom, 1152);
+});
+
 test("game viewport uses the smallest reliable visible browser size", () => {
   const viewport = getGameViewportSize(
     {
@@ -84,6 +100,28 @@ test("world-space UI can counter camera zoom so labels stay readable", () => {
   assert.equal(readableWorldUiScale(1), 1);
   assert.equal(readableWorldUiScale(0.5), 2);
   assert.equal(readableWorldUiScale(0.25), 2.4);
+});
+
+test("unit world overlays stack above playable unit art", () => {
+  const layout = computeUnitWorldOverlayLayout({
+    useUnitConceptPreview: true,
+    worldUiScale: 2,
+  });
+
+  assert.ok(layout.timerOffsetY > layout.teamBarOffsetY);
+  assert.ok(layout.teamBarOffsetY > layout.nameOffsetY);
+  assert.ok(layout.nameOffsetY > layout.classOffsetY);
+  assert.ok(layout.classOffsetY >= 150);
+  assert.ok(layout.timerBadgeHeight >= 80);
+});
+
+test("wind HUD occupies a top-safe fixed screen region", () => {
+  const layout = computeWindHudLayout({ width: 2048, height: 858 });
+
+  assert.equal(layout.x, 1024);
+  assert.equal(layout.y, 24);
+  assert.equal(layout.width, 244);
+  assert.equal(layout.height, 54);
 });
 
 test("battlefield framing keeps map scale consistent across common desktop widths", () => {

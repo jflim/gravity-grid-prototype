@@ -12,11 +12,11 @@ First playable local artillery prototype for Gravity Canyon.
 - Left/Right input turns the vehicle, character, and aim direction before moving.
 - Facing-aware aim controls so each side's Up/Down input feels consistent.
 - Terrain movement allows downhill travel and falling, while steep uphill climbs are blocked by a climb-angle limit.
-- Wind strip visible to everyone; the turn timer lives above the active vehicle only.
-- Docked bottom command deck with active vehicle portrait, aim dial, movement range meter, and a prominent launch-power meter.
-- Raised command deck with a bottom safe margin so controls stay visible in the browser viewport.
+- Top-safe wind badge visible to everyone; active turn timing lives above the active vehicle only.
+- Void-adjacent command deck with active vehicle portrait, aim dial, movement range meter, and a prominent launch-power meter.
+- Command deck floats up under the visible void band when tall browser windows would otherwise leave it too low or cut off.
 - Desktop viewport contract: the game is designed around 1600 x 900, can present up to 2400 x 1350 for readability on larger displays, centers in larger browser windows, and blocks below a 1366 x 768 visible viewport.
-- Turn timer badge above the active vehicle.
+- Raised turn timer, team/HP bar, name, and class labels above playable unit art.
 - Vehicle sprites tilt with terrain slope for clearer ground contact.
 - Battlefield unit art is scaled as readable game pieces, while high-detail art remains available in HUD/presentation surfaces.
 - World-space muzzle aim arrow and ground movement range rail for the active player while positioning.
@@ -156,11 +156,11 @@ dist/index.html
 - After a shot, the turn is committed immediately. There is intentionally no post-shot movement window.
 - A round ends when one team has no alive vehicles left. In this prototype, alive means `alive = true` and HP above 0.
 - Finished rounds show the result briefly, then start a fresh round automatically. R still restarts immediately.
-- Wind is global round information; turn time is shown above the active vehicle.
-- Launch power, movement range, active vehicle identity, and aim angle live in a raised bottom command deck.
-- Active player also gets a world-space aim arrow, turn timer badge, and ground movement range rail so movement decisions can be read without covering the character art.
+- Wind is global round information shown in a fixed top HUD badge; turn time is shown above the active vehicle.
+- Launch power, movement range, active vehicle identity, and aim angle live in a raised command deck under the visible void band.
+- Active player also gets a world-space aim arrow, raised turn timer badge, and ground movement range rail so movement decisions can be read without covering the character art.
 - Prototype vehicle collision zones are visible by default while collision and terrain scale are being tuned, and can be toggled off with `H`, the on-screen checkbox, or `?collisionZones=0`.
-- The game camera reserves space above a centered, capped-width command deck so the playable battlefield and active-player info stay readable across supported desktop viewport sizes.
+- The game camera keeps battlefield framing stable while the centered command deck can float upward below the visible void band so active-player info stays readable across supported desktop viewport sizes.
 - The browser shell is presentation-capped and centered so larger or ultrawide windows improve readability without changing terrain, spawns, collision, void placement, projectile behavior, or the strategic battlefield view.
 - Current sprites are first-pass generated assets, not final production sprites.
 - Gameplay rendering uses separate layers for vehicle and playable character sprites.
