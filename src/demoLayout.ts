@@ -33,6 +33,7 @@ export interface BattlefieldFrameInput {
   playfieldHeight: number;
   worldWidth: number;
   aliveVehicleXs: number[];
+  frameBottomWorldY?: number;
 }
 
 export interface BattlefieldFrameLayout {
@@ -99,10 +100,11 @@ const DOCK_SIDE_MARGIN = 48;
 const DOCK_SIDE_MARGIN_COMPACT = 18;
 const WIDE_PANEL_HEIGHT = 164;
 const COMPACT_PANEL_HEIGHT = 150;
-const WIDE_BOTTOM_MARGIN = 40;
-const COMPACT_BOTTOM_MARGIN = 28;
+const WIDE_BOTTOM_MARGIN = 88;
+const COMPACT_BOTTOM_MARGIN = 56;
 const CAMERA_TARGET_HEIGHT = 760;
 const CAMERA_CENTER_Y = 470;
+const CAMERA_BOTTOM_SCREEN_GAP = 12;
 const CAMERA_WORLD_PADDING_X = 560;
 const CAMERA_MIN_VISIBLE_WORLD_RATIO = 0.78;
 const CAMERA_MIN_ZOOM = 0.34;
@@ -225,10 +227,15 @@ export function computeBattlefieldFrameLayout(input: BattlefieldFrameInput): Bat
   const zoomX = input.viewportWidth / targetWidth;
   const zoomY = input.playfieldHeight / CAMERA_TARGET_HEIGHT;
   const zoom = clamp(Math.min(zoomX, zoomY), CAMERA_MIN_ZOOM, CAMERA_MAX_ZOOM);
+  const visibleWorldHeight = input.playfieldHeight / zoom;
+  const centerY =
+    typeof input.frameBottomWorldY === "number" && Number.isFinite(input.frameBottomWorldY)
+      ? input.frameBottomWorldY - (input.playfieldHeight - CAMERA_BOTTOM_SCREEN_GAP) / zoom + visibleWorldHeight / 2
+      : CAMERA_CENTER_Y;
 
   return {
     centerX: (minX + maxX) / 2,
-    centerY: CAMERA_CENTER_Y,
+    centerY,
     targetWidth,
     targetHeight: CAMERA_TARGET_HEIGHT,
     zoom,

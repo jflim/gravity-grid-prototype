@@ -14,6 +14,7 @@ First playable local artillery prototype for Gravity Canyon.
 - Terrain movement allows downhill travel and falling, while steep uphill climbs are blocked by a climb-angle limit.
 - Top-safe wind badge visible to everyone; active turn timing lives above the active vehicle only.
 - Fixed screen-space command deck with active vehicle portrait, aim dial, movement range meter, and a prominent launch-power meter.
+- The command deck keeps a larger bottom safety gutter so control content is not clipped by the browser edge.
 - The playable map renders only above the command deck so terrain and void visuals do not intersect the controls.
 - Desktop viewport contract: the game is designed around 1600 x 900, can present up to 2400 x 1350 for readability on larger displays, centers in larger browser windows, and blocks below a 1366 x 768 visible viewport.
 - Raised turn timer, team/HP bar, name, and class labels above playable unit art.
@@ -160,7 +161,7 @@ dist/index.html
 - Launch power, movement range, active vehicle identity, and aim angle live in a fixed centered command deck.
 - Active player also gets a world-space aim arrow, raised turn timer badge, and ground movement range rail so movement decisions can be read without covering the character art.
 - Prototype vehicle collision zones are visible by default while collision and terrain scale are being tuned, and can be toggled off with `H`, the on-screen checkbox, or `?collisionZones=0`.
-- The game camera reserves the playfield above a fixed centered command deck, and horizontal side bounds keep the battlefield centered when the camera view is wider than the map.
+- The game camera reserves the playfield above a fixed centered command deck, frames the visible void bottom just above that boundary, and keeps the battlefield centered when the camera view is wider than the map.
 - The browser shell is presentation-capped and centered so larger or ultrawide windows improve readability without changing terrain, spawns, collision, void placement, projectile behavior, or the strategic battlefield view.
 - Current sprites are first-pass generated assets, not final production sprites.
 - Gameplay rendering uses separate layers for vehicle and playable character sprites.

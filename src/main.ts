@@ -1256,6 +1256,7 @@ class GravityGridScene extends Phaser.Scene {
       playfieldHeight: this.playfieldHeight(),
       worldWidth: WORLD_WIDTH,
       aliveVehicleXs: aliveVehicles.map((vehicle) => vehicle.x),
+      frameBottomWorldY: this.visibleVoidBottomY(),
     });
     const bounds = computeCameraWorldBounds({
       worldWidth: WORLD_WIDTH,

@@ -42,10 +42,11 @@ test("map-review demo shows collision hull overlays by default", () => {
 test("command panel stays fully visible on a wide short viewport", () => {
   const layout = computeCommandPanelLayout({ width: 2048, height: 858 });
 
-  assert.equal(layout.panelY, 654);
-  assert.equal(layout.panelBottom, 818);
+  assert.equal(layout.panelY, 606);
+  assert.equal(layout.panelBottom, 770);
   assert.equal(layout.safeAreaBottom, 858);
   assert.equal(layout.playfieldHeight, layout.panelY);
+  assert.equal(layout.bottomMargin, 88);
   assert.ok(layout.dockX > 0);
   assert.equal(layout.dockWidth, 1720);
 });
@@ -53,9 +54,9 @@ test("command panel stays fully visible on a wide short viewport", () => {
 test("command panel stays fixed in screen space instead of following map anchors", () => {
   const layout = computeCommandPanelLayout({ width: 2048, height: 1152 });
 
-  assert.equal(layout.panelY, 948);
-  assert.equal(layout.panelBottom, 1112);
-  assert.equal(layout.bottomMargin, 40);
+  assert.equal(layout.panelY, 900);
+  assert.equal(layout.panelBottom, 1064);
+  assert.equal(layout.bottomMargin, 88);
   assert.equal(layout.safeAreaBottom, 1152);
   assert.equal(layout.playfieldHeight, layout.panelY);
   assert.equal(layout.dockX + layout.dockWidth / 2, 1024);
@@ -96,7 +97,7 @@ test("game viewport uses the smallest reliable visible browser size", () => {
   );
 
   assert.deepEqual(viewport, { width: 2048, height: 1024 });
-  assert.equal(computeCommandPanelLayout(viewport).panelY, 820);
+  assert.equal(computeCommandPanelLayout(viewport).panelY, 772);
 });
 
 test("viewport contract defines a fixed desktop game standard", () => {
@@ -149,13 +150,13 @@ test("wind HUD occupies a top-safe fixed screen region", () => {
 test("battlefield framing keeps map scale consistent across common desktop widths", () => {
   const wide = computeBattlefieldFrameLayout({
     viewportWidth: computeGameCanvasSize({ width: 2048, height: 858 }).width,
-    playfieldHeight: 654,
+    playfieldHeight: computeCommandPanelLayout({ width: 2048, height: 858 }).playfieldHeight,
     worldWidth: 2400,
     aliveVehicleXs: [310, 710, 1690, 2090],
   });
   const standard = computeBattlefieldFrameLayout({
     viewportWidth: 1366,
-    playfieldHeight: 604,
+    playfieldHeight: computeCommandPanelLayout({ width: 1366, height: 768 }).playfieldHeight,
     worldWidth: 2400,
     aliveVehicleXs: [310, 710, 1690, 2090],
   });
@@ -164,10 +165,27 @@ test("battlefield framing keeps map scale consistent across common desktop width
   assert.equal(Math.round(wide.visibleWorldWidth), 2960);
 });
 
+test("battlefield framing places the visible void bottom just above the command deck boundary", () => {
+  const playfieldHeight = computeCommandPanelLayout({ width: 2048, height: 858 }).playfieldHeight;
+  const visibleVoidBottomY = 1055;
+  const frame = computeBattlefieldFrameLayout({
+    viewportWidth: 2048,
+    playfieldHeight,
+    worldWidth: 2400,
+    aliveVehicleXs: [310, 710, 1690, 2090],
+    frameBottomWorldY: visibleVoidBottomY,
+  });
+  const visibleWorldHeight = playfieldHeight / frame.zoom;
+  const topWorldY = frame.centerY - visibleWorldHeight / 2;
+  const voidBottomScreenY = (visibleVoidBottomY - topWorldY) * frame.zoom;
+
+  assert.equal(Math.round(voidBottomScreenY), playfieldHeight - 12);
+});
+
 test("camera world bounds preserve centered battlefield when visible frame is wider than the world", () => {
   const frame = computeBattlefieldFrameLayout({
     viewportWidth: 2048,
-    playfieldHeight: 654,
+    playfieldHeight: computeCommandPanelLayout({ width: 2048, height: 858 }).playfieldHeight,
     worldWidth: 2400,
     aliveVehicleXs: [310, 710, 1690, 2090],
   });

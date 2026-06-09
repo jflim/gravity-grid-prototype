@@ -60,6 +60,7 @@ Highlights:
 - Revised the viewport contract so larger displays can use up to a 2400 x 1350 presentation canvas and world-space labels counter-scale against camera zoom for readability without expanding the strategic battlefield view.
 - Synchronized Phaser and CSS sizing against the smallest reliable visible browser viewport measurement so fullscreen browser chrome/layout mismatches do not push the command deck below the visible screen.
 - Kept the command deck fixed in screen space, reserved the playfield above it, and added layout coverage so map/void rendering cannot intersect the controls.
+- Increased the command deck bottom safety gutter and framed the visible void bottom just above the command deck boundary to avoid clipped controls and stray gap bands.
 - Added horizontal camera side bounds so the battlefield remains centered when the visible camera frame is wider than the world instead of leaving all extra space on one side.
 - Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.
 - Changed projectile camera behavior to keep the battlefield stable while shots are readable, recentering only when a projectile leaves the readable frame.
