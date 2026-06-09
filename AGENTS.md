@@ -20,8 +20,13 @@
 - Install dependencies: `npm install`
 - Run both local services: `npm run dev`
 - Run only the client: `npm run dev:client -- --port 5173`
+- Run only the Colyseus server: `npm run dev:server`
 - Production build and type check: `npm run build`
+- Run all tests: `npm test`
+- Regenerate HTML docs: `npm run docs:html`
+- Verify runtime roster assets: `npm run verify:runtime-roster`
 - Serve a built internet-share preview for a trusted tunnel: `npm run build` then `npm run start:public`
+- Expose the public preview through a quick tunnel: `cloudflared tunnel --url http://127.0.0.1:2567`
 
 Expected local endpoints:
 

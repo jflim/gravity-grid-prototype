@@ -147,6 +147,7 @@
 <li>Public preview mode can serve the built client and Colyseus room server from one local port for internet sharing through a trusted tunnel, while staying localhost-only unless <code>HOST=0.0.0.0</code> is explicitly set.</li>
 </ul>
 <h2>Run</h2>
+<p>This project uses npm scripts as the primary task runner because Gravity Canyon is a Node/TypeScript app and npm is already required for dependencies. On Windows, <code>make</code> is not installed by default, while <code>npm run ...</code> works anywhere Node is available. A Makefile could be added later as a convenience wrapper, but npm scripts remain the source of truth.</p>
 <p>Development server:</p>
 <pre><code class="language-powershell">
 npm install
@@ -216,6 +217,88 @@ http://127.0.0.1:2567
 dist/index.html
 
 </code></pre>
+<h2>Command Reference</h2>
+<table>
+<thead><tr>
+<th>Command</th>
+<th>Use When</th>
+<th>What It Does</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>npm install</code></td>
+<td>First setup or dependency changes</td>
+<td>Installs project dependencies into <code>node_modules</code>.</td>
+</tr>
+<tr>
+<td><code>npm run dev</code></td>
+<td>Normal local development</td>
+<td>Runs the Colyseus server and Vite client together. Client: <code>http://127.0.0.1:5173</code>; server: <code>ws://127.0.0.1:2567</code>.</td>
+</tr>
+<tr>
+<td><code>npm run dev:client -- --port 5173</code></td>
+<td>Client-only UI work</td>
+<td>Runs only the Vite client on the chosen port. The Colyseus server must be started separately for online panel checks.</td>
+</tr>
+<tr>
+<td><code>npm run dev:server</code></td>
+<td>Server-only room work</td>
+<td>Runs only the Colyseus server in watch mode.</td>
+</tr>
+<tr>
+<td><code>npm run build</code></td>
+<td>Before commits and public preview</td>
+<td>Type-checks and builds both client and server targets.</td>
+</tr>
+<tr>
+<td><code>npm run build:client</code></td>
+<td>Client build debugging</td>
+<td>Type-checks the Phaser/Vite client and writes the built static app to <code>dist</code>.</td>
+</tr>
+<tr>
+<td><code>npm run build:server</code></td>
+<td>Server type-check debugging</td>
+<td>Type-checks the Node/Colyseus server.</td>
+</tr>
+<tr>
+<td><code>npm test</code></td>
+<td>Before commits or after behavior changes</td>
+<td>Runs all server and client unit tests.</td>
+</tr>
+<tr>
+<td><code>npm run docs:html</code></td>
+<td>After markdown doc edits</td>
+<td>Regenerates HTML reading copies and map review pages.</td>
+</tr>
+<tr>
+<td><code>npm run verify:runtime-roster</code></td>
+<td>After runtime asset or roster edits</td>
+<td>Checks stable runtime sprite aliases and roster wiring.</td>
+</tr>
+<tr>
+<td><code>npm run start:public</code></td>
+<td>Trusted public preview after <code>npm run build</code></td>
+<td>Serves the built client and Colyseus server from <code>http://127.0.0.1:2567</code> for tunnel-based sharing.</td>
+</tr>
+<tr>
+<td><code>npm run preview</code></td>
+<td>Local static build preview</td>
+<td>Runs Vite's local preview server for the built client only; it is not the multiplayer preview server.</td>
+</tr>
+</tbody></table>
+<p>For internet playtests from this computer, the current manual two-terminal flow is:</p>
+<pre><code class="language-powershell">
+npm run build
+
+npm run start:public
+
+</code></pre>
+<p>Then in another terminal:</p>
+<pre><code class="language-powershell">
+cloudflared tunnel --url http://127.0.0.1:2567
+
+</code></pre>
+<p>Future command direction: replace the two-terminal public-preview flow with an intentional launcher such as <code>npm run playtest</code> and <code>npm run playtest:tunnel</code>, so the launch command controls local-vs-online playtest mode instead of URL parameters.</p>
 <h2>Planning</h2>
 <ul>
 <li>Locked v1 playtest-alpha contract: <a href="docs/V1_PLAYTEST_ALPHA.html">docs/V1_PLAYTEST_ALPHA.html</a></li>

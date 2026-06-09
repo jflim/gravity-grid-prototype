@@ -58,6 +58,8 @@ First playable local artillery prototype for Gravity Canyon.
 
 ## Run
 
+This project uses npm scripts as the primary task runner because Gravity Canyon is a Node/TypeScript app and npm is already required for dependencies. On Windows, `make` is not installed by default, while `npm run ...` works anywhere Node is available. A Makefile could be added later as a convenience wrapper, but npm scripts remain the source of truth.
+
 Development server:
 
 ```powershell
@@ -136,6 +138,38 @@ Open the built file:
 ```text
 dist/index.html
 ```
+
+## Command Reference
+
+| Command | Use When | What It Does |
+| --- | --- | --- |
+| `npm install` | First setup or dependency changes | Installs project dependencies into `node_modules`. |
+| `npm run dev` | Normal local development | Runs the Colyseus server and Vite client together. Client: `http://127.0.0.1:5173`; server: `ws://127.0.0.1:2567`. |
+| `npm run dev:client -- --port 5173` | Client-only UI work | Runs only the Vite client on the chosen port. The Colyseus server must be started separately for online panel checks. |
+| `npm run dev:server` | Server-only room work | Runs only the Colyseus server in watch mode. |
+| `npm run build` | Before commits and public preview | Type-checks and builds both client and server targets. |
+| `npm run build:client` | Client build debugging | Type-checks the Phaser/Vite client and writes the built static app to `dist`. |
+| `npm run build:server` | Server type-check debugging | Type-checks the Node/Colyseus server. |
+| `npm test` | Before commits or after behavior changes | Runs all server and client unit tests. |
+| `npm run docs:html` | After markdown doc edits | Regenerates HTML reading copies and map review pages. |
+| `npm run verify:runtime-roster` | After runtime asset or roster edits | Checks stable runtime sprite aliases and roster wiring. |
+| `npm run start:public` | Trusted public preview after `npm run build` | Serves the built client and Colyseus server from `http://127.0.0.1:2567` for tunnel-based sharing. |
+| `npm run preview` | Local static build preview | Runs Vite's local preview server for the built client only; it is not the multiplayer preview server. |
+
+For internet playtests from this computer, the current manual two-terminal flow is:
+
+```powershell
+npm run build
+npm run start:public
+```
+
+Then in another terminal:
+
+```powershell
+cloudflared tunnel --url http://127.0.0.1:2567
+```
+
+Future command direction: replace the two-terminal public-preview flow with an intentional launcher such as `npm run playtest` and `npm run playtest:tunnel`, so the launch command controls local-vs-online playtest mode instead of URL parameters.
 
 ## Planning
 
