@@ -21,11 +21,13 @@
 - Run both local services: `npm run dev`
 - Run only the client: `npm run dev:client -- --port 5173`
 - Production build and type check: `npm run build`
+- Serve a built internet-share preview for a trusted tunnel: `npm run build` then `npm run start:public`
 
 Expected local endpoints:
 
 - Client: `http://127.0.0.1:5173`
 - Colyseus server: `ws://127.0.0.1:2567`
+- Public preview origin after `npm run start:public`: `http://127.0.0.1:2567`
 
 On Windows inside managed Codex shells, detached watch-mode startup can exit silently. If that happens, run `npm run dev` in the Codex integrated terminal or a normal PowerShell window and keep that terminal open.
 

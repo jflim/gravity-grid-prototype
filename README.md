@@ -54,6 +54,7 @@ First playable local artillery prototype for Gravity Canyon.
   - server-owned combat preview state with round, turn, wind, active vehicle, HP, winner, and validated preview shot actions.
 - Browser client uses the vendored Colyseus browser SDK at `public/vendor/colyseus.js` to keep Vite dev mode stable on Windows.
 - The local map-review demo hides the Online Alpha room panel by default; add `?onlinePanel=1` to the URL when checking room create/join work.
+- Public preview mode can serve the built client and Colyseus room server from one local port for internet sharing through a trusted tunnel, while staying localhost-only unless `HOST=0.0.0.0` is explicitly set.
 
 ## Run
 
@@ -105,6 +106,30 @@ Runtime roster asset check:
 ```powershell
 npm run verify:runtime-roster
 ```
+
+Public internet preview from this computer:
+
+```powershell
+npm run build
+npm run start:public
+```
+
+This serves the built game and Colyseus server at:
+
+```text
+http://127.0.0.1:2567
+```
+
+For safest sharing, expose that local URL through a trusted tunnel and send friends the tunnel URL with `?onlinePanel=1` appended when you want them to see the Online Alpha panel. This keeps the game server bound to `127.0.0.1` on your machine; the tunnel is the public entry point.
+
+Security boundary for public preview:
+
+- Only the built `dist` game files, `/healthz`, and the Colyseus room endpoint are served.
+- Directory listing is not enabled.
+- The server does not expose your source tree, shell, editor, local files outside `dist`, or machine admin access.
+- Stop the terminal running `npm run start:public` when the playtest is over.
+- Do not run the command from an elevated/admin terminal.
+- Prefer a tunnel over router port forwarding. If you intentionally need direct network binding, set `HOST=0.0.0.0` yourself and only forward the single chosen game port.
 
 Open the built file:
 

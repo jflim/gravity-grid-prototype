@@ -13,6 +13,7 @@
     "docs:html": "tsx scripts/build-map-previews.ts && tsx scripts/build-map-gameplay-review.ts && node scripts/build-docs-html.mjs",
     "test": "tsx --test \"server/**/*.test.ts\" \"src/**/*.test.ts\"",
     "verify:runtime-roster": "node scripts/verify-runtime-roster.mjs",
+    "start:public": "tsx scripts/start-public-preview.ts",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {

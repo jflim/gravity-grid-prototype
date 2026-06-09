@@ -1,3 +1,5 @@
+import { resolveOnlineServerUrl } from "./onlineServerUrl";
+
 type PlayerSnapshot = {
   sessionId: string;
   displayName: string;
@@ -61,7 +63,7 @@ declare global {
 
 const serverUrl =
   ((import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env?.VITE_COLYSEUS_URL) ??
-  `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.hostname || "127.0.0.1"}:2567`;
+  resolveOnlineServerUrl(window.location);
 
 export function mountOnlineLobby() {
   const panel = document.createElement("aside");

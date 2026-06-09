@@ -144,6 +144,7 @@
 <li>server-owned combat preview state with round, turn, wind, active vehicle, HP, winner, and validated preview shot actions.</li>
 <li>Browser client uses the vendored Colyseus browser SDK at <code>public/vendor/colyseus.js</code> to keep Vite dev mode stable on Windows.</li>
 <li>The local map-review demo hides the Online Alpha room panel by default; add <code>?onlinePanel=1</code> to the URL when checking room create/join work.</li>
+<li>Public preview mode can serve the built client and Colyseus room server from one local port for internet sharing through a trusted tunnel, while staying localhost-only unless <code>HOST=0.0.0.0</code> is explicitly set.</li>
 </ul>
 <h2>Run</h2>
 <p>Development server:</p>
@@ -188,6 +189,28 @@ npm run docs:html
 npm run verify:runtime-roster
 
 </code></pre>
+<p>Public internet preview from this computer:</p>
+<pre><code class="language-powershell">
+npm run build
+
+npm run start:public
+
+</code></pre>
+<p>This serves the built game and Colyseus server at:</p>
+<pre><code class="language-text">
+http://127.0.0.1:2567
+
+</code></pre>
+<p>For safest sharing, expose that local URL through a trusted tunnel and send friends the tunnel URL with <code>?onlinePanel=1</code> appended when you want them to see the Online Alpha panel. This keeps the game server bound to <code>127.0.0.1</code> on your machine; the tunnel is the public entry point.</p>
+<p>Security boundary for public preview:</p>
+<ul>
+<li>Only the built <code>dist</code> game files, <code>/healthz</code>, and the Colyseus room endpoint are served.</li>
+<li>Directory listing is not enabled.</li>
+<li>The server does not expose your source tree, shell, editor, local files outside <code>dist</code>, or machine admin access.</li>
+<li>Stop the terminal running <code>npm run start:public</code> when the playtest is over.</li>
+<li>Do not run the command from an elevated/admin terminal.</li>
+<li>Prefer a tunnel over router port forwarding. If you intentionally need direct network binding, set <code>HOST=0.0.0.0</code> yourself and only forward the single chosen game port.</li>
+</ul>
 <p>Open the built file:</p>
 <pre><code class="language-text">
 dist/index.html

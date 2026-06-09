@@ -62,6 +62,7 @@ Highlights:
 - Kept the command deck fixed in screen space, reserved the playfield above it, and added layout coverage so map/void rendering cannot intersect the controls.
 - Increased the command deck bottom safety gutter and framed the visible void bottom just above the command deck boundary to avoid clipped controls and stray gap bands.
 - Made the command deck content scale from the available browser dock width, with tested child-control geometry so the portrait, launch meter, movement meter, and aim dial stay inside the visible panel across supported desktop sizes.
+- Added an opt-in public preview startup path that serves the built client and Colyseus room server from one local port for tunnel-based internet sharing, while keeping default and preview hosting localhost-bound unless `HOST=0.0.0.0` is explicitly set.
 - Added horizontal camera side bounds so the battlefield remains centered when the visible camera frame is wider than the world instead of leaving all extra space on one side.
 - Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.
 - Changed projectile camera behavior to keep the battlefield stable while shots are readable, recentering only when a projectile leaves the readable frame.
