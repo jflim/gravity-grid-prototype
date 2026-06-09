@@ -8,6 +8,7 @@ import {
   type DefeatReason,
 } from "./combatPresentation";
 import { shouldApplyWeaponEffect } from "./combatRules";
+import { COLLISION_ZONE_OVERLAY_DEPTH, collisionZoneOverlayStyle } from "./collisionOverlay";
 import { firstTerrainContact, firstVehicleContact } from "./projectileCollision";
 import { SHARED_V1_VEHICLE_HIT_ZONE } from "./v1CollisionProfiles";
 import {
@@ -226,6 +227,7 @@ class GravityGridScene extends Phaser.Scene {
 
   private terrainGfx!: Phaser.GameObjects.Graphics;
   private vehicleGfx!: Phaser.GameObjects.Graphics;
+  private collisionGfx!: Phaser.GameObjects.Graphics;
   private projectileGfx!: Phaser.GameObjects.Graphics;
   private hudGfx!: Phaser.GameObjects.Graphics;
   private aimGfx!: Phaser.GameObjects.Graphics;
@@ -306,6 +308,7 @@ class GravityGridScene extends Phaser.Scene {
     this.aimGfx = this.add.graphics();
     this.impactGfx = this.add.graphics().setDepth(9);
     this.vehicleGfx = this.add.graphics();
+    this.collisionGfx = this.add.graphics().setDepth(COLLISION_ZONE_OVERLAY_DEPTH);
     this.projectileGfx = this.add.graphics();
     this.hudGfx = this.add.graphics().setScrollFactor(0).setDepth(50);
 
@@ -1721,7 +1724,9 @@ class GravityGridScene extends Phaser.Scene {
 
   private drawVehicles(): void {
     const gfx = this.vehicleGfx;
+    const collisionGfx = this.collisionGfx;
     gfx.clear();
+    collisionGfx.clear();
 
     for (const label of this.vehicleLabels) {
       label.destroy();
@@ -1824,21 +1829,22 @@ class GravityGridScene extends Phaser.Scene {
         const hull = this.combatHullFor(vehicle);
         const hullCenter = this.combatHullCenter(vehicle);
         const hullColor = active ? 0xffffff : vehicle.accent;
+        const overlay = collisionZoneOverlayStyle(active, hullColor);
         const left = hullCenter.x - hull.width / 2;
         const top = hullCenter.y - hull.height / 2;
-        gfx.fillStyle(hullColor, active ? 0.15 : 0.085);
-        gfx.fillRoundedRect(left, top, hull.width, hull.height, 8);
-        gfx.lineStyle(active ? 4 : 3, hullColor, active ? 0.86 : 0.64);
-        gfx.strokeRoundedRect(
+        collisionGfx.fillStyle(overlay.fillColor, overlay.fillAlpha);
+        collisionGfx.fillRoundedRect(left, top, hull.width, hull.height, 8);
+        collisionGfx.lineStyle(overlay.lineWidth, overlay.lineColor, overlay.lineAlpha);
+        collisionGfx.strokeRoundedRect(
           left,
           top,
           hull.width,
           hull.height,
           8,
         );
-        gfx.lineStyle(2, 0xffffff, active ? 0.46 : 0.22);
-        gfx.lineBetween(left + 8, hullCenter.y, left + hull.width - 8, hullCenter.y);
-        gfx.lineBetween(hullCenter.x, top + 8, hullCenter.x, top + hull.height - 8);
+        collisionGfx.lineStyle(overlay.crossWidth, overlay.crossColor, overlay.crossAlpha);
+        collisionGfx.lineBetween(left + 8, hullCenter.y, left + hull.width - 8, hullCenter.y);
+        collisionGfx.lineBetween(hullCenter.x, top + 8, hullCenter.x, top + hull.height - 8);
       }
 
       if (vehicle.alive || vehicle.defeatReason === "damage") {
