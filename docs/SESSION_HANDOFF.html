@@ -127,7 +127,8 @@
 <li>preview token reward on round end.</li>
 <li>The online preview is available in the floating Online Alpha panel when the local URL includes <code>?onlinePanel=1</code>; the default local demo hides that panel for map-review clarity.</li>
 <li><code>npm run playtest</code> now builds the project, serves the built client plus Colyseus from one localhost-bound port, starts a Cloudflare quick tunnel, and prints the public URL. <code>npm run playtest:local</code> starts the same playtest mode without a tunnel. Playtest launch mode, not the public URL hostname, controls the Online Alpha panel. Default and public-preview startup stay bound to <code>127.0.0.1</code>; direct all-interface binding requires explicitly setting <code>HOST=0.0.0.0</code>.</li>
-<li>Hosted/default playtest mode uses stable runtime gameplay assets by default so Cloudflare quick-tunnel loads are lighter. Art-review concept sprites are opt-in with <code>?conceptAssets=1</code>, and the faint Style B backdrop is opt-in with <code>?styleReference=1</code>.</li>
+<li>Hosted/default playtest mode uses stable runtime gameplay art through optimized WebP delivery files so Cloudflare quick-tunnel loads are lighter while the accepted game art remains part of the normal mode. Art-review concept sprites are opt-in with <code>?conceptAssets=1</code>, and the faint Style B backdrop is opt-in with <code>?styleReference=1</code>.</li>
+<li><code>npm run optimize:assets</code> regenerates the WebP delivery files from the PNG runtime and selected art-review sources; run it after promoting or editing runtime art, then run <code>npm run verify:runtime-roster</code>.</li>
 <li>The Phaser scene shows loading progress before the match appears and leaves a failed asset key visible if image loading fails, so remote playtest blank-screen reports have a concrete next debugging clue.</li>
 <li>Phaser projectile and terrain simulation are not yet synced to the server-owned combat model.</li>
 <li>Local combat readability now has prototype combat hulls, floating combat markers, and playable v1 map terrain:</li>
@@ -151,7 +152,7 @@
 </ul>
 <h2>Current Sprite State</h2>
 <ul>
-<li>Runtime sprites use stable filenames in <code>public/assets</code>.</li>
+<li>Runtime sprites use stable PNG source filenames and optimized WebP delivery filenames in <code>public/assets</code>.</li>
 <li>Variant/history sprites live under <code>public/assets/sprite-variants</code>.</li>
 <li>Active Nova Defeated KO runtime sprite is:</li>
 <li>runtime alias: <code>public/assets/nova-character-ko.png</code></li>

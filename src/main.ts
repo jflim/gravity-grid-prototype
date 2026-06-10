@@ -45,6 +45,11 @@ import {
   playableMapById,
   type PlayableTerrain,
 } from "./playableMaps";
+import {
+  CONCEPT_IMAGE_ASSETS,
+  RUNTIME_IMAGE_ASSETS,
+  STYLE_REFERENCE_ASSET,
+} from "./runtimeAssets";
 import "./styles.css";
 
 type TeamId = "red" | "blue";
@@ -281,49 +286,17 @@ class GravityGridScene extends Phaser.Scene {
     this.mountPreloadStatus();
 
     if (USE_STYLE_REFERENCE_BACKGROUND) {
-      this.load.image("style-reference", "assets/style-b-2v2-reference.png");
+      this.load.image("style-reference", STYLE_REFERENCE_ASSET);
     }
-    this.load.image("nova-vehicle", "assets/nova-vehicle.png");
-    this.load.image("nova-vehicle-sprite", "assets/nova-vehicle-sprite.png");
-    this.load.image("nova-vehicle-destroyed", "assets/nova-vehicle-destroyed.png");
-    this.load.image("nova-character-default", "assets/nova-character-default.png");
-    this.load.image("nova-character-ko", "assets/nova-character-ko.png");
-    this.load.image("nova-character-intense", "assets/nova-character-intense.png");
-    this.load.image("nova-unit-intense", "assets/nova-unit-intense.png");
-    this.load.image("vesper-vehicle", "assets/vesper-vehicle.png");
-    this.load.image("vesper-vehicle-sprite", "assets/vesper-vehicle-sprite.png");
-    this.load.image("vesper-vehicle-destroyed", "assets/vesper-vehicle-destroyed.png");
-    this.load.image("vesper-character-default", "assets/vesper-character-default.png");
-    this.load.image("vesper-character-ko", "assets/vesper-character-ko.png");
-    this.load.image("vesper-character-intense", "assets/vesper-character-intense.png");
-    this.load.image("vesper-unit-intense", "assets/vesper-unit-intense.png");
-    this.load.image("kaelii-vehicle-sprite", "assets/kaelii-vehicle-sprite.png");
-    this.load.image("kaelii-vehicle-destroyed", "assets/kaelii-vehicle-destroyed.png");
-    this.load.image("kaelii-unit-default", "assets/kaelii-unit-default.png");
-    this.load.image("kaelii-unit-intense", "assets/kaelii-unit-intense.png");
-    this.load.image("kaelii-unit-ko", "assets/kaelii-unit-ko.png");
-    this.load.image("perlah-vehicle-sprite", "assets/perlah-vehicle-sprite.png");
-    this.load.image("perlah-vehicle-destroyed", "assets/perlah-vehicle-destroyed.png");
-    this.load.image("perlah-unit-default", "assets/perlah-unit-default.png");
-    this.load.image("perlah-unit-intense", "assets/perlah-unit-intense.png");
-    this.load.image("perlah-unit-ko", "assets/perlah-unit-ko.png");
+
+    for (const [key, path] of Object.entries(RUNTIME_IMAGE_ASSETS)) {
+      this.load.image(key, path);
+    }
+
     if (USE_UNIT_CONCEPT_PREVIEW) {
-      this.load.image(
-        "nova-unit-default-concept",
-        "assets/sprite-variants/units/nova/default/nova-unit-default-mounted-v1-alpha.png",
-      );
-      this.load.image(
-        "nova-unit-ko-concept",
-        "assets/sprite-variants/units/nova/defeated-ko/nova-unit-defeated-ko-head-over-heels-v1-alpha.png",
-      );
-      this.load.image(
-        "vesper-unit-default-concept",
-        "assets/sprite-variants/units/vesper/default/vesper-unit-default-mounted-tech-shorts-v9-alpha.png",
-      );
-      this.load.image(
-        "vesper-unit-ko-concept",
-        "assets/sprite-variants/units/vesper/defeated-ko/vesper-unit-defeated-ko-tech-shorts-v10-alpha.png",
-      );
+      for (const [key, path] of Object.entries(CONCEPT_IMAGE_ASSETS)) {
+        this.load.image(key, path);
+      }
     }
   }
 

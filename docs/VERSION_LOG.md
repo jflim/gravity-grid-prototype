@@ -68,6 +68,7 @@ Highlights:
 - Added a one-terminal `npm run playtest` launcher that builds, starts playtest mode, starts a Cloudflare quick tunnel, prints the share URL, and shuts server/tunnel down together with Ctrl+C.
 - Fixed the `npm run playtest` launcher on Windows by avoiding direct `.cmd` child-process spawning for its nested build step.
 - Made hosted/default playtest loads lighter and more diagnosable by defaulting to runtime match assets, making heavy concept/backdrop art explicit opt-in, and showing Phaser loading/failure status.
+- Added optimized WebP delivery assets and `npm run optimize:assets` so the normal hosted playtest serves the accepted runtime game art at much smaller transfer sizes while keeping PNG sources in the repo.
 - Added runtime config so playtest launch mode controls the Online Alpha panel instead of inferring it from the public URL hostname.
 - Added horizontal camera side bounds so the battlefield remains centered when the visible camera frame is wider than the world instead of leaving all extra space on one side.
 - Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.

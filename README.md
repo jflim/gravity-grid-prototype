@@ -110,6 +110,12 @@ Runtime roster asset check:
 npm run verify:runtime-roster
 ```
 
+Regenerate optimized WebP delivery assets from the PNG runtime sources:
+
+```powershell
+npm run optimize:assets
+```
+
 Public internet playtest from this computer:
 
 ```powershell
@@ -159,6 +165,7 @@ dist/index.html
 | `npm test` | Before commits or after behavior changes | Runs all server and client unit tests. |
 | `npm run docs:html` | After markdown doc edits | Regenerates HTML reading copies and map review pages. |
 | `npm run verify:runtime-roster` | After runtime asset or roster edits | Checks stable runtime sprite aliases and roster wiring. |
+| `npm run optimize:assets` | After promoting or editing runtime art | Regenerates compressed WebP delivery files from the PNG art sources. |
 | `npm run playtest` | Trusted internet playtest from this computer | Builds the project, serves the built client and Colyseus server from `http://127.0.0.1:2567`, starts a Cloudflare quick tunnel, and prints the share URL. |
 | `npm run playtest:local` | Local playtest server without a tunnel | Builds the project and serves playtest mode locally at `http://127.0.0.1:2567`. |
 | `npm run start:public` | Lower-level preview server only | Serves the built client and Colyseus server from `http://127.0.0.1:2567`; `npm run playtest` is preferred for normal sharing. |
@@ -217,7 +224,8 @@ dist/index.html
 - The browser shell is presentation-capped and centered so larger or ultrawide windows improve readability without changing terrain, spawns, collision, void placement, projectile behavior, or the strategic battlefield view.
 - Current sprites are first-pass generated assets, not final production sprites.
 - Gameplay rendering uses separate layers for vehicle and playable character sprites.
-- Active runtime sprites use stable filenames in `public/assets`; versioned experiments live under `public/assets/sprite-variants`.
+- Active runtime sprites use stable PNG source filenames and optimized WebP delivery filenames in `public/assets`; versioned experiments live under `public/assets/sprite-variants`.
+- When runtime art changes, run `npm run optimize:assets` before `npm run verify:runtime-roster` so hosted playtest links serve the compressed art.
 - Each vehicle look currently needs a default gameplay sprite and a destroyed gameplay sprite.
 - Each playable character currently needs three generated gameplay states: default, KO, and intense shooting.
 - Character states should be integrated artwork, not code-drawn facial overlays on top of default art.

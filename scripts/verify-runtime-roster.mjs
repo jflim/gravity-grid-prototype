@@ -4,6 +4,7 @@ import { inflateSync } from "node:zlib";
 
 const root = process.cwd();
 const mainSource = readFileSync(join(root, "src", "main.ts"), "utf8");
+const runtimeAssetsSource = readFileSync(join(root, "src", "runtimeAssets.ts"), "utf8");
 
 const runtimeUnits = [
   {
@@ -92,16 +93,33 @@ for (const unit of runtimeUnits) {
   }
 
   for (const key of unit.keys) {
-    if (!mainSource.includes(`"${key}"`)) {
-      failures.push(`missing preload or roster key ${key}`);
+    if (!mainSource.includes(`"${key}"`) && !runtimeAssetsSource.includes(`"${key}"`)) {
+      failures.push(`missing preload, manifest, or roster key ${key}`);
     }
   }
 
   for (const file of unit.files) {
     if (!existsSync(join(root, file))) {
-      failures.push(`missing runtime asset ${file}`);
+      failures.push(`missing runtime source asset ${file}`);
+    }
+
+    const deliveryFile = file.replace(/\.png$/, ".webp");
+    const deliveryManifestPath = deliveryFile.replace(/^public\//, "");
+    if (!existsSync(join(root, deliveryFile))) {
+      failures.push(`missing optimized runtime delivery asset ${deliveryFile}`);
+    }
+    if (!runtimeAssetsSource.includes(`"${deliveryManifestPath}"`)) {
+      failures.push(`missing optimized runtime manifest path ${deliveryManifestPath}`);
     }
   }
+}
+
+if (!existsSync(join(root, "public/assets/style-b-2v2-reference.webp"))) {
+  failures.push("missing optimized style reference asset public/assets/style-b-2v2-reference.webp");
+}
+
+if (!runtimeAssetsSource.includes('export const STYLE_REFERENCE_ASSET = "assets/style-b-2v2-reference.webp";')) {
+  failures.push("style reference asset manifest does not point at optimized WebP delivery");
 }
 
 if (!mainSource.includes('type ClassId = "bunger" | "glitch" | "bouncer" | "spark";')) {

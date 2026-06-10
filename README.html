@@ -191,6 +191,11 @@ npm run docs:html
 npm run verify:runtime-roster
 
 </code></pre>
+<p>Regenerate optimized WebP delivery assets from the PNG runtime sources:</p>
+<pre><code class="language-powershell">
+npm run optimize:assets
+
+</code></pre>
 <p>Public internet playtest from this computer:</p>
 <pre><code class="language-powershell">
 npm run playtest
@@ -280,6 +285,11 @@ dist/index.html
 <td>Checks stable runtime sprite aliases and roster wiring.</td>
 </tr>
 <tr>
+<td><code>npm run optimize:assets</code></td>
+<td>After promoting or editing runtime art</td>
+<td>Regenerates compressed WebP delivery files from the PNG art sources.</td>
+</tr>
+<tr>
 <td><code>npm run playtest</code></td>
 <td>Trusted internet playtest from this computer</td>
 <td>Builds the project, serves the built client and Colyseus server from <code>http://127.0.0.1:2567</code>, starts a Cloudflare quick tunnel, and prints the share URL.</td>
@@ -353,7 +363,8 @@ dist/index.html
 <li>The browser shell is presentation-capped and centered so larger or ultrawide windows improve readability without changing terrain, spawns, collision, void placement, projectile behavior, or the strategic battlefield view.</li>
 <li>Current sprites are first-pass generated assets, not final production sprites.</li>
 <li>Gameplay rendering uses separate layers for vehicle and playable character sprites.</li>
-<li>Active runtime sprites use stable filenames in <code>public/assets</code>; versioned experiments live under <code>public/assets/sprite-variants</code>.</li>
+<li>Active runtime sprites use stable PNG source filenames and optimized WebP delivery filenames in <code>public/assets</code>; versioned experiments live under <code>public/assets/sprite-variants</code>.</li>
+<li>When runtime art changes, run <code>npm run optimize:assets</code> before <code>npm run verify:runtime-roster</code> so hosted playtest links serve the compressed art.</li>
 <li>Each vehicle look currently needs a default gameplay sprite and a destroyed gameplay sprite.</li>
 <li>Each playable character currently needs three generated gameplay states: default, KO, and intense shooting.</li>
 <li>Character states should be integrated artwork, not code-drawn facial overlays on top of default art.</li>

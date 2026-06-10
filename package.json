@@ -13,6 +13,7 @@
     "docs:html": "tsx scripts/build-map-previews.ts && tsx scripts/build-map-gameplay-review.ts && node scripts/build-docs-html.mjs",
     "test": "tsx --test \"server/**/*.test.ts\" \"src/**/*.test.ts\"",
     "verify:runtime-roster": "node scripts/verify-runtime-roster.mjs",
+    "optimize:assets": "tsx scripts/optimize-runtime-assets.ts",
     "playtest": "tsx scripts/playtest.ts",
     "playtest:local": "tsx scripts/playtest.ts --local",
     "start:public": "tsx scripts/start-public-preview.ts",
@@ -29,6 +30,7 @@
     "@types/express": "^5.0.6",
     "@types/node": "^25.9.2",
     "concurrently": "^10.0.3",
+    "sharp": "^0.34.5",
     "tsx": "^4.22.4",
     "typescript": "^5.8.3",
     "vite": "^6.3.5"
