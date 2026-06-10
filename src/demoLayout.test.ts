@@ -18,6 +18,8 @@ import {
   shouldRecenterProjectileCamera,
   shouldMountOnlineLobby,
   shouldShowCombatHulls,
+  shouldUseConceptPreviewAssets,
+  shouldUseStyleReferenceBackground,
 } from "./demoLayout";
 
 test("map-review demo hides the online room panel by default", () => {
@@ -51,6 +53,25 @@ test("map-review demo shows collision hull overlays by default", () => {
   assert.equal(shouldShowCombatHulls("?collisionZones=1"), true);
   assert.equal(shouldShowCombatHulls("?collisionZones=0"), false);
   assert.equal(shouldShowCombatHulls("?hulls=false"), false);
+});
+
+test("playtest uses runtime assets by default for reliable hosted loading", () => {
+  assert.equal(shouldUseConceptPreviewAssets(""), false);
+  assert.equal(shouldUseConceptPreviewAssets("?onlinePanel=1"), false);
+  assert.equal(shouldUseConceptPreviewAssets("?runtimeAssets"), false);
+});
+
+test("concept preview assets are explicit opt-in for art review", () => {
+  assert.equal(shouldUseConceptPreviewAssets("?conceptAssets=1"), true);
+  assert.equal(shouldUseConceptPreviewAssets("?conceptAssets=true"), true);
+  assert.equal(shouldUseConceptPreviewAssets("?conceptAssets=1&runtimeAssets=1"), false);
+});
+
+test("style reference background is explicit opt-in for art review", () => {
+  assert.equal(shouldUseStyleReferenceBackground(""), false);
+  assert.equal(shouldUseStyleReferenceBackground("?onlinePanel=1"), false);
+  assert.equal(shouldUseStyleReferenceBackground("?styleReference=1"), true);
+  assert.equal(shouldUseStyleReferenceBackground("?styleReference=true"), true);
 });
 
 test("command panel stays fully visible on a wide short viewport", () => {

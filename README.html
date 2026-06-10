@@ -87,7 +87,7 @@
   <main>
     <article>
       <div class="generated">
-        Generated from <a href="README.md">README.md</a> on 2026-06-09.
+        Generated from <a href="README.md">README.md</a> on 2026-06-10.
         Edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Gravity Canyon Prototype</h1>
@@ -117,7 +117,7 @@
 <li>Firing commits the turn immediately, so the active vehicle cannot move during projectile flight or impact resolution.</li>
 <li>Swept projectile-edge collision checks so fast shots impact at the first visible terrain or vehicle contact.</li>
 <li>Visible prototype combat hulls define one shared vehicle-only hit zone for all v1 units.</li>
-<li>Full-unit concept preview sprites, active frames, labels, and prototype combat hulls are scaled down in the match view to keep terrain and movement readable.</li>
+<li>Runtime gameplay sprites are the default match-view assets for faster hosted playtest loading; full-unit concept preview sprites remain available with <code>?conceptAssets=1</code> for art review.</li>
 <li>Collision art review rules keep pilot poses visually compatible with the vehicle-only hit zone.</li>
 <li>Crater deformation on impact.</li>
 <li>Terrain can be blasted through into a visible void beneath the stage, with a persistent danger layer anchored to the current map's lowest playable terrain.</li>
@@ -132,7 +132,7 @@
 <li>Accepted Nova and Vesper full-unit intense runtime test sprites for concept-preview charging.</li>
 <li>Accepted Kaelii and Perlah v1 test runtime unit sprites: default, intense shooting, Defeated KO, vehicle default, and vehicle destroyed.</li>
 <li>Generated destroyed vehicle sprites pair with KO character sprites or full-unit KO sprites when a vehicle is no longer alive.</li>
-<li>Style B 2v2 concept art used as a faint backdrop reference.</li>
+<li>Style B 2v2 concept art can be shown as a faint backdrop reference with <code>?styleReference=1</code>.</li>
 <li>High-detail anime vehicle/pilot portraits plus standalone generated gameplay sprites for Nova and Vesper.</li>
 <li>First Colyseus online foundation:</li>
 <li>local multiplayer server,</li>
@@ -145,6 +145,7 @@
 <li>Browser client uses the vendored Colyseus browser SDK at <code>public/vendor/colyseus.js</code> to keep Vite dev mode stable on Windows.</li>
 <li>The local map-review demo hides the Online Alpha room panel by default; playtest launch mode shows it automatically.</li>
 <li>Public preview mode can serve the built client and Colyseus room server from one local port for internet sharing through a trusted tunnel, while staying localhost-only unless <code>HOST=0.0.0.0</code> is explicitly set.</li>
+<li>Playtest pages show a visible loading status and report the failed asset key if Phaser cannot load a required image.</li>
 </ul>
 <h2>Run</h2>
 <p>This project uses npm scripts as the primary task runner because Gravity Canyon is a Node/TypeScript app and npm is already required for dependencies. On Windows, <code>make</code> is not installed by default, while <code>npm run ...</code> works anywhere Node is available. A Makefile could be added later as a convenience wrapper, but npm scripts remain the source of truth.</p>

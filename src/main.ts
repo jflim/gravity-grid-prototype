@@ -35,6 +35,8 @@ import {
   shouldMountOnlineLobby,
   shouldRecenterProjectileCamera,
   shouldShowCombatHulls,
+  shouldUseConceptPreviewAssets,
+  shouldUseStyleReferenceBackground,
 } from "./demoLayout";
 import { mountOnlineLobby } from "./onlineLobby";
 import {
@@ -218,7 +220,8 @@ const WORLD_RENDER_HEIGHT = WORLD_HEIGHT + VISIBLE_VOID_ZONE_HEIGHT;
 const DEFAULT_TERRAIN_BREAKTHROUGH_Y = WORLD_HEIGHT - 54;
 const VOID_DROP_HORIZONTAL_PADDING = 24;
 const MAX_TERRAIN_SPRITE_TILT_DEG = 20;
-const USE_UNIT_CONCEPT_PREVIEW = !new URLSearchParams(window.location.search).has("runtimeAssets");
+const USE_UNIT_CONCEPT_PREVIEW = shouldUseConceptPreviewAssets(window.location.search);
+const USE_STYLE_REFERENCE_BACKGROUND = shouldUseStyleReferenceBackground(window.location.search);
 let currentViewportSupported = true;
 
 class GravityGridScene extends Phaser.Scene {
@@ -267,13 +270,19 @@ class GravityGridScene extends Phaser.Scene {
   private movementLabelText!: Phaser.GameObjects.Text;
   private hudPortrait!: Phaser.GameObjects.Image;
   private collisionZonesCheckbox?: HTMLInputElement;
+  private preloadStatusText?: Phaser.GameObjects.Text;
+  private preloadFailed = false;
 
   constructor() {
     super("GravityGridScene");
   }
 
   preload(): void {
-    this.load.image("style-reference", "assets/style-b-2v2-reference.png");
+    this.mountPreloadStatus();
+
+    if (USE_STYLE_REFERENCE_BACKGROUND) {
+      this.load.image("style-reference", "assets/style-b-2v2-reference.png");
+    }
     this.load.image("nova-vehicle", "assets/nova-vehicle.png");
     this.load.image("nova-vehicle-sprite", "assets/nova-vehicle-sprite.png");
     this.load.image("nova-vehicle-destroyed", "assets/nova-vehicle-destroyed.png");
@@ -298,22 +307,61 @@ class GravityGridScene extends Phaser.Scene {
     this.load.image("perlah-unit-default", "assets/perlah-unit-default.png");
     this.load.image("perlah-unit-intense", "assets/perlah-unit-intense.png");
     this.load.image("perlah-unit-ko", "assets/perlah-unit-ko.png");
-    this.load.image(
-      "nova-unit-default-concept",
-      "assets/sprite-variants/units/nova/default/nova-unit-default-mounted-v1-alpha.png",
-    );
-    this.load.image(
-      "nova-unit-ko-concept",
-      "assets/sprite-variants/units/nova/defeated-ko/nova-unit-defeated-ko-head-over-heels-v1-alpha.png",
-    );
-    this.load.image(
-      "vesper-unit-default-concept",
-      "assets/sprite-variants/units/vesper/default/vesper-unit-default-mounted-tech-shorts-v9-alpha.png",
-    );
-    this.load.image(
-      "vesper-unit-ko-concept",
-      "assets/sprite-variants/units/vesper/defeated-ko/vesper-unit-defeated-ko-tech-shorts-v10-alpha.png",
-    );
+    if (USE_UNIT_CONCEPT_PREVIEW) {
+      this.load.image(
+        "nova-unit-default-concept",
+        "assets/sprite-variants/units/nova/default/nova-unit-default-mounted-v1-alpha.png",
+      );
+      this.load.image(
+        "nova-unit-ko-concept",
+        "assets/sprite-variants/units/nova/defeated-ko/nova-unit-defeated-ko-head-over-heels-v1-alpha.png",
+      );
+      this.load.image(
+        "vesper-unit-default-concept",
+        "assets/sprite-variants/units/vesper/default/vesper-unit-default-mounted-tech-shorts-v9-alpha.png",
+      );
+      this.load.image(
+        "vesper-unit-ko-concept",
+        "assets/sprite-variants/units/vesper/defeated-ko/vesper-unit-defeated-ko-tech-shorts-v10-alpha.png",
+      );
+    }
+  }
+
+  private mountPreloadStatus(): void {
+    this.preloadFailed = false;
+    this.preloadStatusText = this.add
+      .text(this.scale.width / 2, this.scale.height / 2, "Loading Gravity Canyon 0%", {
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: "24px",
+        fontStyle: "700",
+        color: "#9ee8ff",
+        align: "center",
+        stroke: "#07111f",
+        strokeThickness: 5,
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(10000);
+
+    this.load.on("progress", (progress: number) => {
+      if (!this.preloadStatusText || this.preloadFailed) {
+        return;
+      }
+
+      this.preloadStatusText.setText(`Loading Gravity Canyon ${Math.round(progress * 100)}%`);
+    });
+
+    this.load.on("loaderror", (file: { key: string }) => {
+      this.preloadFailed = true;
+      this.preloadStatusText?.setText(`Could not load ${file.key}`);
+    });
+
+    this.load.once("complete", () => {
+      if (!this.preloadFailed) {
+        this.preloadStatusText?.destroy();
+        this.preloadStatusText = undefined;
+      }
+    });
   }
 
   create(): void {
@@ -499,11 +547,13 @@ class GravityGridScene extends Phaser.Scene {
 
   private createBackground(): void {
     this.add.rectangle(WORLD_WIDTH / 2, WORLD_RENDER_HEIGHT / 2, WORLD_WIDTH, WORLD_RENDER_HEIGHT, 0x111827);
-    const reference = this.add
-      .image(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, "style-reference")
-      .setDisplaySize(WORLD_WIDTH, WORLD_HEIGHT)
-      .setAlpha(0.08);
-    reference.setTint(0x8bd7ff);
+    if (USE_STYLE_REFERENCE_BACKGROUND && this.textures.exists("style-reference")) {
+      const reference = this.add
+        .image(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, "style-reference")
+        .setDisplaySize(WORLD_WIDTH, WORLD_HEIGHT)
+        .setAlpha(0.08);
+      reference.setTint(0x8bd7ff);
+    }
 
     const horizon = this.add.graphics();
     horizon.fillStyle(0x171f32, 0.45);

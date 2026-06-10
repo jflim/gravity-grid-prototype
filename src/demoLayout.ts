@@ -167,6 +167,20 @@ export function shouldShowCombatHulls(search: string): boolean {
   return value !== "0" && value !== "false" && value !== "off";
 }
 
+export function shouldUseConceptPreviewAssets(search: string): boolean {
+  const params = new URLSearchParams(search);
+  if (params.has("runtimeAssets")) {
+    return false;
+  }
+
+  return isEnabledQueryValue(params.get("conceptAssets") ?? params.get("conceptPreview"));
+}
+
+export function shouldUseStyleReferenceBackground(search: string): boolean {
+  const params = new URLSearchParams(search);
+  return isEnabledQueryValue(params.get("styleReference") ?? params.get("styleBackground"));
+}
+
 export function getGameViewportSize(
   browserViewport: BrowserViewportSource,
   documentViewport?: DocumentViewportSource,
@@ -364,6 +378,10 @@ export function shouldRecenterProjectileCamera(input: ProjectileCameraInput): bo
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
+}
+
+function isEnabledQueryValue(value: string | null): boolean {
+  return value === "" || value === "1" || value === "true" || value === "on";
 }
 
 function smallestPositive(fallback: number, ...values: Array<number | null | undefined>): number {

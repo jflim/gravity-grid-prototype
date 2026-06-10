@@ -27,7 +27,7 @@ First playable local artillery prototype for Gravity Canyon.
 - Firing commits the turn immediately, so the active vehicle cannot move during projectile flight or impact resolution.
 - Swept projectile-edge collision checks so fast shots impact at the first visible terrain or vehicle contact.
 - Visible prototype combat hulls define one shared vehicle-only hit zone for all v1 units.
-- Full-unit concept preview sprites, active frames, labels, and prototype combat hulls are scaled down in the match view to keep terrain and movement readable.
+- Runtime gameplay sprites are the default match-view assets for faster hosted playtest loading; full-unit concept preview sprites remain available with `?conceptAssets=1` for art review.
 - Collision art review rules keep pilot poses visually compatible with the vehicle-only hit zone.
 - Crater deformation on impact.
 - Terrain can be blasted through into a visible void beneath the stage, with a persistent danger layer anchored to the current map's lowest playable terrain.
@@ -42,7 +42,7 @@ First playable local artillery prototype for Gravity Canyon.
 - Accepted Nova and Vesper full-unit intense runtime test sprites for concept-preview charging.
 - Accepted Kaelii and Perlah v1 test runtime unit sprites: default, intense shooting, Defeated KO, vehicle default, and vehicle destroyed.
 - Generated destroyed vehicle sprites pair with KO character sprites or full-unit KO sprites when a vehicle is no longer alive.
-- Style B 2v2 concept art used as a faint backdrop reference.
+- Style B 2v2 concept art can be shown as a faint backdrop reference with `?styleReference=1`.
 - High-detail anime vehicle/pilot portraits plus standalone generated gameplay sprites for Nova and Vesper.
 - First Colyseus online foundation:
   - local multiplayer server,
@@ -55,6 +55,7 @@ First playable local artillery prototype for Gravity Canyon.
 - Browser client uses the vendored Colyseus browser SDK at `public/vendor/colyseus.js` to keep Vite dev mode stable on Windows.
 - The local map-review demo hides the Online Alpha room panel by default; playtest launch mode shows it automatically.
 - Public preview mode can serve the built client and Colyseus room server from one local port for internet sharing through a trusted tunnel, while staying localhost-only unless `HOST=0.0.0.0` is explicitly set.
+- Playtest pages show a visible loading status and report the failed asset key if Phaser cannot load a required image.
 
 ## Run
 

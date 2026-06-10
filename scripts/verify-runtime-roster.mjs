@@ -8,13 +8,45 @@ const mainSource = readFileSync(join(root, "src", "main.ts"), "utf8");
 const runtimeUnits = [
   {
     name: "Nova",
-    keys: ["nova-unit-intense"],
-    files: ["public/assets/nova-unit-intense.png"],
+    keys: [
+      "nova-vehicle",
+      "nova-vehicle-sprite",
+      "nova-vehicle-destroyed",
+      "nova-character-default",
+      "nova-character-ko",
+      "nova-character-intense",
+      "nova-unit-intense",
+    ],
+    files: [
+      "public/assets/nova-vehicle.png",
+      "public/assets/nova-vehicle-sprite.png",
+      "public/assets/nova-vehicle-destroyed.png",
+      "public/assets/nova-character-default.png",
+      "public/assets/nova-character-ko.png",
+      "public/assets/nova-character-intense.png",
+      "public/assets/nova-unit-intense.png",
+    ],
   },
   {
     name: "Vesper",
-    keys: ["vesper-unit-intense"],
-    files: ["public/assets/vesper-unit-intense.png"],
+    keys: [
+      "vesper-vehicle",
+      "vesper-vehicle-sprite",
+      "vesper-vehicle-destroyed",
+      "vesper-character-default",
+      "vesper-character-ko",
+      "vesper-character-intense",
+      "vesper-unit-intense",
+    ],
+    files: [
+      "public/assets/vesper-vehicle.png",
+      "public/assets/vesper-vehicle-sprite.png",
+      "public/assets/vesper-vehicle-destroyed.png",
+      "public/assets/vesper-character-default.png",
+      "public/assets/vesper-character-ko.png",
+      "public/assets/vesper-character-intense.png",
+      "public/assets/vesper-unit-intense.png",
+    ],
   },
   {
     name: "Kaelii",
@@ -86,11 +118,10 @@ const expectedRuntimeTuning = [
   'default: { width: 356, height: 208 }',
   'intense: { width: 356, height: 208 }',
   'ko: { width: 354, height: 212 }',
-  'combatHull: { offsetX: 0, offsetY: -65, radiusX: 150, radiusY: 91 }',
-  'combatHull: { offsetX: 0, offsetY: -58, radiusX: 146, radiusY: 80 }',
-  'const frameWidth = USE_UNIT_CONCEPT_PREVIEW ? 404 : 232;',
-  'const frameHeight = USE_UNIT_CONCEPT_PREVIEW ? 258 : 138;',
-  'const frameTopOffset = USE_UNIT_CONCEPT_PREVIEW ? 202 : 106;',
+  "const USE_UNIT_CONCEPT_PREVIEW = shouldUseConceptPreviewAssets(window.location.search);",
+  "const USE_STYLE_REFERENCE_BACKGROUND = shouldUseStyleReferenceBackground(window.location.search);",
+  "combatHull: SHARED_V1_VEHICLE_HIT_ZONE",
+  "const yOffset = USE_UNIT_CONCEPT_PREVIEW ? 176 : 104;",
 ];
 
 for (const snippet of expectedRuntimeTuning) {
