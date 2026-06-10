@@ -66,6 +66,7 @@ Highlights:
 - Kept localhost map-review URLs clean by default while allowing explicit `?onlinePanel=1` debugging and playtest-mode runtime config to show the Online Alpha panel.
 - Added a README command reference explaining the current npm scripts, the manual Cloudflare tunnel flow, and why npm scripts are the project task-runner source of truth on Windows.
 - Added a one-terminal `npm run playtest` launcher that builds, starts playtest mode, starts a Cloudflare quick tunnel, prints the share URL, and shuts server/tunnel down together with Ctrl+C.
+- Fixed the `npm run playtest` launcher on Windows by avoiding direct `.cmd` child-process spawning for its nested build step.
 - Added runtime config so playtest launch mode controls the Online Alpha panel instead of inferring it from the public URL hostname.
 - Added horizontal camera side bounds so the battlefield remains centered when the visible camera frame is wider than the world instead of leaving all extra space on one side.
 - Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { extractCloudflaredUrl, parsePlaytestArgs } from "./playtestLauncher.js";
+import { createNpmRunCommand, extractCloudflaredUrl, parsePlaytestArgs } from "./playtestLauncher.js";
 
 test("playtest launcher builds and tunnels by default", () => {
   const options = parsePlaytestArgs([]);
@@ -31,4 +31,26 @@ test("playtest launcher extracts the public Cloudflare URL from output", () => {
 
 test("playtest launcher ignores non-Cloudflare URLs in output", () => {
   assert.equal(extractCloudflaredUrl("Started at http://127.0.0.1:2567"), undefined);
+});
+
+test("playtest launcher runs npm scripts through node when npm_execpath is available", () => {
+  const command = createNpmRunCommand("build", {
+    nodePath: "C:\\Program Files\\nodejs\\node.exe",
+    npmExecPath: "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js",
+    platform: "win32",
+  });
+
+  assert.equal(command.command, "C:\\Program Files\\nodejs\\node.exe");
+  assert.deepEqual(command.args, ["C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js", "run", "build"]);
+});
+
+test("playtest launcher avoids direct npm.cmd spawning on Windows fallback", () => {
+  const command = createNpmRunCommand("build", {
+    nodePath: "C:\\Program Files\\nodejs\\node.exe",
+    platform: "win32",
+    comSpec: "C:\\Windows\\System32\\cmd.exe",
+  });
+
+  assert.equal(command.command, "C:\\Windows\\System32\\cmd.exe");
+  assert.deepEqual(command.args, ["/d", "/s", "/c", "npm.cmd run build"]);
 });

@@ -87,7 +87,7 @@
   <main>
     <article>
       <div class="generated">
-        Generated from <a href="VERSION_LOG.md">docs/VERSION_LOG.md</a> on 2026-06-09.
+        Generated from <a href="VERSION_LOG.md">docs/VERSION_LOG.md</a> on 2026-06-10.
         Edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Gravity Canyon Version Log</h1>
@@ -156,6 +156,7 @@
 <li>Kept localhost map-review URLs clean by default while allowing explicit <code>?onlinePanel=1</code> debugging and playtest-mode runtime config to show the Online Alpha panel.</li>
 <li>Added a README command reference explaining the current npm scripts, the manual Cloudflare tunnel flow, and why npm scripts are the project task-runner source of truth on Windows.</li>
 <li>Added a one-terminal <code>npm run playtest</code> launcher that builds, starts playtest mode, starts a Cloudflare quick tunnel, prints the share URL, and shuts server/tunnel down together with Ctrl+C.</li>
+<li>Fixed the <code>npm run playtest</code> launcher on Windows by avoiding direct <code>.cmd</code> child-process spawning for its nested build step.</li>
 <li>Added runtime config so playtest launch mode controls the Online Alpha panel instead of inferring it from the public URL hostname.</li>
 <li>Added horizontal camera side bounds so the battlefield remains centered when the visible camera frame is wider than the world instead of leaving all extra space on one side.</li>
 <li>Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.</li>

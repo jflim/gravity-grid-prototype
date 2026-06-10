@@ -5,6 +5,18 @@ export interface PlaytestLauncherOptions {
   port: number;
 }
 
+export interface SpawnCommand {
+  command: string;
+  args: string[];
+}
+
+export interface NpmRunCommandOptions {
+  nodePath: string;
+  npmExecPath?: string;
+  platform: NodeJS.Platform | string;
+  comSpec?: string;
+}
+
 const DEFAULT_PORT = 2567;
 const DEFAULT_HOST = "127.0.0.1";
 const CLOUDFLARED_URL_PATTERN = /https:\/\/[a-z0-9-]+\.trycloudflare\.com\b/i;
@@ -44,6 +56,28 @@ export function parsePlaytestArgs(args: string[]): PlaytestLauncherOptions {
 
 export function extractCloudflaredUrl(output: string): string | undefined {
   return output.match(CLOUDFLARED_URL_PATTERN)?.[0];
+}
+
+export function createNpmRunCommand(script: string, options: NpmRunCommandOptions): SpawnCommand {
+  const npmArgs = ["run", script];
+  if (options.npmExecPath) {
+    return {
+      command: options.nodePath,
+      args: [options.npmExecPath, ...npmArgs],
+    };
+  }
+
+  if (options.platform === "win32") {
+    return {
+      command: options.comSpec || "cmd.exe",
+      args: ["/d", "/s", "/c", `npm.cmd ${npmArgs.join(" ")}`],
+    };
+  }
+
+  return {
+    command: "npm",
+    args: npmArgs,
+  };
 }
 
 function parsePort(value: string | undefined): number {

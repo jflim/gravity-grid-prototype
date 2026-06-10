@@ -1,7 +1,7 @@
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
-import { extractCloudflaredUrl, parsePlaytestArgs } from "../server/playtestLauncher.js";
+import { createNpmRunCommand, extractCloudflaredUrl, parsePlaytestArgs } from "../server/playtestLauncher.js";
 
 const options = parsePlaytestArgs(process.argv.slice(2));
 const localUrl = `http://${options.host}:${options.port}`;
@@ -10,10 +10,18 @@ let shuttingDown = false;
 
 try {
   if (options.build) {
-    await runToCompletion(npmCommand(), ["run", "build"]);
+    console.log("Building Gravity Canyon...");
+    const buildCommand = createNpmRunCommand("build", {
+      nodePath: process.execPath,
+      npmExecPath: process.env.npm_execpath,
+      platform: process.platform,
+      comSpec: process.env.ComSpec,
+    });
+    await runToCompletion(buildCommand.command, buildCommand.args);
   }
 
-  const server = startManagedProcess(process.execPath, [join("node_modules", "tsx", "dist", "cli.mjs"), "scripts/start-public-preview.ts"], {
+  console.log("Starting Gravity Canyon playtest server...");
+  startManagedProcess(process.execPath, [join("node_modules", "tsx", "dist", "cli.mjs"), "scripts/start-public-preview.ts"], {
     HOST: options.host,
     PORT: String(options.port),
     PUBLIC_PREVIEW: "1",
@@ -79,6 +87,11 @@ function startManagedProcess(
     child.stdout.on("data", (chunk: Buffer) => process.stdout.write(chunk));
     child.stderr.on("data", (chunk: Buffer) => process.stderr.write(chunk));
   }
+  child.on("error", (error) => {
+    if (!shuttingDown) {
+      console.error(`Failed to start ${command}: ${error.message}`);
+    }
+  });
   child.on("exit", () => {
     children.delete(child);
   });
@@ -94,7 +107,9 @@ async function runToCompletion(command: string, args: string[]): Promise<void> {
       stdio: "inherit",
     });
 
-    child.on("error", reject);
+    child.on("error", (error) => {
+      reject(new Error(`Failed to start ${command}: ${error.message}`));
+    });
     child.on("exit", (code) => {
       if (code === 0) {
         resolve();
@@ -155,8 +170,4 @@ async function shutdownChildren(): Promise<void> {
       child.kill("SIGTERM");
     }
   }
-}
-
-function npmCommand(): string {
-  return process.platform === "win32" ? "npm.cmd" : "npm";
 }
