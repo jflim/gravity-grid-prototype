@@ -115,6 +115,7 @@
 <li><code>src/match/rendering/ProjectileRenderer.ts</code>: Projectile trail and projectile body drawing.</li>
 <li><code>src/match/rendering/EffectsRenderer.ts</code>: Aim arrow, movement rail, and impact preview.</li>
 <li><code>src/match/rendering/CombatMarkerRenderer.ts</code>: Floating direct/splash/shove/KO/Void Dropped text markers.</li>
+<li><code>src/match/rendering/RenderingTypes.ts</code>: Phaser rendering-object state shapes shared by renderers.</li>
 </ul>
 <h2>Task 1: Add Architecture Boundary Tests</h2>
 <p><strong>Files:</strong></p>
@@ -446,6 +447,27 @@ git commit -m &quot;refactor: split match scene ui and renderers&quot;
 <li>[x] <strong>Step 3: Run focused verification</strong></li>
 </ul>
 <p>Run: <code>npm test -- src/match/ImpactController.test.ts src/match/architecture.test.ts</code></p>
+<p>Expected: PASS.</p>
+<h2>Task 12: Split Runtime Types From Rendering Types</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/match/rendering/RenderingTypes.ts</code></li>
+<li>Modify: <code>src/match/MatchTypes.ts</code></li>
+<li>Modify: <code>src/match/rendering/CombatMarkerRenderer.ts</code></li>
+<li>Modify: <code>src/match/architecture.test.ts</code></li>
+</ul>
+<ul>
+<li>[x] <strong>Step 1: Add failing architecture test for Phaser-free runtime types</strong></li>
+</ul>
+<p>Assert that <code>MatchTypes.ts</code> does not import Phaser, does not reference <code>Phaser.*</code>, and does not export renderer-only combat marker state.</p>
+<ul>
+<li>[x] <strong>Step 2: Move renderer-only state into rendering types</strong></li>
+</ul>
+<p>Move <code>CombatMarker</code> into <code>src/match/rendering/RenderingTypes.ts</code> because it owns a <code>Phaser.GameObjects.Text</code>. Keep <code>VehicleState</code>, <code>ProjectileState</code>, <code>ImpactPreview</code>, and settlement/projectile types in <code>MatchTypes.ts</code>.</p>
+<ul>
+<li>[x] <strong>Step 3: Run focused verification</strong></li>
+</ul>
+<p>Run: <code>npm test -- src/match/architecture.test.ts</code></p>
 <p>Expected: PASS.</p>
 <h2>Self-Review</h2>
 <ul>

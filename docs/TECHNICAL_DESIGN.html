@@ -156,6 +156,7 @@
 <li><code>src/match/rendering/ProjectileRenderer.ts</code> for projectile body and trail drawing.</li>
 <li><code>src/match/rendering/EffectsRenderer.ts</code> for aim arrow, movement rail, and impact preview rings.</li>
 <li><code>src/match/rendering/CombatMarkerRenderer.ts</code> for floating direct/splash/shove/KO/Void Dropped text markers.</li>
+<li><code>src/match/rendering/RenderingTypes.ts</code> for Phaser rendering-object state shapes that should not leak into match runtime types.</li>
 </ul>
 <p>The main technical gap is that online v1 must run the real match through server-owned state and deterministic combat resolution. The existing online preview is not the final combat system.</p>
 <h3>Known Gameplay Correctness Bugs</h3>
@@ -453,6 +454,8 @@ src/
 
       CombatMarkerRenderer.ts
 
+      RenderingTypes.ts
+
   onlineLobby.ts
 
   net/
@@ -619,6 +622,11 @@ src/
 <td>Change floating direct/splash/shove/KO/Void Dropped marker styling, offsets, duration, or fade movement</td>
 <td><code>src/match/rendering/CombatMarkerRenderer.ts</code></td>
 <td>Combat-result feedback is visual presentation; impact truth should remain in shared gameplay modules.</td>
+</tr>
+<tr>
+<td>Change Phaser rendering-object state shapes such as text-backed combat markers</td>
+<td><code>src/match/rendering/RenderingTypes.ts</code></td>
+<td>Renderer-only state can depend on Phaser; <code>src/match/MatchTypes.ts</code> should remain Phaser-free runtime state.</td>
 </tr>
 <tr>
 <td>Change private-room networking, server state, or online preview behavior</td>

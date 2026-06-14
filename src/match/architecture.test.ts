@@ -18,6 +18,7 @@ test("match scene refactor exposes planned module boundaries", () => {
     "src/match/rendering/ProjectileRenderer.ts",
     "src/match/rendering/EffectsRenderer.ts",
     "src/match/rendering/CombatMarkerRenderer.ts",
+    "src/match/rendering/RenderingTypes.ts",
   ];
 
   for (const file of expectedFiles) {
@@ -40,6 +41,7 @@ test("planned match modules export their concrete boundaries", () => {
     ["src/match/rendering/ProjectileRenderer.ts", "export class ProjectileRenderer"],
     ["src/match/rendering/EffectsRenderer.ts", "export class EffectsRenderer"],
     ["src/match/rendering/CombatMarkerRenderer.ts", "export class CombatMarkerRenderer"],
+    ["src/match/rendering/RenderingTypes.ts", "export interface CombatMarker"],
   ] as const;
 
   for (const [file, expectedExport] of expectedExports) {
@@ -52,4 +54,12 @@ test("main.ts stays a bootstrap instead of owning the Phaser scene", () => {
   assert.match(main, /new Phaser\.Game/);
   assert.match(main, /scene:\s*MatchScene/);
   assert.doesNotMatch(main, /class GravityGridScene/);
+});
+
+test("match runtime types stay free of Phaser rendering objects", () => {
+  const matchTypes = readFileSync("src/match/MatchTypes.ts", "utf8");
+
+  assert.doesNotMatch(matchTypes, /from "phaser"/);
+  assert.doesNotMatch(matchTypes, /Phaser\./);
+  assert.doesNotMatch(matchTypes, /CombatMarker/);
 });

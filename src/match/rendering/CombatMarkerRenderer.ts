@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import type { CombatMarkerKind } from "../../../shared/model/gameTypes.js";
-import type { CombatMarker, VehicleState } from "../MatchTypes";
+import type { VehicleState } from "../MatchTypes";
+import type { CombatMarker } from "./RenderingTypes";
 
 export interface CombatMarkerRendererOptions {
   scene: Phaser.Scene;

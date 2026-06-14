@@ -71,6 +71,7 @@ Current shared extraction includes:
 - `src/match/rendering/ProjectileRenderer.ts` for projectile body and trail drawing.
 - `src/match/rendering/EffectsRenderer.ts` for aim arrow, movement rail, and impact preview rings.
 - `src/match/rendering/CombatMarkerRenderer.ts` for floating direct/splash/shove/KO/Void Dropped text markers.
+- `src/match/rendering/RenderingTypes.ts` for Phaser rendering-object state shapes that should not leak into match runtime types.
 
 The main technical gap is that online v1 must run the real match through server-owned state and deterministic combat resolution. The existing online preview is not the final combat system.
 
@@ -257,6 +258,7 @@ src/
       ProjectileRenderer.ts
       EffectsRenderer.ts
       CombatMarkerRenderer.ts
+      RenderingTypes.ts
   onlineLobby.ts
   net/
     roomClient.ts
@@ -318,6 +320,7 @@ Current human editing map:
 | Change projectile trail/body drawing | `src/match/rendering/ProjectileRenderer.ts` | Projectile rendering is separate from projectile simulation and collision truth. |
 | Change aim arrow, movement rail, or impact preview rings | `src/match/rendering/EffectsRenderer.ts` | Tactical visual aids stay out of gameplay resolution logic. |
 | Change floating direct/splash/shove/KO/Void Dropped marker styling, offsets, duration, or fade movement | `src/match/rendering/CombatMarkerRenderer.ts` | Combat-result feedback is visual presentation; impact truth should remain in shared gameplay modules. |
+| Change Phaser rendering-object state shapes such as text-backed combat markers | `src/match/rendering/RenderingTypes.ts` | Renderer-only state can depend on Phaser; `src/match/MatchTypes.ts` should remain Phaser-free runtime state. |
 | Change private-room networking, server state, or online preview behavior | `server/rooms/GravityCanyonRoom.ts` and `server/schema/GravityCanyonState.ts` | Server authority and Colyseus schema belong on the Node side. |
 
 Planned naming cleanup after shared gameplay extraction:

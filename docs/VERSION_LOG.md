@@ -93,6 +93,7 @@ Highlights:
 - Renamed the current demo unit content exports away from milestone-prefixed symbols so new code consumes `DemoUnitDefinition` and `DEMO_UNIT_DEFINITIONS`.
 - Extracted local projectile launch, flight stepping, trail tracking, swept collision lookup, and out-of-bounds orchestration into `src/match/ProjectileController.ts`.
 - Extracted local impact application into `src/match/ImpactController.ts`, covering crater callback wiring, vehicle damage/knockback mutation, settlement callback wiring, combat marker requests, and shot-result text.
+- Moved text-backed combat marker render state into `src/match/rendering/RenderingTypes.ts` so `src/match/MatchTypes.ts` stays free of Phaser rendering objects.
 - Adopted an HTML-first documentation workflow: markdown remains the canonical editable source, generated HTML is the preferred reading/review surface, local scripts must generate markdown reading copies without AI/manual conversion, and custom HTML is reserved for rich visual/review artifacts.
 - Added horizontal camera side bounds so the battlefield remains centered when the visible camera frame is wider than the world instead of leaving all extra space on one side.
 - Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.

@@ -27,6 +27,7 @@
 - `src/match/rendering/ProjectileRenderer.ts`: Projectile trail and projectile body drawing.
 - `src/match/rendering/EffectsRenderer.ts`: Aim arrow, movement rail, and impact preview.
 - `src/match/rendering/CombatMarkerRenderer.ts`: Floating direct/splash/shove/KO/Void Dropped text markers.
+- `src/match/rendering/RenderingTypes.ts`: Phaser rendering-object state shapes shared by renderers.
 
 ## Task 1: Add Architecture Boundary Tests
 
@@ -334,6 +335,27 @@ Move crater callback wiring, vehicle damage/knockback mutation, combat marker re
 - [x] **Step 3: Run focused verification**
 
 Run: `npm test -- src/match/ImpactController.test.ts src/match/architecture.test.ts`
+Expected: PASS.
+
+## Task 12: Split Runtime Types From Rendering Types
+
+**Files:**
+- Create: `src/match/rendering/RenderingTypes.ts`
+- Modify: `src/match/MatchTypes.ts`
+- Modify: `src/match/rendering/CombatMarkerRenderer.ts`
+- Modify: `src/match/architecture.test.ts`
+
+- [x] **Step 1: Add failing architecture test for Phaser-free runtime types**
+
+Assert that `MatchTypes.ts` does not import Phaser, does not reference `Phaser.*`, and does not export renderer-only combat marker state.
+
+- [x] **Step 2: Move renderer-only state into rendering types**
+
+Move `CombatMarker` into `src/match/rendering/RenderingTypes.ts` because it owns a `Phaser.GameObjects.Text`. Keep `VehicleState`, `ProjectileState`, `ImpactPreview`, and settlement/projectile types in `MatchTypes.ts`.
+
+- [x] **Step 3: Run focused verification**
+
+Run: `npm test -- src/match/architecture.test.ts`
 Expected: PASS.
 
 ## Self-Review

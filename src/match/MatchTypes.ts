@@ -1,7 +1,6 @@
-import type Phaser from "phaser";
 import type { ProjectileKinematics } from "../../shared/gameplay/projectile.js";
 import type { DemoUnitDefinition } from "../../shared/content/v1Units.js";
-import type { CombatMarkerKind, DefeatReason, TeamId } from "../../shared/model/gameTypes.js";
+import type { DefeatReason, TeamId } from "../../shared/model/gameTypes.js";
 
 export type VehicleState = DemoUnitDefinition & {
   x: number;
@@ -48,17 +47,6 @@ export interface ImpactPreview {
   damageRadius: number;
   isBungerShot: boolean;
   timeLeft: number;
-}
-
-export interface CombatMarker {
-  kind: CombatMarkerKind;
-  label: string;
-  x: number;
-  y: number;
-  age: number;
-  duration: number;
-  lift: number;
-  text: Phaser.GameObjects.Text;
 }
 
 export interface SettleOptions {
