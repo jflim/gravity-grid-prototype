@@ -147,6 +147,7 @@
 <li><code>src/match/ImpactController.ts</code> for local impact application: crater callback, vehicle damage mutation, knockback mutation, settlement callback, marker requests, and shot-result text.</li>
 <li><code>src/match/ProjectileController.ts</code> for local projectile launch, flight stepping, trail tracking, swept collision lookup, and out-of-bounds orchestration.</li>
 <li><code>src/match/RoundBuilder.ts</code> for local round setup: terrain copy, spawn flattening, starting vehicle state, turn order, visible void top, and round-start message.</li>
+<li><code>src/match/TerrainController.ts</code> for local mutable terrain state: current playable map, active heightmap copy, surface sampling, crater application, visible void top, and vehicle sprite slope reads.</li>
 <li><code>src/match/TurnController.ts</code> for local turn order/index, turn timer, wind, charge state, and committed/round-over action state.</li>
 <li><code>src/match/VehicleGeometry.ts</code> for facing-aware combat hull centers and projectile hit-zone geometry shared by scene collision and vehicle rendering.</li>
 <li><code>src/match/MatchInputController.ts</code> for client-side input sampling without embedding keyboard state directly in the Phaser scene.</li>
@@ -423,6 +424,8 @@ src/
 
     RoundBuilder.ts
 
+    TerrainController.ts
+
     TurnController.ts
 
     VehicleGeometry.ts
@@ -512,7 +515,7 @@ src/
 <td>Model language should be shared across content, client, server, and tests.</td>
 </tr>
 <tr>
-<td>Change heightmap construction, surface sampling, terrain angle, or crater deformation</td>
+<td>Change deterministic heightmap construction, surface sampling, terrain angle, or crater deformation math</td>
 <td><code>shared/gameplay/terrain.ts</code></td>
 <td>Deterministic gameplay helpers should stay Phaser-free so the future server can run them.</td>
 </tr>
@@ -580,6 +583,11 @@ src/
 <td>Change local round setup, spawn flattening width, starting HP/move units, initial facing angle, initial turn order, or round-start message</td>
 <td><code>src/match/RoundBuilder.ts</code> and <code>shared/v1/tuning.ts</code></td>
 <td>Round initialization should be testable without opening Phaser scene rendering code.</td>
+</tr>
+<tr>
+<td>Change local browser terrain ownership, current map handoff, crater callback application, visible void top storage, or scene-facing terrain/slope reads</td>
+<td><code>src/match/TerrainController.ts</code> and <code>shared/gameplay/terrain.ts</code></td>
+<td>Local terrain state should be readable without opening Phaser lifecycle code, while deterministic terrain math stays shared for future server authority.</td>
 </tr>
 <tr>
 <td>Change local turn index, turn timer, charge state, committed state, or wind-per-turn ownership</td>

@@ -10,6 +10,7 @@ test("match scene refactor exposes planned module boundaries", () => {
     "src/match/ImpactController.ts",
     "src/match/ProjectileController.ts",
     "src/match/RoundBuilder.ts",
+    "src/match/TerrainController.ts",
     "src/match/TurnController.ts",
     "src/match/VehicleGeometry.ts",
     "src/match/VoidZoneController.ts",
@@ -34,6 +35,7 @@ test("planned match modules export their concrete boundaries", () => {
     ["src/match/ImpactController.ts", "export class ImpactController"],
     ["src/match/ProjectileController.ts", "export class ProjectileController"],
     ["src/match/RoundBuilder.ts", "export class RoundBuilder"],
+    ["src/match/TerrainController.ts", "export class TerrainController"],
     ["src/match/TurnController.ts", "export class TurnController"],
     ["src/match/VehicleGeometry.ts", "export class VehicleGeometry"],
     ["src/match/VoidZoneController.ts", "export class VoidZoneController"],
@@ -64,4 +66,13 @@ test("match runtime types stay free of Phaser rendering objects", () => {
   assert.doesNotMatch(matchTypes, /from "phaser"/);
   assert.doesNotMatch(matchTypes, /Phaser\./);
   assert.doesNotMatch(matchTypes, /CombatMarker/);
+});
+
+test("match scene delegates terrain state to TerrainController", () => {
+  const matchScene = readFileSync("src/match/MatchScene.ts", "utf8");
+
+  assert.match(matchScene, /new TerrainController/);
+  assert.doesNotMatch(matchScene, /craterTerrain/);
+  assert.doesNotMatch(matchScene, /terrainAngleAt as terrainSlopeAngleAt/);
+  assert.doesNotMatch(matchScene, /surfaceAt as terrainSurfaceAt/);
 });

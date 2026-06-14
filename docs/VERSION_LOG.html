@@ -185,6 +185,7 @@
 <li>Extracted local impact application into <code>src/match/ImpactController.ts</code>, covering crater callback wiring, vehicle damage/knockback mutation, settlement callback wiring, combat marker requests, and shot-result text.</li>
 <li>Moved text-backed combat marker render state into <code>src/match/rendering/RenderingTypes.ts</code> so <code>src/match/MatchTypes.ts</code> stays free of Phaser rendering objects.</li>
 <li>Extracted local turn order/index, turn timer, wind, charge state, and committed state into <code>src/match/TurnController.ts</code>.</li>
+<li>Extracted local mutable terrain ownership into <code>src/match/TerrainController.ts</code>, keeping active map/heightmap state, crater application, visible void top, and terrain slope reads out of <code>MatchScene</code> while deterministic terrain math remains in <code>shared/gameplay/terrain.ts</code>.</li>
 <li>Adopted an HTML-first documentation workflow: markdown remains the canonical editable source, generated HTML is the preferred reading/review surface, local scripts must generate markdown reading copies without AI/manual conversion, and custom HTML is reserved for rich visual/review artifacts.</li>
 <li>Added horizontal camera side bounds so the battlefield remains centered when the visible camera frame is wider than the world instead of leaving all extra space on one side.</li>
 <li>Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.</li>

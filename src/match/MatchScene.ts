@@ -6,11 +6,6 @@ import {
   resolveMovementStep,
   updateChargeState,
 } from "../../shared/gameplay/movement.js";
-import {
-  craterTerrain,
-  surfaceAt as terrainSurfaceAt,
-  terrainAngleAt as terrainSlopeAngleAt,
-} from "../../shared/gameplay/terrain.js";
 import { settleVehicleOnTerrain, type VehicleSettlementResult } from "../../shared/gameplay/vehicleSettlement.js";
 import type { VehicleHitZone } from "../../shared/gameplay/vehicleHitZone.js";
 import { DEMO_UNIT_DEFINITIONS } from "../../shared/content/v1Units.js";
@@ -83,6 +78,7 @@ import { MatchCameraController } from "./MatchCameraController";
 import { MatchController } from "./MatchController";
 import { ProjectileController } from "./ProjectileController";
 import { RoundBuilder } from "./RoundBuilder";
+import { TerrainController } from "./TerrainController";
 import { TurnController } from "./TurnController";
 import { VehicleGeometry } from "./VehicleGeometry";
 import { VoidZoneController } from "./VoidZoneController";
@@ -140,7 +136,6 @@ const EMPTY_MATCH_INPUT: MatchInputSnapshot = {
 };
 
 export class MatchScene extends Phaser.Scene {
-  private terrain: number[] = [];
   private readonly matchController = new MatchController();
   private readonly vehicleGeometry = new VehicleGeometry();
   private readonly impactController = new ImpactController({
@@ -180,7 +175,13 @@ export class MatchScene extends Phaser.Scene {
     defaultTerrainBreakthroughY: DEFAULT_TERRAIN_BREAKTHROUGH_Y,
     fallbackVisibleVoidTopY: FALLBACK_VISIBLE_VOID_TOP_Y,
   });
-  private currentDemoMap?: PlayableTerrain;
+  private readonly terrainController = new TerrainController({
+    worldWidth: WORLD_WIDTH,
+    voidSurfaceY: VOID_SURFACE_Y,
+    vehicleHalfWidth: VEHICLE_HALF_WIDTH,
+    deathSurfaceY: DEATH_SURFACE_Y,
+    maxTerrainSpriteTiltDeg: MAX_TERRAIN_SPRITE_TILT_DEG,
+  });
   private vehicles: VehicleState[] = [];
   private projectile?: ProjectileState;
   private impactPreview?: ImpactPreview;
@@ -188,7 +189,6 @@ export class MatchScene extends Phaser.Scene {
   private roundOver = false;
   private pendingRoundEvent?: Phaser.Time.TimerEvent;
   private showCombatHulls = shouldShowCombatHulls(window.location.search);
-  private visibleVoidTopY = FALLBACK_VISIBLE_VOID_TOP_Y;
 
   private inputController?: MatchInputController;
   private cameraController?: MatchCameraController;
@@ -592,9 +592,11 @@ export class MatchScene extends Phaser.Scene {
       playableTerrain: this.buildDefaultDemoMap(),
       units: DEMO_UNIT_DEFINITIONS,
     });
-    this.currentDemoMap = round.playableTerrain;
-    this.terrain = round.terrain;
-    this.visibleVoidTopY = round.visibleVoidTopY;
+    this.terrainController.startRound({
+      playableTerrain: round.playableTerrain,
+      terrain: round.terrain,
+      visibleVoidTopY: round.visibleVoidTopY,
+    });
     this.vehicles = round.vehicles;
     this.turnController.startRound(round.turnOrder);
     this.projectile = undefined;
@@ -788,13 +790,11 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private makeCrater(centerX: number, centerY: number, radius: number, depthFactor = 0.74): void {
-    this.terrain = craterTerrain({
-      terrain: this.terrain,
-      impactX: centerX,
-      impactY: centerY,
+    this.terrainController.makeCrater({
+      x: centerX,
+      y: centerY,
       radius,
-      depth: radius * depthFactor,
-      voidSurfaceY: VOID_SURFACE_Y,
+      depthFactor,
       breakthroughY: this.terrainBreakthroughY(),
     });
   }
@@ -898,10 +898,7 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private surfaceAt(x: number): number {
-    return terrainSurfaceAt(this.terrain, x, {
-      worldWidth: WORLD_WIDTH,
-      voidSurfaceY: VOID_SURFACE_Y,
-    });
+    return this.terrainController.surfaceAt(x);
   }
 
   private placeVehicleOnSurface(vehicle: VehicleState): boolean {
@@ -934,7 +931,7 @@ export class MatchScene extends Phaser.Scene {
       changedRadius: options.changedRadius,
       forceSettle: options.forceSettle,
       tuning: VEHICLE_SETTLEMENT_TUNING,
-      fallbackFallStartY: this.visibleVoidTopY - 40,
+      fallbackFallStartY: this.terrainController.visibleVoidTopY - 40,
       surfaceAt: (x) => this.surfaceAt(x),
     });
   }
@@ -952,7 +949,7 @@ export class MatchScene extends Phaser.Scene {
       const presentation = this.voidZoneController.createVoidDropPresentation({
         fallStartX: settlement.fallStartX,
         fallStartY: settlement.fallStartY,
-        visibleVoidTopY: this.visibleVoidTopY,
+        visibleVoidTopY: this.terrainController.visibleVoidTopY,
         terrainBreakthroughY: this.terrainBreakthroughY(),
         surfaceAt: (x) => this.surfaceAt(x),
       });
@@ -966,34 +963,23 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private terrainBreakthroughY(): number {
-    return this.voidZoneController.terrainBreakthroughY(this.visibleVoidTopY);
+    return this.voidZoneController.terrainBreakthroughY(this.terrainController.visibleVoidTopY);
   }
 
   private terrainPlatformBottomY(): number {
-    return this.voidZoneController.terrainPlatformBottomY(this.visibleVoidTopY);
+    return this.voidZoneController.terrainPlatformBottomY(this.terrainController.visibleVoidTopY);
   }
 
   private visibleVoidBottomY(): number {
-    return this.voidZoneController.visibleVoidBottomY(this.visibleVoidTopY);
+    return this.voidZoneController.visibleVoidBottomY(this.terrainController.visibleVoidTopY);
   }
 
   private voidDropTargetY(): number {
-    return this.voidZoneController.voidDropTargetY(this.visibleVoidTopY);
+    return this.voidZoneController.voidDropTargetY(this.terrainController.visibleVoidTopY);
   }
 
   private terrainAngleAt(x: number): number {
-    const left = this.surfaceAt(x - VEHICLE_HALF_WIDTH);
-    const right = this.surfaceAt(x + VEHICLE_HALF_WIDTH);
-    if (left >= DEATH_SURFACE_Y || right >= DEATH_SURFACE_Y) {
-      return 0;
-    }
-
-    const angle = terrainSlopeAngleAt(this.terrain, x, {
-      worldWidth: WORLD_WIDTH,
-      voidSurfaceY: VOID_SURFACE_Y,
-      sampleDistance: VEHICLE_HALF_WIDTH,
-    });
-    return Phaser.Math.Clamp(angle, -MAX_TERRAIN_SPRITE_TILT_DEG, MAX_TERRAIN_SPRITE_TILT_DEG);
+    return this.terrainController.terrainAngleAt(x);
   }
 
   private updateImpactPreview(dt: number): void {
@@ -1018,10 +1004,10 @@ export class MatchScene extends Phaser.Scene {
 
   private drawTerrain(): void {
     this.terrainRenderer?.draw({
-      currentDemoMap: this.currentDemoMap,
+      currentDemoMap: this.terrainController.currentMap,
       worldWidth: WORLD_WIDTH,
       terrainStep: TERRAIN_STEP,
-      visibleVoidTopY: this.visibleVoidTopY,
+      visibleVoidTopY: this.terrainController.visibleVoidTopY,
       visibleVoidBottomY: this.visibleVoidBottomY(),
       terrainPlatformBottomY: this.terrainPlatformBottomY(),
       terrainBreakthroughY: this.terrainBreakthroughY(),

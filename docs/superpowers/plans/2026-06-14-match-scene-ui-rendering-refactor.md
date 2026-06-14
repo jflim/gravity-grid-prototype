@@ -19,6 +19,7 @@
 - `src/match/ImpactController.ts`: Local impact application for crater callback wiring, vehicle mutation, combat marker requests, settlement callback wiring, and shot-result text.
 - `src/match/ProjectileController.ts`: Local projectile launch, flight stepping, trail tracking, swept collision lookup, and out-of-bounds orchestration.
 - `src/match/RoundBuilder.ts`: Local round setup for terrain copy, spawn flattening, starting vehicle state, turn order, and round-start text.
+- `src/match/TerrainController.ts`: Local mutable terrain state, current playable map, active heightmap, crater application, surface sampling, visible void top, and vehicle sprite slope reads.
 - `src/match/TurnController.ts`: Local turn order/index, turn timer, wind, charge state, and committed/round-over action state.
 - `src/match/VehicleGeometry.ts`: Facing-aware combat hull centers and projectile hit-zone conversion shared by scene collision and vehicle rendering.
 - `src/match/VoidZoneController.ts`: Visible void-zone geometry and Void Dropped presentation timing.
@@ -378,6 +379,27 @@ Move turn order/index, turn timer, wind, charging, charge, and committed state i
 - [x] **Step 3: Run focused verification**
 
 Run: `npm test -- src/match/TurnController.test.ts src/match/architecture.test.ts`
+Expected: PASS.
+
+## Task 14: Extract Terrain Controller
+
+**Files:**
+- Create: `src/match/TerrainController.ts`
+- Create: `src/match/TerrainController.test.ts`
+- Modify: `src/match/MatchScene.ts`
+- Modify: `src/match/architecture.test.ts`
+
+- [x] **Step 1: Add failing tests for local terrain state**
+
+Assert that the controller owns the current playable map, stores a mutable round heightmap copy without mutating the round source, applies craters through the shared terrain helper, reports void/out-of-bounds surface samples, and returns clamped vehicle-facing slope reads.
+
+- [x] **Step 2: Move terrain state out of `MatchScene`**
+
+Move active map, mutable heightmap, visible void top storage, crater application, surface sampling, and vehicle sprite slope reads into `TerrainController`. Keep deterministic heightmap math in `shared/gameplay/terrain.ts`, terrain drawing in `TerrainRenderer`, and Void Dropped presentation geometry in `VoidZoneController`.
+
+- [x] **Step 3: Run focused verification**
+
+Run: `npm test -- src/match/TerrainController.test.ts src/match/architecture.test.ts`
 Expected: PASS.
 
 ## Self-Review

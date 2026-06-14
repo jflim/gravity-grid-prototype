@@ -62,6 +62,7 @@ Current shared extraction includes:
 - `src/match/ImpactController.ts` for local impact application: crater callback, vehicle damage mutation, knockback mutation, settlement callback, marker requests, and shot-result text.
 - `src/match/ProjectileController.ts` for local projectile launch, flight stepping, trail tracking, swept collision lookup, and out-of-bounds orchestration.
 - `src/match/RoundBuilder.ts` for local round setup: terrain copy, spawn flattening, starting vehicle state, turn order, visible void top, and round-start message.
+- `src/match/TerrainController.ts` for local mutable terrain state: current playable map, active heightmap copy, surface sampling, crater application, visible void top, and vehicle sprite slope reads.
 - `src/match/TurnController.ts` for local turn order/index, turn timer, wind, charge state, and committed/round-over action state.
 - `src/match/VehicleGeometry.ts` for facing-aware combat hull centers and projectile hit-zone geometry shared by scene collision and vehicle rendering.
 - `src/match/MatchInputController.ts` for client-side input sampling without embedding keyboard state directly in the Phaser scene.
@@ -243,6 +244,7 @@ src/
     ImpactController.ts
     ProjectileController.ts
     RoundBuilder.ts
+    TerrainController.ts
     TurnController.ts
     VehicleGeometry.ts
     VoidZoneController.ts
@@ -299,7 +301,7 @@ Current human editing map:
 | Rename a v1 unit class label, swap a sprite key, adjust a HUD portrait, or tune a unit display size | `shared/content/v1Units.ts` | Authored unit content should be data-first and reviewable without reading the Phaser scene. |
 | Adjust world size, HP, aim bounds, movement range, shot speed, gravity, wind force, crater size, damage radius, knockback, or void thresholds | `shared/v1/tuning.ts` | Numeric tuning should live in one shared rules/tuning file with tests. |
 | Add or rename a shared game concept such as character id, team id, facing, hit-zone shape, or defeat reason | `shared/model/gameTypes.ts` | Model language should be shared across content, client, server, and tests. |
-| Change heightmap construction, surface sampling, terrain angle, or crater deformation | `shared/gameplay/terrain.ts` | Deterministic gameplay helpers should stay Phaser-free so the future server can run them. |
+| Change deterministic heightmap construction, surface sampling, terrain angle, or crater deformation math | `shared/gameplay/terrain.ts` | Deterministic gameplay helpers should stay Phaser-free so the future server can run them. |
 | Change aim input math, facing-preserving angle flips, movement traversal legality, or charge/release behavior | `shared/gameplay/movement.ts` and `shared/v1/tuning.ts` | Player-input outcomes should be gameplay logic, not hidden inside the Phaser scene. |
 | Change projectile launch position, shot speed interpolation, wind/gravity stepping, or miss boundaries | `shared/gameplay/projectile.ts` and `shared/v1/tuning.ts` | Projectile outcome math must be reusable by the future server authority. |
 | Change local projectile launch orchestration, trail history, swept collision priority, or out-of-bounds response | `src/match/ProjectileController.ts`, `shared/gameplay/projectile.ts`, and `shared/gameplay/projectileCollision.ts` | The browser scene should delegate projectile flow through a focused controller while deterministic math remains shared. |
@@ -313,6 +315,7 @@ Current human editing map:
 | Change browser bootstrap, game config, viewport guard, or online lobby mount | `src/main.ts` | Startup belongs outside the Phaser scene so the playable scene remains game-focused. |
 | Change local active-vehicle, movable/alive, alive-team, winner, or next-turn bridge logic | `src/match/MatchController.ts` | The scene uses a controller boundary before those decisions move to server authority. |
 | Change local round setup, spawn flattening width, starting HP/move units, initial facing angle, initial turn order, or round-start message | `src/match/RoundBuilder.ts` and `shared/v1/tuning.ts` | Round initialization should be testable without opening Phaser scene rendering code. |
+| Change local browser terrain ownership, current map handoff, crater callback application, visible void top storage, or scene-facing terrain/slope reads | `src/match/TerrainController.ts` and `shared/gameplay/terrain.ts` | Local terrain state should be readable without opening Phaser lifecycle code, while deterministic terrain math stays shared for future server authority. |
 | Change local turn index, turn timer, charge state, committed state, or wind-per-turn ownership | `src/match/TurnController.ts`, `shared/match/turns.ts`, and `shared/v1/tuning.ts` | Turn state should be testable without Phaser lifecycle code; pure next-turn decisions remain in shared turn helpers. |
 | Change camera viewport, battlefield framing, or projectile recentering | `src/match/MatchCameraController.ts` | Camera behavior is presentation orchestration, separate from combat truth and drawing. |
 | Change visible void-zone bounds, terrain breakthrough padding, Void Dropped target position, or Void Dropped fall-presentation timing | `src/match/VoidZoneController.ts` and `src/voidDropPresentation.ts` | Void-zone presentation should be isolated before the future falling-state fix separates falling from final Void Dropped truth. |

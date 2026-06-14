@@ -107,6 +107,7 @@
 <li><code>src/match/ImpactController.ts</code>: Local impact application for crater callback wiring, vehicle mutation, combat marker requests, settlement callback wiring, and shot-result text.</li>
 <li><code>src/match/ProjectileController.ts</code>: Local projectile launch, flight stepping, trail tracking, swept collision lookup, and out-of-bounds orchestration.</li>
 <li><code>src/match/RoundBuilder.ts</code>: Local round setup for terrain copy, spawn flattening, starting vehicle state, turn order, and round-start text.</li>
+<li><code>src/match/TerrainController.ts</code>: Local mutable terrain state, current playable map, active heightmap, crater application, surface sampling, visible void top, and vehicle sprite slope reads.</li>
 <li><code>src/match/TurnController.ts</code>: Local turn order/index, turn timer, wind, charge state, and committed/round-over action state.</li>
 <li><code>src/match/VehicleGeometry.ts</code>: Facing-aware combat hull centers and projectile hit-zone conversion shared by scene collision and vehicle rendering.</li>
 <li><code>src/match/VoidZoneController.ts</code>: Visible void-zone geometry and Void Dropped presentation timing.</li>
@@ -490,6 +491,27 @@ git commit -m &quot;refactor: split match scene ui and renderers&quot;
 <li>[x] <strong>Step 3: Run focused verification</strong></li>
 </ul>
 <p>Run: <code>npm test -- src/match/TurnController.test.ts src/match/architecture.test.ts</code></p>
+<p>Expected: PASS.</p>
+<h2>Task 14: Extract Terrain Controller</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/match/TerrainController.ts</code></li>
+<li>Create: <code>src/match/TerrainController.test.ts</code></li>
+<li>Modify: <code>src/match/MatchScene.ts</code></li>
+<li>Modify: <code>src/match/architecture.test.ts</code></li>
+</ul>
+<ul>
+<li>[x] <strong>Step 1: Add failing tests for local terrain state</strong></li>
+</ul>
+<p>Assert that the controller owns the current playable map, stores a mutable round heightmap copy without mutating the round source, applies craters through the shared terrain helper, reports void/out-of-bounds surface samples, and returns clamped vehicle-facing slope reads.</p>
+<ul>
+<li>[x] <strong>Step 2: Move terrain state out of <code>MatchScene</code></strong></li>
+</ul>
+<p>Move active map, mutable heightmap, visible void top storage, crater application, surface sampling, and vehicle sprite slope reads into <code>TerrainController</code>. Keep deterministic heightmap math in <code>shared/gameplay/terrain.ts</code>, terrain drawing in <code>TerrainRenderer</code>, and Void Dropped presentation geometry in <code>VoidZoneController</code>.</p>
+<ul>
+<li>[x] <strong>Step 3: Run focused verification</strong></li>
+</ul>
+<p>Run: <code>npm test -- src/match/TerrainController.test.ts src/match/architecture.test.ts</code></p>
 <p>Expected: PASS.</p>
 <h2>Self-Review</h2>
 <ul>
