@@ -4,6 +4,7 @@ import { inflateSync } from "node:zlib";
 
 const root = process.cwd();
 const mainSource = readFileSync(join(root, "src", "main.ts"), "utf8");
+const matchSceneSource = readFileSync(join(root, "src", "match", "MatchScene.ts"), "utf8");
 const runtimeAssetsSource = readFileSync(join(root, "src", "runtimeAssets.ts"), "utf8");
 const gameTypesSource = readFileSync(join(root, "shared", "model", "gameTypes.ts"), "utf8");
 const unitContentSource = readFileSync(join(root, "shared", "content", "v1Units.ts"), "utf8");
@@ -130,7 +131,7 @@ if (!gameTypesSource.includes('export type ClassId = "bunger" | "glitch" | "boun
 }
 
 if (
-  !mainSource.includes("this.turnOrder = V1_DEMO_UNIT_DEFINITIONS.map((unit) => unit.id);") ||
+  !matchSceneSource.includes("this.turnOrder = V1_DEMO_UNIT_DEFINITIONS.map((unit) => unit.id);") ||
   !unitContentSource.includes('id: "red-2"') ||
   !unitContentSource.includes('id: "blue-2"')
 ) {
@@ -151,7 +152,7 @@ const expectedRuntimeTuning = [
 
 for (const snippet of expectedRuntimeTuning) {
   const source = snippet.startsWith("const USE_") || snippet.includes("yOffset")
-    ? mainSource
+    ? matchSceneSource
     : snippet.includes("SHARED_V1_VEHICLE_HIT_ZONE") || snippet.includes("width:")
       ? unitContentSource
       : tuningSource;

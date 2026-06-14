@@ -139,7 +139,17 @@
 <li><code>shared/gameplay/vehicleSettlement.ts</code> for Phaser-free vehicle terrain placement, localized post-impact slope nudging, and Void Dropped truth resolution.</li>
 <li><code>shared/match/rounds.ts</code> for Phaser-free alive checks, alive-team calculation, winner calculation, and round-over decisions.</li>
 <li><code>shared/match/turns.ts</code> for Phaser-free next-turn selection that skips defeated vehicles while preserving the match turn order.</li>
+<li><code>src/main.ts</code> as browser bootstrap only: Phaser config, viewport guard, online lobby mount, and CSS import.</li>
+<li><code>src/match/MatchScene.ts</code> as the playable Phaser scene and local browser-authority orchestration surface.</li>
+<li><code>src/match/MatchTypes.ts</code> for match-scene runtime state shapes shared by UI/rendering modules.</li>
+<li><code>src/match/MatchController.ts</code> as the local match-flow bridge for active vehicle, alive/movable checks, alive teams, winners, and next-turn decisions.</li>
+<li><code>src/match/MatchCameraController.ts</code> for camera viewport, battlefield framing, and projectile recentering.</li>
 <li><code>src/match/MatchInputController.ts</code> for client-side input sampling without embedding keyboard state directly in the Phaser scene.</li>
+<li><code>src/match/ui/CommandDeck.ts</code> for the fixed command deck, launch meter, movement meter, active unit info, and wind badge.</li>
+<li><code>src/match/rendering/TerrainRenderer.ts</code> for terrain, visible void hazard, and map landmarks.</li>
+<li><code>src/match/rendering/VehicleRenderer.ts</code> for vehicle/character sprites, combat hull overlays, labels, HP bars, and active turn badges.</li>
+<li><code>src/match/rendering/ProjectileRenderer.ts</code> for projectile body and trail drawing.</li>
+<li><code>src/match/rendering/EffectsRenderer.ts</code> for aim arrow, movement rail, and impact preview rings.</li>
 </ul>
 <p>The main technical gap is that online v1 must run the real match through server-owned state and deterministic combat resolution. The existing online preview is not the final combat system.</p>
 <h2>3. V1 Technical Goal</h2>
@@ -513,14 +523,49 @@ src/
 <td>Turn sequencing truth should be reusable by local browser authority and future server authority.</td>
 </tr>
 <tr>
+<td>Change browser bootstrap, game config, viewport guard, or online lobby mount</td>
+<td><code>src/main.ts</code></td>
+<td>Startup belongs outside the Phaser scene so the playable scene remains game-focused.</td>
+</tr>
+<tr>
+<td>Change local active-vehicle, movable/alive, alive-team, winner, or next-turn bridge logic</td>
+<td><code>src/match/MatchController.ts</code></td>
+<td>The scene uses a controller boundary before those decisions move to server authority.</td>
+</tr>
+<tr>
+<td>Change camera viewport, battlefield framing, or projectile recentering</td>
+<td><code>src/match/MatchCameraController.ts</code></td>
+<td>Camera behavior is presentation orchestration, separate from combat truth and drawing.</td>
+</tr>
+<tr>
 <td>Change which keyboard keys mean move, aim, charge, restart, or collision overlay toggle</td>
-<td><code>src/match/MatchInputController.ts</code> and <code>src/main.ts</code> key setup</td>
+<td><code>src/match/MatchInputController.ts</code> and <code>src/match/MatchScene.ts</code> key setup</td>
 <td>Input sampling is client-side controller work; gameplay helpers consume the sampled intent.</td>
 </tr>
 <tr>
-<td>Change how a unit is drawn, how labels are placed, or how the HUD renders</td>
-<td><code>src/main.ts</code> for now; future target is <code>src/match/rendering</code> and <code>src/match/ui</code></td>
-<td>Rendering is still inside the current Phaser scene, but should continue moving out in small slices.</td>
+<td>Change fixed HUD command deck, launch-power meter, movement meter, aim dial, active unit info, or wind badge</td>
+<td><code>src/match/ui/CommandDeck.ts</code></td>
+<td>Command UI should not be mixed into scene lifecycle or combat logic.</td>
+</tr>
+<tr>
+<td>Change terrain, void-hazard, or map-landmark drawing</td>
+<td><code>src/match/rendering/TerrainRenderer.ts</code></td>
+<td>Terrain rendering is visual presentation over shared terrain state.</td>
+</tr>
+<tr>
+<td>Change vehicle sprites, labels, HP bars, combat hull overlays, active turn badge, or footing marker</td>
+<td><code>src/match/rendering/VehicleRenderer.ts</code></td>
+<td>Vehicle drawing should own Phaser sprite/text objects but not combat truth.</td>
+</tr>
+<tr>
+<td>Change projectile trail/body drawing</td>
+<td><code>src/match/rendering/ProjectileRenderer.ts</code></td>
+<td>Projectile rendering is separate from projectile simulation and collision truth.</td>
+</tr>
+<tr>
+<td>Change aim arrow, movement rail, or impact preview rings</td>
+<td><code>src/match/rendering/EffectsRenderer.ts</code></td>
+<td>Tactical visual aids stay out of gameplay resolution logic.</td>
 </tr>
 <tr>
 <td>Change private-room networking, server state, or online preview behavior</td>

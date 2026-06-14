@@ -80,6 +80,7 @@ Highlights:
 - Moved swept projectile collision and vehicle-body hit-zone geometry into `shared/gameplay/projectileCollision.ts` and `shared/gameplay/vehicleHitZone.ts`, removing the old client-local helper modules.
 - Extracted vehicle terrain placement, localized post-impact slope nudging, and Void Dropped truth resolution into `shared/gameplay/vehicleSettlement.ts`, leaving the visual fall target and suspension animation in Phaser.
 - Extracted alive checks, alive-team/winner calculation, and round-over decisions into `shared/match/rounds.ts`, plus next-turn selection into `shared/match/turns.ts`, leaving Phaser responsible for timers and drawing.
+- Split the local Phaser client into bootstrap, match scene, match controller, camera controller, command deck UI, and focused terrain/vehicle/projectile/effects renderers so human development no longer starts from a monolithic `src/main.ts`.
 - Added a TDD naming rule that `v1` remains a product milestone/profile label, while new permanent code modules should use generic names and select milestone behavior through ruleset/content ids.
 - Adopted an HTML-first documentation workflow: markdown remains the canonical editable source, generated HTML is the preferred reading/review surface, local scripts must generate markdown reading copies without AI/manual conversion, and custom HTML is reserved for rich visual/review artifacts.
 - Added horizontal camera side bounds so the battlefield remains centered when the visible camera frame is wider than the world instead of leaving all extra space on one side.

@@ -54,7 +54,17 @@ Current shared extraction includes:
 - `shared/gameplay/vehicleSettlement.ts` for Phaser-free vehicle terrain placement, localized post-impact slope nudging, and Void Dropped truth resolution.
 - `shared/match/rounds.ts` for Phaser-free alive checks, alive-team calculation, winner calculation, and round-over decisions.
 - `shared/match/turns.ts` for Phaser-free next-turn selection that skips defeated vehicles while preserving the match turn order.
+- `src/main.ts` as browser bootstrap only: Phaser config, viewport guard, online lobby mount, and CSS import.
+- `src/match/MatchScene.ts` as the playable Phaser scene and local browser-authority orchestration surface.
+- `src/match/MatchTypes.ts` for match-scene runtime state shapes shared by UI/rendering modules.
+- `src/match/MatchController.ts` as the local match-flow bridge for active vehicle, alive/movable checks, alive teams, winners, and next-turn decisions.
+- `src/match/MatchCameraController.ts` for camera viewport, battlefield framing, and projectile recentering.
 - `src/match/MatchInputController.ts` for client-side input sampling without embedding keyboard state directly in the Phaser scene.
+- `src/match/ui/CommandDeck.ts` for the fixed command deck, launch meter, movement meter, active unit info, and wind badge.
+- `src/match/rendering/TerrainRenderer.ts` for terrain, visible void hazard, and map landmarks.
+- `src/match/rendering/VehicleRenderer.ts` for vehicle/character sprites, combat hull overlays, labels, HP bars, and active turn badges.
+- `src/match/rendering/ProjectileRenderer.ts` for projectile body and trail drawing.
+- `src/match/rendering/EffectsRenderer.ts` for aim arrow, movement rail, and impact preview rings.
 
 The main technical gap is that online v1 must run the real match through server-owned state and deterministic combat resolution. The existing online preview is not the final combat system.
 
@@ -276,8 +286,15 @@ Current human editing map:
 | Change vehicle terrain placement, post-impact slope nudging, or Void Dropped truth thresholds | `shared/gameplay/vehicleSettlement.ts` and `shared/v1/tuning.ts` | Settlement and elimination truth should be shared by the browser demo and future server authority; visual fall/suspension remains client presentation. |
 | Change alive checks, alive-team/winner calculation, or round-over decisions | `shared/match/rounds.ts` | Round outcome truth should be reusable by local browser authority and future server authority. |
 | Change next-turn selection, defeated-vehicle turn skipping, or turn-order wrapping | `shared/match/turns.ts` | Turn sequencing truth should be reusable by local browser authority and future server authority. |
-| Change which keyboard keys mean move, aim, charge, restart, or collision overlay toggle | `src/match/MatchInputController.ts` and `src/main.ts` key setup | Input sampling is client-side controller work; gameplay helpers consume the sampled intent. |
-| Change how a unit is drawn, how labels are placed, or how the HUD renders | `src/main.ts` for now; future target is `src/match/rendering` and `src/match/ui` | Rendering is still inside the current Phaser scene, but should continue moving out in small slices. |
+| Change browser bootstrap, game config, viewport guard, or online lobby mount | `src/main.ts` | Startup belongs outside the Phaser scene so the playable scene remains game-focused. |
+| Change local active-vehicle, movable/alive, alive-team, winner, or next-turn bridge logic | `src/match/MatchController.ts` | The scene uses a controller boundary before those decisions move to server authority. |
+| Change camera viewport, battlefield framing, or projectile recentering | `src/match/MatchCameraController.ts` | Camera behavior is presentation orchestration, separate from combat truth and drawing. |
+| Change which keyboard keys mean move, aim, charge, restart, or collision overlay toggle | `src/match/MatchInputController.ts` and `src/match/MatchScene.ts` key setup | Input sampling is client-side controller work; gameplay helpers consume the sampled intent. |
+| Change fixed HUD command deck, launch-power meter, movement meter, aim dial, active unit info, or wind badge | `src/match/ui/CommandDeck.ts` | Command UI should not be mixed into scene lifecycle or combat logic. |
+| Change terrain, void-hazard, or map-landmark drawing | `src/match/rendering/TerrainRenderer.ts` | Terrain rendering is visual presentation over shared terrain state. |
+| Change vehicle sprites, labels, HP bars, combat hull overlays, active turn badge, or footing marker | `src/match/rendering/VehicleRenderer.ts` | Vehicle drawing should own Phaser sprite/text objects but not combat truth. |
+| Change projectile trail/body drawing | `src/match/rendering/ProjectileRenderer.ts` | Projectile rendering is separate from projectile simulation and collision truth. |
+| Change aim arrow, movement rail, or impact preview rings | `src/match/rendering/EffectsRenderer.ts` | Tactical visual aids stay out of gameplay resolution logic. |
 | Change private-room networking, server state, or online preview behavior | `server/rooms/GravityCanyonRoom.ts` and `server/schema/GravityCanyonState.ts` | Server authority and Colyseus schema belong on the Node side. |
 
 Planned naming cleanup after shared gameplay extraction:
