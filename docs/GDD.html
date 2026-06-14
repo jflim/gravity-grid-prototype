@@ -101,7 +101,7 @@
 <p>The documentation goal is that a new collaborator can read the README, this GDD, and the Production Plan and understand with roughly 95% confidence what we are trying to build, what exists now, what is v1, what is future, and what should not be changed casually.</p>
 <h2>2. Product Overview</h2>
 <p>Gravity Canyon is a desktop browser, turn-based artillery game about stylish anime pilots and signature combat vehicles fighting across unstable canyon terrain. Players win through angle mastery, wind reads, terrain shaping, movement choices, team positioning, and well-timed weapon effects.</p>
-<p>The current v1 target is a hosted private-room online playtest alpha. The long-term product target is a multiplayer artillery game with collectible cosmetic identity, expressive characters, social rooms, and repeatable online play.</p>
+<p>The current v1 target is a hosted private-room online playtest alpha. The long-term product target is a multiplayer artillery game with collectible cosmetic identity, expressive characters, social rooms, repeatable online play, and optional ways to experience the same shooter through more mature abilities, art, adult themes, and sound design.</p>
 <h3>High Concept</h3>
 <p>Players join a private room, choose a seat and character, then take turns moving, aiming, charging power, and firing arcing shots across fractured floating canyon maps. Terrain can be destroyed, vehicles can be knocked into the void, and each pilot/vehicle pair should feel like a distinct authored combat unit.</p>
 <h3>Genre And Platform</h3>
@@ -150,6 +150,7 @@
 <p>Each playable unit is a pilot plus a signature vehicle family. The player should remember both the character and the vehicle as one authored combat identity. The pilot sells personality; the vehicle carries the readable combat footprint.</p>
 <h3>Stream-Safe Adult Anime Style</h3>
 <p>The intended art direction is adult anime arcade with strong fanservice appeal, but the default public/playtest asset style must remain stream-safe and platform-safe. The game can be attractive, suggestive, stylish, and deliberately fanservice-forward without becoming explicit pornography in the normal playable build.</p>
+<p>Long term, Gravity Canyon may support a more mature presentation layer for art, ability theming, adult themes, and sounds. That direction must preserve the same core shooter fairness unless a future milestone explicitly defines a separate adult-only mode.</p>
 <h3>Private-Room Reliability First</h3>
 <p>The first online proof point is not matchmaking, ranking, or a public lobby. It is real people completing private-room matches without desync or confusing state.</p>
 <h3>Cosmetics Stay Cosmetic</h3>
@@ -211,7 +212,7 @@
 <h3>Match</h3>
 <p>A match is one or more rounds. V1 supports best-of-1 and best-of-3 as room settings.</p>
 <h3>Turn Timer</h3>
-<p>V1 target turn timer is 30 seconds unless tuned in implementation. The timer should be visible above the active unit and should not block character/vehicle readability.</p>
+<p>V1 target turn timer uses the shared v1 rules constant, currently 20 seconds. The timer should be visible above the active unit and should not block character/vehicle readability.</p>
 <h3>Turn Order</h3>
 <p>Turn order is generated at match start and persists across every round in that match. Full turn order should be visible enough for players to understand who acts next.</p>
 <h3>HP</h3>
@@ -396,6 +397,16 @@
 <li>Fanservice should not change hitboxes, visibility, or combat fairness.</li>
 </ul>
 <p>This does not mean the game must be sterile. It means the normal playtest/public-facing asset set should be safe enough to share, stream, and playtest without forcing the project into adult-only distribution.</p>
+<h3>Mature Presentation Direction</h3>
+<p>Long term, the player fantasy can include experiencing the same artillery game with more mature ability presentation, adult-themed art variants, and adult sound design. This is a future product direction, not v1 scope.</p>
+<p>Mature presentation rules:</p>
+<ul>
+<li>Stream-safe assets remain the default public/playtest set.</li>
+<li>Mature variants require explicit opt-in and platform/distribution decisions.</li>
+<li>Mature variants do not change hitboxes, HP, damage, movement, projectile behavior, wind, matchmaking, or rewards.</li>
+<li>Mature ability presentation may change visuals, audio, naming, and tone, but it should not secretly change gameplay mechanics.</li>
+<li>The project should keep a clean streamer-safe path so the game can still be shared, demoed, and playtested publicly.</li>
+</ul>
 <h3>Presentation Layers</h3>
 <p>Different surfaces can carry different detail levels:</p>
 <ul>
@@ -491,8 +502,9 @@
 <h2>25. Open Design Questions</h2>
 <p>These are intentionally not v1 scope changes until resolved and moved into the Production Plan.</p>
 <ul>
-<li>What is the exact adult-tone ceiling for the default asset set: stream-safe fanservice only, stream-safe default plus optional mature variants later, or adult-only product with separate stream-safe demo assets?</li>
-<li>Should any mature-only asset pack ever ship, or should all official playable art remain stream-safe?</li>
+<li>What is the exact adult-tone ceiling for the default streamer-safe asset set?</li>
+<li>What mature presentation features are desirable later: art variants, ability names/VFX, audio/SFX, UI theme, or separate adult-only mode?</li>
+<li>Should any mature-only asset pack ever ship, or should mature content remain local/optional/private?</li>
 <li>What are Kaelii and Perlah's exact primary weapon mechanics?</li>
 <li>Should friendly fire become an optional room setting after v1?</li>
 <li>How much camera restriction is needed to discourage ruler-style cheating without hurting global context?</li>
@@ -514,7 +526,7 @@
 <li>Cosmetic inventory.</li>
 <li>Gacha/capsule economy.</li>
 <li>Streamer mode toggle.</li>
-<li>Optional mature cosmetic variants.</li>
+<li>Optional mature art, audio, and ability-presentation variants.</li>
 <li>Expanded lore campaign.</li>
 <li>Mobile controls.</li>
 <li>Full audio identity with voices.</li>
@@ -525,6 +537,7 @@
 <li>README: runbook and current runnable state.</li>
 <li>GDD: living game design document.</li>
 <li>Production Plan: milestone scope, schedule, acceptance criteria, and change control.</li>
+<li>Technical Design Document: implementer-facing architecture, state ownership, networking, simulation, deployment, and verification plan.</li>
 <li>Technical/reference docs: supporting implementation, art, roster, workflow, and historical notes.</li>
 </ul>
 <p>References:</p>

@@ -17,7 +17,7 @@ The documentation goal is that a new collaborator can read the README, this GDD,
 
 Gravity Canyon is a desktop browser, turn-based artillery game about stylish anime pilots and signature combat vehicles fighting across unstable canyon terrain. Players win through angle mastery, wind reads, terrain shaping, movement choices, team positioning, and well-timed weapon effects.
 
-The current v1 target is a hosted private-room online playtest alpha. The long-term product target is a multiplayer artillery game with collectible cosmetic identity, expressive characters, social rooms, and repeatable online play.
+The current v1 target is a hosted private-room online playtest alpha. The long-term product target is a multiplayer artillery game with collectible cosmetic identity, expressive characters, social rooms, repeatable online play, and optional ways to experience the same shooter through more mature abilities, art, adult themes, and sound design.
 
 ### High Concept
 
@@ -79,6 +79,8 @@ Each playable unit is a pilot plus a signature vehicle family. The player should
 ### Stream-Safe Adult Anime Style
 
 The intended art direction is adult anime arcade with strong fanservice appeal, but the default public/playtest asset style must remain stream-safe and platform-safe. The game can be attractive, suggestive, stylish, and deliberately fanservice-forward without becoming explicit pornography in the normal playable build.
+
+Long term, Gravity Canyon may support a more mature presentation layer for art, ability theming, adult themes, and sounds. That direction must preserve the same core shooter fairness unless a future milestone explicitly defines a separate adult-only mode.
 
 ### Private-Room Reliability First
 
@@ -160,7 +162,7 @@ A match is one or more rounds. V1 supports best-of-1 and best-of-3 as room setti
 
 ### Turn Timer
 
-V1 target turn timer is 30 seconds unless tuned in implementation. The timer should be visible above the active unit and should not block character/vehicle readability.
+V1 target turn timer uses the shared v1 rules constant, currently 20 seconds. The timer should be visible above the active unit and should not block character/vehicle readability.
 
 ### Turn Order
 
@@ -405,6 +407,18 @@ The default playable build should remain streamer-safe and platform-safe:
 
 This does not mean the game must be sterile. It means the normal playtest/public-facing asset set should be safe enough to share, stream, and playtest without forcing the project into adult-only distribution.
 
+### Mature Presentation Direction
+
+Long term, the player fantasy can include experiencing the same artillery game with more mature ability presentation, adult-themed art variants, and adult sound design. This is a future product direction, not v1 scope.
+
+Mature presentation rules:
+
+- Stream-safe assets remain the default public/playtest set.
+- Mature variants require explicit opt-in and platform/distribution decisions.
+- Mature variants do not change hitboxes, HP, damage, movement, projectile behavior, wind, matchmaking, or rewards.
+- Mature ability presentation may change visuals, audio, naming, and tone, but it should not secretly change gameplay mechanics.
+- The project should keep a clean streamer-safe path so the game can still be shared, demoed, and playtested publicly.
+
 ### Presentation Layers
 
 Different surfaces can carry different detail levels:
@@ -519,8 +533,9 @@ Future accessibility:
 
 These are intentionally not v1 scope changes until resolved and moved into the Production Plan.
 
-- What is the exact adult-tone ceiling for the default asset set: stream-safe fanservice only, stream-safe default plus optional mature variants later, or adult-only product with separate stream-safe demo assets?
-- Should any mature-only asset pack ever ship, or should all official playable art remain stream-safe?
+- What is the exact adult-tone ceiling for the default streamer-safe asset set?
+- What mature presentation features are desirable later: art variants, ability names/VFX, audio/SFX, UI theme, or separate adult-only mode?
+- Should any mature-only asset pack ever ship, or should mature content remain local/optional/private?
 - What are Kaelii and Perlah's exact primary weapon mechanics?
 - Should friendly fire become an optional room setting after v1?
 - How much camera restriction is needed to discourage ruler-style cheating without hurting global context?
@@ -543,7 +558,7 @@ Future ideas that are not v1:
 - Cosmetic inventory.
 - Gacha/capsule economy.
 - Streamer mode toggle.
-- Optional mature cosmetic variants.
+- Optional mature art, audio, and ability-presentation variants.
 - Expanded lore campaign.
 - Mobile controls.
 - Full audio identity with voices.
@@ -555,6 +570,7 @@ Gravity Canyon uses standard game-development document roles:
 - README: runbook and current runnable state.
 - GDD: living game design document.
 - Production Plan: milestone scope, schedule, acceptance criteria, and change control.
+- Technical Design Document: implementer-facing architecture, state ownership, networking, simulation, deployment, and verification plan.
 - Technical/reference docs: supporting implementation, art, roster, workflow, and historical notes.
 
 References:

@@ -17,6 +17,7 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
 - Browser-based online multiplayer artillery game.
 - Current locked v1 scope is the hosted private-room playtest alpha in `docs/PRODUCTION_PLAN.md`.
 - `docs/GDD.md` is the broader living game design document and does not override the current Production Plan.
+- `docs/TECHNICAL_DESIGN.md` is the implementer-facing blueprint for networking, server-authoritative combat, shared simulation, data models, deployment, and tests.
 - `docs/V1_PLAYTEST_ALPHA.html` is the original v1 contract snapshot for historical reference.
 - Local Phaser prototype proves movement, aiming, wind, destructible terrain, fall KOs, round reset, and readable HUD.
 - Online foundation uses Colyseus with private rooms, ready checks, placeholder rewards, and a server-owned combat preview.
@@ -104,7 +105,7 @@ For v1 scope discipline, use `docs/PRODUCTION_PLAN.md` as the authority before a
 
 For combat feel, keep tuning visible combat hulls and playable v1 map terrain only where they support v1 readability. Advanced wind bands and high-angle/plunge reward rules are future ideas unless the v1 contract is explicitly changed.
 
-For online v1, the next best build direction is to move from the current Colyseus combat preview toward real private-room 1v1/2v2 room settings, seat ownership, persistent match turn order, and server-owned combat results wired into the Phaser match scene.
+For online v1, the next best build direction is to follow `docs/TECHNICAL_DESIGN.md`: move from the current Colyseus combat preview toward real private-room 1v1/2v2 room settings, seat ownership, persistent match turn order, and server-owned combat results wired into the Phaser match scene.
 
 For sprites, use the committed Vesper v9/v10 unit candidates as references for the next production pass. The next pass should simplify detail, preserve the light full gloves/tech shorts/chunky sneaker identity, remove the chroma key, split or size layers as needed, and only then promote runtime aliases.
 

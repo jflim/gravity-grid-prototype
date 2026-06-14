@@ -369,11 +369,11 @@ function indexPathFor(htmlPath) {
 }
 
 function writeDocsIndex(pages) {
-  const primarySources = new Set(['README.md', 'docs/GDD.md', 'docs/PRODUCTION_PLAN.md']);
+  const primarySources = new Set(['README.md', 'docs/GDD.md', 'docs/PRODUCTION_PLAN.md', 'docs/TECHNICAL_DESIGN.md']);
   const primaryRows = pages
     .filter((page) => primarySources.has(relative(root, page.markdownPath).split(sep).join('/')))
     .sort((a, b) => {
-      const order = ['README.md', 'docs/GDD.md', 'docs/PRODUCTION_PLAN.md'];
+      const order = ['README.md', 'docs/GDD.md', 'docs/PRODUCTION_PLAN.md', 'docs/TECHNICAL_DESIGN.md'];
       const aPath = relative(root, a.markdownPath).split(sep).join('/');
       const bPath = relative(root, b.markdownPath).split(sep).join('/');
       return order.indexOf(aPath) - order.indexOf(bPath);
@@ -385,7 +385,9 @@ function writeDocsIndex(pages) {
         ? 'Project runbook, setup, commands, controls, and current runnable state.'
         : relMarkdown === 'docs/GDD.md'
           ? 'Living Game Design Document for product direction, rules, art, audio, UX, and future systems.'
-          : 'Current milestone scope authority, v1 acceptance criteria, build order, and change-control rules.';
+          : relMarkdown === 'docs/PRODUCTION_PLAN.md'
+            ? 'Current milestone scope authority, v1 acceptance criteria, build order, and change-control rules.'
+            : 'Technical Design Document for architecture, networking, simulation, data models, deployment, and tests.';
       return `<tr><td><a href="${escapeHtml(relHtml)}">${escapeHtml(page.title)}</a></td><td><code>${escapeHtml(relMarkdown)}</code></td><td>${escapeHtml(purpose)}</td></tr>`;
     })
     .join('\n');

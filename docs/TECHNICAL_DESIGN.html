@@ -1,0 +1,1155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gravity Canyon Technical Design Document</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        Generated from <a href="TECHNICAL_DESIGN.md">docs/TECHNICAL_DESIGN.md</a> on 2026-06-14.
+        Edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Gravity Canyon Technical Design Document</h1>
+<p>Status: living technical design</p>
+<p>Last updated: 2026-06-14</p>
+<p>Design reference: <a href="GDD.html">GDD.md</a></p>
+<p>Current scope authority: <a href="PRODUCTION_PLAN.html">PRODUCTION_PLAN.md</a></p>
+<p>Runbook: <a href="../README.html">../README.md</a></p>
+<h2>1. Document Purpose</h2>
+<p>This Technical Design Document (TDD) describes how Gravity Canyon should be implemented for the current v1 playtest alpha. It is written from the implementer's point of view.</p>
+<p>The GDD describes the game from the player and product point of view. The Production Plan defines what is allowed in the current milestone. This TDD translates those decisions into architecture, state ownership, module boundaries, message contracts, data models, validation rules, testing strategy, and deployment expectations.</p>
+<p>In this repository, TDD means Technical Design Document. It does not mean test-driven development.</p>
+<h2>2. Current Technical Baseline</h2>
+<p>Gravity Canyon currently has two partially separate systems:</p>
+<ul>
+<li>The local Phaser prototype in <a href="../src/main.ts">../src/main.ts</a> owns the full playable artillery loop.</li>
+<li>The Colyseus room in <a href="../server/rooms/GravityCanyonRoom.ts">../server/rooms/GravityCanyonRoom.ts</a> owns a lightweight online room and combat preview.</li>
+</ul>
+<p>Current local Phaser features include:</p>
+<ul>
+<li>Four local units in a 2v2-style roster.</li>
+<li>Movement, facing, aim, charge, fire, projectile flight, wind, destructible terrain, HP damage, knockback, and Void Dropped eliminations.</li>
+<li>Vehicle-only hit zones and collision-zone overlays.</li>
+<li>Ringworks Basin as the local default playable map.</li>
+<li>Fixed command deck and desktop viewport contract.</li>
+</ul>
+<p>Current Colyseus features include:</p>
+<ul>
+<li>Room create/join.</li>
+<li>Guest display names.</li>
+<li>Two-player placeholder room capacity.</li>
+<li>Ready checks.</li>
+<li>Placeholder nameplate/capsule state.</li>
+<li>Combat preview state with HP, active vehicle, wind, turn number, and winner.</li>
+</ul>
+<p>The main technical gap is that online v1 must run the real match through server-owned state and deterministic combat resolution. The existing online preview is not the final combat system.</p>
+<h2>3. V1 Technical Goal</h2>
+<p>The v1 technical goal is:</p>
+<blockquote>
+<p>A hosted private-room 1v1/2v2 artillery match where the server owns room state, seats, settings, match setup, turn order, movement legality, aim/fire validation, projectile simulation, terrain deformation, damage, KOs, Void Dropped eliminations, score, and match result.</p>
+</blockquote>
+<p>Client responsibilities:</p>
+<ul>
+<li>Render the game.</li>
+<li>Capture player input.</li>
+<li>Show responsive local feedback where safe.</li>
+<li>Send intent messages to the server.</li>
+<li>Animate server-approved match events.</li>
+<li>Reconcile to server state when local prediction differs.</li>
+</ul>
+<p>Server responsibilities:</p>
+<ul>
+<li>Own truth.</li>
+<li>Validate all gameplay inputs.</li>
+<li>Advance turn and match state.</li>
+<li>Resolve combat deterministically.</li>
+<li>Broadcast state and events to every connected client.</li>
+</ul>
+<h2>4. Non-Goals</h2>
+<p>Not part of v1 technical design:</p>
+<ul>
+<li>Ranked matchmaking.</li>
+<li>Public room list.</li>
+<li>Accounts.</li>
+<li>Persistent inventory.</li>
+<li>Durable rewards.</li>
+<li>Real-money purchases.</li>
+<li>Full anti-cheat.</li>
+<li>Rollback netcode.</li>
+<li>Mobile controls.</li>
+<li>Voice chat.</li>
+<li>Free-text chat.</li>
+<li>Mature/adult-only asset delivery.</li>
+<li>Public CDN/production hosting architecture.</li>
+</ul>
+<p>These may be future technical designs, but they should not complicate the v1 implementation.</p>
+<h2>5. Runtime Topology</h2>
+<h3>Local Development</h3>
+<p>Local development uses two services:</p>
+<ul>
+<li>Vite client at <code>http://127.0.0.1:5173</code>.</li>
+<li>Colyseus server at <code>ws://127.0.0.1:2567</code>.</li>
+</ul>
+<p>The command is:</p>
+<pre><code class="language-powershell">
+npm run dev
+
+</code></pre>
+<h3>Public Playtest From This Computer</h3>
+<p>Playtest mode builds the client and serves both client and Colyseus server from one local port:</p>
+<pre><code class="language-powershell">
+npm run playtest
+
+</code></pre>
+<p>Expected local origin:</p>
+<pre><code class="language-text">
+http://127.0.0.1:2567
+
+</code></pre>
+<p><code>npm run playtest</code> starts a Cloudflare quick tunnel and prints a public URL. The game remains bound to localhost unless <code>HOST=0.0.0.0</code> is explicitly set.</p>
+<p>Security boundary:</p>
+<ul>
+<li>Serve only built <code>dist</code> files.</li>
+<li>Serve <code>/healthz</code>.</li>
+<li>Serve <code>/runtime-config.js</code>.</li>
+<li>Serve Colyseus WebSocket room traffic.</li>
+<li>Do not expose source files, local filesystem, shell access, editor access, or admin machine capabilities.</li>
+</ul>
+<h3>Future Hosted Deployment</h3>
+<p>Later deployment may use a managed host, VPS, container host, object storage/CDN, or separate static/client and Node server infrastructure. This is infrastructure scope, not v1 gameplay scope.</p>
+<p>The technical design should not assume Cloudflare Tunnel forever. It should assume the browser can load a static client and connect to a WebSocket endpoint.</p>
+<h2>6. Source Of Truth</h2>
+<table>
+<thead><tr>
+<th>Area</th>
+<th>Source Of Truth</th>
+<th>Notes</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Room membership</td>
+<td>Colyseus room</td>
+<td>No database in v1.</td>
+</tr>
+<tr>
+<td>Display name</td>
+<td>Colyseus player state</td>
+<td>Guest name only.</td>
+</tr>
+<tr>
+<td>Host</td>
+<td>Colyseus room</td>
+<td>First connected player, transferred on leave.</td>
+</tr>
+<tr>
+<td>Room settings</td>
+<td>Colyseus room</td>
+<td>Locked after match start.</td>
+</tr>
+<tr>
+<td>Seats</td>
+<td>Colyseus room</td>
+<td>Seat ownership uses connection/session token.</td>
+</tr>
+<tr>
+<td>Character selection</td>
+<td>Colyseus room</td>
+<td>Four v1 characters only.</td>
+</tr>
+<tr>
+<td>Match score</td>
+<td>Colyseus room</td>
+<td>Ephemeral, room-scoped.</td>
+</tr>
+<tr>
+<td>Turn order</td>
+<td>Server match state</td>
+<td>Generated at match start.</td>
+</tr>
+<tr>
+<td>Wind</td>
+<td>Server round state</td>
+<td>Generated per round.</td>
+</tr>
+<tr>
+<td>Terrain</td>
+<td>Server round state</td>
+<td>Heightmap plus server-approved diffs.</td>
+</tr>
+<tr>
+<td>Vehicle position</td>
+<td>Server round state</td>
+<td>Client may predict active player movement.</td>
+</tr>
+<tr>
+<td>Vehicle HP/alive state</td>
+<td>Server round state</td>
+<td>Client renders only.</td>
+</tr>
+<tr>
+<td>Projectile result</td>
+<td>Server simulation</td>
+<td>Client animates approved path/result.</td>
+</tr>
+<tr>
+<td>Cosmetics</td>
+<td>Player/session state</td>
+<td>Cosmetic only, no combat effects.</td>
+</tr>
+<tr>
+<td>Turn timer</td>
+<td>Shared v1 rules constant</td>
+<td>Current implementation constant is 20 seconds.</td>
+</tr>
+</tbody></table>
+<h2>7. Recommended Module Boundaries</h2>
+<p>The current codebase already has pure logic modules in <code>src</code> and contract modules in <code>server/v1</code>. For server-authoritative combat, new logic should be extracted into Phaser-free, Node-free shared modules.</p>
+<p>Recommended target shape:</p>
+<pre><code class="language-text">
+shared/
+
+  v1/
+
+    constants.ts
+
+    roomRules.ts
+
+    maps.ts
+
+    roster.ts
+
+    weapons.ts
+
+  simulation/
+
+    terrain.ts
+
+    movement.ts
+
+    projectile.ts
+
+    collision.ts
+
+    damage.ts
+
+    turnOrder.ts
+
+    round.ts
+
+    match.ts
+
+server/
+
+  rooms/
+
+    GravityCanyonRoom.ts
+
+  schema/
+
+    GravityCanyonState.ts
+
+  services/
+
+    matchController.ts
+
+src/
+
+  main.ts
+
+  onlineLobby.ts
+
+  net/
+
+    roomClient.ts
+
+  presentation/
+
+    matchSceneAdapter.ts
+
+</code></pre>
+<p>Conservative migration rule:</p>
+<ul>
+<li>Do not rewrite <code>src/main.ts</code> in one giant pass.</li>
+<li>Extract pure deterministic functions first.</li>
+<li>Keep Phaser rendering code client-side.</li>
+<li>Keep Colyseus schema and network messages server-side.</li>
+<li>Share only pure data types and simulation functions.</li>
+</ul>
+<p>Existing pure modules such as <code>projectileCollision.ts</code>, <code>vehicleHitZone.ts</code>, <code>combatRules.ts</code>, <code>playableMaps.ts</code>, <code>server/v1/rules.ts</code>, and <code>server/v1/maps.ts</code> should guide the shape of shared simulation code.</p>
+<h2>8. Colyseus Room Lifecycle</h2>
+<p>Room phases should become:</p>
+<table>
+<thead><tr>
+<th>Phase</th>
+<th>Meaning</th>
+<th>Allowed Client Actions</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>lobby</code></td>
+<td>Room exists, players can join and choose seats/settings.</td>
+<td>Set display name, claim/release seat, select character, set ready, host settings.</td>
+</tr>
+<tr>
+<td><code>starting</code></td>
+<td>Server is creating match state.</td>
+<td>None except leave/reconnect.</td>
+</tr>
+<tr>
+<td><code>round-intro</code></td>
+<td>Round state is available, client can load/render.</td>
+<td>Client ready acknowledgement if needed.</td>
+</tr>
+<tr>
+<td><code>turn-active</code></td>
+<td>One vehicle can move, aim, charge, and fire.</td>
+<td>Active owner sends movement/aim/fire intents. Others may send phrases only.</td>
+</tr>
+<tr>
+<td><code>shot-resolving</code></td>
+<td>Server has accepted a shot and is resolving/broadcasting result.</td>
+<td>No gameplay input.</td>
+</tr>
+<tr>
+<td><code>round-over</code></td>
+<td>Round result shown, score updated.</td>
+<td>None except leave/reconnect.</td>
+</tr>
+<tr>
+<td><code>match-over</code></td>
+<td>Match result shown, returning to lobby.</td>
+<td>Return to lobby acknowledgement.</td>
+</tr>
+</tbody></table>
+<p>The current <code>combat-preview</code> phase should be removed when the real online match is implemented.</p>
+<h2>9. Core Data Model</h2>
+<h3>Room Settings</h3>
+<pre><code class="language-ts">
+type RoomSettings = {
+
+  mode: &quot;1v1&quot; | &quot;2v2&quot;;
+
+  matchLength: &quot;best-of-1&quot; | &quot;best-of-3&quot;;
+
+  mapPick: &quot;random&quot; | V1MapId;
+
+  friendlyFire: false;
+
+};
+
+</code></pre>
+<p><code>friendlyFire</code> is currently fixed false for v1. If a future playtest setting is added, it requires Product Plan review before becoming v1.</p>
+<h3>Player</h3>
+<pre><code class="language-ts">
+type PlayerState = {
+
+  sessionId: string;
+
+  reconnectTokenHash?: string;
+
+  displayName: string;
+
+  joinedAt: number;
+
+  host: boolean;
+
+  ready: boolean;
+
+  seatIds: SeatId[];
+
+  connected: boolean;
+
+  disconnectedAt?: number;
+
+};
+
+</code></pre>
+<h3>Seat</h3>
+<pre><code class="language-ts">
+type SeatState = {
+
+  seatId: &quot;red-1&quot; | &quot;blue-1&quot; | &quot;red-2&quot; | &quot;blue-2&quot;;
+
+  team: &quot;red&quot; | &quot;blue&quot;;
+
+  slot: 1 | 2;
+
+  ownerSessionId?: string;
+
+  ownerReconnectTokenHash?: string;
+
+  characterId?: &quot;nova&quot; | &quot;vesper&quot; | &quot;kaelii&quot; | &quot;perlah&quot;;
+
+};
+
+</code></pre>
+<h3>Match</h3>
+<pre><code class="language-ts">
+type MatchState = {
+
+  matchId: string;
+
+  settings: RoomSettings;
+
+  phase: RoomPhase;
+
+  roundNumber: number;
+
+  redScore: number;
+
+  blueScore: number;
+
+  turnOrder: VehicleId[];
+
+  activeTurnIndex: number;
+
+  winnerTeam?: TeamId;
+
+};
+
+</code></pre>
+<h3>Round</h3>
+<pre><code class="language-ts">
+type RoundState = {
+
+  roundId: string;
+
+  mapId: V1MapId;
+
+  mapSeed: number;
+
+  wind: number;
+
+  terrain: TerrainState;
+
+  vehicles: VehicleState[];
+
+  activeVehicleId?: string;
+
+  turnStartedAt?: number;
+
+  turnEndsAt?: number;
+
+  lastShot?: ShotResult;
+
+};
+
+</code></pre>
+<h3>Vehicle</h3>
+<pre><code class="language-ts">
+type VehicleState = {
+
+  vehicleId: string;
+
+  seatId: SeatId;
+
+  ownerSessionId: string;
+
+  team: TeamId;
+
+  characterId: CharacterId;
+
+  displayName: string;
+
+  x: number;
+
+  y: number;
+
+  facing: 1 | -1;
+
+  angle: number;
+
+  hp: number;
+
+  maxHp: number;
+
+  alive: boolean;
+
+  defeatReason?: &quot;damage&quot; | &quot;void&quot;;
+
+  movementUsed: number;
+
+};
+
+</code></pre>
+<h3>Terrain</h3>
+<pre><code class="language-ts">
+type TerrainState = {
+
+  worldWidth: number;
+
+  deathPlaneY: number;
+
+  visibleVoidTopY: number;
+
+  voidSurfaceY: number;
+
+  heightmap: number[];
+
+  revision: number;
+
+};
+
+</code></pre>
+<p>Heightmap convention:</p>
+<ul>
+<li><code>heightmap[x]</code> is the terrain surface Y at integer X.</li>
+<li>Higher Y means lower on screen.</li>
+<li>A value at or beyond the void threshold means no safe terrain at that X.</li>
+<li>The server increments <code>revision</code> after every terrain change.</li>
+</ul>
+<h3>Shot Result</h3>
+<pre><code class="language-ts">
+type ShotResult = {
+
+  shotId: string;
+
+  shooterVehicleId: string;
+
+  angle: number;
+
+  power: number;
+
+  wind: number;
+
+  path: readonly Point[];
+
+  impact?: ImpactEvent;
+
+  terrainDiffs: readonly TerrainDiff[];
+
+  vehicleDiffs: readonly VehicleDiff[];
+
+  combatEvents: readonly CombatEvent[];
+
+  nextActiveVehicleId?: string;
+
+  roundWinnerTeam?: TeamId;
+
+};
+
+</code></pre>
+<p>The server can store only the latest shot result in room state and broadcast larger path/diff data as a message event if Colyseus schema patch size becomes too large.</p>
+<h2>10. Client Message Protocol</h2>
+<p>All client messages must be ignored unless they are valid for the current phase and sender.</p>
+<h3>Lobby Messages</h3>
+<table>
+<thead><tr>
+<th>Message</th>
+<th>Sender</th>
+<th>Payload</th>
+<th>Server Validation</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>setDisplayName</code></td>
+<td>Any joined client</td>
+<td><code>{ displayName }</code></td>
+<td>Sanitize, length-limit, safe render.</td>
+</tr>
+<tr>
+<td><code>updateRoomSettings</code></td>
+<td>Host only</td>
+<td><code>{ mode, matchLength, mapPick }</code></td>
+<td>Only in lobby, validate values.</td>
+</tr>
+<tr>
+<td><code>claimSeat</code></td>
+<td>Any joined client</td>
+<td><code>{ seatId }</code></td>
+<td>Seat exists, not taken, mode allows seat.</td>
+</tr>
+<tr>
+<td><code>releaseSeat</code></td>
+<td>Seat owner</td>
+<td><code>{ seatId }</code></td>
+<td>Owner only, lobby only.</td>
+</tr>
+<tr>
+<td><code>selectCharacter</code></td>
+<td>Seat owner</td>
+<td><code>{ seatId, characterId }</code></td>
+<td>Character in v1 roster, lobby only.</td>
+</tr>
+<tr>
+<td><code>setReady</code></td>
+<td>Any joined client</td>
+<td><code>{ ready }</code></td>
+<td>Seated player only for match start readiness.</td>
+</tr>
+<tr>
+<td><code>startMatch</code></td>
+<td>Host only</td>
+<td>none</td>
+<td>Required seats filled, seated players ready, settings valid.</td>
+</tr>
+</tbody></table>
+<h3>Turn Messages</h3>
+<table>
+<thead><tr>
+<th>Message</th>
+<th>Sender</th>
+<th>Payload</th>
+<th>Server Validation</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>setMoveDirection</code></td>
+<td>Active vehicle owner</td>
+<td>`{ direction: -1</td>
+<td>0</td>
+<td>1, inputSeq }`</td>
+<td>Active turn, alive, owner, movement remains legal.</td>
+</tr>
+<tr>
+<td><code>setAimAngle</code></td>
+<td>Active vehicle owner</td>
+<td><code>{ angle, facing, inputSeq }</code></td>
+<td>Active turn, owner, angle/facing within allowed range.</td>
+</tr>
+<tr>
+<td><code>fire</code></td>
+<td>Active vehicle owner</td>
+<td><code>{ angle, power, facing, inputSeq }</code></td>
+<td>Active turn, owner, power/angle/facing valid, no shot already resolving.</td>
+</tr>
+<tr>
+<td><code>presetPhrase</code></td>
+<td>Seated player</td>
+<td><code>{ seatId, phraseId }</code></td>
+<td>Phrase allowed, cooldown, player owns seat, no spectators in v1.</td>
+</tr>
+</tbody></table>
+<h3>Reconnect Messages</h3>
+<p>Reconnect should use join options, not public URL parameters:</p>
+<pre><code class="language-ts">
+type JoinOptions = {
+
+  displayName?: string;
+
+  reconnectToken?: string;
+
+  roomId?: string;
+
+};
+
+</code></pre>
+<p>The reconnect token is a temporary room-scoped secret stored in browser local storage. It is not an account credential and is not secure against a compromised browser. It is sufficient for v1 friend playtests.</p>
+<h2>11. Server Simulation Loop</h2>
+<h3>Movement</h3>
+<p>Movement is the only part of the turn that benefits from real-time server ticking.</p>
+<p>Recommended v1 behavior:</p>
+<ul>
+<li>Server ticks active movement at a fixed rate, for example 20 Hz.</li>
+<li>Client sends <code>setMoveDirection</code> on keydown/keyup.</li>
+<li>Server updates active vehicle X/Y if movement remains legal.</li>
+<li>Server tracks movement used during the turn.</li>
+<li>Client may predict active movement locally but must snap/reconcile to server state.</li>
+</ul>
+<p>Movement validation:</p>
+<ul>
+<li>Active vehicle only.</li>
+<li>Alive vehicle only.</li>
+<li>Movement range not exceeded.</li>
+<li>X remains in world bounds.</li>
+<li>Downhill and falling are allowed.</li>
+<li>Steep uphill is blocked by climb-angle rule.</li>
+<li>If vehicle falls below the death/void threshold, mark Void Dropped.</li>
+</ul>
+<h3>Aim</h3>
+<p>Aim does not require high-frequency simulation.</p>
+<p>Recommended v1 behavior:</p>
+<ul>
+<li>Client sends <code>setAimAngle</code> when the displayed aim changes meaningfully.</li>
+<li>Server clamps angle to the allowed tuning range.</li>
+<li>Server stores facing and angle on the active vehicle.</li>
+<li>Client renders the server-approved angle.</li>
+</ul>
+<h3>Firing</h3>
+<p>Recommended v1 behavior:</p>
+<ul>
+<li>Client renders local charging UI immediately.</li>
+<li>Client sends <code>fire</code> with angle, facing, and power on release.</li>
+<li>Server validates active ownership and clamps power/angle.</li>
+<li>Server immediately changes phase to <code>shot-resolving</code>.</li>
+<li>Server resolves the full projectile result.</li>
+<li>Server broadcasts the shot path, impact, terrain diffs, damage diffs, combat markers, KO/Void Dropped events, and next turn or round result.</li>
+</ul>
+<p>V1 does not need full charge anti-cheat. Server validation should reject impossible values and invalid turn ownership.</p>
+<h3>Projectile</h3>
+<p>Projectile simulation should be pure deterministic TypeScript.</p>
+<p>Inputs:</p>
+<ul>
+<li>Shooter position.</li>
+<li>Muzzle offset.</li>
+<li>Angle.</li>
+<li>Facing.</li>
+<li>Power.</li>
+<li>Wind.</li>
+<li>Gravity constant.</li>
+<li>Projectile radius.</li>
+<li>Active terrain heightmap.</li>
+<li>Active vehicle hit zones.</li>
+</ul>
+<p>Outputs:</p>
+<ul>
+<li>Path sample points.</li>
+<li>First impact event.</li>
+<li>Terrain diff.</li>
+<li>Vehicle damage/knockback diff.</li>
+<li>Defeat events.</li>
+<li>Next turn or round winner.</li>
+</ul>
+<p>Simulation should not depend on Phaser physics.</p>
+<h3>Collision Priority</h3>
+<p>For each projectile step:</p>
+<ol>
+<li>Compute swept path from previous point to current point.</li>
+<li>Find first vehicle contact against enemy/self vehicle zones.</li>
+<li>Find first terrain contact against the terrain heightmap.</li>
+<li>Resolve whichever contact has the earliest time along the swept segment.</li>
+<li>If no contact and projectile leaves world bounds or max lifetime, resolve as miss.</li>
+</ol>
+<p>Friendly-fire rule:</p>
+<ul>
+<li>Self damage is allowed.</li>
+<li>Allied HP damage and allied knockback are blocked by default.</li>
+<li>Terrain deformation affects everyone.</li>
+</ul>
+<h3>Terrain Deformation</h3>
+<p>Terrain is server-owned heightmap data.</p>
+<p>Each impact produces one or more terrain diffs:</p>
+<pre><code class="language-ts">
+type TerrainDiff = {
+
+  revisionBefore: number;
+
+  revisionAfter: number;
+
+  startX: number;
+
+  values: number[];
+
+};
+
+</code></pre>
+<p>Clients apply diffs only if <code>revisionBefore</code> matches their local terrain revision. If not, the client requests or waits for a full terrain snapshot.</p>
+<h3>Damage And Knockback</h3>
+<p>Damage resolution order:</p>
+<ol>
+<li>Apply direct hit damage if a vehicle hit zone was contacted.</li>
+<li>Apply splash damage based on distance from impact to vehicle-zone edge.</li>
+<li>Apply weapon-specific terrain deformation.</li>
+<li>Apply weapon-specific knockback.</li>
+<li>Re-settle affected vehicles onto terrain.</li>
+<li>Mark HP KOs.</li>
+<li>Mark Void Dropped eliminations.</li>
+<li>Check round winner.</li>
+</ol>
+<p>Vehicle combat uses vehicle hit zones only. Pilot art and cosmetic variants must not alter hitboxes.</p>
+<h2>12. Weapon Implementation</h2>
+<p>V1 has one primary action per character.</p>
+<p>Recommended data model:</p>
+<pre><code class="language-ts">
+type WeaponDefinition = {
+
+  weaponId: string;
+
+  characterId: CharacterId;
+
+  displayName: string;
+
+  projectileRadius: number;
+
+  baseDamage: number;
+
+  splashRadius: number;
+
+  craterRadius: number;
+
+  craterDepth: number;
+
+  knockback: number;
+
+  effectKind: &quot;breaker&quot; | &quot;gravity-well&quot; | &quot;roller&quot; | &quot;cluster&quot;;
+
+  sfxKey: string;
+
+  vfxKey: string;
+
+};
+
+</code></pre>
+<p>V1 behavior targets:</p>
+<ul>
+<li>Nova: heavy terrain breaker with strongest crater and knockback.</li>
+<li>Vesper: gravity/control impact that pulls enemies toward impact.</li>
+<li>Kaelii: rolling, bouncing, or crater-punishing behavior. Exact v1 behavior still needs final design lock before implementation.</li>
+<li>Perlah: spark/cluster pressure. Exact v1 behavior still needs final design lock before implementation.</li>
+</ul>
+<p>The TDD intentionally calls out Kaelii and Perlah as open technical risk because their exact primary mechanics are not yet locked in the GDD.</p>
+<h2>13. Map And Spawn Implementation</h2>
+<p>V1 maps are fixed contracts with known spawn points.</p>
+<p>Map implementation responsibilities:</p>
+<ul>
+<li>Server chooses the map.</li>
+<li>Server builds the initial heightmap.</li>
+<li>Server owns terrain revision.</li>
+<li>Server places vehicles at map spawn positions by seat.</li>
+<li>Server validates all spawn points are safe.</li>
+<li>Server selects wind using the map wind scale.</li>
+</ul>
+<p>Random map selection:</p>
+<ul>
+<li>If host picks <code>random</code>, server chooses from the v1 map list.</li>
+<li>The chosen map is stored in round state.</li>
+<li>If best-of-3 uses random, the server may choose a fresh map each round.</li>
+<li>If host picks a specific map, the same map repeats each round with fresh terrain.</li>
+</ul>
+<h2>14. Turn Order</h2>
+<p>Turn order should be generated once at match start.</p>
+<p>Requirements:</p>
+<ul>
+<li>Include one vehicle for every filled required seat.</li>
+<li>Alternate teams where possible.</li>
+<li>Be deterministic from match seed and seats.</li>
+<li>Persist across rounds in the match.</li>
+<li>Skip dead or forfeited vehicles.</li>
+<li>Resume at the appropriate next living vehicle after shot resolution.</li>
+</ul>
+<p>For v1, a simple deterministic shuffle that enforces team alternation is sufficient. Full draft-order fairness rules are future scope.</p>
+<h2>15. Disconnect And Reconnect</h2>
+<p>V1 reconnect is practical, not account-secure.</p>
+<p>Requirements:</p>
+<ul>
+<li>Player receives a room-scoped reconnect token when joining.</li>
+<li>Browser stores token in local storage keyed by room id.</li>
+<li>If the socket drops, the room marks player disconnected and preserves seats during grace.</li>
+<li>If the same browser reconnects with the token before grace expires, seats are restored.</li>
+<li>If grace expires, seats forfeit/KO if match is active.</li>
+<li>If disconnected player's turn begins, the timer continues.</li>
+<li>Server skips disconnected turn after the configured skip behavior.</li>
+</ul>
+<p>Do not put reconnect secrets in invite URLs.</p>
+<h2>16. Client Rendering Contract</h2>
+<p>The Phaser client should become a renderer and input surface for server state.</p>
+<p>Client responsibilities:</p>
+<ul>
+<li>Render room/lobby state.</li>
+<li>Render match state.</li>
+<li>Render terrain from server snapshot/diffs.</li>
+<li>Render vehicles from server state.</li>
+<li>Render local input UI.</li>
+<li>Animate server-approved projectile paths.</li>
+<li>Show combat markers from server events.</li>
+<li>Show loading/failure states for assets.</li>
+</ul>
+<p>Client prediction allowed:</p>
+<ul>
+<li>Active player's movement can predict between server ticks.</li>
+<li>Aim/power UI can update immediately.</li>
+<li>Shot path should not be locally authoritative.</li>
+</ul>
+<p>Client prediction not allowed:</p>
+<ul>
+<li>Damage.</li>
+<li>Terrain deformation.</li>
+<li>Round winner.</li>
+<li>Turn advancement.</li>
+<li>Vehicle KO/Void Dropped state.</li>
+<li>Match score.</li>
+</ul>
+<h2>17. Schema And Event Strategy</h2>
+<p>Use Colyseus Schema for durable room state:</p>
+<ul>
+<li>Room phase.</li>
+<li>Settings.</li>
+<li>Players.</li>
+<li>Seats.</li>
+<li>Match score.</li>
+<li>Round metadata.</li>
+<li>Vehicles.</li>
+<li>Active vehicle.</li>
+<li>Wind.</li>
+<li>Terrain revision.</li>
+</ul>
+<p>Use Colyseus messages for heavier transient events:</p>
+<ul>
+<li>Full terrain snapshot.</li>
+<li>Terrain diff batches.</li>
+<li>Shot path samples.</li>
+<li>Impact event.</li>
+<li>Combat marker events.</li>
+<li>Round result summary.</li>
+<li>Error/invalid-action feedback.</li>
+</ul>
+<p>Reason: large projectile paths and terrain arrays can be expensive as constantly patched schema state.</p>
+<h2>18. Error Handling</h2>
+<p>Invalid client inputs should fail closed.</p>
+<p>Server behavior:</p>
+<ul>
+<li>Ignore clearly invalid messages.</li>
+<li>Send a small <code>actionRejected</code> message for user-correctable cases.</li>
+<li>Never throw uncaught exceptions from malformed client payloads.</li>
+<li>Log invalid action categories in development.</li>
+</ul>
+<p>Examples:</p>
+<ul>
+<li>Non-host changes settings: reject.</li>
+<li>Unseated player readies for match: reject.</li>
+<li>Spectator sends phrase: reject.</li>
+<li>Non-active player fires: ignore or reject.</li>
+<li>Active player sends impossible power: clamp or reject based on severity.</li>
+<li>Client terrain revision mismatch: send full terrain snapshot.</li>
+</ul>
+<h2>19. Testing Strategy</h2>
+<h3>Pure Simulation Tests</h3>
+<p>Required:</p>
+<ul>
+<li>Map selection and spawn safety.</li>
+<li>Turn-order generation.</li>
+<li>Movement range and climb-angle legality.</li>
+<li>Falling and Void Dropped detection.</li>
+<li>Projectile terrain collision.</li>
+<li>Projectile vehicle hit-zone collision.</li>
+<li>Splash distance to vehicle-zone edge.</li>
+<li>Terrain deformation diffs.</li>
+<li>HP KO.</li>
+<li>Void Dropped KO.</li>
+<li>Friendly-fire blocked, self-damage allowed.</li>
+<li>Weapon-specific behavior.</li>
+</ul>
+<h3>Room Tests</h3>
+<p>Required:</p>
+<ul>
+<li>Create/join room.</li>
+<li>Display name sanitation.</li>
+<li>Host assignment and host transfer.</li>
+<li>Room settings validation.</li>
+<li>Seat claim/release.</li>
+<li>Character selection.</li>
+<li>Ready/start validation.</li>
+<li>1v1 setup.</li>
+<li>2v2 setup.</li>
+<li>Best-of-1 scoring.</li>
+<li>Best-of-3 scoring.</li>
+<li>Disconnect grace.</li>
+<li>Reconnect token restore.</li>
+<li>Disconnected turn skip/forfeit.</li>
+</ul>
+<h3>Integration Tests</h3>
+<p>Required before v1 acceptance:</p>
+<ul>
+<li>Two-client 1v1 online match completes.</li>
+<li>Four-seat 2v2-format online match completes.</li>
+<li>Four-human 2v2 manual validation completes.</li>
+<li>Public playtest URL loads runtime config and WebP art.</li>
+</ul>
+<h3>Visual/Manual Checks</h3>
+<p>Manual checks remain necessary for:</p>
+<ul>
+<li>Combat readability.</li>
+<li>Projectile animation feel.</li>
+<li>HUD placement.</li>
+<li>Wind visibility.</li>
+<li>Map readability.</li>
+<li>SFX clarity.</li>
+<li>Remote playtest loading.</li>
+</ul>
+<h2>20. Deployment And Asset Delivery</h2>
+<p>V1 playtest deployment should continue to favor low-risk sharing:</p>
+<ul>
+<li>Build static client to <code>dist</code>.</li>
+<li>Serve static client and Colyseus server from one local preview server.</li>
+<li>Use Cloudflare quick tunnel for public internet testing.</li>
+<li>Keep host bound to <code>127.0.0.1</code> by default.</li>
+<li>Use optimized WebP assets for normal playtest loading.</li>
+<li>Keep PNG source assets in repo.</li>
+</ul>
+<p>Future mature/adult content should not be bundled into the default v1 public playtest build. If mature variants are added later, they should be gated by explicit product, platform, and technical decisions:</p>
+<ul>
+<li>Separate asset manifest.</li>
+<li>Explicit opt-in mode.</li>
+<li>No effect on hitboxes or combat stats.</li>
+<li>No automatic loading in streamer-safe mode.</li>
+<li>Clear fallback to stream-safe assets.</li>
+</ul>
+<h2>21. Performance Targets</h2>
+<p>V1 does not need high-scale infrastructure, but it should feel stable for friend playtests.</p>
+<p>Targets:</p>
+<ul>
+<li>One room supports up to required v1 capacity without noticeable server delay.</li>
+<li>2v2 turn inputs feel responsive.</li>
+<li>Projectile resolution completes quickly enough that animation can start immediately after fire.</li>
+<li>Terrain diff payloads stay small enough for quick tunnel testing.</li>
+<li>Runtime assets load over the playtest tunnel without blank-screen failure.</li>
+</ul>
+<p>Optimization priority:</p>
+<ol>
+<li>Correct deterministic results.</li>
+<li>Readable client presentation.</li>
+<li>Small asset payloads.</li>
+<li>Compact terrain/shot event payloads.</li>
+<li>Higher room concurrency later.</li>
+</ol>
+<h2>22. Technical Risks</h2>
+<table>
+<thead><tr>
+<th>Risk</th>
+<th>Why It Matters</th>
+<th>Mitigation</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Large <code>src/main.ts</code> owns too much behavior</td>
+<td>Hard to move online safely</td>
+<td>Extract pure simulation functions in small slices.</td>
+</tr>
+<tr>
+<td>Phaser-specific logic leaks into server</td>
+<td>Server cannot run deterministic simulation</td>
+<td>Shared modules must not import Phaser.</td>
+</tr>
+<tr>
+<td>Terrain arrays become large network payloads</td>
+<td>Quick tunnel and remote players may lag</td>
+<td>Send terrain diffs and revision numbers.</td>
+</tr>
+<tr>
+<td>Charge/power feels delayed online</td>
+<td>Turn-based shooting depends on timing feel</td>
+<td>Let client render power locally; server validates/clamps submitted power for v1.</td>
+</tr>
+<tr>
+<td>Kaelii/Perlah mechanics are not locked</td>
+<td>Weapon implementation could wander</td>
+<td>Lock exact primary mechanics before coding them.</td>
+</tr>
+<tr>
+<td>Reconnect tokens are not true accounts</td>
+<td>Anyone with browser token can reclaim</td>
+<td>Accept for v1 friend tests; accounts later.</td>
+</tr>
+<tr>
+<td>Mature content direction affects platform safety</td>
+<td>Could block sharing/streaming</td>
+<td>Default build remains stream-safe; mature variants are future opt-in.</td>
+</tr>
+</tbody></table>
+<h2>23. Implementation Order</h2>
+<p>Recommended technical sequence:</p>
+<ol>
+<li>Force Cloudflare Tunnel HTTP/2 in <code>npm run playtest</code> if needed for reliability.</li>
+<li>Add room settings to Colyseus state and UI.</li>
+<li>Add seat state and character selection.</li>
+<li>Add ready/start validation using selected seats.</li>
+<li>Extract pure map/terrain/vehicle state builders.</li>
+<li>Extract pure movement validation from <code>src/main.ts</code>.</li>
+<li>Extract pure projectile/collision/damage simulation.</li>
+<li>Add server round creation from room settings.</li>
+<li>Add server turn loop and movement input messages.</li>
+<li>Add server fire resolution and shot result events.</li>
+<li>Make Phaser scene render from server state.</li>
+<li>Add 1v1 online match scoring.</li>
+<li>Add 2v2 online match scoring.</li>
+<li>Add reconnect grace.</li>
+<li>Run four-human v1 validation.</li>
+</ol>
+<p>Each step should be small enough to keep the prototype playable after the commit.</p>
+<h2>24. Documentation Update Rules</h2>
+<p>Update this TDD when:</p>
+<ul>
+<li>A server/client ownership boundary changes.</li>
+<li>A Colyseus message changes.</li>
+<li>A Schema field changes.</li>
+<li>A deterministic simulation module is added or moved.</li>
+<li>Terrain representation changes.</li>
+<li>Deployment/playtest topology changes.</li>
+<li>Test requirements change.</li>
+</ul>
+<p>Do not update this TDD to accept new v1 product scope. Product scope changes go through <a href="PRODUCTION_PLAN.html">PRODUCTION_PLAN.md</a> change control first.</p>
+    </article>
+  </main>
+</body>
+</html>

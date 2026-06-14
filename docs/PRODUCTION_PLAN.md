@@ -101,6 +101,7 @@ Required match rules:
 - Best-of-1 and best-of-3 match settings.
 - One shot per active turn.
 - Firing commits the turn immediately.
+- Turn timer uses the shared v1 rules constant, currently 20 seconds.
 - Equal baseline HP per vehicle.
 - Limited movement range per turn.
 - Downhill movement and falling are allowed.
@@ -352,6 +353,7 @@ Recommended loop:
 ## 20. Supporting References
 
 - [GDD.md](GDD.md): living game design reference.
+- [TECHNICAL_DESIGN.md](TECHNICAL_DESIGN.md): implementer-facing architecture and server-authoritative v1 plan.
 - [V1_PLAYTEST_ALPHA.html](V1_PLAYTEST_ALPHA.html): original v1 contract snapshot.
 - [CHARACTER_ROSTER.md](CHARACTER_ROSTER.md): roster/art notes.
 - [COLLISION_ART_RULE.md](COLLISION_ART_RULE.md): vehicle-only hit-zone art rule.

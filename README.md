@@ -176,6 +176,7 @@ dist/index.html
 - HTML docs index: [docs/index.html](docs/index.html)
 - Game Design Document: [docs/GDD.md](docs/GDD.md)
 - Production Plan and current v1 scope authority: [docs/PRODUCTION_PLAN.md](docs/PRODUCTION_PLAN.md)
+- Technical Design Document: [docs/TECHNICAL_DESIGN.md](docs/TECHNICAL_DESIGN.md)
 - Original v1 contract snapshot: [docs/V1_PLAYTEST_ALPHA.html](docs/V1_PLAYTEST_ALPHA.html)
 - Version log: [docs/VERSION_LOG.md](docs/VERSION_LOG.md)
 - Git workflow: [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md)

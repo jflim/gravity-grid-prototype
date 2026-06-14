@@ -12,6 +12,7 @@
 - Read `docs/SESSION_HANDOFF.md` for the latest handoff, next best step, known environment notes, and verification already run.
 - Read `docs/PRODUCTION_PLAN.md` for current v1 scope, acceptance tests, out-of-scope list, build order, and change-control rules.
 - Read `docs/GDD.md` for broader product direction and design context.
+- Read `docs/TECHNICAL_DESIGN.md` before changing networking, server-authoritative combat, shared simulation, deployment, or data-model boundaries.
 - Read `docs/V1_PLAYTEST_ALPHA.html` as the original v1 contract snapshot if historical context is needed.
 - Follow `docs/GIT_WORKFLOW.md` for commit cadence, branch strategy, and quality gates.
 
@@ -60,6 +61,7 @@ On Windows inside managed Codex shells, detached watch-mode startup can exit sil
 
 - Combat readability comes before cosmetic spectacle inside the match screen.
 - Cosmetics must remain cosmetic only. They must not affect combat stats, hitboxes, projectile behavior, wind, movement, matchmaking, or rewards.
+- Default public/playtest assets stay streamer-safe; mature/adult-only variants are future opt-in presentation scope and must not affect combat truth.
 - Current v1 target is hosted private-room online 2v2 playtest alpha, with 1v1 supported for easier testing.
 - Live matches should move toward server-authoritative combat.
 - Gameplay sprites use stable runtime filenames in `public/assets`; variant/history sprites live under `public/assets/sprite-variants`.

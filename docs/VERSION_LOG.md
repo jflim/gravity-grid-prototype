@@ -71,6 +71,7 @@ Highlights:
 - Added optimized WebP delivery assets and `npm run optimize:assets` so the normal hosted playtest serves the accepted runtime game art at much smaller transfer sizes while keeping PNG sources in the repo.
 - Added runtime config so playtest launch mode controls the Online Alpha panel instead of inferring it from the public URL hostname.
 - Reorganized the primary documentation around standard game-development roles: `README.md` as runbook, `docs/GDD.md` as the living Game Design Document, and `docs/PRODUCTION_PLAN.md` as the current v1 milestone scope authority.
+- Added `docs/TECHNICAL_DESIGN.md` as the implementer-facing Technical Design Document for server-authoritative online v1, and recorded the long-term mature presentation direction as future GDD scope.
 - Added horizontal camera side bounds so the battlefield remains centered when the visible camera frame is wider than the world instead of leaving all extra space on one side.
 - Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.
 - Changed projectile camera behavior to keep the battlefield stable while shots are readable, recentering only when a projectile leaves the readable frame.
