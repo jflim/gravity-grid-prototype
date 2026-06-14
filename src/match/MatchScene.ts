@@ -6,7 +6,6 @@ import {
   resolveMovementStep,
   updateChargeState,
 } from "../../shared/gameplay/movement.js";
-import { settleVehicleOnTerrain, type VehicleSettlementResult } from "../../shared/gameplay/vehicleSettlement.js";
 import type { VehicleHitZone } from "../../shared/gameplay/vehicleHitZone.js";
 import { DEMO_UNIT_DEFINITIONS } from "../../shared/content/v1Units.js";
 import type { TeamId } from "../../shared/model/gameTypes.js";
@@ -81,6 +80,7 @@ import { RoundBuilder } from "./RoundBuilder";
 import { TerrainController } from "./TerrainController";
 import { TurnController } from "./TurnController";
 import { VehicleGeometry } from "./VehicleGeometry";
+import { VehicleSettlementController } from "./VehicleSettlementController";
 import { VoidZoneController } from "./VoidZoneController";
 import { CommandDeck } from "./ui/CommandDeck";
 import { EffectsRenderer } from "./rendering/EffectsRenderer";
@@ -92,7 +92,6 @@ import { MatchInputController, type MatchInputSnapshot } from "./MatchInputContr
 import type {
   ImpactPreview,
   ProjectileState,
-  SettleOptions,
   VehicleState,
 } from "./MatchTypes";
 import {
@@ -199,6 +198,13 @@ export class MatchScene extends Phaser.Scene {
     visibleVoidZoneHeight: VISIBLE_VOID_ZONE_HEIGHT,
     horizontalPadding: VOID_DROP_HORIZONTAL_PADDING,
     fallDurationSeconds: DRAMATIC_VOID_DROP_FALL_SECONDS,
+  });
+  private readonly vehicleSettlementController = new VehicleSettlementController({
+    tuning: VEHICLE_SETTLEMENT_TUNING,
+    visibleVoidTopY: () => this.terrainController.visibleVoidTopY,
+    terrainBreakthroughY: () => this.terrainBreakthroughY(),
+    surfaceAt: (x) => this.surfaceAt(x),
+    createVoidDropPresentation: (input) => this.voidZoneController.createVoidDropPresentation(input),
   });
   private combatMarkerRenderer?: CombatMarkerRenderer;
   private effectsRenderer?: EffectsRenderer;
@@ -602,7 +608,7 @@ export class MatchScene extends Phaser.Scene {
     this.projectile = undefined;
     this.impactPreview = undefined;
     this.shotResult = round.shotResult;
-    this.settleVehicles();
+    this.vehicleSettlementController.settleVehicles(this.vehicles);
     this.beginTurn();
     this.drawWorld();
   }
@@ -673,7 +679,7 @@ export class MatchScene extends Phaser.Scene {
 
     if (step.moved) {
       active.x = step.x;
-      this.placeVehicleOnSurface(active);
+      this.vehicleSettlementController.placeVehicleOnSurface(active);
       active.moveUnits = step.moveUnits;
       if (!active.alive) {
         this.shotResult = `${active.username} drove into the void.`;
@@ -770,7 +776,7 @@ export class MatchScene extends Phaser.Scene {
       makeCrater: (impactX, impactY, radius, depthFactor) => {
         this.makeCrater(impactX, impactY, radius, depthFactor);
       },
-      settleVehicles: (options) => this.settleVehicles(options),
+      settleVehicles: (options) => this.vehicleSettlementController.settleVehicles(this.vehicles, options),
       addCombatMarker: (vehicle, kind, label, slot) => {
         this.combatMarkerRenderer?.addForVehicle(vehicle, kind, label, slot);
       },
@@ -797,27 +803,6 @@ export class MatchScene extends Phaser.Scene {
       depthFactor,
       breakthroughY: this.terrainBreakthroughY(),
     });
-  }
-
-  private settleVehicles(options?: SettleOptions): string[] {
-    const fallEvents: string[] = [];
-    for (const vehicle of this.vehicles) {
-      if (!vehicle.alive) {
-        continue;
-      }
-      const forceSettle = options?.forceIds?.has(vehicle.id) ?? false;
-      const settlement = this.resolveVehicleSettlement(vehicle, {
-        adjustForSlope: true,
-        changedX: options?.changedX,
-        changedRadius: options?.changedRadius,
-        forceSettle,
-      });
-
-      if (this.applyVehicleSettlement(vehicle, settlement)) {
-        fallEvents.push(`${vehicle.username} Void Dropped`);
-      }
-    }
-    return fallEvents;
   }
 
   private advanceTurn(): void {
@@ -899,67 +884,6 @@ export class MatchScene extends Phaser.Scene {
 
   private surfaceAt(x: number): number {
     return this.terrainController.surfaceAt(x);
-  }
-
-  private placeVehicleOnSurface(vehicle: VehicleState): boolean {
-    const settlement = this.resolveVehicleSettlement(vehicle, {
-      adjustForSlope: false,
-    });
-
-    return this.applyVehicleSettlement(vehicle, settlement);
-  }
-
-  private resolveVehicleSettlement(
-    vehicle: VehicleState,
-    options: {
-      adjustForSlope: boolean;
-      changedX?: number;
-      changedRadius?: number;
-      forceSettle?: boolean;
-    },
-  ): VehicleSettlementResult {
-    return settleVehicleOnTerrain({
-      vehicle: {
-        id: vehicle.id,
-        x: vehicle.x,
-        y: vehicle.y,
-        hp: vehicle.hp,
-        alive: vehicle.alive,
-      },
-      adjustForSlope: options.adjustForSlope,
-      changedX: options.changedX,
-      changedRadius: options.changedRadius,
-      forceSettle: options.forceSettle,
-      tuning: VEHICLE_SETTLEMENT_TUNING,
-      fallbackFallStartY: this.terrainController.visibleVoidTopY - 40,
-      surfaceAt: (x) => this.surfaceAt(x),
-    });
-  }
-
-  private applyVehicleSettlement(vehicle: VehicleState, settlement: VehicleSettlementResult): boolean {
-    vehicle.x = settlement.x;
-    vehicle.y = settlement.y;
-    vehicle.hp = settlement.hp;
-    vehicle.alive = settlement.alive;
-    if (settlement.defeatReason) {
-      vehicle.defeatReason = settlement.defeatReason;
-    }
-
-    if (settlement.voidDropped) {
-      const presentation = this.voidZoneController.createVoidDropPresentation({
-        fallStartX: settlement.fallStartX,
-        fallStartY: settlement.fallStartY,
-        visibleVoidTopY: this.terrainController.visibleVoidTopY,
-        terrainBreakthroughY: this.terrainBreakthroughY(),
-        surfaceAt: (x) => this.surfaceAt(x),
-      });
-      vehicle.voidDropPresentation = presentation;
-      vehicle.x = presentation.targetX;
-      vehicle.y = presentation.targetY;
-      return true;
-    }
-
-    return false;
   }
 
   private terrainBreakthroughY(): number {

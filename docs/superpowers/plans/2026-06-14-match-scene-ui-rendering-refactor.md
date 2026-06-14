@@ -22,6 +22,7 @@
 - `src/match/TerrainController.ts`: Local mutable terrain state, current playable map, active heightmap, crater application, surface sampling, visible void top, and vehicle sprite slope reads.
 - `src/match/TurnController.ts`: Local turn order/index, turn timer, wind, charge state, and committed/round-over action state.
 - `src/match/VehicleGeometry.ts`: Facing-aware combat hull centers and projectile hit-zone conversion shared by scene collision and vehicle rendering.
+- `src/match/VehicleSettlementController.ts`: Local vehicle placement application, shared settlement calls, Void Dropped presentation assignment, and fall event text.
 - `src/match/VoidZoneController.ts`: Visible void-zone geometry and Void Dropped presentation timing.
 - `src/match/ui/CommandDeck.ts`: Fixed HUD command deck drawing, active unit info, launch meter, movement meter, and aim dial.
 - `src/match/rendering/TerrainRenderer.ts`: Terrain, void hazard, and map landmark drawing.
@@ -400,6 +401,27 @@ Move active map, mutable heightmap, visible void top storage, crater application
 - [x] **Step 3: Run focused verification**
 
 Run: `npm test -- src/match/TerrainController.test.ts src/match/architecture.test.ts`
+Expected: PASS.
+
+## Task 15: Extract Vehicle Settlement Controller
+
+**Files:**
+- Create: `src/match/VehicleSettlementController.ts`
+- Create: `src/match/VehicleSettlementController.test.ts`
+- Modify: `src/match/MatchScene.ts`
+- Modify: `src/match/architecture.test.ts`
+
+- [x] **Step 1: Add failing tests for local settlement application**
+
+Assert that the controller places alive vehicles on terrain, applies Void Dropped presentation state and event text, and skips vehicles that are already defeated.
+
+- [x] **Step 2: Move settlement application out of `MatchScene`**
+
+Move shared settlement helper calls, mutable vehicle placement updates, Void Dropped presentation assignment, and fall event text into `VehicleSettlementController`. Keep deterministic footing and slope truth in `shared/gameplay/vehicleSettlement.ts`, and keep visible void-run presentation geometry in `VoidZoneController`.
+
+- [x] **Step 3: Run focused verification**
+
+Run: `npm test -- src/match/VehicleSettlementController.test.ts src/match/architecture.test.ts`
 Expected: PASS.
 
 ## Self-Review

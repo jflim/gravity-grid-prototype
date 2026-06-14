@@ -110,6 +110,7 @@
 <li><code>src/match/TerrainController.ts</code>: Local mutable terrain state, current playable map, active heightmap, crater application, surface sampling, visible void top, and vehicle sprite slope reads.</li>
 <li><code>src/match/TurnController.ts</code>: Local turn order/index, turn timer, wind, charge state, and committed/round-over action state.</li>
 <li><code>src/match/VehicleGeometry.ts</code>: Facing-aware combat hull centers and projectile hit-zone conversion shared by scene collision and vehicle rendering.</li>
+<li><code>src/match/VehicleSettlementController.ts</code>: Local vehicle placement application, shared settlement calls, Void Dropped presentation assignment, and fall event text.</li>
 <li><code>src/match/VoidZoneController.ts</code>: Visible void-zone geometry and Void Dropped presentation timing.</li>
 <li><code>src/match/ui/CommandDeck.ts</code>: Fixed HUD command deck drawing, active unit info, launch meter, movement meter, and aim dial.</li>
 <li><code>src/match/rendering/TerrainRenderer.ts</code>: Terrain, void hazard, and map landmark drawing.</li>
@@ -512,6 +513,27 @@ git commit -m &quot;refactor: split match scene ui and renderers&quot;
 <li>[x] <strong>Step 3: Run focused verification</strong></li>
 </ul>
 <p>Run: <code>npm test -- src/match/TerrainController.test.ts src/match/architecture.test.ts</code></p>
+<p>Expected: PASS.</p>
+<h2>Task 15: Extract Vehicle Settlement Controller</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/match/VehicleSettlementController.ts</code></li>
+<li>Create: <code>src/match/VehicleSettlementController.test.ts</code></li>
+<li>Modify: <code>src/match/MatchScene.ts</code></li>
+<li>Modify: <code>src/match/architecture.test.ts</code></li>
+</ul>
+<ul>
+<li>[x] <strong>Step 1: Add failing tests for local settlement application</strong></li>
+</ul>
+<p>Assert that the controller places alive vehicles on terrain, applies Void Dropped presentation state and event text, and skips vehicles that are already defeated.</p>
+<ul>
+<li>[x] <strong>Step 2: Move settlement application out of <code>MatchScene</code></strong></li>
+</ul>
+<p>Move shared settlement helper calls, mutable vehicle placement updates, Void Dropped presentation assignment, and fall event text into <code>VehicleSettlementController</code>. Keep deterministic footing and slope truth in <code>shared/gameplay/vehicleSettlement.ts</code>, and keep visible void-run presentation geometry in <code>VoidZoneController</code>.</p>
+<ul>
+<li>[x] <strong>Step 3: Run focused verification</strong></li>
+</ul>
+<p>Run: <code>npm test -- src/match/VehicleSettlementController.test.ts src/match/architecture.test.ts</code></p>
 <p>Expected: PASS.</p>
 <h2>Self-Review</h2>
 <ul>

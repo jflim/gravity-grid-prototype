@@ -13,6 +13,7 @@ test("match scene refactor exposes planned module boundaries", () => {
     "src/match/TerrainController.ts",
     "src/match/TurnController.ts",
     "src/match/VehicleGeometry.ts",
+    "src/match/VehicleSettlementController.ts",
     "src/match/VoidZoneController.ts",
     "src/match/ui/CommandDeck.ts",
     "src/match/rendering/TerrainRenderer.ts",
@@ -38,6 +39,7 @@ test("planned match modules export their concrete boundaries", () => {
     ["src/match/TerrainController.ts", "export class TerrainController"],
     ["src/match/TurnController.ts", "export class TurnController"],
     ["src/match/VehicleGeometry.ts", "export class VehicleGeometry"],
+    ["src/match/VehicleSettlementController.ts", "export class VehicleSettlementController"],
     ["src/match/VoidZoneController.ts", "export class VoidZoneController"],
     ["src/match/ui/CommandDeck.ts", "export class CommandDeck"],
     ["src/match/rendering/TerrainRenderer.ts", "export class TerrainRenderer"],
@@ -75,4 +77,12 @@ test("match scene delegates terrain state to TerrainController", () => {
   assert.doesNotMatch(matchScene, /craterTerrain/);
   assert.doesNotMatch(matchScene, /terrainAngleAt as terrainSlopeAngleAt/);
   assert.doesNotMatch(matchScene, /surfaceAt as terrainSurfaceAt/);
+});
+
+test("match scene delegates vehicle settlement to VehicleSettlementController", () => {
+  const matchScene = readFileSync("src/match/MatchScene.ts", "utf8");
+
+  assert.match(matchScene, /new VehicleSettlementController/);
+  assert.doesNotMatch(matchScene, /settleVehicleOnTerrain/);
+  assert.doesNotMatch(matchScene, /VehicleSettlementResult/);
 });

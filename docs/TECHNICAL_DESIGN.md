@@ -65,6 +65,7 @@ Current shared extraction includes:
 - `src/match/TerrainController.ts` for local mutable terrain state: current playable map, active heightmap copy, surface sampling, crater application, visible void top, and vehicle sprite slope reads.
 - `src/match/TurnController.ts` for local turn order/index, turn timer, wind, charge state, and committed/round-over action state.
 - `src/match/VehicleGeometry.ts` for facing-aware combat hull centers and projectile hit-zone geometry shared by scene collision and vehicle rendering.
+- `src/match/VehicleSettlementController.ts` for local vehicle placement application: calling shared settlement truth, mutating local vehicle state, assigning Void Dropped presentation state, and reporting fall events.
 - `src/match/MatchInputController.ts` for client-side input sampling without embedding keyboard state directly in the Phaser scene.
 - `src/match/VoidZoneController.ts` for visible void-zone geometry and Void Dropped presentation state/timing.
 - `src/match/ui/CommandDeck.ts` for the fixed command deck, launch meter, movement meter, active unit info, and wind badge.
@@ -247,6 +248,7 @@ src/
     TerrainController.ts
     TurnController.ts
     VehicleGeometry.ts
+    VehicleSettlementController.ts
     VoidZoneController.ts
     authority/
       MatchAuthority.ts
@@ -310,6 +312,7 @@ Current human editing map:
 | Change direct/splash damage, allied friendly-fire filtering, self-damage, bunger knockback, or impact radius selection | `shared/gameplay/impact.ts` and `shared/v1/tuning.ts` | Impact outcome math must be reusable by the future server authority while Phaser stays responsible for markers and animation. |
 | Change local impact application, crater callback wiring, combat-marker requests, settlement callback wiring, or shot-result text | `src/match/ImpactController.ts`, `shared/gameplay/impact.ts`, and `shared/gameplay/vehicleSettlement.ts` | The scene should delegate impact application through a focused controller while deterministic damage and settlement truth stay shared. |
 | Change vehicle terrain placement, post-impact slope nudging, or Void Dropped truth thresholds | `shared/gameplay/vehicleSettlement.ts` and `shared/v1/tuning.ts` | Settlement and elimination truth should be shared by the browser demo and future server authority; visual fall/suspension remains client presentation. |
+| Change local vehicle placement application, Void Dropped presentation assignment, or fall event text after settlement | `src/match/VehicleSettlementController.ts`, `shared/gameplay/vehicleSettlement.ts`, and `src/match/VoidZoneController.ts` | The controller bridges shared settlement truth to mutable local vehicle state and visual Void Dropped presentation without putting that workflow back into `MatchScene`. |
 | Change alive checks, alive-team/winner calculation, or round-over decisions | `shared/match/rounds.ts` | Round outcome truth should be reusable by local browser authority and future server authority. |
 | Change next-turn selection, defeated-vehicle turn skipping, or turn-order wrapping | `shared/match/turns.ts` | Turn sequencing truth should be reusable by local browser authority and future server authority. |
 | Change browser bootstrap, game config, viewport guard, or online lobby mount | `src/main.ts` | Startup belongs outside the Phaser scene so the playable scene remains game-focused. |

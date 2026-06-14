@@ -150,6 +150,7 @@
 <li><code>src/match/TerrainController.ts</code> for local mutable terrain state: current playable map, active heightmap copy, surface sampling, crater application, visible void top, and vehicle sprite slope reads.</li>
 <li><code>src/match/TurnController.ts</code> for local turn order/index, turn timer, wind, charge state, and committed/round-over action state.</li>
 <li><code>src/match/VehicleGeometry.ts</code> for facing-aware combat hull centers and projectile hit-zone geometry shared by scene collision and vehicle rendering.</li>
+<li><code>src/match/VehicleSettlementController.ts</code> for local vehicle placement application: calling shared settlement truth, mutating local vehicle state, assigning Void Dropped presentation state, and reporting fall events.</li>
 <li><code>src/match/MatchInputController.ts</code> for client-side input sampling without embedding keyboard state directly in the Phaser scene.</li>
 <li><code>src/match/VoidZoneController.ts</code> for visible void-zone geometry and Void Dropped presentation state/timing.</li>
 <li><code>src/match/ui/CommandDeck.ts</code> for the fixed command deck, launch meter, movement meter, active unit info, and wind badge.</li>
@@ -430,6 +431,8 @@ src/
 
     VehicleGeometry.ts
 
+    VehicleSettlementController.ts
+
     VoidZoneController.ts
 
     authority/
@@ -558,6 +561,11 @@ src/
 <td>Change vehicle terrain placement, post-impact slope nudging, or Void Dropped truth thresholds</td>
 <td><code>shared/gameplay/vehicleSettlement.ts</code> and <code>shared/v1/tuning.ts</code></td>
 <td>Settlement and elimination truth should be shared by the browser demo and future server authority; visual fall/suspension remains client presentation.</td>
+</tr>
+<tr>
+<td>Change local vehicle placement application, Void Dropped presentation assignment, or fall event text after settlement</td>
+<td><code>src/match/VehicleSettlementController.ts</code>, <code>shared/gameplay/vehicleSettlement.ts</code>, and <code>src/match/VoidZoneController.ts</code></td>
+<td>The controller bridges shared settlement truth to mutable local vehicle state and visual Void Dropped presentation without putting that workflow back into <code>MatchScene</code>.</td>
 </tr>
 <tr>
 <td>Change alive checks, alive-team/winner calculation, or round-over decisions</td>
