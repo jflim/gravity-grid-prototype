@@ -137,6 +137,8 @@
 <li><code>shared/gameplay/vehicleHitZone.ts</code> for shared vehicle-body hit-zone bounds, point checks, nearest-point checks, and splash-distance geometry.</li>
 <li><code>shared/gameplay/impact.ts</code> for Phaser-free projectile impact damage, friendly-fire filtering, bunger knockback, and crater/damage tuning selection.</li>
 <li><code>shared/gameplay/vehicleSettlement.ts</code> for Phaser-free vehicle terrain placement, localized post-impact slope nudging, and Void Dropped truth resolution.</li>
+<li><code>shared/match/rounds.ts</code> for Phaser-free alive checks, alive-team calculation, winner calculation, and round-over decisions.</li>
+<li><code>shared/match/turns.ts</code> for Phaser-free next-turn selection that skips defeated vehicles while preserving the match turn order.</li>
 <li><code>src/match/MatchInputController.ts</code> for client-side input sampling without embedding keyboard state directly in the Phaser scene.</li>
 </ul>
 <p>The main technical gap is that online v1 must run the real match through server-owned state and deterministic combat resolution. The existing online preview is not the final combat system.</p>
@@ -349,6 +351,12 @@ shared/
 
     turnSequence.ts
 
+  match/
+
+    rounds.ts
+
+    turns.ts
+
   protocol/
 
     matchCommands.ts
@@ -493,6 +501,16 @@ src/
 <td>Change vehicle terrain placement, post-impact slope nudging, or Void Dropped truth thresholds</td>
 <td><code>shared/gameplay/vehicleSettlement.ts</code> and <code>shared/v1/tuning.ts</code></td>
 <td>Settlement and elimination truth should be shared by the browser demo and future server authority; visual fall/suspension remains client presentation.</td>
+</tr>
+<tr>
+<td>Change alive checks, alive-team/winner calculation, or round-over decisions</td>
+<td><code>shared/match/rounds.ts</code></td>
+<td>Round outcome truth should be reusable by local browser authority and future server authority.</td>
+</tr>
+<tr>
+<td>Change next-turn selection, defeated-vehicle turn skipping, or turn-order wrapping</td>
+<td><code>shared/match/turns.ts</code></td>
+<td>Turn sequencing truth should be reusable by local browser authority and future server authority.</td>
 </tr>
 <tr>
 <td>Change which keyboard keys mean move, aim, charge, restart, or collision overlay toggle</td>

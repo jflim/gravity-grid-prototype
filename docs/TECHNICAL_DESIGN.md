@@ -52,6 +52,8 @@ Current shared extraction includes:
 - `shared/gameplay/vehicleHitZone.ts` for shared vehicle-body hit-zone bounds, point checks, nearest-point checks, and splash-distance geometry.
 - `shared/gameplay/impact.ts` for Phaser-free projectile impact damage, friendly-fire filtering, bunger knockback, and crater/damage tuning selection.
 - `shared/gameplay/vehicleSettlement.ts` for Phaser-free vehicle terrain placement, localized post-impact slope nudging, and Void Dropped truth resolution.
+- `shared/match/rounds.ts` for Phaser-free alive checks, alive-team calculation, winner calculation, and round-over decisions.
+- `shared/match/turns.ts` for Phaser-free next-turn selection that skips defeated vehicles while preserving the match turn order.
 - `src/match/MatchInputController.ts` for client-side input sampling without embedding keyboard state directly in the Phaser scene.
 
 The main technical gap is that online v1 must run the real match through server-owned state and deterministic combat resolution. The existing online preview is not the final combat system.
@@ -194,6 +196,9 @@ shared/
     vehicleSettlement.ts
     combatResolution.ts
     turnSequence.ts
+  match/
+    rounds.ts
+    turns.ts
   protocol/
     matchCommands.ts
     matchEvents.ts
@@ -269,6 +274,8 @@ Current human editing map:
 | Change swept terrain collision, vehicle collision priority, projectile-edge contact timing, or vehicle hit-zone geometry | `shared/gameplay/projectileCollision.ts`, `shared/gameplay/vehicleHitZone.ts`, and `shared/v1/tuning.ts` | Collision truth should be shared by browser presentation and future server authority. |
 | Change direct/splash damage, allied friendly-fire filtering, self-damage, bunger knockback, or impact radius selection | `shared/gameplay/impact.ts` and `shared/v1/tuning.ts` | Impact outcome math must be reusable by the future server authority while Phaser stays responsible for markers and animation. |
 | Change vehicle terrain placement, post-impact slope nudging, or Void Dropped truth thresholds | `shared/gameplay/vehicleSettlement.ts` and `shared/v1/tuning.ts` | Settlement and elimination truth should be shared by the browser demo and future server authority; visual fall/suspension remains client presentation. |
+| Change alive checks, alive-team/winner calculation, or round-over decisions | `shared/match/rounds.ts` | Round outcome truth should be reusable by local browser authority and future server authority. |
+| Change next-turn selection, defeated-vehicle turn skipping, or turn-order wrapping | `shared/match/turns.ts` | Turn sequencing truth should be reusable by local browser authority and future server authority. |
 | Change which keyboard keys mean move, aim, charge, restart, or collision overlay toggle | `src/match/MatchInputController.ts` and `src/main.ts` key setup | Input sampling is client-side controller work; gameplay helpers consume the sampled intent. |
 | Change how a unit is drawn, how labels are placed, or how the HUD renders | `src/main.ts` for now; future target is `src/match/rendering` and `src/match/ui` | Rendering is still inside the current Phaser scene, but should continue moving out in small slices. |
 | Change private-room networking, server state, or online preview behavior | `server/rooms/GravityCanyonRoom.ts` and `server/schema/GravityCanyonState.ts` | Server authority and Colyseus schema belong on the Node side. |

@@ -20,6 +20,12 @@ import {
   surfaceAt as terrainSurfaceAt,
   terrainAngleAt as terrainSlopeAngleAt,
 } from "../shared/gameplay/terrain.js";
+import {
+  aliveTeamsForRound,
+  isRoundVehicleAlive,
+  winningTeamForRound,
+} from "../shared/match/rounds.js";
+import { resolveNextTurn } from "../shared/match/turns.js";
 import { settleVehicleOnTerrain, type VehicleSettlementResult } from "../shared/gameplay/vehicleSettlement.js";
 import type { VehicleHitZone } from "../shared/gameplay/vehicleHitZone.js";
 import { V1_DEMO_UNIT_DEFINITIONS, type V1DemoUnitDefinition } from "../shared/content/v1Units.js";
@@ -1064,21 +1070,19 @@ class GravityGridScene extends Phaser.Scene {
     this.charge = 0;
     this.turnCommitted = false;
 
-    if (this.aliveTeams().size <= 1) {
+    const decision = resolveNextTurn({
+      turnOrder: this.turnOrder,
+      currentTurnIndex: this.turnIndex,
+      vehicles: this.vehicles,
+    });
+
+    if (decision.kind === "round-over") {
       this.endRound();
       return;
     }
 
-    for (let i = 0; i < this.turnOrder.length; i += 1) {
-      this.turnIndex = (this.turnIndex + 1) % this.turnOrder.length;
-      const next = this.activeVehicle();
-      if (next && this.isMovable(next)) {
-        this.beginTurn();
-        return;
-      }
-    }
-
-    this.endRound();
+    this.turnIndex = decision.nextTurnIndex;
+    this.beginTurn();
   }
 
   private isMovable(vehicle: VehicleState): boolean {
@@ -1086,16 +1090,15 @@ class GravityGridScene extends Phaser.Scene {
   }
 
   private isAlive(vehicle: VehicleState): boolean {
-    return vehicle.alive && vehicle.hp > 0;
+    return isRoundVehicleAlive(vehicle);
   }
 
   private aliveTeams(): Set<TeamId> {
-    return new Set(this.vehicles.filter((vehicle) => this.isAlive(vehicle)).map((vehicle) => vehicle.team));
+    return aliveTeamsForRound(this.vehicles);
   }
 
   private winningTeam(): TeamId | undefined {
-    const aliveTeams = this.aliveTeams();
-    return aliveTeams.size === 1 ? [...aliveTeams][0] : undefined;
+    return winningTeamForRound(this.vehicles);
   }
 
   private endRound(): void {
