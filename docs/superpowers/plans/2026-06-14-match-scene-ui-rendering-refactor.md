@@ -19,6 +19,7 @@
 - `src/match/ImpactController.ts`: Local impact application for crater callback wiring, vehicle mutation, combat marker requests, settlement callback wiring, and shot-result text.
 - `src/match/ProjectileController.ts`: Local projectile launch, flight stepping, trail tracking, swept collision lookup, and out-of-bounds orchestration.
 - `src/match/RoundBuilder.ts`: Local round setup for terrain copy, spawn flattening, starting vehicle state, turn order, and round-start text.
+- `src/match/TurnController.ts`: Local turn order/index, turn timer, wind, charge state, and committed/round-over action state.
 - `src/match/VehicleGeometry.ts`: Facing-aware combat hull centers and projectile hit-zone conversion shared by scene collision and vehicle rendering.
 - `src/match/VoidZoneController.ts`: Visible void-zone geometry and Void Dropped presentation timing.
 - `src/match/ui/CommandDeck.ts`: Fixed HUD command deck drawing, active unit info, launch meter, movement meter, and aim dial.
@@ -356,6 +357,27 @@ Move `CombatMarker` into `src/match/rendering/RenderingTypes.ts` because it owns
 - [x] **Step 3: Run focused verification**
 
 Run: `npm test -- src/match/architecture.test.ts`
+Expected: PASS.
+
+## Task 13: Extract Turn Controller
+
+**Files:**
+- Create: `src/match/TurnController.ts`
+- Create: `src/match/TurnController.test.ts`
+- Modify: `src/match/MatchScene.ts`
+- Modify: `src/match/architecture.test.ts`
+
+- [x] **Step 1: Add failing tests for local turn state**
+
+Assert that the controller starts a round, begins a turn with fresh action state, ticks turn time to timeout, advances to a chosen turn index, resets charge/commit state, and locks action state when the round ends.
+
+- [x] **Step 2: Move turn state out of `MatchScene`**
+
+Move turn order/index, turn timer, wind, charging, charge, and committed state into `TurnController`. Keep pure next-turn selection in `MatchController`/`shared/match/turns.ts`, and keep scene presentation work such as camera framing in `MatchScene`.
+
+- [x] **Step 3: Run focused verification**
+
+Run: `npm test -- src/match/TurnController.test.ts src/match/architecture.test.ts`
 Expected: PASS.
 
 ## Self-Review

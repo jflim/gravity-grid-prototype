@@ -62,6 +62,7 @@ Current shared extraction includes:
 - `src/match/ImpactController.ts` for local impact application: crater callback, vehicle damage mutation, knockback mutation, settlement callback, marker requests, and shot-result text.
 - `src/match/ProjectileController.ts` for local projectile launch, flight stepping, trail tracking, swept collision lookup, and out-of-bounds orchestration.
 - `src/match/RoundBuilder.ts` for local round setup: terrain copy, spawn flattening, starting vehicle state, turn order, visible void top, and round-start message.
+- `src/match/TurnController.ts` for local turn order/index, turn timer, wind, charge state, and committed/round-over action state.
 - `src/match/VehicleGeometry.ts` for facing-aware combat hull centers and projectile hit-zone geometry shared by scene collision and vehicle rendering.
 - `src/match/MatchInputController.ts` for client-side input sampling without embedding keyboard state directly in the Phaser scene.
 - `src/match/VoidZoneController.ts` for visible void-zone geometry and Void Dropped presentation state/timing.
@@ -242,6 +243,7 @@ src/
     ImpactController.ts
     ProjectileController.ts
     RoundBuilder.ts
+    TurnController.ts
     VehicleGeometry.ts
     VoidZoneController.ts
     authority/
@@ -311,6 +313,7 @@ Current human editing map:
 | Change browser bootstrap, game config, viewport guard, or online lobby mount | `src/main.ts` | Startup belongs outside the Phaser scene so the playable scene remains game-focused. |
 | Change local active-vehicle, movable/alive, alive-team, winner, or next-turn bridge logic | `src/match/MatchController.ts` | The scene uses a controller boundary before those decisions move to server authority. |
 | Change local round setup, spawn flattening width, starting HP/move units, initial facing angle, initial turn order, or round-start message | `src/match/RoundBuilder.ts` and `shared/v1/tuning.ts` | Round initialization should be testable without opening Phaser scene rendering code. |
+| Change local turn index, turn timer, charge state, committed state, or wind-per-turn ownership | `src/match/TurnController.ts`, `shared/match/turns.ts`, and `shared/v1/tuning.ts` | Turn state should be testable without Phaser lifecycle code; pure next-turn decisions remain in shared turn helpers. |
 | Change camera viewport, battlefield framing, or projectile recentering | `src/match/MatchCameraController.ts` | Camera behavior is presentation orchestration, separate from combat truth and drawing. |
 | Change visible void-zone bounds, terrain breakthrough padding, Void Dropped target position, or Void Dropped fall-presentation timing | `src/match/VoidZoneController.ts` and `src/voidDropPresentation.ts` | Void-zone presentation should be isolated before the future falling-state fix separates falling from final Void Dropped truth. |
 | Change which keyboard keys mean move, aim, charge, restart, or collision overlay toggle | `src/match/MatchInputController.ts` and `src/match/MatchScene.ts` key setup | Input sampling is client-side controller work; gameplay helpers consume the sampled intent. |

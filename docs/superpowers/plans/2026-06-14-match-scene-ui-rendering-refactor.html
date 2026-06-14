@@ -107,6 +107,7 @@
 <li><code>src/match/ImpactController.ts</code>: Local impact application for crater callback wiring, vehicle mutation, combat marker requests, settlement callback wiring, and shot-result text.</li>
 <li><code>src/match/ProjectileController.ts</code>: Local projectile launch, flight stepping, trail tracking, swept collision lookup, and out-of-bounds orchestration.</li>
 <li><code>src/match/RoundBuilder.ts</code>: Local round setup for terrain copy, spawn flattening, starting vehicle state, turn order, and round-start text.</li>
+<li><code>src/match/TurnController.ts</code>: Local turn order/index, turn timer, wind, charge state, and committed/round-over action state.</li>
 <li><code>src/match/VehicleGeometry.ts</code>: Facing-aware combat hull centers and projectile hit-zone conversion shared by scene collision and vehicle rendering.</li>
 <li><code>src/match/VoidZoneController.ts</code>: Visible void-zone geometry and Void Dropped presentation timing.</li>
 <li><code>src/match/ui/CommandDeck.ts</code>: Fixed HUD command deck drawing, active unit info, launch meter, movement meter, and aim dial.</li>
@@ -468,6 +469,27 @@ git commit -m &quot;refactor: split match scene ui and renderers&quot;
 <li>[x] <strong>Step 3: Run focused verification</strong></li>
 </ul>
 <p>Run: <code>npm test -- src/match/architecture.test.ts</code></p>
+<p>Expected: PASS.</p>
+<h2>Task 13: Extract Turn Controller</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/match/TurnController.ts</code></li>
+<li>Create: <code>src/match/TurnController.test.ts</code></li>
+<li>Modify: <code>src/match/MatchScene.ts</code></li>
+<li>Modify: <code>src/match/architecture.test.ts</code></li>
+</ul>
+<ul>
+<li>[x] <strong>Step 1: Add failing tests for local turn state</strong></li>
+</ul>
+<p>Assert that the controller starts a round, begins a turn with fresh action state, ticks turn time to timeout, advances to a chosen turn index, resets charge/commit state, and locks action state when the round ends.</p>
+<ul>
+<li>[x] <strong>Step 2: Move turn state out of <code>MatchScene</code></strong></li>
+</ul>
+<p>Move turn order/index, turn timer, wind, charging, charge, and committed state into <code>TurnController</code>. Keep pure next-turn selection in <code>MatchController</code>/<code>shared/match/turns.ts</code>, and keep scene presentation work such as camera framing in <code>MatchScene</code>.</p>
+<ul>
+<li>[x] <strong>Step 3: Run focused verification</strong></li>
+</ul>
+<p>Run: <code>npm test -- src/match/TurnController.test.ts src/match/architecture.test.ts</code></p>
 <p>Expected: PASS.</p>
 <h2>Self-Review</h2>
 <ul>

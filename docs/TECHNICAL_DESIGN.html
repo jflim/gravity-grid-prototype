@@ -147,6 +147,7 @@
 <li><code>src/match/ImpactController.ts</code> for local impact application: crater callback, vehicle damage mutation, knockback mutation, settlement callback, marker requests, and shot-result text.</li>
 <li><code>src/match/ProjectileController.ts</code> for local projectile launch, flight stepping, trail tracking, swept collision lookup, and out-of-bounds orchestration.</li>
 <li><code>src/match/RoundBuilder.ts</code> for local round setup: terrain copy, spawn flattening, starting vehicle state, turn order, visible void top, and round-start message.</li>
+<li><code>src/match/TurnController.ts</code> for local turn order/index, turn timer, wind, charge state, and committed/round-over action state.</li>
 <li><code>src/match/VehicleGeometry.ts</code> for facing-aware combat hull centers and projectile hit-zone geometry shared by scene collision and vehicle rendering.</li>
 <li><code>src/match/MatchInputController.ts</code> for client-side input sampling without embedding keyboard state directly in the Phaser scene.</li>
 <li><code>src/match/VoidZoneController.ts</code> for visible void-zone geometry and Void Dropped presentation state/timing.</li>
@@ -422,6 +423,8 @@ src/
 
     RoundBuilder.ts
 
+    TurnController.ts
+
     VehicleGeometry.ts
 
     VoidZoneController.ts
@@ -577,6 +580,11 @@ src/
 <td>Change local round setup, spawn flattening width, starting HP/move units, initial facing angle, initial turn order, or round-start message</td>
 <td><code>src/match/RoundBuilder.ts</code> and <code>shared/v1/tuning.ts</code></td>
 <td>Round initialization should be testable without opening Phaser scene rendering code.</td>
+</tr>
+<tr>
+<td>Change local turn index, turn timer, charge state, committed state, or wind-per-turn ownership</td>
+<td><code>src/match/TurnController.ts</code>, <code>shared/match/turns.ts</code>, and <code>shared/v1/tuning.ts</code></td>
+<td>Turn state should be testable without Phaser lifecycle code; pure next-turn decisions remain in shared turn helpers.</td>
 </tr>
 <tr>
 <td>Change camera viewport, battlefield framing, or projectile recentering</td>

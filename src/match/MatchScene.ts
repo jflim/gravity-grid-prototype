@@ -83,6 +83,7 @@ import { MatchCameraController } from "./MatchCameraController";
 import { MatchController } from "./MatchController";
 import { ProjectileController } from "./ProjectileController";
 import { RoundBuilder } from "./RoundBuilder";
+import { TurnController } from "./TurnController";
 import { VehicleGeometry } from "./VehicleGeometry";
 import { VoidZoneController } from "./VoidZoneController";
 import { CommandDeck } from "./ui/CommandDeck";
@@ -167,6 +168,10 @@ export class MatchScene extends Phaser.Scene {
     upperYMargin: PROJECTILE_OUT_OF_BOUNDS_UPPER_Y_MARGIN,
     maxTrailPoints: 34,
   });
+  private readonly turnController = new TurnController({
+    turnSeconds: TURN_SECONDS,
+    windSource: () => Phaser.Math.FloatBetween(-1, 1),
+  });
   private readonly roundBuilder = new RoundBuilder({
     maxHp: MAX_HP,
     maxMoveUnits: MAX_MOVE_UNITS,
@@ -177,15 +182,8 @@ export class MatchScene extends Phaser.Scene {
   });
   private currentDemoMap?: PlayableTerrain;
   private vehicles: VehicleState[] = [];
-  private turnOrder: string[] = [];
-  private turnIndex = 0;
-  private wind = 0;
-  private turnTime = TURN_SECONDS;
   private projectile?: ProjectileState;
   private impactPreview?: ImpactPreview;
-  private turnCommitted = false;
-  private charging = false;
-  private charge = 0;
   private shotResult = "";
   private roundOver = false;
   private pendingRoundEvent?: Phaser.Time.TimerEvent;
@@ -483,7 +481,7 @@ export class MatchScene extends Phaser.Scene {
       return;
     }
 
-    if (this.turnCommitted) {
+    if (this.turnController.isCommitted) {
       this.drawWorld();
       return;
     }
@@ -494,15 +492,14 @@ export class MatchScene extends Phaser.Scene {
       return;
     }
 
-    this.turnTime -= dt;
-    if (this.turnTime <= 0) {
+    if (this.turnController.tick(dt) === "timed-out") {
       this.shotResult = `${active.username} timed out.`;
       this.advanceTurn();
       return;
     }
 
     this.handleChargeInput(active, input, dt);
-    if (this.turnCommitted || this.projectile) {
+    if (this.turnController.isCommitted || this.projectile) {
       this.drawWorld();
       return;
     }
@@ -599,13 +596,9 @@ export class MatchScene extends Phaser.Scene {
     this.terrain = round.terrain;
     this.visibleVoidTopY = round.visibleVoidTopY;
     this.vehicles = round.vehicles;
-    this.turnOrder = round.turnOrder;
-    this.turnIndex = 0;
+    this.turnController.startRound(round.turnOrder);
     this.projectile = undefined;
     this.impactPreview = undefined;
-    this.turnCommitted = false;
-    this.charge = 0;
-    this.charging = false;
     this.shotResult = round.shotResult;
     this.settleVehicles();
     this.beginTurn();
@@ -622,19 +615,23 @@ export class MatchScene extends Phaser.Scene {
       return;
     }
 
+    this.turnController.beginTurn();
+    this.prepareStartedTurn(active);
+  }
+
+  private prepareStartedTurn(active: VehicleState): void {
     active.moveUnits = MAX_MOVE_UNITS;
-    this.turnTime = TURN_SECONDS;
-    this.charge = 0;
-    this.charging = false;
-    this.turnCommitted = false;
     this.impactPreview = undefined;
-    this.wind = Phaser.Math.FloatBetween(-1, 1);
     this.cameras.main.stopFollow();
     this.frameBattlefield(450);
   }
 
   private activeVehicle(): VehicleState | undefined {
-    return this.matchController.activeVehicle(this.vehicles, this.turnOrder, this.turnIndex % this.turnOrder.length);
+    return this.matchController.activeVehicle(
+      this.vehicles,
+      this.turnController.turnOrder,
+      this.turnController.activeTurnIndex,
+    );
   }
 
   private handleVehicleInput(active: VehicleState, input: MatchInputSnapshot, dt: number): void {
@@ -678,8 +675,7 @@ export class MatchScene extends Phaser.Scene {
       active.moveUnits = step.moveUnits;
       if (!active.alive) {
         this.shotResult = `${active.username} drove into the void.`;
-        this.charging = false;
-        this.charge = 0;
+        this.turnController.resetCharge();
       }
       this.frameBattlefield(0);
     }
@@ -703,8 +699,8 @@ export class MatchScene extends Phaser.Scene {
 
   private handleChargeInput(active: VehicleState, input: MatchInputSnapshot, dt: number): void {
     const charge = updateChargeState({
-      isCharging: this.charging,
-      charge: this.charge,
+      isCharging: this.turnController.isCharging,
+      charge: this.turnController.charge,
       chargeHeld: input.chargeHeld,
       deltaSeconds: dt,
       chargeRatePerSecond: CHARGE_RATE_PER_SECOND,
@@ -712,8 +708,10 @@ export class MatchScene extends Phaser.Scene {
       minFirePower: MIN_FIRE_POWER,
     });
 
-    this.charging = charge.isCharging;
-    this.charge = charge.charge;
+    this.turnController.setChargeState({
+      isCharging: charge.isCharging,
+      charge: charge.charge,
+    });
 
     if (charge.firePower !== undefined) {
       this.fire(active, charge.firePower);
@@ -721,9 +719,7 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private fire(active: VehicleState, power: number): void {
-    this.charging = false;
-    this.charge = 0;
-    this.turnCommitted = true;
+    this.turnController.commitTurn();
     this.projectile = this.projectileController.createProjectile(active, power);
     this.shotResult = `${active.username} fired.`;
   }
@@ -736,7 +732,7 @@ export class MatchScene extends Phaser.Scene {
     const result = this.projectileController.advance({
       projectile: this.projectile,
       deltaSeconds: dt,
-      wind: this.wind,
+      wind: this.turnController.wind,
       targets: this.vehicles.map((vehicle) => ({
         id: vehicle.id,
         team: vehicle.team,
@@ -830,13 +826,11 @@ export class MatchScene extends Phaser.Scene {
     }
 
     this.projectile = undefined;
-    this.charging = false;
-    this.charge = 0;
-    this.turnCommitted = false;
+    this.turnController.resetActionState();
 
     const decision = this.matchController.resolveNextTurn({
-      turnOrder: this.turnOrder,
-      currentTurnIndex: this.turnIndex,
+      turnOrder: this.turnController.turnOrder,
+      currentTurnIndex: this.turnController.turnIndex,
       vehicles: this.vehicles,
     });
 
@@ -845,12 +839,15 @@ export class MatchScene extends Phaser.Scene {
       return;
     }
 
-    this.turnIndex = decision.nextTurnIndex;
-    this.beginTurn();
+    this.turnController.advanceTo(decision.nextTurnIndex);
+    const active = this.activeVehicle();
+    if (active) {
+      this.prepareStartedTurn(active);
+    }
   }
 
   private isMovable(vehicle: VehicleState): boolean {
-    return this.matchController.isMovable(vehicle, this.turnOrder);
+    return this.matchController.isMovable(vehicle, this.turnController.turnOrder);
   }
 
   private isAlive(vehicle: VehicleState): boolean {
@@ -874,9 +871,7 @@ export class MatchScene extends Phaser.Scene {
     this.pendingRoundEvent = undefined;
     this.roundOver = true;
     this.projectile = undefined;
-    this.charging = false;
-    this.charge = 0;
-    this.turnCommitted = true;
+    this.turnController.endRound();
 
     const winner = this.winningTeam();
     this.shotResult = winner
@@ -1037,7 +1032,13 @@ export class MatchScene extends Phaser.Scene {
     const active = this.activeVehicle();
     this.effectsRenderer?.drawAim({
       active,
-      canAct: Boolean(active && this.isMovable(active) && !this.projectile && !this.roundOver && !this.turnCommitted),
+      canAct: Boolean(
+        active &&
+          this.isMovable(active) &&
+          !this.projectile &&
+          !this.roundOver &&
+          !this.turnController.isCommitted,
+      ),
     });
   }
 
@@ -1054,10 +1055,10 @@ export class MatchScene extends Phaser.Scene {
       activeVehicle: this.activeVehicle(),
       projectileActive: Boolean(this.projectile),
       roundOver: this.roundOver,
-      turnCommitted: this.turnCommitted,
+      turnCommitted: this.turnController.isCommitted,
       showCombatHulls: this.showCombatHulls,
-      charging: this.charging,
-      turnTime: this.turnTime,
+      charging: this.turnController.isCharging,
+      turnTime: this.turnController.turnTime,
       cameraZoom: this.cameras.main.zoom,
       isMovable: (vehicle) => this.isMovable(vehicle),
     });
@@ -1072,21 +1073,21 @@ export class MatchScene extends Phaser.Scene {
     const roundComplete = this.roundOver || this.aliveTeams().size <= 1;
 
     this.commandDeck.draw({
-      active: active && !roundComplete && !this.turnCommitted ? active : undefined,
+      active: active && !roundComplete && !this.turnController.isCommitted ? active : undefined,
       roundComplete: roundComplete || Boolean(winner),
       shotResult: this.shotResult,
       projectileInFlight: Boolean(this.projectile),
-      charging: this.charging,
-      charge: this.charge,
+      charging: this.turnController.isCharging,
+      charge: this.turnController.charge,
       windLabel: this.windLabel(),
     });
   }
   private windLabel(): string {
-    if (Math.abs(this.wind) < 0.12) {
+    if (Math.abs(this.turnController.wind) < 0.12) {
       return "calm";
     }
-    const direction = this.wind > 0 ? ">>" : "<<";
-    return `${direction} ${Math.round(Math.abs(this.wind) * 10)}`;
+    const direction = this.turnController.wind > 0 ? ">>" : "<<";
+    return `${direction} ${Math.round(Math.abs(this.turnController.wind) * 10)}`;
   }
 }
 
