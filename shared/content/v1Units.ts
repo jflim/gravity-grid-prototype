@@ -17,7 +17,7 @@ export type CharacterDisplaySet = Record<CharacterPose, SpriteDisplaySize>;
 export type UnitConceptSpriteSet = Record<CharacterPose, string>;
 export type UnitConceptDisplaySet = Record<CharacterPose, SpriteDisplaySize>;
 
-export interface V1DemoUnitDefinition {
+export interface DemoUnitDefinition {
   id: VehicleId;
   characterId: CharacterId;
   username: string;
@@ -44,7 +44,7 @@ export interface V1DemoUnitDefinition {
   portraitKey: string;
 }
 
-export const V1_DEMO_UNIT_DEFINITIONS = [
+export const DEMO_UNIT_DEFINITIONS = [
   {
     id: "red-1",
     characterId: "nova",
@@ -57,21 +57,21 @@ export const V1_DEMO_UNIT_DEFINITIONS = [
     vehicleSpriteKey: "nova-vehicle-sprite",
     vehicleDestroyedSpriteKey: "nova-vehicle-destroyed",
     vehicleSpriteFaces: 1,
-    vehicleDisplay: { width: 254, height: 155 },
-    vehicleDestroyedDisplay: { width: 260, height: 211 },
+    vehicleDisplay: { width: 1, height: 1 },
+    vehicleDestroyedDisplay: { width: 1, height: 1 },
     characterSpriteKeys: {
-      default: "nova-character-default",
-      ko: "nova-character-ko",
-      intense: "nova-character-intense",
+      default: "nova-unit-default",
+      ko: "nova-unit-ko",
+      intense: "nova-unit-intense",
     },
     characterSpriteFaces: 1,
     characterDisplays: {
-      default: { width: 112, height: 150 },
-      ko: { width: 250, height: 94 },
-      intense: { width: 166, height: 148 },
+      default: { width: 350, height: 233 },
+      ko: { width: 354, height: 212 },
+      intense: { width: 350, height: 233 },
     },
-    characterOffsetX: -36,
-    characterOffsetY: -34,
+    characterOffsetX: 0,
+    characterOffsetY: 28,
     unitConceptSpriteKeys: {
       default: "nova-unit-default-concept",
       intense: "nova-unit-intense",
@@ -85,7 +85,7 @@ export const V1_DEMO_UNIT_DEFINITIONS = [
     unitConceptSpriteFaces: 1,
     unitConceptOffsetY: 28,
     combatHull: SHARED_V1_VEHICLE_HIT_ZONE,
-    portraitKey: "nova-vehicle",
+    portraitKey: "nova-unit-default",
   },
   {
     id: "blue-1",
@@ -99,21 +99,21 @@ export const V1_DEMO_UNIT_DEFINITIONS = [
     vehicleSpriteKey: "vesper-vehicle-sprite",
     vehicleDestroyedSpriteKey: "vesper-vehicle-destroyed",
     vehicleSpriteFaces: -1,
-    vehicleDisplay: { width: 250, height: 160 },
-    vehicleDestroyedDisplay: { width: 260, height: 169 },
+    vehicleDisplay: { width: 1, height: 1 },
+    vehicleDestroyedDisplay: { width: 1, height: 1 },
     characterSpriteKeys: {
-      default: "vesper-character-default",
-      ko: "vesper-character-ko",
-      intense: "vesper-character-intense",
+      default: "vesper-unit-default",
+      ko: "vesper-unit-ko",
+      intense: "vesper-unit-intense",
     },
     characterSpriteFaces: -1,
     characterDisplays: {
-      default: { width: 108, height: 151 },
-      ko: { width: 154, height: 149 },
-      intense: { width: 139, height: 150 },
+      default: { width: 356, height: 208 },
+      ko: { width: 356, height: 208 },
+      intense: { width: 356, height: 208 },
     },
-    characterOffsetX: 54,
-    characterOffsetY: -34,
+    characterOffsetX: 0,
+    characterOffsetY: 25,
     unitConceptSpriteKeys: {
       default: "vesper-unit-default-concept",
       intense: "vesper-unit-intense",
@@ -127,7 +127,7 @@ export const V1_DEMO_UNIT_DEFINITIONS = [
     unitConceptSpriteFaces: -1,
     unitConceptOffsetY: 25,
     combatHull: SHARED_V1_VEHICLE_HIT_ZONE,
-    portraitKey: "vesper-vehicle",
+    portraitKey: "vesper-unit-default",
   },
   {
     id: "red-2",
@@ -213,10 +213,10 @@ export const V1_DEMO_UNIT_DEFINITIONS = [
     combatHull: SHARED_V1_VEHICLE_HIT_ZONE,
     portraitKey: "perlah-unit-default",
   },
-] as const satisfies readonly V1DemoUnitDefinition[];
+] as const satisfies readonly DemoUnitDefinition[];
 
-export function unitDefinitionForCharacter(characterId: CharacterId): V1DemoUnitDefinition {
-  const unit = V1_DEMO_UNIT_DEFINITIONS.find((definition) => definition.characterId === characterId);
+export function unitDefinitionForCharacter(characterId: CharacterId): DemoUnitDefinition {
+  const unit = DEMO_UNIT_DEFINITIONS.find((definition) => definition.characterId === characterId);
   if (!unit) {
     throw new Error(`Unknown v1 character: ${characterId}`);
   }

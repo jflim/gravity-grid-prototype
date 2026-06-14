@@ -5,6 +5,11 @@ import { inflateSync } from "node:zlib";
 const root = process.cwd();
 const mainSource = readFileSync(join(root, "src", "main.ts"), "utf8");
 const matchSceneSource = readFileSync(join(root, "src", "match", "MatchScene.ts"), "utf8");
+const roundBuilderSource = readFileSync(join(root, "src", "match", "RoundBuilder.ts"), "utf8");
+const combatMarkerRendererSource = readFileSync(
+  join(root, "src", "match", "rendering", "CombatMarkerRenderer.ts"),
+  "utf8",
+);
 const runtimeAssetsSource = readFileSync(join(root, "src", "runtimeAssets.ts"), "utf8");
 const gameTypesSource = readFileSync(join(root, "shared", "model", "gameTypes.ts"), "utf8");
 const unitContentSource = readFileSync(join(root, "shared", "content", "v1Units.ts"), "utf8");
@@ -20,7 +25,9 @@ const runtimeUnits = [
       "nova-character-default",
       "nova-character-ko",
       "nova-character-intense",
+      "nova-unit-default",
       "nova-unit-intense",
+      "nova-unit-ko",
     ],
     files: [
       "public/assets/nova-vehicle.png",
@@ -29,7 +36,9 @@ const runtimeUnits = [
       "public/assets/nova-character-default.png",
       "public/assets/nova-character-ko.png",
       "public/assets/nova-character-intense.png",
+      "public/assets/nova-unit-default.png",
       "public/assets/nova-unit-intense.png",
+      "public/assets/nova-unit-ko.png",
     ],
   },
   {
@@ -41,7 +50,9 @@ const runtimeUnits = [
       "vesper-character-default",
       "vesper-character-ko",
       "vesper-character-intense",
+      "vesper-unit-default",
       "vesper-unit-intense",
+      "vesper-unit-ko",
     ],
     files: [
       "public/assets/vesper-vehicle.png",
@@ -50,7 +61,9 @@ const runtimeUnits = [
       "public/assets/vesper-character-default.png",
       "public/assets/vesper-character-ko.png",
       "public/assets/vesper-character-intense.png",
+      "public/assets/vesper-unit-default.png",
       "public/assets/vesper-unit-intense.png",
+      "public/assets/vesper-unit-ko.png",
     ],
   },
   {
@@ -131,7 +144,8 @@ if (!gameTypesSource.includes('export type ClassId = "bunger" | "glitch" | "boun
 }
 
 if (
-  !matchSceneSource.includes("this.turnOrder = V1_DEMO_UNIT_DEFINITIONS.map((unit) => unit.id);") ||
+  !roundBuilderSource.includes("turnOrder: input.units.map((unit) => unit.id)") ||
+  !matchSceneSource.includes("units: DEMO_UNIT_DEFINITIONS") ||
   !unitContentSource.includes('id: "red-2"') ||
   !unitContentSource.includes('id: "blue-2"')
 ) {
@@ -147,15 +161,17 @@ const expectedRuntimeTuning = [
   "const USE_UNIT_CONCEPT_PREVIEW = shouldUseConceptPreviewAssets(window.location.search);",
   "const USE_STYLE_REFERENCE_BACKGROUND = shouldUseStyleReferenceBackground(window.location.search);",
   "combatHull: SHARED_V1_VEHICLE_HIT_ZONE",
-  "const yOffset = USE_UNIT_CONCEPT_PREVIEW ? 176 : 104;",
+  "const yOffset = this.options.unitConceptPreview ? 176 : 104;",
 ];
 
 for (const snippet of expectedRuntimeTuning) {
-  const source = snippet.startsWith("const USE_") || snippet.includes("yOffset")
-    ? matchSceneSource
-    : snippet.includes("SHARED_V1_VEHICLE_HIT_ZONE") || snippet.includes("width:")
-      ? unitContentSource
-      : tuningSource;
+  const source = snippet.includes("unitConceptPreview")
+    ? combatMarkerRendererSource
+    : snippet.startsWith("const USE_")
+      ? matchSceneSource
+      : snippet.includes("SHARED_V1_VEHICLE_HIT_ZONE") || snippet.includes("width:")
+        ? unitContentSource
+        : tuningSource;
   if (!source.includes(snippet)) {
     failures.push(`missing runtime tuning snippet: ${snippet}`);
   }

@@ -1,9 +1,9 @@
 import type Phaser from "phaser";
 import type { ProjectileKinematics } from "../../shared/gameplay/projectile.js";
-import type { V1DemoUnitDefinition } from "../../shared/content/v1Units.js";
+import type { DemoUnitDefinition } from "../../shared/content/v1Units.js";
 import type { CombatMarkerKind, DefeatReason, TeamId } from "../../shared/model/gameTypes.js";
 
-export type VehicleState = V1DemoUnitDefinition & {
+export type VehicleState = DemoUnitDefinition & {
   x: number;
   y: number;
   hp: number;
@@ -18,7 +18,12 @@ export type VehicleState = V1DemoUnitDefinition & {
 export interface ProjectileState extends ProjectileKinematics {
   shooterId: string;
   team: TeamId;
-  trail: Phaser.Math.Vector2[];
+  trail: WorldPoint[];
+}
+
+export interface WorldPoint {
+  x: number;
+  y: number;
 }
 
 export interface ProjectileCollision {

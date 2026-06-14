@@ -81,7 +81,18 @@ Highlights:
 - Extracted vehicle terrain placement, localized post-impact slope nudging, and Void Dropped truth resolution into `shared/gameplay/vehicleSettlement.ts`, leaving the visual fall target and suspension animation in Phaser.
 - Extracted alive checks, alive-team/winner calculation, and round-over decisions into `shared/match/rounds.ts`, plus next-turn selection into `shared/match/turns.ts`, leaving Phaser responsible for timers and drawing.
 - Split the local Phaser client into bootstrap, match scene, match controller, camera controller, command deck UI, and focused terrain/vehicle/projectile/effects renderers so human development no longer starts from a monolithic `src/main.ts`.
+- Extracted floating combat marker presentation into `src/match/rendering/CombatMarkerRenderer.ts` so direct/splash/shove/KO/Void Dropped text feedback is no longer owned by `MatchScene`.
+- Extracted visible void-zone geometry and Void Dropped presentation timing into `src/match/VoidZoneController.ts`, setting up a cleaner future fix for gravity-driven falling before final void collision.
+- Extracted local round setup into `src/match/RoundBuilder.ts` so map terrain copying, spawn flattening, initial unit state, turn order, and round-start text are testable without reading `MatchScene`.
+- Extracted facing-aware combat hull and projectile hit-zone conversion into `src/match/VehicleGeometry.ts` so scene collision checks and vehicle overlay rendering share one interpretation.
+- Recorded a gameplay-correctness bug that falling and Void Dropped must become separate states: unsupported vehicles should fall under gravity first, then become Void Dropped only when their collision zone reaches the visible void/death zone.
+- Fixed movement traversal so vehicles no longer drive down near-vertical non-void terrain faces, while intentional movement into void holes still triggers falling/void-drop behavior.
+- Promoted the accepted mounted Nova and Vesper default/KO unit sprites to stable normal-runtime aliases so `npm run dev` shows the updated gameplay art without concept-preview mode.
+- Added vehicle footing support checks during terrain settlement so units fall from under-supported cliff edges instead of balancing on a center-point terrain sample.
 - Added a TDD naming rule that `v1` remains a product milestone/profile label, while new permanent code modules should use generic names and select milestone behavior through ruleset/content ids.
+- Renamed the current demo unit content exports away from milestone-prefixed symbols so new code consumes `DemoUnitDefinition` and `DEMO_UNIT_DEFINITIONS`.
+- Extracted local projectile launch, flight stepping, trail tracking, swept collision lookup, and out-of-bounds orchestration into `src/match/ProjectileController.ts`.
+- Extracted local impact application into `src/match/ImpactController.ts`, covering crater callback wiring, vehicle damage/knockback mutation, settlement callback wiring, combat marker requests, and shot-result text.
 - Adopted an HTML-first documentation workflow: markdown remains the canonical editable source, generated HTML is the preferred reading/review surface, local scripts must generate markdown reading copies without AI/manual conversion, and custom HTML is reserved for rich visual/review artifacts.
 - Added horizontal camera side bounds so the battlefield remains centered when the visible camera frame is wider than the world instead of leaving all extra space on one side.
 - Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.

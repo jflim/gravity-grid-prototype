@@ -1,9 +1,8 @@
 import Phaser from "phaser";
-import type { CombatHullShape, CharacterPose } from "../../../shared/model/gameTypes.js";
+import type { CharacterPose } from "../../../shared/model/gameTypes.js";
 import { MAX_HP, VEHICLE_HALF_WIDTH } from "../../../shared/v1/tuning.js";
 import {
   defeatPresentationFor,
-  scaleBattlefieldCombatHull,
   scaleBattlefieldDisplay,
   scaleBattlefieldOffset,
 } from "../../combatPresentation";
@@ -14,6 +13,7 @@ import {
 } from "../../demoLayout";
 import { voidDropRenderPosition } from "../../voidDropPresentation";
 import type { VehicleState } from "../MatchTypes";
+import { VehicleGeometry } from "../VehicleGeometry";
 
 export interface VehicleRendererOptions {
   scene: Phaser.Scene;
@@ -39,6 +39,7 @@ export interface DrawVehiclesInput {
 export class VehicleRenderer {
   private readonly vehicleSprites = new Map<string, Phaser.GameObjects.Image>();
   private readonly characterSprites = new Map<string, Phaser.GameObjects.Image>();
+  private readonly vehicleGeometry = new VehicleGeometry();
   private vehicleLabels: Phaser.GameObjects.Text[] = [];
 
   constructor(private readonly options: VehicleRendererOptions) {}
@@ -171,19 +172,7 @@ export class VehicleRenderer {
   }
 
   private orientedOffset(vehicle: VehicleState, offset: number, nativeFacing: 1 | -1): number {
-    return vehicle.facing === nativeFacing ? offset : -offset;
-  }
-
-  private combatHullCenter(vehicle: VehicleState): Phaser.Math.Vector2 {
-    const hull = this.combatHullFor(vehicle);
-    return new Phaser.Math.Vector2(
-      vehicle.x + this.orientedOffset(vehicle, hull.offsetX, 1),
-      vehicle.y + hull.offsetY,
-    );
-  }
-
-  private combatHullFor(vehicle: VehicleState): CombatHullShape {
-    return scaleBattlefieldCombatHull(vehicle.combatHull);
+    return this.vehicleGeometry.orientedOffset(vehicle, offset, nativeFacing);
   }
 
   private terrainAngleAt(x: number): number {
@@ -208,8 +197,8 @@ export class VehicleRenderer {
   }
 
   private drawCombatHull(vehicle: VehicleState, active: boolean): void {
-    const hull = this.combatHullFor(vehicle);
-    const hullCenter = this.combatHullCenter(vehicle);
+    const hull = this.vehicleGeometry.combatHullFor(vehicle);
+    const hullCenter = this.vehicleGeometry.combatHullCenter(vehicle);
     const hullColor = active ? 0xffffff : vehicle.accent;
     const overlay = collisionZoneOverlayStyle(active, hullColor);
     const left = hullCenter.x - hull.width / 2;

@@ -7,26 +7,14 @@ import {
   updateChargeState,
 } from "../../shared/gameplay/movement.js";
 import {
-  isProjectileOutOfBounds,
-  launchProjectile,
-  stepProjectile,
-  type ProjectileStepResult,
-} from "../../shared/gameplay/projectile.js";
-import { resolveProjectileImpact } from "../../shared/gameplay/impact.js";
-import { firstTerrainContact, firstVehicleContact } from "../../shared/gameplay/projectileCollision.js";
-import {
   craterTerrain,
   surfaceAt as terrainSurfaceAt,
   terrainAngleAt as terrainSlopeAngleAt,
 } from "../../shared/gameplay/terrain.js";
 import { settleVehicleOnTerrain, type VehicleSettlementResult } from "../../shared/gameplay/vehicleSettlement.js";
 import type { VehicleHitZone } from "../../shared/gameplay/vehicleHitZone.js";
-import { V1_DEMO_UNIT_DEFINITIONS } from "../../shared/content/v1Units.js";
-import type {
-  CombatHullShape,
-  CombatMarkerKind,
-  TeamId,
-} from "../../shared/model/gameTypes.js";
+import { DEMO_UNIT_DEFINITIONS } from "../../shared/content/v1Units.js";
+import type { TeamId } from "../../shared/model/gameTypes.js";
 import {
   AIM_SPEED_DEG_PER_SECOND,
   BUNGER_CRATER_RADIUS,
@@ -75,17 +63,12 @@ import {
   WIND_FORCE,
 } from "../../shared/v1/tuning.js";
 import {
-  scaleBattlefieldCombatHull,
   scaleBattlefieldDisplay,
 } from "../combatPresentation";
 import { COLLISION_ZONE_OVERLAY_DEPTH } from "../collisionOverlay";
 import {
   DRAMATIC_VOID_DROP_FALL_SECONDS,
-  chooseVoidDropDisplayX,
   requiredVoidZoneHeight,
-  visibleVoidZoneBottomY,
-  visibleVoidZoneTopY,
-  voidDropTargetY,
 } from "../voidDropPresentation";
 import {
   getGameViewportSize,
@@ -95,18 +78,22 @@ import {
   shouldUseConceptPreviewAssets,
   shouldUseStyleReferenceBackground,
 } from "../demoLayout";
+import { ImpactController } from "./ImpactController";
 import { MatchCameraController } from "./MatchCameraController";
 import { MatchController } from "./MatchController";
+import { ProjectileController } from "./ProjectileController";
+import { RoundBuilder } from "./RoundBuilder";
+import { VehicleGeometry } from "./VehicleGeometry";
+import { VoidZoneController } from "./VoidZoneController";
 import { CommandDeck } from "./ui/CommandDeck";
 import { EffectsRenderer } from "./rendering/EffectsRenderer";
+import { CombatMarkerRenderer } from "./rendering/CombatMarkerRenderer";
 import { ProjectileRenderer } from "./rendering/ProjectileRenderer";
 import { TerrainRenderer } from "./rendering/TerrainRenderer";
 import { VehicleRenderer } from "./rendering/VehicleRenderer";
 import { MatchInputController, type MatchInputSnapshot } from "./MatchInputController";
 import type {
-  CombatMarker,
   ImpactPreview,
-  ProjectileCollision,
   ProjectileState,
   SettleOptions,
   VehicleState,
@@ -154,6 +141,40 @@ const EMPTY_MATCH_INPUT: MatchInputSnapshot = {
 export class MatchScene extends Phaser.Scene {
   private terrain: number[] = [];
   private readonly matchController = new MatchController();
+  private readonly vehicleGeometry = new VehicleGeometry();
+  private readonly impactController = new ImpactController({
+    craterRadius: CRATER_RADIUS,
+    bungerCraterRadius: BUNGER_CRATER_RADIUS,
+    damageRadius: DAMAGE_RADIUS,
+    bungerDamageRadius: BUNGER_DAMAGE_RADIUS,
+    bungerKnockback: BUNGER_KNOCKBACK,
+    moveMinX: MOVE_MIN_X,
+    moveMaxX: MOVE_MAX_X,
+    impactPreviewSeconds: IMPACT_PREVIEW_SECONDS,
+  });
+  private readonly projectileController = new ProjectileController({
+    projectileRadius: PROJECTILE_RADIUS,
+    maxPower: MAX_POWER,
+    shotSpeedMin: SHOT_SPEED_MIN,
+    shotSpeedMax: SHOT_SPEED_MAX,
+    muzzleDistance: PROJECTILE_MUZZLE_DISTANCE,
+    muzzleYOffset: PROJECTILE_MUZZLE_Y_OFFSET,
+    windForce: WIND_FORCE,
+    gravity: GRAVITY,
+    worldWidth: WORLD_WIDTH,
+    worldHeight: WORLD_HEIGHT,
+    lowerYMargin: PROJECTILE_OUT_OF_BOUNDS_LOWER_Y_MARGIN,
+    upperYMargin: PROJECTILE_OUT_OF_BOUNDS_UPPER_Y_MARGIN,
+    maxTrailPoints: 34,
+  });
+  private readonly roundBuilder = new RoundBuilder({
+    maxHp: MAX_HP,
+    maxMoveUnits: MAX_MOVE_UNITS,
+    worldWidth: WORLD_WIDTH,
+    spawnFlattenWidth: 150,
+    defaultTerrainBreakthroughY: DEFAULT_TERRAIN_BREAKTHROUGH_Y,
+    fallbackVisibleVoidTopY: FALLBACK_VISIBLE_VOID_TOP_Y,
+  });
   private currentDemoMap?: PlayableTerrain;
   private vehicles: VehicleState[] = [];
   private turnOrder: string[] = [];
@@ -169,11 +190,19 @@ export class MatchScene extends Phaser.Scene {
   private roundOver = false;
   private pendingRoundEvent?: Phaser.Time.TimerEvent;
   private showCombatHulls = shouldShowCombatHulls(window.location.search);
-  private combatMarkers: CombatMarker[] = [];
   private visibleVoidTopY = FALLBACK_VISIBLE_VOID_TOP_Y;
 
   private inputController?: MatchInputController;
   private cameraController?: MatchCameraController;
+  private readonly voidZoneController = new VoidZoneController({
+    worldWidth: WORLD_WIDTH,
+    terrainStep: TERRAIN_STEP,
+    displaySize: VOID_DROP_DISPLAY_SIZE,
+    visibleVoidZoneHeight: VISIBLE_VOID_ZONE_HEIGHT,
+    horizontalPadding: VOID_DROP_HORIZONTAL_PADDING,
+    fallDurationSeconds: DRAMATIC_VOID_DROP_FALL_SECONDS,
+  });
+  private combatMarkerRenderer?: CombatMarkerRenderer;
   private effectsRenderer?: EffectsRenderer;
   private terrainRenderer?: TerrainRenderer;
   private projectileRenderer?: ProjectileRenderer;
@@ -407,6 +436,12 @@ export class MatchScene extends Phaser.Scene {
       movementLabelText: this.movementLabelText,
       hudPortrait: this.hudPortrait,
     });
+    this.combatMarkerRenderer = new CombatMarkerRenderer({
+      scene: this,
+      durationSeconds: COMBAT_MARKER_SECONDS,
+      unitConceptPreview: USE_UNIT_CONCEPT_PREVIEW,
+      worldUiScale: () => readableWorldUiScale(this.cameras.main.zoom),
+    });
 
     this.mountCollisionZonesToggle();
     this.startRound();
@@ -426,8 +461,8 @@ export class MatchScene extends Phaser.Scene {
     const dt = Math.min(deltaMs / 1000, 0.033);
     const input = this.inputController?.sample() ?? EMPTY_MATCH_INPUT;
     this.updateImpactPreview(dt);
-    this.updateCombatMarkers(dt);
-    this.updateVoidDropPresentations(dt);
+    this.combatMarkerRenderer?.update(dt);
+    this.voidZoneController.updatePresentations(this.vehicles, dt);
 
     if (input.resetPressed) {
       this.startRound();
@@ -555,51 +590,23 @@ export class MatchScene extends Phaser.Scene {
     this.pendingRoundEvent?.remove(false);
     this.pendingRoundEvent = undefined;
     this.roundOver = false;
-    this.clearCombatMarkers();
-    const demoMap = this.buildDefaultDemoMap();
-    this.currentDemoMap = demoMap;
-    this.terrain = [...demoMap.terrain];
-    this.flattenDemoSpawnZones(demoMap);
-    this.visibleVoidTopY = visibleVoidZoneTopY({
-      terrain: this.terrain,
-      terrainBreakthroughY: DEFAULT_TERRAIN_BREAKTHROUGH_Y,
-      fallbackTopY: FALLBACK_VISIBLE_VOID_TOP_Y,
+    this.combatMarkerRenderer?.clear();
+    const round = this.roundBuilder.build({
+      playableTerrain: this.buildDefaultDemoMap(),
+      units: DEMO_UNIT_DEFINITIONS,
     });
-    const redOneSpawn = demoMap.map.spawns["red-1"];
-    const blueOneSpawn = demoMap.map.spawns["blue-1"];
-    const redTwoSpawn = demoMap.map.spawns["red-2"];
-    const blueTwoSpawn = demoMap.map.spawns["blue-2"];
-    const spawnByUnitId = new Map([
-      ["red-1", redOneSpawn],
-      ["blue-1", blueOneSpawn],
-      ["red-2", redTwoSpawn],
-      ["blue-2", blueTwoSpawn],
-    ] as const);
-    this.vehicles = V1_DEMO_UNIT_DEFINITIONS.map((unit) => {
-      const spawn = spawnByUnitId.get(unit.id);
-      if (!spawn) {
-        throw new Error(`Missing spawn for ${unit.id}`);
-      }
-
-      return {
-        ...unit,
-        x: spawn.x,
-        y: 0,
-        hp: MAX_HP,
-        angle: this.initialAngleForFacing(spawn.facing),
-        facing: spawn.facing,
-        moveUnits: MAX_MOVE_UNITS,
-        alive: true,
-      };
-    });
-    this.turnOrder = V1_DEMO_UNIT_DEFINITIONS.map((unit) => unit.id);
+    this.currentDemoMap = round.playableTerrain;
+    this.terrain = round.terrain;
+    this.visibleVoidTopY = round.visibleVoidTopY;
+    this.vehicles = round.vehicles;
+    this.turnOrder = round.turnOrder;
     this.turnIndex = 0;
     this.projectile = undefined;
     this.impactPreview = undefined;
     this.turnCommitted = false;
     this.charge = 0;
     this.charging = false;
-    this.shotResult = `Round started: ${demoMap.map.name}.`;
+    this.shotResult = round.shotResult;
     this.settleVehicles();
     this.beginTurn();
     this.drawWorld();
@@ -607,26 +614,6 @@ export class MatchScene extends Phaser.Scene {
 
   private buildDefaultDemoMap(): PlayableTerrain {
     return buildPlayableTerrain(playableMapById(DEFAULT_DEMO_MAP_ID), { voidSurfaceY: VOID_SURFACE_Y });
-  }
-
-  private flattenDemoSpawnZones(demoMap: PlayableTerrain): void {
-    for (const spawn of Object.values(demoMap.map.spawns)) {
-      this.flattenSpawnZone(spawn.x, 150);
-    }
-  }
-
-  private initialAngleForFacing(facing: 1 | -1): number {
-    return facing === 1 ? 47 : 133;
-  }
-
-  private flattenSpawnZone(centerX: number, width: number): void {
-    const start = Math.max(0, Math.floor(centerX - width / 2));
-    const end = Math.min(WORLD_WIDTH, Math.floor(centerX + width / 2));
-    const target = this.surfaceAt(centerX);
-    for (let x = start; x <= end; x += 1) {
-      const edgeT = Math.min((x - start) / 26, (end - x) / 26, 1);
-      this.terrain[x] = Phaser.Math.Linear(this.terrain[x] ?? target, target, edgeT);
-    }
   }
 
   private beginTurn(): void {
@@ -681,6 +668,7 @@ export class MatchScene extends Phaser.Scene {
       minX: MOVE_MIN_X,
       maxX: MOVE_MAX_X,
       maxClimbSlope: MAX_CLIMB_SLOPE,
+      fallSurfaceY: DEATH_SURFACE_Y,
       surfaceAt: (x) => this.surfaceAt(x),
     });
 
@@ -736,24 +724,7 @@ export class MatchScene extends Phaser.Scene {
     this.charging = false;
     this.charge = 0;
     this.turnCommitted = true;
-    const projectile = launchProjectile({
-      shooterX: active.x,
-      shooterY: active.y,
-      angleDeg: active.angle,
-      power,
-      maxPower: MAX_POWER,
-      shotSpeedMin: SHOT_SPEED_MIN,
-      shotSpeedMax: SHOT_SPEED_MAX,
-      muzzleDistance: PROJECTILE_MUZZLE_DISTANCE,
-      muzzleYOffset: PROJECTILE_MUZZLE_Y_OFFSET,
-    });
-
-    this.projectile = {
-      ...projectile,
-      shooterId: active.id,
-      team: active.team,
-      trail: [],
-    };
+    this.projectile = this.projectileController.createProjectile(active, power);
     this.shotResult = `${active.username} fired.`;
   }
 
@@ -762,41 +733,27 @@ export class MatchScene extends Phaser.Scene {
       return;
     }
 
-    const p = this.projectile;
-    p.trail.push(new Phaser.Math.Vector2(p.x, p.y));
-    if (p.trail.length > 34) {
-      p.trail.shift();
-    }
-
-    const step = stepProjectile({
-      projectile: p,
+    const result = this.projectileController.advance({
+      projectile: this.projectile,
       deltaSeconds: dt,
       wind: this.wind,
-      windForce: WIND_FORCE,
-      gravity: GRAVITY,
+      targets: this.vehicles.map((vehicle) => ({
+        id: vehicle.id,
+        team: vehicle.team,
+        alive: vehicle.alive,
+        hitZone: this.vehicleHitZoneFor(vehicle),
+      })),
+      surfaceAt: (x) => this.surfaceAt(x),
     });
 
-    const collision = this.findProjectileCollision(p, step.startX, step.startY, step.endX, step.endY);
-    if (collision) {
-      p.x = collision.x;
-      p.y = collision.y;
-      this.cameraController?.recenterForProjectileIfNeeded(p);
-      this.resolveImpact(collision.x, collision.y, collision.directHitId);
+    this.cameraController?.recenterForProjectileIfNeeded(this.projectile);
+
+    if (result.kind === "collision") {
+      this.resolveImpact(result.collision.x, result.collision.y, result.collision.directHitId);
       return;
     }
 
-    this.applyProjectileStep(p, step);
-
-    this.cameraController?.recenterForProjectileIfNeeded(p);
-
-    if (
-      isProjectileOutOfBounds(p, {
-        worldWidth: WORLD_WIDTH,
-        worldHeight: WORLD_HEIGHT,
-        lowerYMargin: PROJECTILE_OUT_OF_BOUNDS_LOWER_Y_MARGIN,
-        upperYMargin: PROJECTILE_OUT_OF_BOUNDS_UPPER_Y_MARGIN,
-      })
-    ) {
+    if (result.kind === "out-of-bounds") {
       this.shotResult = "Shot flew out of bounds.";
       this.projectile = undefined;
       this.queueRoundEvent(700, () => this.advanceTurn());
@@ -804,161 +761,26 @@ export class MatchScene extends Phaser.Scene {
     }
   }
 
-  private applyProjectileStep(projectile: ProjectileState, step: ProjectileStepResult): void {
-    projectile.x = step.projectile.x;
-    projectile.y = step.projectile.y;
-    projectile.vx = step.projectile.vx;
-    projectile.vy = step.projectile.vy;
-  }
-
-  private findProjectileCollision(
-    projectile: ProjectileState,
-    startX: number,
-    startY: number,
-    endX: number,
-    endY: number,
-  ): ProjectileCollision | undefined {
-    const vehicleContact = firstVehicleContact({
-      startX,
-      startY,
-      endX,
-      endY,
-      projectileRadius: PROJECTILE_RADIUS,
-      zones: this.vehicles
-        .filter((vehicle) => vehicle.alive && vehicle.id !== projectile.shooterId && vehicle.team !== projectile.team)
-        .map((vehicle) => ({
-          id: vehicle.id,
-          ...this.vehicleHitZoneFor(vehicle),
-        })),
-    });
-    const terrainContact = firstTerrainContact({
-      startX,
-      startY,
-      endX,
-      endY,
-      projectileRadius: PROJECTILE_RADIUS,
-      worldWidth: WORLD_WIDTH,
-      surfaceAt: (x) => this.surfaceAt(x),
-    });
-
-    if (vehicleContact && (!terrainContact || vehicleContact.time <= terrainContact.time)) {
-      return { x: vehicleContact.x, y: vehicleContact.y, directHitId: vehicleContact.id };
-    }
-
-    return terrainContact ? { x: terrainContact.x, y: terrainContact.y } : undefined;
-  }
-
   private resolveImpact(x: number, y: number, directHitId?: string): void {
-    const shooter = this.vehicles.find((vehicle) => vehicle.id === this.projectile?.shooterId);
-    const impact = resolveProjectileImpact({
+    const result = this.impactController.resolve({
       x,
       y,
       directHitId,
-      shooter: shooter
-        ? {
-            id: shooter.id,
-            team: shooter.team,
-            classId: shooter.classId,
-          }
-        : undefined,
-      vehicles: this.vehicles.map((vehicle) => ({
-        id: vehicle.id,
-        username: vehicle.username,
-        team: vehicle.team,
-        alive: vehicle.alive,
-        hp: vehicle.hp,
-        x: vehicle.x,
-        hitZone: this.vehicleHitZoneFor(vehicle),
-      })),
-      tuning: {
-        craterRadius: CRATER_RADIUS,
-        bungerCraterRadius: BUNGER_CRATER_RADIUS,
-        damageRadius: DAMAGE_RADIUS,
-        bungerDamageRadius: BUNGER_DAMAGE_RADIUS,
-        bungerKnockback: BUNGER_KNOCKBACK,
-        moveMinX: MOVE_MIN_X,
-        moveMaxX: MOVE_MAX_X,
+      projectile: this.projectile,
+      vehicles: this.vehicles,
+      hitZoneFor: (vehicle) => this.vehicleHitZoneFor(vehicle),
+      makeCrater: (impactX, impactY, radius, depthFactor) => {
+        this.makeCrater(impactX, impactY, radius, depthFactor);
+      },
+      settleVehicles: (options) => this.settleVehicles(options),
+      addCombatMarker: (vehicle, kind, label, slot) => {
+        this.combatMarkerRenderer?.addForVehicle(vehicle, kind, label, slot);
       },
     });
-    this.impactPreview = {
-      x,
-      y,
-      craterRadius: impact.craterRadius,
-      damageRadius: impact.damageRadius,
-      isBungerShot: impact.isBungerShot,
-      timeLeft: IMPACT_PREVIEW_SECONDS,
-    };
-    this.makeCrater(x, y, impact.craterRadius, impact.craterDepthFactor);
-    const damaged: string[] = [];
-    const bungeEvents: string[] = [];
-    const affectedVehicleIds = new Set(impact.affectedVehicleIds);
-    const defeatMarkedIds = new Set(impact.damageDefeatIds);
 
-    for (const event of impact.damageEvents) {
-      const vehicle = this.vehicles.find((candidate) => candidate.id === event.vehicleId);
-      if (!vehicle) {
-        continue;
-      }
-
-      vehicle.hp = event.hpAfter;
-      damaged.push(`${event.username} -${event.damage}`);
-      this.addVehicleCombatMarker(
-        vehicle,
-        event.hitKind,
-        `${event.hitKind === "direct" ? "DIRECT" : "SPLASH"} -${event.damage}`,
-      );
-
-      if (event.defeated) {
-        vehicle.alive = false;
-        vehicle.defeatReason = "damage";
-        this.addVehicleCombatMarker(vehicle, "ko", "KO", 1);
-      }
-    }
-
-    for (const event of impact.knockbackEvents) {
-      const vehicle = this.vehicles.find((candidate) => candidate.id === event.vehicleId);
-      if (!vehicle) {
-        continue;
-      }
-
-      vehicle.x = event.toX;
-      bungeEvents.push(`${event.username} shoved`);
-      this.addVehicleCombatMarker(vehicle, "shoved", "SHOVED", 1);
-    }
-
-    for (const update of impact.vehicleUpdates) {
-      const vehicle = this.vehicles.find((candidate) => candidate.id === update.vehicleId);
-      if (!vehicle) {
-        continue;
-      }
-
-      vehicle.x = update.x;
-      vehicle.hp = update.hp;
-      vehicle.alive = update.alive;
-      if (update.defeatReason) {
-        vehicle.defeatReason = update.defeatReason;
-      }
-    }
-
+    this.impactPreview = result.impactPreview;
     this.projectile = undefined;
-    const aliveBeforeSettle = new Set(this.vehicles.filter((vehicle) => vehicle.alive).map((vehicle) => vehicle.id));
-    const fallEvents = this.settleVehicles({
-      changedX: x,
-      changedRadius: impact.changedRadius,
-      forceIds: affectedVehicleIds,
-    });
-    for (const vehicle of this.vehicles) {
-      if (aliveBeforeSettle.has(vehicle.id) && !vehicle.alive && !defeatMarkedIds.has(vehicle.id)) {
-        this.addVehicleCombatMarker(vehicle, "bunged", "VOID DROPPED");
-      }
-    }
-    this.shotResult = damaged.length > 0 ? damaged.join(" / ") : "Terrain carved.";
-    if (bungeEvents.length > 0) {
-      this.shotResult += ` / ${bungeEvents.join(" / ")}`;
-    }
-    if (fallEvents.length > 0) {
-      this.shotResult += ` / ${fallEvents.join(" / ")}`;
-    }
+    this.shotResult = result.shotResult;
     this.drawWorld();
 
     if (this.winningTeam()) {
@@ -1132,53 +954,36 @@ export class MatchScene extends Phaser.Scene {
     }
 
     if (settlement.voidDropped) {
-      const targetX = this.nearestVoidDisplayX(settlement.fallStartX);
-      const targetY = this.voidDropTargetY();
-      vehicle.voidDropPresentation = {
-        fromX: settlement.fallStartX,
-        fromY: settlement.fallStartY,
-        targetX,
-        targetY,
-        age: 0,
-        duration: DRAMATIC_VOID_DROP_FALL_SECONDS,
-      };
-      vehicle.x = targetX;
-      vehicle.y = targetY;
+      const presentation = this.voidZoneController.createVoidDropPresentation({
+        fallStartX: settlement.fallStartX,
+        fallStartY: settlement.fallStartY,
+        visibleVoidTopY: this.visibleVoidTopY,
+        terrainBreakthroughY: this.terrainBreakthroughY(),
+        surfaceAt: (x) => this.surfaceAt(x),
+      });
+      vehicle.voidDropPresentation = presentation;
+      vehicle.x = presentation.targetX;
+      vehicle.y = presentation.targetY;
       return true;
     }
 
     return false;
   }
 
-  private nearestVoidDisplayX(startX: number): number {
-    return chooseVoidDropDisplayX({
-      startX,
-      worldWidth: WORLD_WIDTH,
-      step: TERRAIN_STEP,
-      displayWidth: VOID_DROP_DISPLAY_SIZE.width,
-      padding: VOID_DROP_HORIZONTAL_PADDING,
-      isVoidAt: (x) => this.surfaceAt(x) >= this.terrainBreakthroughY(),
-    });
-  }
-
   private terrainBreakthroughY(): number {
-    return this.visibleVoidTopY + 8;
+    return this.voidZoneController.terrainBreakthroughY(this.visibleVoidTopY);
   }
 
   private terrainPlatformBottomY(): number {
-    return this.visibleVoidTopY;
+    return this.voidZoneController.terrainPlatformBottomY(this.visibleVoidTopY);
   }
 
   private visibleVoidBottomY(): number {
-    return visibleVoidZoneBottomY(this.visibleVoidTopY, VISIBLE_VOID_ZONE_HEIGHT);
+    return this.voidZoneController.visibleVoidBottomY(this.visibleVoidTopY);
   }
 
   private voidDropTargetY(): number {
-    return voidDropTargetY({
-      visibleVoidTopY: this.visibleVoidTopY,
-      visibleVoidZoneHeight: VISIBLE_VOID_ZONE_HEIGHT,
-      displayHeight: VOID_DROP_DISPLAY_SIZE.height,
-    });
+    return this.voidZoneController.voidDropTargetY(this.visibleVoidTopY);
   }
 
   private terrainAngleAt(x: number): number {
@@ -1204,89 +1009,6 @@ export class MatchScene extends Phaser.Scene {
     this.impactPreview.timeLeft -= dt;
     if (this.impactPreview.timeLeft <= 0) {
       this.impactPreview = undefined;
-    }
-  }
-
-  private addCombatMarker(kind: CombatMarkerKind, label: string, x: number, y: number): void {
-    const style = this.combatMarkerStyle(kind);
-    const worldUiScale = readableWorldUiScale(this.cameras.main.zoom);
-    const text = this.add
-      .text(x, y, label, {
-        fontFamily: "Inter, Arial, sans-serif",
-        fontSize: kind === "ko" || kind === "bunged" ? "24px" : "21px",
-        fontStyle: "800",
-        color: style.color,
-        stroke: "#10131b",
-        strokeThickness: 7,
-      })
-      .setOrigin(0.5)
-      .setScale(worldUiScale)
-      .setDepth(35);
-
-    this.combatMarkers.push({
-      kind,
-      label,
-      x,
-      y,
-      age: 0,
-      duration: COMBAT_MARKER_SECONDS,
-      lift: style.lift,
-      text,
-    });
-  }
-
-  private addVehicleCombatMarker(vehicle: VehicleState, kind: CombatMarkerKind, label: string, slot = 0): void {
-    const yOffset = USE_UNIT_CONCEPT_PREVIEW ? 176 : 104;
-    this.addCombatMarker(kind, label, vehicle.x, vehicle.y - yOffset - slot * 26);
-  }
-
-  private combatMarkerStyle(kind: CombatMarkerKind): { color: string; lift: number } {
-    switch (kind) {
-      case "direct":
-        return { color: "#ff6b6b", lift: 54 };
-      case "splash":
-        return { color: "#ffd166", lift: 46 };
-      case "shoved":
-        return { color: "#8be9ff", lift: 40 };
-      case "ko":
-        return { color: "#ff8bd1", lift: 58 };
-      case "bunged":
-        return { color: "#ff8bd1", lift: 58 };
-    }
-  }
-
-  private updateCombatMarkers(dt: number): void {
-    for (const marker of this.combatMarkers) {
-      marker.age += dt;
-      const progress = Phaser.Math.Clamp(marker.age / marker.duration, 0, 1);
-      marker.text
-        .setPosition(marker.x, marker.y - marker.lift * Phaser.Math.Easing.Sine.Out(progress))
-        .setScale(readableWorldUiScale(this.cameras.main.zoom))
-        .setAlpha(Phaser.Math.Clamp(1 - progress, 0, 1));
-    }
-
-    const expired = this.combatMarkers.filter((marker) => marker.age >= marker.duration);
-    for (const marker of expired) {
-      marker.text.destroy();
-    }
-    this.combatMarkers = this.combatMarkers.filter((marker) => marker.age < marker.duration);
-  }
-
-  private clearCombatMarkers(): void {
-    for (const marker of this.combatMarkers) {
-      marker.text.destroy();
-    }
-    this.combatMarkers = [];
-  }
-
-  private updateVoidDropPresentations(dt: number): void {
-    for (const vehicle of this.vehicles) {
-      if (vehicle.voidDropPresentation) {
-        vehicle.voidDropPresentation.age = Math.min(
-          vehicle.voidDropPresentation.duration,
-          vehicle.voidDropPresentation.age + dt,
-        );
-      }
     }
   }
 
@@ -1322,31 +1044,8 @@ export class MatchScene extends Phaser.Scene {
   private drawImpactPreview(): void {
     this.effectsRenderer?.drawImpactPreview(this.impactPreview);
   }
-  private orientedOffset(vehicle: VehicleState, offset: number, nativeFacing: 1 | -1): number {
-    return vehicle.facing === nativeFacing ? offset : -offset;
-  }
-
-  private combatHullCenter(vehicle: VehicleState): Phaser.Math.Vector2 {
-    const hull = this.combatHullFor(vehicle);
-    return new Phaser.Math.Vector2(
-      vehicle.x + this.orientedOffset(vehicle, hull.offsetX, 1),
-      vehicle.y + hull.offsetY,
-    );
-  }
-
-  private combatHullFor(vehicle: VehicleState): CombatHullShape {
-    return scaleBattlefieldCombatHull(vehicle.combatHull);
-  }
-
   private vehicleHitZoneFor(vehicle: VehicleState): VehicleHitZone {
-    const hull = this.combatHullFor(vehicle);
-    const center = this.combatHullCenter(vehicle);
-    return {
-      centerX: center.x,
-      centerY: center.y,
-      width: hull.width,
-      height: hull.height,
-    };
+    return this.vehicleGeometry.hitZoneFor(vehicle);
   }
 
   private drawVehicles(): void {

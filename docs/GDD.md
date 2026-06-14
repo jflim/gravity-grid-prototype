@@ -174,7 +174,7 @@ V1 target is equal HP per vehicle. Damage values can differ by weapon, but cosme
 
 ### Movement
 
-Vehicles have limited movement range per turn. Downhill movement and falling are allowed. Steep uphill movement is blocked by a climb-angle limit. Vehicles can intentionally drive into holes or off the stage, causing self-KO if they fall into the void.
+Vehicles have limited movement range per turn. Playable downhill movement and intentional void falling are allowed. Steep uphill faces and steep non-void downhill faces are blocked by the climb-angle limit so vehicles do not visually drive down near-vertical terrain. Vehicles must also have enough supported footing across their gameplay hull; if too much of the footing is unsupported, the vehicle falls instead of perching on a cliff edge. Vehicles can intentionally drive into holes or off the stage, causing self-KO if they fall into the void.
 
 ### Wind
 

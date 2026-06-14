@@ -43,6 +43,10 @@ export interface VehicleSettlementResult {
   fallStartY: number;
 }
 
+const FOOTING_SAMPLE_COUNT = 7;
+const MINIMUM_FOOTING_SUPPORT_RATIO = 2 / 3;
+const FOOTING_SURFACE_TOLERANCE = 8;
+
 export function settleVehicleOnTerrain(input: VehicleSettlementInput): VehicleSettlementResult {
   if (!input.vehicle.alive) {
     return {
@@ -81,7 +85,7 @@ export function settleVehicleOnTerrain(input: VehicleSettlementInput): VehicleSe
   const surface = input.surfaceAt(x);
   const y = surface - input.tuning.vehicleHalfHeight;
 
-  if (surface >= input.tuning.deathSurfaceY) {
+  if (surface >= input.tuning.deathSurfaceY || !hasEnoughFootingSupport(input, x, surface)) {
     return {
       vehicleId: input.vehicle.id,
       x,
@@ -107,6 +111,40 @@ export function settleVehicleOnTerrain(input: VehicleSettlementInput): VehicleSe
     fallStartX,
     fallStartY,
   };
+}
+
+function hasEnoughFootingSupport(input: VehicleSettlementInput, x: number, centerSurface: number): boolean {
+  let supportedSamples = 0;
+
+  for (let sample = 0; sample < FOOTING_SAMPLE_COUNT; sample += 1) {
+    const t = sample / (FOOTING_SAMPLE_COUNT - 1);
+    const sampleX = x - input.tuning.vehicleHalfWidth + t * input.tuning.vehicleHalfWidth * 2;
+    const sampleSurface = input.surfaceAt(sampleX);
+
+    if (surfaceSupportsFooting(input, sampleX, x, sampleSurface, centerSurface)) {
+      supportedSamples += 1;
+    }
+  }
+
+  return supportedSamples / FOOTING_SAMPLE_COUNT >= MINIMUM_FOOTING_SUPPORT_RATIO;
+}
+
+function surfaceSupportsFooting(
+  input: VehicleSettlementInput,
+  sampleX: number,
+  centerX: number,
+  sampleSurface: number,
+  centerSurface: number,
+): boolean {
+  if (sampleSurface >= input.tuning.deathSurfaceY) {
+    return false;
+  }
+
+  const maxSlope =
+    input.tuning.slopeThreshold / Math.max(input.tuning.slopeSampleDistance * 2, 1);
+  const maxSupportedSurface =
+    centerSurface + FOOTING_SURFACE_TOLERANCE + Math.abs(sampleX - centerX) * maxSlope;
+  return sampleSurface <= maxSupportedSurface;
 }
 
 function shouldAdjustForSlope(input: VehicleSettlementInput): boolean {

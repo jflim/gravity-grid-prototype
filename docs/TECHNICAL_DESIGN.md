@@ -41,7 +41,7 @@ Current Colyseus features include:
 Current shared extraction includes:
 
 - `shared/model/gameTypes.ts` for shared game-language types such as character ids, teams, facing, hit-zone shapes, display sizes, and defeat reasons.
-- `shared/content/v1Units.ts` for the current authored local v1 unit definitions: roster ids, class labels, sprite keys, display sizes, colors, portrait keys, and shared combat hull wiring.
+- `shared/content/v1Units.ts` for the current authored local unit definitions: roster ids, class labels, sprite keys, display sizes, colors, portrait keys, and shared combat hull wiring. Its exported content symbols use generic demo-unit names while the file path remains a transitional compatibility name.
 - `shared/content/v1CollisionProfiles.ts` for the shared v1 vehicle-only hit zone used by playable unit content and collision-art review.
 - `shared/v1/tuning.ts` for v1/local prototype tuning constants such as world size, HP, movement range, shot physics, crater radii, damage radii, wind force, and void thresholds.
 - `shared/v1/constants.ts` as a compatibility re-export for shared v1 constants already consumed by server code.
@@ -59,14 +59,24 @@ Current shared extraction includes:
 - `src/match/MatchTypes.ts` for match-scene runtime state shapes shared by UI/rendering modules.
 - `src/match/MatchController.ts` as the local match-flow bridge for active vehicle, alive/movable checks, alive teams, winners, and next-turn decisions.
 - `src/match/MatchCameraController.ts` for camera viewport, battlefield framing, and projectile recentering.
+- `src/match/ImpactController.ts` for local impact application: crater callback, vehicle damage mutation, knockback mutation, settlement callback, marker requests, and shot-result text.
+- `src/match/ProjectileController.ts` for local projectile launch, flight stepping, trail tracking, swept collision lookup, and out-of-bounds orchestration.
+- `src/match/RoundBuilder.ts` for local round setup: terrain copy, spawn flattening, starting vehicle state, turn order, visible void top, and round-start message.
+- `src/match/VehicleGeometry.ts` for facing-aware combat hull centers and projectile hit-zone geometry shared by scene collision and vehicle rendering.
 - `src/match/MatchInputController.ts` for client-side input sampling without embedding keyboard state directly in the Phaser scene.
+- `src/match/VoidZoneController.ts` for visible void-zone geometry and Void Dropped presentation state/timing.
 - `src/match/ui/CommandDeck.ts` for the fixed command deck, launch meter, movement meter, active unit info, and wind badge.
 - `src/match/rendering/TerrainRenderer.ts` for terrain, visible void hazard, and map landmarks.
 - `src/match/rendering/VehicleRenderer.ts` for vehicle/character sprites, combat hull overlays, labels, HP bars, and active turn badges.
 - `src/match/rendering/ProjectileRenderer.ts` for projectile body and trail drawing.
 - `src/match/rendering/EffectsRenderer.ts` for aim arrow, movement rail, and impact preview rings.
+- `src/match/rendering/CombatMarkerRenderer.ts` for floating direct/splash/shove/KO/Void Dropped text markers.
 
 The main technical gap is that online v1 must run the real match through server-owned state and deterministic combat resolution. The existing online preview is not the final combat system.
+
+### Known Gameplay Correctness Bugs
+
+- Falling and Void Dropped are currently too tightly coupled in the local prototype. A vehicle that loses stable footing should first enter a gravity-affected falling presentation/state, and it should only become Void Dropped after its gameplay collision zone actually intersects the visible void/death zone. The fall decision should be based on vehicle-footing support, terrain surface normals/perpendicular angle, and whether the settled vehicle orientation is physically stable, not merely on the fact that the vehicle will eventually fall.
 
 ## 3. V1 Technical Goal
 
@@ -228,6 +238,11 @@ src/
     MatchController.ts
     MatchInputController.ts
     MatchCameraController.ts
+    ImpactController.ts
+    ProjectileController.ts
+    RoundBuilder.ts
+    VehicleGeometry.ts
+    VoidZoneController.ts
     authority/
       MatchAuthority.ts
       BrowserMatchAuthority.ts
@@ -241,6 +256,7 @@ src/
       VehicleRenderer.ts
       ProjectileRenderer.ts
       EffectsRenderer.ts
+      CombatMarkerRenderer.ts
   onlineLobby.ts
   net/
     roomClient.ts
@@ -257,6 +273,7 @@ Rules:
 - Keep functions and classes reusable: `resolveProjectileImpact`, `buildMatchState`, `selectRoster`, and `applyRoomSettings` are better than names with `v1`.
 - `v1` is acceptable in docs, release notes, tests describing milestone acceptance, historical compatibility shims, and explicit migration notes.
 - `v1` should not be introduced into new permanent folder names, function names, class names, or exported constants.
+- Current content exports should use generic names such as `DemoUnitDefinition` and `DEMO_UNIT_DEFINITIONS`; milestone selection belongs in ruleset/profile data, not exported type names.
 
 Current `v1` file and symbol names are transitional. After the server-authoritative gameplay extraction is stable, add a focused cleanup pass that moves milestone-specific code from `shared/v1` and `server/v1` into generic rules/content modules backed by an explicit `playtest-alpha` ruleset/profile id.
 
@@ -281,20 +298,26 @@ Current human editing map:
 | Change heightmap construction, surface sampling, terrain angle, or crater deformation | `shared/gameplay/terrain.ts` | Deterministic gameplay helpers should stay Phaser-free so the future server can run them. |
 | Change aim input math, facing-preserving angle flips, movement traversal legality, or charge/release behavior | `shared/gameplay/movement.ts` and `shared/v1/tuning.ts` | Player-input outcomes should be gameplay logic, not hidden inside the Phaser scene. |
 | Change projectile launch position, shot speed interpolation, wind/gravity stepping, or miss boundaries | `shared/gameplay/projectile.ts` and `shared/v1/tuning.ts` | Projectile outcome math must be reusable by the future server authority. |
+| Change local projectile launch orchestration, trail history, swept collision priority, or out-of-bounds response | `src/match/ProjectileController.ts`, `shared/gameplay/projectile.ts`, and `shared/gameplay/projectileCollision.ts` | The browser scene should delegate projectile flow through a focused controller while deterministic math remains shared. |
 | Change swept terrain collision, vehicle collision priority, projectile-edge contact timing, or vehicle hit-zone geometry | `shared/gameplay/projectileCollision.ts`, `shared/gameplay/vehicleHitZone.ts`, and `shared/v1/tuning.ts` | Collision truth should be shared by browser presentation and future server authority. |
+| Change client-side facing-aware combat hull center or conversion from authored combat hull to projectile hit zone | `src/match/VehicleGeometry.ts` | Scene collision and vehicle overlay rendering should use the same geometry interpretation. |
 | Change direct/splash damage, allied friendly-fire filtering, self-damage, bunger knockback, or impact radius selection | `shared/gameplay/impact.ts` and `shared/v1/tuning.ts` | Impact outcome math must be reusable by the future server authority while Phaser stays responsible for markers and animation. |
+| Change local impact application, crater callback wiring, combat-marker requests, settlement callback wiring, or shot-result text | `src/match/ImpactController.ts`, `shared/gameplay/impact.ts`, and `shared/gameplay/vehicleSettlement.ts` | The scene should delegate impact application through a focused controller while deterministic damage and settlement truth stay shared. |
 | Change vehicle terrain placement, post-impact slope nudging, or Void Dropped truth thresholds | `shared/gameplay/vehicleSettlement.ts` and `shared/v1/tuning.ts` | Settlement and elimination truth should be shared by the browser demo and future server authority; visual fall/suspension remains client presentation. |
 | Change alive checks, alive-team/winner calculation, or round-over decisions | `shared/match/rounds.ts` | Round outcome truth should be reusable by local browser authority and future server authority. |
 | Change next-turn selection, defeated-vehicle turn skipping, or turn-order wrapping | `shared/match/turns.ts` | Turn sequencing truth should be reusable by local browser authority and future server authority. |
 | Change browser bootstrap, game config, viewport guard, or online lobby mount | `src/main.ts` | Startup belongs outside the Phaser scene so the playable scene remains game-focused. |
 | Change local active-vehicle, movable/alive, alive-team, winner, or next-turn bridge logic | `src/match/MatchController.ts` | The scene uses a controller boundary before those decisions move to server authority. |
+| Change local round setup, spawn flattening width, starting HP/move units, initial facing angle, initial turn order, or round-start message | `src/match/RoundBuilder.ts` and `shared/v1/tuning.ts` | Round initialization should be testable without opening Phaser scene rendering code. |
 | Change camera viewport, battlefield framing, or projectile recentering | `src/match/MatchCameraController.ts` | Camera behavior is presentation orchestration, separate from combat truth and drawing. |
+| Change visible void-zone bounds, terrain breakthrough padding, Void Dropped target position, or Void Dropped fall-presentation timing | `src/match/VoidZoneController.ts` and `src/voidDropPresentation.ts` | Void-zone presentation should be isolated before the future falling-state fix separates falling from final Void Dropped truth. |
 | Change which keyboard keys mean move, aim, charge, restart, or collision overlay toggle | `src/match/MatchInputController.ts` and `src/match/MatchScene.ts` key setup | Input sampling is client-side controller work; gameplay helpers consume the sampled intent. |
 | Change fixed HUD command deck, launch-power meter, movement meter, aim dial, active unit info, or wind badge | `src/match/ui/CommandDeck.ts` | Command UI should not be mixed into scene lifecycle or combat logic. |
 | Change terrain, void-hazard, or map-landmark drawing | `src/match/rendering/TerrainRenderer.ts` | Terrain rendering is visual presentation over shared terrain state. |
 | Change vehicle sprites, labels, HP bars, combat hull overlays, active turn badge, or footing marker | `src/match/rendering/VehicleRenderer.ts` | Vehicle drawing should own Phaser sprite/text objects but not combat truth. |
 | Change projectile trail/body drawing | `src/match/rendering/ProjectileRenderer.ts` | Projectile rendering is separate from projectile simulation and collision truth. |
 | Change aim arrow, movement rail, or impact preview rings | `src/match/rendering/EffectsRenderer.ts` | Tactical visual aids stay out of gameplay resolution logic. |
+| Change floating direct/splash/shove/KO/Void Dropped marker styling, offsets, duration, or fade movement | `src/match/rendering/CombatMarkerRenderer.ts` | Combat-result feedback is visual presentation; impact truth should remain in shared gameplay modules. |
 | Change private-room networking, server state, or online preview behavior | `server/rooms/GravityCanyonRoom.ts` and `server/schema/GravityCanyonState.ts` | Server authority and Colyseus schema belong on the Node side. |
 
 Planned naming cleanup after shared gameplay extraction:
@@ -523,7 +546,9 @@ Movement validation:
 - X remains in world bounds.
 - Downhill and falling are allowed.
 - Steep uphill is blocked by climb-angle rule.
+- Vehicle settlement samples footing support across the gameplay hull so under-supported cliff-edge positions become Void Dropped instead of stable perches.
 - If vehicle falls below the death/void threshold, mark Void Dropped.
+- Future refinement should separate unstable-footing fall state from Void Dropped truth so falling has readable gravity-driven presentation before final void collision.
 
 ### Aim
 
@@ -894,6 +919,7 @@ Optimization priority:
 | Kaelii/Perlah mechanics are not locked | Weapon implementation could wander | Lock exact primary mechanics before coding them. |
 | Reconnect tokens are not true accounts | Anyone with browser token can reclaim | Accept for v1 friend tests; accounts later. |
 | Mature content direction affects platform safety | Could block sharing/streaming | Default build remains stream-safe; mature variants are future opt-in. |
+| Falling and Void Dropped are visually conflated | Players read a fall as a physical event, but the prototype can resolve the final status as soon as a vehicle is unsupported | Add a distinct falling state driven by gravity; apply Void Dropped only when the vehicle collision zone intersects the visible void/death zone. |
 
 ## 23. Implementation Order
 

@@ -104,11 +104,17 @@
 <li><code>src/match/MatchScene.ts</code>: Phaser scene lifecycle and high-level match orchestration. Owns current local browser authority until online server authority replaces it.</li>
 <li><code>src/match/MatchTypes.ts</code>: Scene-local runtime state shapes shared by match UI/rendering modules.</li>
 <li><code>src/match/MatchCameraController.ts</code>: Camera viewport, battlefield framing, and projectile recenter decisions.</li>
+<li><code>src/match/ImpactController.ts</code>: Local impact application for crater callback wiring, vehicle mutation, combat marker requests, settlement callback wiring, and shot-result text.</li>
+<li><code>src/match/ProjectileController.ts</code>: Local projectile launch, flight stepping, trail tracking, swept collision lookup, and out-of-bounds orchestration.</li>
+<li><code>src/match/RoundBuilder.ts</code>: Local round setup for terrain copy, spawn flattening, starting vehicle state, turn order, and round-start text.</li>
+<li><code>src/match/VehicleGeometry.ts</code>: Facing-aware combat hull centers and projectile hit-zone conversion shared by scene collision and vehicle rendering.</li>
+<li><code>src/match/VoidZoneController.ts</code>: Visible void-zone geometry and Void Dropped presentation timing.</li>
 <li><code>src/match/ui/CommandDeck.ts</code>: Fixed HUD command deck drawing, active unit info, launch meter, movement meter, and aim dial.</li>
 <li><code>src/match/rendering/TerrainRenderer.ts</code>: Terrain, void hazard, and map landmark drawing.</li>
 <li><code>src/match/rendering/VehicleRenderer.ts</code>: Vehicle/character sprite synchronization, combat hull overlays, labels, and footing markers.</li>
 <li><code>src/match/rendering/ProjectileRenderer.ts</code>: Projectile trail and projectile body drawing.</li>
-<li><code>src/match/rendering/EffectsRenderer.ts</code>: Aim arrow, movement rail, impact preview, and combat markers.</li>
+<li><code>src/match/rendering/EffectsRenderer.ts</code>: Aim arrow, movement rail, and impact preview.</li>
+<li><code>src/match/rendering/CombatMarkerRenderer.ts</code>: Floating direct/splash/shove/KO/Void Dropped text markers.</li>
 </ul>
 <h2>Task 1: Add Architecture Boundary Tests</h2>
 <p><strong>Files:</strong></p>
@@ -116,7 +122,7 @@
 <li>Create: <code>src/match/architecture.test.ts</code></li>
 </ul>
 <ul>
-<li>[ ] <strong>Step 1: Write failing tests for the planned module files</strong></li>
+<li>[x] <strong>Step 1: Write failing tests for the planned module files</strong></li>
 </ul>
 <pre><code class="language-ts">
 import assert from &quot;node:assert/strict&quot;;
@@ -147,6 +153,8 @@ test(&quot;match scene refactor exposes planned module boundaries&quot;, () =&gt
 
     &quot;src/match/rendering/EffectsRenderer.ts&quot;,
 
+    &quot;src/match/rendering/CombatMarkerRenderer.ts&quot;,
+
   ];
 
 
@@ -173,7 +181,7 @@ test(&quot;main.ts stays a bootstrap instead of owning the Phaser scene&quot;, (
 
 </code></pre>
 <ul>
-<li>[ ] <strong>Step 2: Run test to verify it fails</strong></li>
+<li>[x] <strong>Step 2: Run test to verify it fails</strong></li>
 </ul>
 <p>Run: <code>npx tsx --test src/match/architecture.test.ts</code></p>
 <p>Expected: FAIL because the new module files do not exist and <code>src/main.ts</code> still owns <code>class GravityGridScene</code>.</p>
@@ -185,19 +193,19 @@ test(&quot;main.ts stays a bootstrap instead of owning the Phaser scene&quot;, (
 <li>Modify: <code>src/main.ts</code></li>
 </ul>
 <ul>
-<li>[ ] <strong>Step 1: Move scene-local types into <code>MatchTypes.ts</code></strong></li>
+<li>[x] <strong>Step 1: Move scene-local types into <code>MatchTypes.ts</code></strong></li>
 </ul>
 <p>Move <code>VehicleState</code>, <code>ProjectileState</code>, <code>ProjectileCollision</code>, <code>VoidDropPresentationState</code>, <code>ImpactPreview</code>, <code>CombatMarker</code>, and <code>SettleOptions</code> from <code>src/main.ts</code>.</p>
 <ul>
-<li>[ ] <strong>Step 2: Move <code>GravityGridScene</code> into <code>MatchScene.ts</code> and export it as <code>MatchScene</code></strong></li>
+<li>[x] <strong>Step 2: Move <code>GravityGridScene</code> into <code>MatchScene.ts</code> and export it as <code>MatchScene</code></strong></li>
 </ul>
 <p>Keep method bodies identical except for import paths and class name.</p>
 <ul>
-<li>[ ] <strong>Step 3: Replace <code>src/main.ts</code> with bootstrap-only code</strong></li>
+<li>[x] <strong>Step 3: Replace <code>src/main.ts</code> with bootstrap-only code</strong></li>
 </ul>
 <p><code>src/main.ts</code> should import <code>MatchScene</code> and pass it as the Phaser scene.</p>
 <ul>
-<li>[ ] <strong>Step 4: Run verification</strong></li>
+<li>[x] <strong>Step 4: Run verification</strong></li>
 </ul>
 <p>Run: <code>npx tsx --test src/match/architecture.test.ts</code></p>
 <p>Expected: PASS.</p>
@@ -211,16 +219,16 @@ test(&quot;main.ts stays a bootstrap instead of owning the Phaser scene&quot;, (
 <li>Test: <code>src/match/architecture.test.ts</code></li>
 </ul>
 <ul>
-<li>[ ] <strong>Step 1: Add architecture assertion</strong></li>
+<li>[x] <strong>Step 1: Add architecture assertion</strong></li>
 </ul>
 <p>Assert that <code>MatchCameraController.ts</code> exports <code>MatchCameraController</code>.</p>
 <ul>
-<li>[ ] <strong>Step 2: Move camera-only methods</strong></li>
+<li>[x] <strong>Step 2: Move camera-only methods</strong></li>
 </ul>
 <p>Move viewport/framing calculations out of the scene where practical:</p>
 <p><code>updateCameraViewport</code>, <code>playfieldHeight</code>, <code>frameBattlefield</code>, and projectile recenter helper logic.</p>
 <ul>
-<li>[ ] <strong>Step 3: Run verification</strong></li>
+<li>[x] <strong>Step 3: Run verification</strong></li>
 </ul>
 <p>Run: <code>npm run build:client</code></p>
 <p>Expected: PASS.</p>
@@ -232,19 +240,19 @@ test(&quot;main.ts stays a bootstrap instead of owning the Phaser scene&quot;, (
 <li>Test: <code>src/match/architecture.test.ts</code></li>
 </ul>
 <ul>
-<li>[ ] <strong>Step 1: Add architecture assertion</strong></li>
+<li>[x] <strong>Step 1: Add architecture assertion</strong></li>
 </ul>
 <p>Assert that <code>CommandDeck.ts</code> exports <code>CommandDeck</code>.</p>
 <ul>
-<li>[ ] <strong>Step 2: Move command deck drawing</strong></li>
+<li>[x] <strong>Step 2: Move command deck drawing</strong></li>
 </ul>
 <p>Move <code>drawControlPanel</code>, <code>drawGlobalRoundStatus</code>, <code>drawHudBar</code>, <code>drawLaunchPowerMeter</code>, <code>drawMoveMeter</code>, <code>drawPanelAimDial</code>, and the command-deck text/image object wiring into <code>CommandDeck</code>.</p>
 <ul>
-<li>[ ] <strong>Step 3: Keep Phaser object ownership explicit</strong></li>
+<li>[x] <strong>Step 3: Keep Phaser object ownership explicit</strong></li>
 </ul>
 <p><code>CommandDeck</code> should receive a Phaser scene, graphics object, text objects, and portrait image through its constructor. It should not own combat truth.</p>
 <ul>
-<li>[ ] <strong>Step 4: Run verification</strong></li>
+<li>[x] <strong>Step 4: Run verification</strong></li>
 </ul>
 <p>Run: <code>npm test</code></p>
 <p>Expected: PASS.</p>
@@ -257,31 +265,36 @@ test(&quot;main.ts stays a bootstrap instead of owning the Phaser scene&quot;, (
 <li>Create: <code>src/match/rendering/VehicleRenderer.ts</code></li>
 <li>Create: <code>src/match/rendering/ProjectileRenderer.ts</code></li>
 <li>Create: <code>src/match/rendering/EffectsRenderer.ts</code></li>
+<li>Create: <code>src/match/rendering/CombatMarkerRenderer.ts</code></li>
 <li>Modify: <code>src/match/MatchScene.ts</code></li>
 <li>Test: <code>src/match/architecture.test.ts</code></li>
 </ul>
 <ul>
-<li>[ ] <strong>Step 1: Add architecture assertions</strong></li>
+<li>[x] <strong>Step 1: Add architecture assertions</strong></li>
 </ul>
 <p>Assert each renderer file exports its renderer class.</p>
 <ul>
-<li>[ ] <strong>Step 2: Move terrain rendering</strong></li>
+<li>[x] <strong>Step 2: Move terrain rendering</strong></li>
 </ul>
 <p>Move terrain, void hazard, and map landmark drawing into <code>TerrainRenderer</code>.</p>
 <ul>
-<li>[ ] <strong>Step 3: Move projectile rendering</strong></li>
+<li>[x] <strong>Step 3: Move projectile rendering</strong></li>
 </ul>
 <p>Move projectile trail/body drawing into <code>ProjectileRenderer</code>.</p>
 <ul>
-<li>[ ] <strong>Step 4: Move effects rendering</strong></li>
+<li>[x] <strong>Step 4: Move effects rendering</strong></li>
 </ul>
-<p>Move aim arrow, movement rail, impact preview, and combat marker drawing into <code>EffectsRenderer</code>.</p>
+<p>Move aim arrow, movement rail, and impact preview drawing into <code>EffectsRenderer</code>.</p>
 <ul>
-<li>[ ] <strong>Step 5: Move vehicle rendering</strong></li>
+<li>[x] <strong>Step 4a: Move combat marker rendering</strong></li>
+</ul>
+<p>Move floating direct/splash/shove/KO/Void Dropped marker drawing and lifecycle into <code>CombatMarkerRenderer</code>.</p>
+<ul>
+<li>[x] <strong>Step 5: Move vehicle rendering</strong></li>
 </ul>
 <p>Move vehicle sprite synchronization, collision hull drawing, labels, HP bars, and footing marker drawing into <code>VehicleRenderer</code>.</p>
 <ul>
-<li>[ ] <strong>Step 6: Run verification</strong></li>
+<li>[x] <strong>Step 6: Run verification</strong></li>
 </ul>
 <p>Run: <code>npm test</code></p>
 <p>Expected: PASS.</p>
@@ -297,20 +310,20 @@ test(&quot;main.ts stays a bootstrap instead of owning the Phaser scene&quot;, (
 <li>Generated: HTML docs via <code>npm run docs:html</code></li>
 </ul>
 <ul>
-<li>[ ] <strong>Step 1: Update TDD current extraction list and human editing map</strong></li>
+<li>[x] <strong>Step 1: Update TDD current extraction list and human editing map</strong></li>
 </ul>
 <p>Describe the implemented <code>MatchScene</code>, <code>CommandDeck</code>, camera controller, and renderer files.</p>
 <ul>
-<li>[ ] <strong>Step 2: Update version log</strong></li>
+<li>[x] <strong>Step 2: Update version log</strong></li>
 </ul>
 <p>Add one checkpoint line for the scene/UI/rendering refactor.</p>
 <ul>
-<li>[ ] <strong>Step 3: Regenerate docs</strong></li>
+<li>[x] <strong>Step 3: Regenerate docs</strong></li>
 </ul>
 <p>Run: <code>npm run docs:html</code></p>
 <p>Expected: generated HTML docs complete.</p>
 <ul>
-<li>[ ] <strong>Step 4: Final quality gate</strong></li>
+<li>[x] <strong>Step 4: Final quality gate</strong></li>
 </ul>
 <p>Run: <code>npm test</code></p>
 <p>Expected: PASS.</p>
@@ -327,6 +340,113 @@ git add -A
 git commit -m &quot;refactor: split match scene ui and renderers&quot;
 
 </code></pre>
+<h2>Task 7: Extract Void Zone Controller</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/match/VoidZoneController.ts</code></li>
+<li>Create: <code>src/match/VoidZoneController.test.ts</code></li>
+<li>Modify: <code>src/match/MatchScene.ts</code></li>
+<li>Modify: <code>src/match/architecture.test.ts</code></li>
+</ul>
+<ul>
+<li>[x] <strong>Step 1: Add failing tests for the controller boundary</strong></li>
+</ul>
+<p>Assert that the controller creates readable Void Dropped presentation targets, exposes visible void-zone bounds, and advances presentation age without overshooting.</p>
+<ul>
+<li>[x] <strong>Step 2: Move void-zone presentation coordination out of <code>MatchScene</code></strong></li>
+</ul>
+<p>Move visible void bottom, terrain breakthrough padding, Void Dropped target position, nearest readable void-run selection, and Void Dropped presentation ticking into <code>VoidZoneController</code>.</p>
+<ul>
+<li>[x] <strong>Step 3: Run focused verification</strong></li>
+</ul>
+<p>Run: <code>npm test -- src/match/VoidZoneController.test.ts src/match/architecture.test.ts</code></p>
+<p>Expected: PASS.</p>
+<h2>Task 8: Extract Round Builder</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/match/RoundBuilder.ts</code></li>
+<li>Create: <code>src/match/RoundBuilder.test.ts</code></li>
+<li>Modify: <code>src/match/MatchScene.ts</code></li>
+<li>Modify: <code>src/match/architecture.test.ts</code></li>
+</ul>
+<ul>
+<li>[x] <strong>Step 1: Add failing tests for the round setup boundary</strong></li>
+</ul>
+<p>Assert that the builder creates deterministic starting vehicles and turn order from map spawns, flattens spawn terrain without mutating source terrain, and reports a useful missing-spawn error.</p>
+<ul>
+<li>[x] <strong>Step 2: Move local round setup out of <code>MatchScene</code></strong></li>
+</ul>
+<p>Move terrain copying, spawn flattening, starting vehicle state creation, visible void top calculation, starting turn order, and round-start text into <code>RoundBuilder</code>.</p>
+<ul>
+<li>[x] <strong>Step 3: Run focused verification</strong></li>
+</ul>
+<p>Run: <code>npm test -- src/match/RoundBuilder.test.ts src/match/architecture.test.ts</code></p>
+<p>Expected: PASS.</p>
+<h2>Task 9: Extract Vehicle Geometry</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/match/VehicleGeometry.ts</code></li>
+<li>Create: <code>src/match/VehicleGeometry.test.ts</code></li>
+<li>Modify: <code>src/match/MatchScene.ts</code></li>
+<li>Modify: <code>src/match/rendering/VehicleRenderer.ts</code></li>
+<li>Modify: <code>src/match/architecture.test.ts</code></li>
+</ul>
+<ul>
+<li>[x] <strong>Step 1: Add failing tests for shared vehicle geometry</strong></li>
+</ul>
+<p>Assert that facing-aware combat hull centers mirror offsets correctly and that combat hulls convert into projectile hit zones.</p>
+<ul>
+<li>[x] <strong>Step 2: Move duplicated hull math into <code>VehicleGeometry</code></strong></li>
+</ul>
+<p>Move oriented offsets, scaled combat hull lookup, combat hull center, and projectile hit-zone conversion into <code>VehicleGeometry</code>. Use it from both <code>MatchScene</code> collision checks and <code>VehicleRenderer</code> combat hull overlays.</p>
+<ul>
+<li>[x] <strong>Step 3: Run focused verification</strong></li>
+</ul>
+<p>Run: <code>npm test -- src/match/VehicleGeometry.test.ts src/match/architecture.test.ts</code></p>
+<p>Expected: PASS.</p>
+<h2>Task 10: Extract Projectile Controller</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/match/ProjectileController.ts</code></li>
+<li>Create: <code>src/match/ProjectileController.test.ts</code></li>
+<li>Modify: <code>src/match/MatchScene.ts</code></li>
+<li>Modify: <code>src/match/MatchTypes.ts</code></li>
+<li>Modify: <code>src/match/architecture.test.ts</code></li>
+</ul>
+<ul>
+<li>[x] <strong>Step 1: Add failing tests for projectile orchestration</strong></li>
+</ul>
+<p>Assert that the controller creates launched projectiles with shooter context, advances in-flight shots while recording trail points, reports enemy vehicle collisions before terrain, reports terrain collisions, and reports out-of-bounds shots.</p>
+<ul>
+<li>[x] <strong>Step 2: Move projectile orchestration out of <code>MatchScene</code></strong></li>
+</ul>
+<p>Move launch creation, trail bookkeeping, wind/gravity stepping, swept collision lookup, and out-of-bounds checks into <code>ProjectileController</code>. Keep impact application in <code>MatchScene</code> for the next extraction because it still mutates terrain, vehicles, combat markers, and round flow.</p>
+<ul>
+<li>[x] <strong>Step 3: Run focused verification</strong></li>
+</ul>
+<p>Run: <code>npm test -- src/match/ProjectileController.test.ts src/match/architecture.test.ts</code></p>
+<p>Expected: PASS.</p>
+<h2>Task 11: Extract Impact Controller</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/match/ImpactController.ts</code></li>
+<li>Create: <code>src/match/ImpactController.test.ts</code></li>
+<li>Modify: <code>src/match/MatchScene.ts</code></li>
+<li>Modify: <code>src/match/architecture.test.ts</code></li>
+</ul>
+<ul>
+<li>[x] <strong>Step 1: Add failing tests for impact orchestration</strong></li>
+</ul>
+<p>Assert that the controller applies direct damage, craters terrain, requests combat markers, calls settlement, emits KO and Void Dropped markers, reports bunger knockback, and returns shot-result text.</p>
+<ul>
+<li>[x] <strong>Step 2: Move impact application out of <code>MatchScene</code></strong></li>
+</ul>
+<p>Move crater callback wiring, vehicle damage/knockback mutation, combat marker requests, settlement callback wiring, impact preview creation, and shot-result text construction into <code>ImpactController</code>. Keep round flow, drawing, and winner/turn scheduling in <code>MatchScene</code>.</p>
+<ul>
+<li>[x] <strong>Step 3: Run focused verification</strong></li>
+</ul>
+<p>Run: <code>npm test -- src/match/ImpactController.test.ts src/match/architecture.test.ts</code></p>
+<p>Expected: PASS.</p>
 <h2>Self-Review</h2>
 <ul>
 <li>Spec coverage: Covers the documented target files for scene, controller, UI, and rendering boundaries. It does not implement server-authoritative online combat; that remains a separate v1 milestone.</li>

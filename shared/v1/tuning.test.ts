@@ -11,6 +11,7 @@ import {
   SETTLEMENT_SLOPE_THRESHOLD,
   TERRAIN_CHANGE_SETTLE_PADDING,
   TURN_SECONDS,
+  VEHICLE_HALF_WIDTH,
   V1_WORLD_HEIGHT,
   V1_WORLD_WIDTH,
 } from "./tuning.js";
@@ -24,6 +25,7 @@ test("v1 tuning exports the current local match scale and turn constants", () =>
 });
 
 test("v1 tuning names the current vehicle settlement constants", () => {
+  assert.equal(VEHICLE_HALF_WIDTH, 82);
   assert.equal(TERRAIN_CHANGE_SETTLE_PADDING, 42);
   assert.equal(SETTLEMENT_SLOPE_SAMPLE_DISTANCE, 18);
   assert.equal(SETTLEMENT_SLOPE_THRESHOLD, 18);

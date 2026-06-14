@@ -65,6 +65,29 @@ test("settlement marks a vehicle as Void Dropped when the surface is below the d
   assert.equal(result.fallStartY, 760);
 });
 
+test("settlement void drops a vehicle when too little of its footing is supported", () => {
+  const result = settleVehicleOnTerrain({
+    vehicle: {
+      id: "red-1",
+      x: 100,
+      y: 420,
+      hp: 100,
+      alive: true,
+    },
+    adjustForSlope: false,
+    tuning,
+    fallbackFallStartY: 760,
+    surfaceAt: (x) => (x <= 105 ? 500 : 960),
+  });
+
+  assert.equal(result.voidDropped, true);
+  assert.equal(result.alive, false);
+  assert.equal(result.hp, 0);
+  assert.equal(result.defeatReason, "void");
+  assert.equal(result.fallStartX, 100);
+  assert.equal(result.fallStartY, 420);
+});
+
 test("settlement nudges vehicles off steep local slopes only when terrain changed nearby", () => {
   const unchangedFarAway = settleVehicleOnTerrain({
     vehicle: {

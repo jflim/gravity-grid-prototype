@@ -80,7 +80,47 @@ test("movement step allows downhill movement and spends move units", () => {
     minX: 0,
     maxX: 300,
     maxClimbSlope: 0.5,
-    surfaceAt: (x) => (x <= 100 ? 200 : 220),
+    surfaceAt: (x) => (x <= 100 ? 200 : 212),
+  });
+
+  assert.equal(result.moved, true);
+  assert.equal(result.x, 132);
+  assert.equal(result.moveUnits, 8);
+});
+
+test("movement step blocks steep downhill terrain that is not a void drop", () => {
+  const result = resolveMovementStep({
+    x: 100,
+    moveUnits: 10,
+    direction: 1,
+    deltaSeconds: 1,
+    moveSpeedPixelsPerSecond: 32,
+    movePixelsPerUnit: 16,
+    minX: 0,
+    maxX: 300,
+    maxClimbSlope: 0.5,
+    fallSurfaceY: 500,
+    surfaceAt: (x) => (x <= 100 ? 200 : 260),
+  });
+
+  assert.equal(result.moved, false);
+  assert.equal(result.x, 100);
+  assert.equal(result.moveUnits, 10);
+});
+
+test("movement step allows steep downhill traversal into the configured fall surface", () => {
+  const result = resolveMovementStep({
+    x: 100,
+    moveUnits: 10,
+    direction: 1,
+    deltaSeconds: 1,
+    moveSpeedPixelsPerSecond: 32,
+    movePixelsPerUnit: 16,
+    minX: 0,
+    maxX: 300,
+    maxClimbSlope: 0.5,
+    fallSurfaceY: 500,
+    surfaceAt: (x) => (x <= 100 ? 200 : 520),
   });
 
   assert.equal(result.moved, true);

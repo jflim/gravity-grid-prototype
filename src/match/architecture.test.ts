@@ -7,11 +7,17 @@ test("match scene refactor exposes planned module boundaries", () => {
     "src/match/MatchScene.ts",
     "src/match/MatchTypes.ts",
     "src/match/MatchCameraController.ts",
+    "src/match/ImpactController.ts",
+    "src/match/ProjectileController.ts",
+    "src/match/RoundBuilder.ts",
+    "src/match/VehicleGeometry.ts",
+    "src/match/VoidZoneController.ts",
     "src/match/ui/CommandDeck.ts",
     "src/match/rendering/TerrainRenderer.ts",
     "src/match/rendering/VehicleRenderer.ts",
     "src/match/rendering/ProjectileRenderer.ts",
     "src/match/rendering/EffectsRenderer.ts",
+    "src/match/rendering/CombatMarkerRenderer.ts",
   ];
 
   for (const file of expectedFiles) {
@@ -23,11 +29,17 @@ test("planned match modules export their concrete boundaries", () => {
   const expectedExports = [
     ["src/match/MatchScene.ts", "export class MatchScene"],
     ["src/match/MatchCameraController.ts", "export class MatchCameraController"],
+    ["src/match/ImpactController.ts", "export class ImpactController"],
+    ["src/match/ProjectileController.ts", "export class ProjectileController"],
+    ["src/match/RoundBuilder.ts", "export class RoundBuilder"],
+    ["src/match/VehicleGeometry.ts", "export class VehicleGeometry"],
+    ["src/match/VoidZoneController.ts", "export class VoidZoneController"],
     ["src/match/ui/CommandDeck.ts", "export class CommandDeck"],
     ["src/match/rendering/TerrainRenderer.ts", "export class TerrainRenderer"],
     ["src/match/rendering/VehicleRenderer.ts", "export class VehicleRenderer"],
     ["src/match/rendering/ProjectileRenderer.ts", "export class ProjectileRenderer"],
     ["src/match/rendering/EffectsRenderer.ts", "export class EffectsRenderer"],
+    ["src/match/rendering/CombatMarkerRenderer.ts", "export class CombatMarkerRenderer"],
   ] as const;
 
   for (const [file, expectedExport] of expectedExports) {

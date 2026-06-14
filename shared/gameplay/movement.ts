@@ -31,6 +31,7 @@ export interface MovementStepInput {
   minX: number;
   maxX: number;
   maxClimbSlope: number;
+  fallSurfaceY?: number;
   surfaceAt: (x: number) => number;
 }
 
@@ -107,8 +108,10 @@ export function resolveMovementStep(input: MovementStepInput): MovementStepResul
   const newSurface = input.surfaceAt(proposedX);
   const distanceMoved = Math.abs(proposedX - input.x);
   const surfaceDelta = newSurface - oldSurface;
-  const uphillSlope = Math.max(0, -surfaceDelta) / Math.max(distanceMoved, 1);
-  const canTraverse = surfaceDelta >= 0 || uphillSlope <= input.maxClimbSlope;
+  const slope = Math.abs(surfaceDelta) / Math.max(distanceMoved, 1);
+  const movingIntoFallSurface =
+    input.fallSurfaceY !== undefined && surfaceDelta > 0 && newSurface >= input.fallSurfaceY;
+  const canTraverse = slope <= input.maxClimbSlope || movingIntoFallSurface;
 
   if (!canTraverse || distanceMoved <= 0) {
     return { x: input.x, moveUnits: input.moveUnits, moved: false };

@@ -15,6 +15,13 @@ test("normal runtime image assets use optimized WebP delivery files", () => {
   }
 });
 
+test("normal runtime includes mounted unit sprites for nova and vesper", () => {
+  assert.equal(RUNTIME_IMAGE_ASSETS["nova-unit-default"], "assets/nova-unit-default.webp");
+  assert.equal(RUNTIME_IMAGE_ASSETS["nova-unit-ko"], "assets/nova-unit-ko.webp");
+  assert.equal(RUNTIME_IMAGE_ASSETS["vesper-unit-default"], "assets/vesper-unit-default.webp");
+  assert.equal(RUNTIME_IMAGE_ASSETS["vesper-unit-ko"], "assets/vesper-unit-ko.webp");
+});
+
 test("art-review concept images are kept separate from normal runtime assets", () => {
   for (const path of Object.values(CONCEPT_IMAGE_ASSETS)) {
     assert.match(path, /sprite-variants\//);

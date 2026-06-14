@@ -11,7 +11,7 @@ First playable local artillery prototype for Gravity Canyon.
 - Keyboard movement, 5-90 degree elevation aiming, and hold/release shot power.
 - Left/Right input turns the vehicle, character, and aim direction before moving.
 - Facing-aware aim controls so each side's Up/Down input feels consistent.
-- Terrain movement allows downhill travel and falling, while steep uphill climbs are blocked by a climb-angle limit.
+- Terrain movement allows playable downhill travel and intentional void falls, while terrain faces steeper than the climb-angle limit are not driveable and vehicles need enough grounded footing to stay settled.
 - Top-safe wind badge visible to everyone; active turn timing lives above the active vehicle only.
 - Fixed screen-space command deck with active vehicle portrait, aim dial, movement range meter, and a prominent launch-power meter.
 - The command deck keeps a larger bottom safety gutter so control content is not clipped by the browser edge.
@@ -214,7 +214,7 @@ Primary reading links:
 - The online room now owns a lightweight combat preview model, but Phaser projectile/terrain gameplay is not synced to that model yet.
 - Terrain uses a heightmap for speed. Pixel-mask terrain can replace it later if needed.
 - There is no predicted trajectory line. The muzzle arrow shows current direction, but shot landing is still based on angle, power, wind, and memory.
-- Movement treats downhill and falling as allowed traversal; only steep uphill movement is blocked.
+- Movement treats playable downhill and intentional void falling as allowed traversal; steep uphill or steep non-void downhill faces are blocked by the climb-angle rule, and vehicles without enough supported footing fall instead of perching on cliff edges.
 - Vehicle sprites rotate to match the local terrain slope while labels and meters stay horizontal.
 - Players can intentionally drive into holes or off the map, which sets that vehicle to 0 HP.
 - Every weapon affects terrain. Bunger weapons are tuned to affect terrain the most.
