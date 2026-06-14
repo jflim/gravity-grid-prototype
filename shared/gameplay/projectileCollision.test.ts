@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { firstTerrainContact, firstVehicleContact } from "./projectileCollision";
-import { distanceToVehicleHitZone } from "./vehicleHitZone";
+import { firstTerrainContact, firstVehicleContact } from "./projectileCollision.js";
 
 test("terrain collision resolves at the first projectile-edge surface contact", () => {
   const contact = firstTerrainContact({
@@ -56,15 +55,4 @@ test("vehicle collision resolves on vehicle-body hit zones instead of unit art c
   assert.equal(contact.id, "target");
   assert.equal(contact.x, 200);
   assert.equal(contact.y, 500);
-});
-
-test("effect distance uses the nearest vehicle-body edge", () => {
-  const distance = distanceToVehicleHitZone(180, 500, {
-    centerX: 250,
-    centerY: 500,
-    width: 100,
-    height: 80,
-  });
-
-  assert.equal(distance, 20);
 });

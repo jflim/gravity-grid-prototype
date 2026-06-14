@@ -87,8 +87,8 @@
   <main>
     <article>
       <div class="generated">
-        Generated from <a href="GDD.md">docs/GDD.md</a> on 2026-06-14.
-        Edit the markdown source, then run <code>npm run docs:html</code>.
+        HTML reading copy generated from <a href="GDD.md">docs/GDD.md</a> on 2026-06-14.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Gravity Canyon Game Design Document</h1>
 <p>Status: living GDD</p>
@@ -537,8 +537,18 @@
 <li>README: runbook and current runnable state.</li>
 <li>GDD: living game design document.</li>
 <li>Production Plan: milestone scope, schedule, acceptance criteria, and change control.</li>
-<li>Technical Design Document: implementer-facing architecture, state ownership, networking, simulation, deployment, and verification plan.</li>
+<li>Technical Design Document: implementer-facing architecture, state ownership, networking, gameplay, deployment, and verification plan.</li>
 <li>Technical/reference docs: supporting implementation, art, roster, workflow, and historical notes.</li>
+</ul>
+<p>Gravity Canyon also uses an HTML-first reading workflow:</p>
+<ul>
+<li>HTML is the preferred reading, review, and sharing format for human-facing project docs.</li>
+<li>Markdown remains the canonical editable source for stable text documents because it is easier to diff, maintain, and review in Git.</li>
+<li>Generated HTML reading copies live next to their markdown sources and are regenerated with <code>npm run docs:html</code>.</li>
+<li>Markdown-to-HTML conversion must be reproducible locally through committed scripts. It should never rely on an AI assistant manually rewriting markdown into HTML.</li>
+<li>Custom hand-authored or generated HTML is preferred when the document benefits from visual structure, navigation, diagrams, annotations, module maps, code walkthroughs, PR explanations, or gameplay/map review layouts.</li>
+<li>If a document needs HTML features that the local markdown converter cannot produce, either extend the converter or make that document an intentional HTML source artifact.</li>
+<li>Do not manually edit generated HTML reading copies. Edit the markdown source, then regenerate HTML.</li>
 </ul>
 <p>References:</p>
 <ul>

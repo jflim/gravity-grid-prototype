@@ -87,8 +87,8 @@
   <main>
     <article>
       <div class="generated">
-        Generated from <a href="README.md">README.md</a> on 2026-06-14.
-        Edit the markdown source, then run <code>npm run docs:html</code>.
+        HTML reading copy generated from <a href="README.md">README.md</a> on 2026-06-14.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Gravity Canyon Prototype</h1>
 <p>First playable local artillery prototype for Gravity Canyon.</p>
@@ -311,16 +311,25 @@ dist/index.html
 </tr>
 </tbody></table>
 <h2>Planning</h2>
+<p>Gravity Canyon uses an HTML-first reading workflow:</p>
+<ul>
+<li>Read and share the generated HTML docs whenever possible.</li>
+<li>Edit the markdown source files for canonical text changes.</li>
+<li>Run <code>npm run docs:html</code> after editing markdown docs; this is a local script pipeline and must not depend on AI/manual conversion.</li>
+<li>Use custom HTML directly for visual, navigational, or review-heavy artifacts such as map previews, module maps, code walkthroughs, PR explanations, and annotated architecture reviews.</li>
+<li>If a markdown document cannot be converted to useful HTML by local scripts, either improve the local converter or make that document an intentional HTML source artifact.</li>
+</ul>
+<p>Primary reading links:</p>
 <ul>
 <li>HTML docs index: <a href="docs/index.html">docs/index.html</a></li>
-<li>Game Design Document: <a href="docs/GDD.html">docs/GDD.md</a></li>
-<li>Production Plan and current v1 scope authority: <a href="docs/PRODUCTION_PLAN.html">docs/PRODUCTION_PLAN.md</a></li>
-<li>Technical Design Document: <a href="docs/TECHNICAL_DESIGN.html">docs/TECHNICAL_DESIGN.md</a></li>
+<li>Game Design Document: <a href="docs/GDD.html">docs/GDD.html</a> (source: <code>docs/GDD.md</code>)</li>
+<li>Production Plan and current v1 scope authority: <a href="docs/PRODUCTION_PLAN.html">docs/PRODUCTION_PLAN.html</a> (source: <code>docs/PRODUCTION_PLAN.md</code>)</li>
+<li>Technical Design Document: <a href="docs/TECHNICAL_DESIGN.html">docs/TECHNICAL_DESIGN.html</a> (source: <code>docs/TECHNICAL_DESIGN.md</code>)</li>
 <li>Original v1 contract snapshot: <a href="docs/V1_PLAYTEST_ALPHA.html">docs/V1_PLAYTEST_ALPHA.html</a></li>
-<li>Version log: <a href="docs/VERSION_LOG.html">docs/VERSION_LOG.md</a></li>
-<li>Git workflow: <a href="docs/GIT_WORKFLOW.html">docs/GIT_WORKFLOW.md</a></li>
-<li>Sprite asset workflow: <a href="docs/SPRITE_ASSET_WORKFLOW.html">docs/SPRITE_ASSET_WORKFLOW.md</a></li>
-<li>Session handoff: <a href="docs/SESSION_HANDOFF.html">docs/SESSION_HANDOFF.md</a></li>
+<li>Version log: <a href="docs/VERSION_LOG.html">docs/VERSION_LOG.html</a> (source: <code>docs/VERSION_LOG.md</code>)</li>
+<li>Git workflow: <a href="docs/GIT_WORKFLOW.html">docs/GIT_WORKFLOW.html</a> (source: <code>docs/GIT_WORKFLOW.md</code>)</li>
+<li>Sprite asset workflow: <a href="docs/SPRITE_ASSET_WORKFLOW.html">docs/SPRITE_ASSET_WORKFLOW.html</a> (source: <code>docs/SPRITE_ASSET_WORKFLOW.md</code>)</li>
+<li>Session handoff: <a href="docs/SESSION_HANDOFF.html">docs/SESSION_HANDOFF.html</a> (source: <code>docs/SESSION_HANDOFF.md</code>)</li>
 </ul>
 <h2>Controls</h2>
 <ul>
@@ -339,8 +348,8 @@ dist/index.html
 <h2>Notes</h2>
 <ul>
 <li>This is the local feel prototype, not the multiplayer architecture yet.</li>
-<li>The multiplayer architecture is now scaffolded, but live combat is still local-only until server-authoritative simulation is wired into the match scene.</li>
-<li>The online room now owns a lightweight combat preview model, but Phaser projectile/terrain simulation is not synced to that model yet.</li>
+<li>The multiplayer architecture is now scaffolded, but live combat is still local-only until server-authoritative gameplay is wired into the match scene.</li>
+<li>The online room now owns a lightweight combat preview model, but Phaser projectile/terrain gameplay is not synced to that model yet.</li>
 <li>Terrain uses a heightmap for speed. Pixel-mask terrain can replace it later if needed.</li>
 <li>There is no predicted trajectory line. The muzzle arrow shows current direction, but shot landing is still based on angle, power, wind, and memory.</li>
 <li>Movement treats downhill and falling as allowed traversal; only steep uphill movement is blocked.</li>

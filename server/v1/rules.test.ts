@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { CHARACTER_IDS as SHARED_CHARACTER_IDS } from "../../shared/model/gameTypes.js";
 import {
   CHARACTER_IDS,
   DEFAULT_ROOM_SETTINGS,
@@ -12,6 +13,7 @@ import {
 
 test("v1 exposes exactly the locked roster", () => {
   assert.deepEqual(CHARACTER_IDS, ["nova", "vesper", "kaelii", "perlah"]);
+  assert.equal(CHARACTER_IDS, SHARED_CHARACTER_IDS);
 });
 
 test("v1 supports 1v1 and 2v2 seat layouts", () => {

@@ -87,8 +87,8 @@
   <main>
     <article>
       <div class="generated">
-        Generated from <a href="TECHNICAL_DESIGN.md">docs/TECHNICAL_DESIGN.md</a> on 2026-06-14.
-        Edit the markdown source, then run <code>npm run docs:html</code>.
+        HTML reading copy generated from <a href="TECHNICAL_DESIGN.md">docs/TECHNICAL_DESIGN.md</a> on 2026-06-14.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Gravity Canyon Technical Design Document</h1>
 <p>Status: living technical design</p>
@@ -123,11 +123,27 @@
 <li>Placeholder nameplate/capsule state.</li>
 <li>Combat preview state with HP, active vehicle, wind, turn number, and winner.</li>
 </ul>
+<p>Current shared extraction includes:</p>
+<ul>
+<li><code>shared/model/gameTypes.ts</code> for shared game-language types such as character ids, teams, facing, hit-zone shapes, display sizes, and defeat reasons.</li>
+<li><code>shared/content/v1Units.ts</code> for the current authored local v1 unit definitions: roster ids, class labels, sprite keys, display sizes, colors, portrait keys, and shared combat hull wiring.</li>
+<li><code>shared/content/v1CollisionProfiles.ts</code> for the shared v1 vehicle-only hit zone used by playable unit content and collision-art review.</li>
+<li><code>shared/v1/tuning.ts</code> for v1/local prototype tuning constants such as world size, HP, movement range, shot physics, crater radii, damage radii, wind force, and void thresholds.</li>
+<li><code>shared/v1/constants.ts</code> as a compatibility re-export for shared v1 constants already consumed by server code.</li>
+<li><code>shared/gameplay/terrain.ts</code> as the first Phaser-free gameplay helper module for heightmap building, surface sampling, terrain angle sampling, and crater deformation.</li>
+<li><code>shared/gameplay/movement.ts</code> for Phaser-free aiming, facing, movement-step, and charge/release helpers.</li>
+<li><code>shared/gameplay/projectile.ts</code> for Phaser-free projectile launch, wind/gravity stepping, and miss-boundary checks.</li>
+<li><code>shared/gameplay/projectileCollision.ts</code> for Phaser-free swept projectile-edge collision against terrain and vehicle hit zones.</li>
+<li><code>shared/gameplay/vehicleHitZone.ts</code> for shared vehicle-body hit-zone bounds, point checks, nearest-point checks, and splash-distance geometry.</li>
+<li><code>shared/gameplay/impact.ts</code> for Phaser-free projectile impact damage, friendly-fire filtering, bunger knockback, and crater/damage tuning selection.</li>
+<li><code>shared/gameplay/vehicleSettlement.ts</code> for Phaser-free vehicle terrain placement, localized post-impact slope nudging, and Void Dropped truth resolution.</li>
+<li><code>src/match/MatchInputController.ts</code> for client-side input sampling without embedding keyboard state directly in the Phaser scene.</li>
+</ul>
 <p>The main technical gap is that online v1 must run the real match through server-owned state and deterministic combat resolution. The existing online preview is not the final combat system.</p>
 <h2>3. V1 Technical Goal</h2>
 <p>The v1 technical goal is:</p>
 <blockquote>
-<p>A hosted private-room 1v1/2v2 artillery match where the server owns room state, seats, settings, match setup, turn order, movement legality, aim/fire validation, projectile simulation, terrain deformation, damage, KOs, Void Dropped eliminations, score, and match result.</p>
+<p>A hosted private-room 1v1/2v2 artillery match where the server owns room state, seats, settings, match setup, turn order, movement legality, aim/fire validation, projectile path resolution, terrain deformation, damage, KOs, Void Dropped eliminations, score, and match result.</p>
 </blockquote>
 <p>Client responsibilities:</p>
 <ul>
@@ -269,7 +285,7 @@ http://127.0.0.1:2567
 </tr>
 <tr>
 <td>Projectile result</td>
-<td>Server simulation</td>
+<td>Server combat resolution</td>
 <td>Client animates approved path/result.</td>
 </tr>
 <tr>
@@ -284,24 +300,38 @@ http://127.0.0.1:2567
 </tr>
 </tbody></table>
 <h2>7. Recommended Module Boundaries</h2>
-<p>The current codebase already has pure logic modules in <code>src</code> and contract modules in <code>server/v1</code>. For server-authoritative combat, new logic should be extracted into Phaser-free, Node-free shared modules.</p>
+<p>The current codebase already has pure logic modules in <code>src</code> and contract modules in <code>server/v1</code>. For server-authoritative combat, gameplay logic should move into Phaser-free, Node-free shared modules, while match UI and rendering stay in the browser client.</p>
 <p>Recommended target shape:</p>
 <pre><code class="language-text">
 shared/
 
-  v1/
+  content/
 
-    constants.ts
+    v1Units.ts
 
-    roomRules.ts
+    v1CollisionProfiles.ts
 
-    maps.ts
-
-    roster.ts
+    characters.ts
 
     weapons.ts
 
-  simulation/
+    maps.ts
+
+    assets.ts
+
+  model/
+
+    gameTypes.ts
+
+    matchTypes.ts
+
+    vehicleTypes.ts
+
+    terrainTypes.ts
+
+    combatTypes.ts
+
+  gameplay/
 
     terrain.ts
 
@@ -309,15 +339,27 @@ shared/
 
     projectile.ts
 
-    collision.ts
+    projectileCollision.ts
 
-    damage.ts
+    vehicleHitZone.ts
 
-    turnOrder.ts
+    vehicleSettlement.ts
 
-    round.ts
+    combatResolution.ts
 
-    match.ts
+    turnSequence.ts
+
+  protocol/
+
+    matchCommands.ts
+
+    matchEvents.ts
+
+  v1/
+
+    tuning.ts
+
+    constants.ts
 
 server/
 
@@ -329,13 +371,47 @@ server/
 
     GravityCanyonState.ts
 
-  services/
+  match/
 
-    matchController.ts
+    ServerMatchAuthority.ts
 
 src/
 
-  main.ts
+  match/
+
+    MatchScene.ts
+
+    MatchController.ts
+
+    MatchInputController.ts
+
+    MatchCameraController.ts
+
+    authority/
+
+      MatchAuthority.ts
+
+      BrowserMatchAuthority.ts
+
+      ServerMatchAuthority.ts
+
+    ui/
+
+      MatchHud.ts
+
+      CommandDeck.ts
+
+      UnitLabels.ts
+
+    rendering/
+
+      TerrainRenderer.ts
+
+      VehicleRenderer.ts
+
+      ProjectileRenderer.ts
+
+      EffectsRenderer.ts
 
   onlineLobby.ts
 
@@ -343,20 +419,126 @@ src/
 
     roomClient.ts
 
-  presentation/
-
-    matchSceneAdapter.ts
-
 </code></pre>
+<h3>Version And Milestone Naming</h3>
+<p>The codebase should not encode the current milestone as permanent architecture. <code>v1</code> is a product milestone label, not a durable gameplay subsystem name.</p>
+<p>Rules:</p>
+<ul>
+<li>Prefer generic module names such as <code>rules</code>, <code>content</code>, <code>rosters</code>, <code>maps</code>, <code>tuning</code>, <code>projectile</code>, <code>impact</code>, and <code>match</code>.</li>
+<li>Track milestone-specific selections through data ids such as <code>playtest-alpha</code>, <code>activeRulesetId</code>, <code>rosterId</code>, <code>mapPoolId</code>, or release metadata.</li>
+<li>Keep functions and classes reusable: <code>resolveProjectileImpact</code>, <code>buildMatchState</code>, <code>selectRoster</code>, and <code>applyRoomSettings</code> are better than names with <code>v1</code>.</li>
+<li><code>v1</code> is acceptable in docs, release notes, tests describing milestone acceptance, historical compatibility shims, and explicit migration notes.</li>
+<li><code>v1</code> should not be introduced into new permanent folder names, function names, class names, or exported constants.</li>
+</ul>
+<p>Current <code>v1</code> file and symbol names are transitional. After the server-authoritative gameplay extraction is stable, add a focused cleanup pass that moves milestone-specific code from <code>shared/v1</code> and <code>server/v1</code> into generic rules/content modules backed by an explicit <code>playtest-alpha</code> ruleset/profile id.</p>
 <p>Conservative migration rule:</p>
 <ul>
 <li>Do not rewrite <code>src/main.ts</code> in one giant pass.</li>
 <li>Extract pure deterministic functions first.</li>
 <li>Keep Phaser rendering code client-side.</li>
 <li>Keep Colyseus schema and network messages server-side.</li>
-<li>Share only pure data types and simulation functions.</li>
+<li>Share only content data, model types, protocol contracts, and deterministic gameplay functions.</li>
+<li>Use game-engineering terms in the glossary below when naming new architecture.</li>
 </ul>
-<p>Existing pure modules such as <code>projectileCollision.ts</code>, <code>vehicleHitZone.ts</code>, <code>combatRules.ts</code>, <code>playableMaps.ts</code>, <code>server/v1/rules.ts</code>, and <code>server/v1/maps.ts</code> should guide the shape of shared simulation code.</p>
+<p>Existing pure modules such as <code>combatRules.ts</code>, <code>playableMaps.ts</code>, <code>server/v1/rules.ts</code>, and <code>server/v1/maps.ts</code> should guide the shape of shared gameplay code.</p>
+<p>Current human editing map:</p>
+<table>
+<thead><tr>
+<th>Change You Want To Make</th>
+<th>Start Here</th>
+<th>Why</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Rename a v1 unit class label, swap a sprite key, adjust a HUD portrait, or tune a unit display size</td>
+<td><code>shared/content/v1Units.ts</code></td>
+<td>Authored unit content should be data-first and reviewable without reading the Phaser scene.</td>
+</tr>
+<tr>
+<td>Adjust world size, HP, aim bounds, movement range, shot speed, gravity, wind force, crater size, damage radius, knockback, or void thresholds</td>
+<td><code>shared/v1/tuning.ts</code></td>
+<td>Numeric tuning should live in one shared rules/tuning file with tests.</td>
+</tr>
+<tr>
+<td>Add or rename a shared game concept such as character id, team id, facing, hit-zone shape, or defeat reason</td>
+<td><code>shared/model/gameTypes.ts</code></td>
+<td>Model language should be shared across content, client, server, and tests.</td>
+</tr>
+<tr>
+<td>Change heightmap construction, surface sampling, terrain angle, or crater deformation</td>
+<td><code>shared/gameplay/terrain.ts</code></td>
+<td>Deterministic gameplay helpers should stay Phaser-free so the future server can run them.</td>
+</tr>
+<tr>
+<td>Change aim input math, facing-preserving angle flips, movement traversal legality, or charge/release behavior</td>
+<td><code>shared/gameplay/movement.ts</code> and <code>shared/v1/tuning.ts</code></td>
+<td>Player-input outcomes should be gameplay logic, not hidden inside the Phaser scene.</td>
+</tr>
+<tr>
+<td>Change projectile launch position, shot speed interpolation, wind/gravity stepping, or miss boundaries</td>
+<td><code>shared/gameplay/projectile.ts</code> and <code>shared/v1/tuning.ts</code></td>
+<td>Projectile outcome math must be reusable by the future server authority.</td>
+</tr>
+<tr>
+<td>Change swept terrain collision, vehicle collision priority, projectile-edge contact timing, or vehicle hit-zone geometry</td>
+<td><code>shared/gameplay/projectileCollision.ts</code>, <code>shared/gameplay/vehicleHitZone.ts</code>, and <code>shared/v1/tuning.ts</code></td>
+<td>Collision truth should be shared by browser presentation and future server authority.</td>
+</tr>
+<tr>
+<td>Change direct/splash damage, allied friendly-fire filtering, self-damage, bunger knockback, or impact radius selection</td>
+<td><code>shared/gameplay/impact.ts</code> and <code>shared/v1/tuning.ts</code></td>
+<td>Impact outcome math must be reusable by the future server authority while Phaser stays responsible for markers and animation.</td>
+</tr>
+<tr>
+<td>Change vehicle terrain placement, post-impact slope nudging, or Void Dropped truth thresholds</td>
+<td><code>shared/gameplay/vehicleSettlement.ts</code> and <code>shared/v1/tuning.ts</code></td>
+<td>Settlement and elimination truth should be shared by the browser demo and future server authority; visual fall/suspension remains client presentation.</td>
+</tr>
+<tr>
+<td>Change which keyboard keys mean move, aim, charge, restart, or collision overlay toggle</td>
+<td><code>src/match/MatchInputController.ts</code> and <code>src/main.ts</code> key setup</td>
+<td>Input sampling is client-side controller work; gameplay helpers consume the sampled intent.</td>
+</tr>
+<tr>
+<td>Change how a unit is drawn, how labels are placed, or how the HUD renders</td>
+<td><code>src/main.ts</code> for now; future target is <code>src/match/rendering</code> and <code>src/match/ui</code></td>
+<td>Rendering is still inside the current Phaser scene, but should continue moving out in small slices.</td>
+</tr>
+<tr>
+<td>Change private-room networking, server state, or online preview behavior</td>
+<td><code>server/rooms/GravityCanyonRoom.ts</code> and <code>server/schema/GravityCanyonState.ts</code></td>
+<td>Server authority and Colyseus schema belong on the Node side.</td>
+</tr>
+</tbody></table>
+<p>Planned naming cleanup after shared gameplay extraction:</p>
+<table>
+<thead><tr>
+<th>Current Transitional Name</th>
+<th>Target Direction</th>
+<th>Reason</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>shared/v1/tuning.ts</code></td>
+<td><code>shared/rules/matchTuning.ts</code> or <code>shared/rules/rulesets.ts</code></td>
+<td>Tuning should be selected by ruleset/profile data, not a milestone folder.</td>
+</tr>
+<tr>
+<td><code>shared/content/v1Units.ts</code></td>
+<td><code>shared/content/units.ts</code> plus a <code>playtest-alpha</code> roster/profile</td>
+<td>Unit definitions are durable content; roster membership is milestone/profile data.</td>
+</tr>
+<tr>
+<td><code>shared/content/v1CollisionProfiles.ts</code></td>
+<td><code>shared/content/collisionProfiles.ts</code></td>
+<td>Collision profile names should describe gameplay truth, not release scope.</td>
+</tr>
+<tr>
+<td><code>server/v1/rules.ts</code> and <code>server/v1/maps.ts</code></td>
+<td><code>server/rules/roomRules.ts</code>, <code>server/content/maps.ts</code>, or shared content-backed modules</td>
+<td>Server rules should consume active profiles rather than hard-code milestone names.</td>
+</tr>
+</tbody></table>
 <h2>8. Colyseus Room Lifecycle</h2>
 <p>Room phases should become:</p>
 <table>
@@ -480,7 +662,7 @@ type MatchState = {
 
   blueScore: number;
 
-  turnOrder: VehicleId[];
+  turnSequence: VehicleId[];
 
   activeTurnIndex: number;
 
@@ -716,7 +898,7 @@ type JoinOptions = {
 
 </code></pre>
 <p>The reconnect token is a temporary room-scoped secret stored in browser local storage. It is not an account credential and is not secure against a compromised browser. It is sufficient for v1 friend playtests.</p>
-<h2>11. Server Simulation Loop</h2>
+<h2>11. Server Gameplay Loop</h2>
 <h3>Movement</h3>
 <p>Movement is the only part of the turn that benefits from real-time server ticking.</p>
 <p>Recommended v1 behavior:</p>
@@ -738,7 +920,7 @@ type JoinOptions = {
 <li>If vehicle falls below the death/void threshold, mark Void Dropped.</li>
 </ul>
 <h3>Aim</h3>
-<p>Aim does not require high-frequency simulation.</p>
+<p>Aim does not require high-frequency server ticking.</p>
 <p>Recommended v1 behavior:</p>
 <ul>
 <li>Client sends <code>setAimAngle</code> when the displayed aim changes meaningfully.</li>
@@ -758,7 +940,7 @@ type JoinOptions = {
 </ul>
 <p>V1 does not need full charge anti-cheat. Server validation should reject impossible values and invalid turn ownership.</p>
 <h3>Projectile</h3>
-<p>Projectile simulation should be pure deterministic TypeScript.</p>
+<p>Projectile gameplay should be pure deterministic TypeScript.</p>
 <p>Inputs:</p>
 <ul>
 <li>Shooter position.</li>
@@ -781,7 +963,7 @@ type JoinOptions = {
 <li>Defeat events.</li>
 <li>Next turn or round winner.</li>
 </ul>
-<p>Simulation should not depend on Phaser physics.</p>
+<p>Projectile and combat gameplay should not depend on Phaser physics.</p>
 <h3>Collision Priority</h3>
 <p>For each projectile step:</p>
 <ol>
@@ -984,7 +1166,7 @@ type WeaponDefinition = {
 <li>Client terrain revision mismatch: send full terrain snapshot.</li>
 </ul>
 <h2>19. Testing Strategy</h2>
-<h3>Pure Simulation Tests</h3>
+<h3>Pure Gameplay Tests</h3>
 <p>Required:</p>
 <ul>
 <li>Map selection and spawn safety.</li>
@@ -1084,11 +1266,11 @@ type WeaponDefinition = {
 <tr>
 <td>Large <code>src/main.ts</code> owns too much behavior</td>
 <td>Hard to move online safely</td>
-<td>Extract pure simulation functions in small slices.</td>
+<td>Extract pure gameplay functions in small slices.</td>
 </tr>
 <tr>
 <td>Phaser-specific logic leaks into server</td>
-<td>Server cannot run deterministic simulation</td>
+<td>Server cannot run deterministic gameplay</td>
 <td>Shared modules must not import Phaser.</td>
 </tr>
 <tr>
@@ -1126,7 +1308,7 @@ type WeaponDefinition = {
 <li>Add ready/start validation using selected seats.</li>
 <li>Extract pure map/terrain/vehicle state builders.</li>
 <li>Extract pure movement validation from <code>src/main.ts</code>.</li>
-<li>Extract pure projectile/collision/damage simulation.</li>
+<li>Extract pure projectile collision and combat-resolution gameplay.</li>
 <li>Add server round creation from room settings.</li>
 <li>Add server turn loop and movement input messages.</li>
 <li>Add server fire resolution and shot result events.</li>
@@ -1143,12 +1325,146 @@ type WeaponDefinition = {
 <li>A server/client ownership boundary changes.</li>
 <li>A Colyseus message changes.</li>
 <li>A Schema field changes.</li>
-<li>A deterministic simulation module is added or moved.</li>
+<li>A deterministic gameplay module is added or moved.</li>
 <li>Terrain representation changes.</li>
 <li>Deployment/playtest topology changes.</li>
 <li>Test requirements change.</li>
 </ul>
 <p>Do not update this TDD to accept new v1 product scope. Product scope changes go through <a href="PRODUCTION_PLAN.html">PRODUCTION_PLAN.md</a> change control first.</p>
+<p>Documentation format rule:</p>
+<ul>
+<li>Human-facing markdown docs are canonical editable sources, but their generated HTML copies are the preferred reading and sharing surface.</li>
+<li>After editing markdown docs, run <code>npm run docs:html</code>.</li>
+<li>Markdown-to-HTML conversion must be reproducible through committed local scripts. It must not depend on AI/manual conversion.</li>
+<li>Use custom HTML directly for docs that need richer review surfaces: module maps, architecture walkthroughs, code annotations, rendered diffs, flow diagrams, map previews, gameplay reviews, and PR explanations.</li>
+<li>If the local converter cannot express a doc well enough, improve the converter or make that document an intentional HTML source artifact.</li>
+<li>Do not manually edit generated HTML reading copies.</li>
+</ul>
+<h2>25. Game Engineering Glossary</h2>
+<p>Use these terms in code and docs where they fit. The goal is to keep Gravity Canyon readable while also learning vocabulary that transfers to Unity, Godot, and multiplayer game development.</p>
+<table>
+<thead><tr>
+<th>Term</th>
+<th>Meaning In Gravity Canyon</th>
+<th>Notes</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Authority</td>
+<td>The system trusted to decide the real match state.</td>
+<td>Unity Netcode documents this as <code>Authority</code>. Godot exposes similar vocabulary through <code>set_multiplayer_authority()</code>.</td>
+</tr>
+<tr>
+<td>Server-authoritative</td>
+<td>The server owns truth for combat, state transitions, and results.</td>
+<td>V1 online matches should become server-authoritative. The browser sends player intent; the server validates and resolves.</td>
+</tr>
+<tr>
+<td>Browser authority</td>
+<td>The local browser owns truth for the current local demo.</td>
+<td>This is useful for fast iteration, but online v1 should not trust browser-computed combat results.</td>
+</tr>
+<tr>
+<td>MatchAuthority</td>
+<td>Gravity Canyon code interface for whichever system owns match truth.</td>
+<td><code>BrowserMatchAuthority</code> can run local demo truth. <code>ServerMatchAuthority</code> can bridge to Colyseus/server truth.</td>
+</tr>
+<tr>
+<td>Client</td>
+<td>The player's browser game.</td>
+<td>The client renders, captures input, shows UI, and sends commands. It should not own online combat results.</td>
+</tr>
+<tr>
+<td>Server</td>
+<td>The Node/Colyseus process.</td>
+<td>The server owns online rooms, seats, match state, combat resolution, score, and match result.</td>
+</tr>
+<tr>
+<td>Scene</td>
+<td>A Phaser screen or mode.</td>
+<td><code>MatchScene</code> should become the playable combat scene, similar in spirit to a Unity scene or Godot scene, but implemented through Phaser.</td>
+</tr>
+<tr>
+<td>Controller</td>
+<td>A stateful object coordinating a flow or input surface.</td>
+<td>Use controllers for match orchestration, input, and camera behavior. Avoid turning pure math into classes just to look organized.</td>
+</tr>
+<tr>
+<td>Renderer</td>
+<td>A frontend object responsible for drawing one part of the match.</td>
+<td>Terrain, vehicles, projectiles, HUD, and effects can have focused renderers. Renderers should not decide combat truth.</td>
+</tr>
+<tr>
+<td>Content</td>
+<td>Authored game data: characters, weapons, maps, assets, labels, SFX keys.</td>
+<td>Content answers &quot;what exists in the game?&quot; It should be easy to tune without rewriting gameplay code.</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Runtime state shape: match, round, vehicle, terrain, combat event, command.</td>
+<td>Model answers &quot;what does the game remember right now?&quot; This is not visual art or character lore.</td>
+</tr>
+<tr>
+<td>Gameplay</td>
+<td>Deterministic game-outcome logic.</td>
+<td>Projectile collision, terrain deformation, movement legality, combat resolution, and turn sequencing belong here.</td>
+</tr>
+<tr>
+<td>Protocol</td>
+<td>Commands and events exchanged between client and server.</td>
+<td>Examples: <code>fire</code>, <code>setAimAngle</code>, <code>terrainDiff</code>, <code>shotResolved</code>, <code>roundOver</code>.</td>
+</tr>
+<tr>
+<td>Command</td>
+<td>A player or client request to do something.</td>
+<td>Commands are intent, not truth. Example: &quot;fire at angle 47, power 82.&quot;</td>
+</tr>
+<tr>
+<td>Event</td>
+<td>A fact produced by match resolution.</td>
+<td>Events are results. Example: &quot;Nova hit Vesper&quot;, &quot;terrain changed&quot;, &quot;blue wins round.&quot;</td>
+</tr>
+<tr>
+<td>Prediction</td>
+<td>Client-side guess shown before server confirmation.</td>
+<td>Useful for responsive movement/aim UI. Damage, terrain, KO, and winners should not be predicted as truth in v1 online.</td>
+</tr>
+<tr>
+<td>Reconciliation</td>
+<td>Correcting the client after authoritative state arrives.</td>
+<td>If local prediction differs from server truth, the client updates to match the server.</td>
+</tr>
+<tr>
+<td>Snapshot</td>
+<td>A complete state payload at a point in time.</td>
+<td>Useful when joining/rejoining or recovering from terrain revision mismatch.</td>
+</tr>
+<tr>
+<td>Diff</td>
+<td>A smaller state change from one revision to the next.</td>
+<td>Terrain should use diffs when practical so online payloads stay lighter.</td>
+</tr>
+<tr>
+<td>Schema</td>
+<td>Colyseus synchronized state class.</td>
+<td>Durable online state lives in Colyseus Schema. Heavy one-off data can be sent as messages/events.</td>
+</tr>
+<tr>
+<td>Hit zone</td>
+<td>The damageable vehicle body used for combat collision.</td>
+<td>Gravity Canyon uses vehicle-only hit zones. Pilot art and cosmetics do not change combat collision.</td>
+</tr>
+<tr>
+<td>Spawn point</td>
+<td>A predefined safe start position on a map.</td>
+<td>V1 maps need known 1v1 and 2v2 spawns.</td>
+</tr>
+<tr>
+<td>Viewport</td>
+<td>The visible browser/game area.</td>
+<td>The game has a desktop viewport contract so resizing the browser does not change tactical layout.</td>
+</tr>
+</tbody></table>
     </article>
   </main>
 </body>

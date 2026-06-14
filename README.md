@@ -173,15 +173,25 @@ dist/index.html
 
 ## Planning
 
+Gravity Canyon uses an HTML-first reading workflow:
+
+- Read and share the generated HTML docs whenever possible.
+- Edit the markdown source files for canonical text changes.
+- Run `npm run docs:html` after editing markdown docs; this is a local script pipeline and must not depend on AI/manual conversion.
+- Use custom HTML directly for visual, navigational, or review-heavy artifacts such as map previews, module maps, code walkthroughs, PR explanations, and annotated architecture reviews.
+- If a markdown document cannot be converted to useful HTML by local scripts, either improve the local converter or make that document an intentional HTML source artifact.
+
+Primary reading links:
+
 - HTML docs index: [docs/index.html](docs/index.html)
-- Game Design Document: [docs/GDD.md](docs/GDD.md)
-- Production Plan and current v1 scope authority: [docs/PRODUCTION_PLAN.md](docs/PRODUCTION_PLAN.md)
-- Technical Design Document: [docs/TECHNICAL_DESIGN.md](docs/TECHNICAL_DESIGN.md)
+- Game Design Document: [docs/GDD.html](docs/GDD.html) (source: `docs/GDD.md`)
+- Production Plan and current v1 scope authority: [docs/PRODUCTION_PLAN.html](docs/PRODUCTION_PLAN.html) (source: `docs/PRODUCTION_PLAN.md`)
+- Technical Design Document: [docs/TECHNICAL_DESIGN.html](docs/TECHNICAL_DESIGN.html) (source: `docs/TECHNICAL_DESIGN.md`)
 - Original v1 contract snapshot: [docs/V1_PLAYTEST_ALPHA.html](docs/V1_PLAYTEST_ALPHA.html)
-- Version log: [docs/VERSION_LOG.md](docs/VERSION_LOG.md)
-- Git workflow: [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md)
-- Sprite asset workflow: [docs/SPRITE_ASSET_WORKFLOW.md](docs/SPRITE_ASSET_WORKFLOW.md)
-- Session handoff: [docs/SESSION_HANDOFF.md](docs/SESSION_HANDOFF.md)
+- Version log: [docs/VERSION_LOG.html](docs/VERSION_LOG.html) (source: `docs/VERSION_LOG.md`)
+- Git workflow: [docs/GIT_WORKFLOW.html](docs/GIT_WORKFLOW.html) (source: `docs/GIT_WORKFLOW.md`)
+- Sprite asset workflow: [docs/SPRITE_ASSET_WORKFLOW.html](docs/SPRITE_ASSET_WORKFLOW.html) (source: `docs/SPRITE_ASSET_WORKFLOW.md`)
+- Session handoff: [docs/SESSION_HANDOFF.html](docs/SESSION_HANDOFF.html) (source: `docs/SESSION_HANDOFF.md`)
 
 ## Controls
 
@@ -200,8 +210,8 @@ dist/index.html
 ## Notes
 
 - This is the local feel prototype, not the multiplayer architecture yet.
-- The multiplayer architecture is now scaffolded, but live combat is still local-only until server-authoritative simulation is wired into the match scene.
-- The online room now owns a lightweight combat preview model, but Phaser projectile/terrain simulation is not synced to that model yet.
+- The multiplayer architecture is now scaffolded, but live combat is still local-only until server-authoritative gameplay is wired into the match scene.
+- The online room now owns a lightweight combat preview model, but Phaser projectile/terrain gameplay is not synced to that model yet.
 - Terrain uses a heightmap for speed. Pixel-mask terrain can replace it later if needed.
 - There is no predicted trajectory line. The muzzle arrow shows current direction, but shot landing is still based on angle, power, wind, and memory.
 - Movement treats downhill and falling as allowed traversal; only steep uphill movement is blocked.

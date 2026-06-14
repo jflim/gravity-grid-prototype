@@ -570,8 +570,18 @@ Gravity Canyon uses standard game-development document roles:
 - README: runbook and current runnable state.
 - GDD: living game design document.
 - Production Plan: milestone scope, schedule, acceptance criteria, and change control.
-- Technical Design Document: implementer-facing architecture, state ownership, networking, simulation, deployment, and verification plan.
+- Technical Design Document: implementer-facing architecture, state ownership, networking, gameplay, deployment, and verification plan.
 - Technical/reference docs: supporting implementation, art, roster, workflow, and historical notes.
+
+Gravity Canyon also uses an HTML-first reading workflow:
+
+- HTML is the preferred reading, review, and sharing format for human-facing project docs.
+- Markdown remains the canonical editable source for stable text documents because it is easier to diff, maintain, and review in Git.
+- Generated HTML reading copies live next to their markdown sources and are regenerated with `npm run docs:html`.
+- Markdown-to-HTML conversion must be reproducible locally through committed scripts. It should never rely on an AI assistant manually rewriting markdown into HTML.
+- Custom hand-authored or generated HTML is preferred when the document benefits from visual structure, navigation, diagrams, annotations, module maps, code walkthroughs, PR explanations, or gameplay/map review layouts.
+- If a document needs HTML features that the local markdown converter cannot produce, either extend the converter or make that document an intentional HTML source artifact.
+- Do not manually edit generated HTML reading copies. Edit the markdown source, then regenerate HTML.
 
 References:
 

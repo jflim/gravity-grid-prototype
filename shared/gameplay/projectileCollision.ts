@@ -2,7 +2,7 @@ import {
   closestPointOnVehicleHitZone,
   vehicleHitZoneBounds,
   type VehicleHitZone,
-} from "./vehicleHitZone";
+} from "./vehicleHitZone.js";
 
 export interface TerrainContactInput {
   startX: number;

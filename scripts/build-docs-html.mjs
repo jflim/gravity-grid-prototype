@@ -343,8 +343,8 @@ function pageTemplate({ title, body, markdownPath, htmlPath }) {
   <main>
     <article>
       <div class="generated">
-        Generated from <a href="${escapeHtml(sourceLink)}">${escapeHtml(relPath)}</a> on ${generatedAt}.
-        Edit the markdown source, then run <code>npm run docs:html</code>.
+        HTML reading copy generated from <a href="${escapeHtml(sourceLink)}">${escapeHtml(relPath)}</a> on ${generatedAt}.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 ${body}
     </article>
@@ -387,7 +387,7 @@ function writeDocsIndex(pages) {
           ? 'Living Game Design Document for product direction, rules, art, audio, UX, and future systems.'
           : relMarkdown === 'docs/PRODUCTION_PLAN.md'
             ? 'Current milestone scope authority, v1 acceptance criteria, build order, and change-control rules.'
-            : 'Technical Design Document for architecture, networking, simulation, data models, deployment, and tests.';
+            : 'Technical Design Document for architecture, networking, gameplay, data models, deployment, and tests.';
       return `<tr><td><a href="${escapeHtml(relHtml)}">${escapeHtml(page.title)}</a></td><td><code>${escapeHtml(relMarkdown)}</code></td><td>${escapeHtml(purpose)}</td></tr>`;
     })
     .join('\n');
@@ -462,8 +462,9 @@ function writeDocsIndex(pages) {
     <header>
       <p>Gravity Canyon documentation</p>
       <h1>Docs Index</h1>
-      <p>This page links the primary project docs, supporting references, and generated HTML reading copies.</p>
+      <p>This page is the preferred reading surface for project docs. Markdown remains the canonical editable source for stable text documents.</p>
       <p class="callout"><strong>Current v1 authority:</strong> <a href="PRODUCTION_PLAN.html">Gravity Canyon Production Plan</a></p>
+      <p><strong>Workflow:</strong> read/share HTML, edit markdown source, run <code>npm run docs:html</code>. Use custom HTML directly for visual reviews, module maps, code walkthroughs, rendered diffs, and gameplay/map review pages.</p>
     </header>
     <section>
       <h2>Primary Project Docs</h2>

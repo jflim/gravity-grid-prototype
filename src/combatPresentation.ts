@@ -1,16 +1,6 @@
-export interface SpriteDisplaySize {
-  width: number;
-  height: number;
-}
+import type { CombatHullShape, DefeatReason, SpriteDisplaySize } from "../shared/model/gameTypes.js";
 
-export interface CombatHullShape {
-  offsetX: number;
-  offsetY: number;
-  width: number;
-  height: number;
-}
-
-export type DefeatReason = "damage" | "void";
+export type { CombatHullShape, DefeatReason, SpriteDisplaySize } from "../shared/model/gameTypes.js";
 
 export interface DefeatPresentation {
   label: "KO" | "VOID DROPPED";

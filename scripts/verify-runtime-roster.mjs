@@ -5,6 +5,9 @@ import { inflateSync } from "node:zlib";
 const root = process.cwd();
 const mainSource = readFileSync(join(root, "src", "main.ts"), "utf8");
 const runtimeAssetsSource = readFileSync(join(root, "src", "runtimeAssets.ts"), "utf8");
+const gameTypesSource = readFileSync(join(root, "shared", "model", "gameTypes.ts"), "utf8");
+const unitContentSource = readFileSync(join(root, "shared", "content", "v1Units.ts"), "utf8");
+const tuningSource = readFileSync(join(root, "shared", "v1", "tuning.ts"), "utf8");
 
 const runtimeUnits = [
   {
@@ -88,12 +91,12 @@ const runtimeUnits = [
 const failures = [];
 
 for (const unit of runtimeUnits) {
-  if (!mainSource.includes(`username: "${unit.name}"`)) {
+  if (!unitContentSource.includes(`username: "${unit.name}"`)) {
     failures.push(`missing local roster entry for ${unit.name}`);
   }
 
   for (const key of unit.keys) {
-    if (!mainSource.includes(`"${key}"`) && !runtimeAssetsSource.includes(`"${key}"`)) {
+    if (!unitContentSource.includes(`"${key}"`) && !runtimeAssetsSource.includes(`"${key}"`)) {
       failures.push(`missing preload, manifest, or roster key ${key}`);
     }
   }
@@ -122,11 +125,15 @@ if (!runtimeAssetsSource.includes('export const STYLE_REFERENCE_ASSET = "assets/
   failures.push("style reference asset manifest does not point at optimized WebP delivery");
 }
 
-if (!mainSource.includes('type ClassId = "bunger" | "glitch" | "bouncer" | "spark";')) {
+if (!gameTypesSource.includes('export type ClassId = "bunger" | "glitch" | "bouncer" | "spark";')) {
   failures.push("ClassId does not include bouncer and spark");
 }
 
-if (!mainSource.includes('this.turnOrder = ["red-1", "blue-1", "red-2", "blue-2"];')) {
+if (
+  !mainSource.includes("this.turnOrder = V1_DEMO_UNIT_DEFINITIONS.map((unit) => unit.id);") ||
+  !unitContentSource.includes('id: "red-2"') ||
+  !unitContentSource.includes('id: "blue-2"')
+) {
   failures.push("local turn order does not include Kaelii and Perlah test units");
 }
 
@@ -143,7 +150,12 @@ const expectedRuntimeTuning = [
 ];
 
 for (const snippet of expectedRuntimeTuning) {
-  if (!mainSource.includes(snippet)) {
+  const source = snippet.startsWith("const USE_") || snippet.includes("yOffset")
+    ? mainSource
+    : snippet.includes("SHARED_V1_VEHICLE_HIT_ZONE") || snippet.includes("width:")
+      ? unitContentSource
+      : tuningSource;
+  if (!source.includes(snippet)) {
     failures.push(`missing runtime tuning snippet: ${snippet}`);
   }
 }

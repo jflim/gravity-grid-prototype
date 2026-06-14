@@ -1,12 +1,6 @@
 import type { CollisionArtRuleInput } from "./collisionArtRule";
-import type { CombatHullShape } from "./combatPresentation";
-
-export const SHARED_V1_VEHICLE_HIT_ZONE: CombatHullShape = {
-  offsetX: 0,
-  offsetY: -18,
-  width: 240,
-  height: 78,
-};
+export { SHARED_V1_VEHICLE_HIT_ZONE } from "../shared/content/v1CollisionProfiles.js";
+import { SHARED_V1_VEHICLE_HIT_ZONE } from "../shared/content/v1CollisionProfiles.js";
 
 export const V1_COLLISION_ART_REVIEWS: readonly CollisionArtRuleInput[] = [
   {

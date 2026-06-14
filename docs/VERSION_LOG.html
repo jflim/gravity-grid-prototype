@@ -87,8 +87,8 @@
   <main>
     <article>
       <div class="generated">
-        Generated from <a href="VERSION_LOG.md">docs/VERSION_LOG.md</a> on 2026-06-14.
-        Edit the markdown source, then run <code>npm run docs:html</code>.
+        HTML reading copy generated from <a href="VERSION_LOG.md">docs/VERSION_LOG.md</a> on 2026-06-14.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Gravity Canyon Version Log</h1>
 <p>Use this as the human-readable checkpoint history. Every meaningful commit should add an entry.</p>
@@ -162,6 +162,15 @@
 <li>Added runtime config so playtest launch mode controls the Online Alpha panel instead of inferring it from the public URL hostname.</li>
 <li>Reorganized the primary documentation around standard game-development roles: <code>README.md</code> as runbook, <code>docs/GDD.md</code> as the living Game Design Document, and <code>docs/PRODUCTION_PLAN.md</code> as the current v1 milestone scope authority.</li>
 <li>Added <code>docs/TECHNICAL_DESIGN.md</code> as the implementer-facing Technical Design Document for server-authoritative online v1, and recorded the long-term mature presentation direction as future GDD scope.</li>
+<li>Added the first top-level shared Phaser-free modules for v1 constants and terrain gameplay, wired client/server type checks plus tests to include <code>shared/</code>, and added a Unity/Godot-adjacent technical glossary to the TDD.</li>
+<li>Extracted v1 unit content, shared game model types, vehicle-only collision profile data, and local match tuning constants out of <code>src/main.ts</code> into <code>shared/content</code>, <code>shared/model</code>, and <code>shared/v1</code> so human edits can start from data and tested concepts instead of the Phaser scene.</li>
+<li>Extracted aiming, facing, movement-step, and charge/release behavior into <code>shared/gameplay/movement.ts</code>, and added <code>src/match/MatchInputController.ts</code> so keyboard sampling is separated from gameplay rules.</li>
+<li>Extracted projectile launch, wind/gravity stepping, and out-of-bounds checks into <code>shared/gameplay/projectile.ts</code> while keeping Phaser responsible for drawing trails and resolving visible collision feedback.</li>
+<li>Extracted projectile impact damage, self-damage/friendly-fire filtering, crater radius selection, and Bunger knockback into <code>shared/gameplay/impact.ts</code> while keeping Phaser responsible for combat markers, terrain drawing, and round flow.</li>
+<li>Moved swept projectile collision and vehicle-body hit-zone geometry into <code>shared/gameplay/projectileCollision.ts</code> and <code>shared/gameplay/vehicleHitZone.ts</code>, removing the old client-local helper modules.</li>
+<li>Extracted vehicle terrain placement, localized post-impact slope nudging, and Void Dropped truth resolution into <code>shared/gameplay/vehicleSettlement.ts</code>, leaving the visual fall target and suspension animation in Phaser.</li>
+<li>Added a TDD naming rule that <code>v1</code> remains a product milestone/profile label, while new permanent code modules should use generic names and select milestone behavior through ruleset/content ids.</li>
+<li>Adopted an HTML-first documentation workflow: markdown remains the canonical editable source, generated HTML is the preferred reading/review surface, local scripts must generate markdown reading copies without AI/manual conversion, and custom HTML is reserved for rich visual/review artifacts.</li>
 <li>Added horizontal camera side bounds so the battlefield remains centered when the visible camera frame is wider than the world instead of leaving all extra space on one side.</li>
 <li>Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.</li>
 <li>Changed projectile camera behavior to keep the battlefield stable while shots are readable, recentering only when a projectile leaves the readable frame.</li>

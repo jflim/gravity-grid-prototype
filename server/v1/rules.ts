@@ -1,7 +1,10 @@
+import type { TeamId } from "../../shared/model/gameTypes.js";
+
+export { CHARACTER_IDS } from "../../shared/model/gameTypes.js";
+export { TURN_SECONDS } from "../../shared/v1/constants.js";
+
 export type GameMode = "1v1" | "2v2";
 export type MatchLength = "best-of-1" | "best-of-3";
-export type TeamId = "red" | "blue";
-export type CharacterId = "nova" | "vesper" | "kaelii" | "perlah";
 export type MapPick =
   | "random"
   | "canyon-terraces"
@@ -25,8 +28,6 @@ export type RoomSettings = {
   friendlyFire: boolean;
 };
 
-export const CHARACTER_IDS = ["nova", "vesper", "kaelii", "perlah"] as const satisfies readonly CharacterId[];
-export const TURN_SECONDS = 20;
 export const DISCONNECTED_SKIP_SECONDS = 5;
 export const RECONNECT_GRACE_MS = 180_000;
 export const PHRASE_COOLDOWN_MS = 3_000;

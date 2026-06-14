@@ -1,15 +1,90 @@
 import Phaser from "phaser";
 import {
+  aimAngleAfterInput,
+  aimAngleForFacingChange,
+  movementDirectionFromInput,
+  resolveMovementStep,
+  updateChargeState,
+} from "../shared/gameplay/movement.js";
+import {
+  isProjectileOutOfBounds,
+  launchProjectile,
+  stepProjectile,
+  type ProjectileKinematics,
+  type ProjectileStepResult,
+} from "../shared/gameplay/projectile.js";
+import { resolveProjectileImpact } from "../shared/gameplay/impact.js";
+import { firstTerrainContact, firstVehicleContact } from "../shared/gameplay/projectileCollision.js";
+import {
+  craterTerrain,
+  surfaceAt as terrainSurfaceAt,
+  terrainAngleAt as terrainSlopeAngleAt,
+} from "../shared/gameplay/terrain.js";
+import { settleVehicleOnTerrain, type VehicleSettlementResult } from "../shared/gameplay/vehicleSettlement.js";
+import type { VehicleHitZone } from "../shared/gameplay/vehicleHitZone.js";
+import { V1_DEMO_UNIT_DEFINITIONS, type V1DemoUnitDefinition } from "../shared/content/v1Units.js";
+import type {
+  CharacterPose,
+  CombatHullShape,
+  CombatMarkerKind,
+  DefeatReason,
+  SpriteDisplaySize,
+  TeamId,
+} from "../shared/model/gameTypes.js";
+import {
+  AIM_SPEED_DEG_PER_SECOND,
+  BUNGER_CRATER_RADIUS,
+  BUNGER_DAMAGE_RADIUS,
+  BUNGER_KNOCKBACK,
+  CHARGE_RATE_PER_SECOND,
+  COMBAT_MARKER_SECONDS,
+  CRATER_RADIUS,
+  DAMAGE_RADIUS,
+  DEATH_SURFACE_Y,
+  DEFAULT_TERRAIN_BREAKTHROUGH_Y,
+  GRAVITY,
+  IMPACT_PREVIEW_SECONDS,
+  MAX_CLIMB_SLOPE,
+  MAX_ELEVATION_DEG,
+  MAX_HP,
+  MAX_MOVE_UNITS,
+  MAX_POWER,
+  MAX_TERRAIN_SPRITE_TILT_DEG,
+  MIN_ELEVATION_DEG,
+  MIN_FIRE_POWER,
+  MOVE_MAX_X,
+  MOVE_MIN_X,
+  MOVE_PIXELS_PER_UNIT,
+  MOVE_SPEED_PIXELS_PER_SECOND,
+  PROJECTILE_RADIUS,
+  PROJECTILE_MUZZLE_DISTANCE,
+  PROJECTILE_MUZZLE_Y_OFFSET,
+  PROJECTILE_OUT_OF_BOUNDS_LOWER_Y_MARGIN,
+  PROJECTILE_OUT_OF_BOUNDS_UPPER_Y_MARGIN,
+  SETTLEMENT_MAX_SLOPE_ITERATIONS,
+  SETTLEMENT_SLOPE_SAMPLE_DISTANCE,
+  SETTLEMENT_SLOPE_STEP,
+  SETTLEMENT_SLOPE_THRESHOLD,
+  SHOT_SPEED_MAX,
+  SHOT_SPEED_MIN,
+  TERRAIN_CHANGE_SETTLE_PADDING,
+  TERRAIN_STEP,
+  TURN_SECONDS,
+  VEHICLE_HALF_HEIGHT,
+  VEHICLE_HALF_WIDTH,
+  VOID_DROP_HORIZONTAL_PADDING,
+  VOID_SURFACE_Y,
+  V1_WORLD_HEIGHT as WORLD_HEIGHT,
+  V1_WORLD_WIDTH as WORLD_WIDTH,
+  WIND_FORCE,
+} from "../shared/v1/tuning.js";
+import {
   defeatPresentationFor,
   scaleBattlefieldCombatHull,
   scaleBattlefieldDisplay,
   scaleBattlefieldOffset,
-  type DefeatReason,
 } from "./combatPresentation";
-import { shouldApplyWeaponEffect } from "./combatRules";
 import { COLLISION_ZONE_OVERLAY_DEPTH, collisionZoneOverlayStyle } from "./collisionOverlay";
-import { firstTerrainContact, firstVehicleContact } from "./projectileCollision";
-import { SHARED_V1_VEHICLE_HIT_ZONE } from "./v1CollisionProfiles";
 import {
   DRAMATIC_VOID_DROP_FALL_SECONDS,
   chooseVoidDropDisplayX,
@@ -19,7 +94,6 @@ import {
   voidDropRenderPosition,
   voidDropTargetY,
 } from "./voidDropPresentation";
-import { distanceToVehicleHitZone, type VehicleHitZone } from "./vehicleHitZone";
 import {
   computeBattlefieldFrameLayout,
   computeCameraWorldBounds,
@@ -38,6 +112,7 @@ import {
   shouldUseConceptPreviewAssets,
   shouldUseStyleReferenceBackground,
 } from "./demoLayout";
+import { MatchInputController, type MatchInputSnapshot } from "./match/MatchInputController";
 import { mountOnlineLobby } from "./onlineLobby";
 import {
   buildPlayableTerrain,
@@ -52,16 +127,6 @@ import {
 } from "./runtimeAssets";
 import "./styles.css";
 
-type TeamId = "red" | "blue";
-type ClassId = "bunger" | "glitch" | "bouncer" | "spark";
-type CharacterPose = "default" | "ko" | "intense";
-type CombatMarkerKind = "direct" | "splash" | "shoved" | "ko" | "bunged";
-
-interface SpriteDisplaySize {
-  width: number;
-  height: number;
-}
-
 declare global {
   interface Window {
     __GRAVITY_CANYON_CONFIG__?: {
@@ -70,43 +135,7 @@ declare global {
   }
 }
 
-interface CombatHull {
-  offsetX: number;
-  offsetY: number;
-  width: number;
-  height: number;
-}
-
-interface CharacterSpriteSet {
-  default: string;
-  ko: string;
-  intense: string;
-}
-
-interface CharacterDisplaySet {
-  default: SpriteDisplaySize;
-  ko: SpriteDisplaySize;
-  intense: SpriteDisplaySize;
-}
-
-interface UnitConceptSpriteSet {
-  default: string;
-  intense: string;
-  ko: string;
-}
-
-interface UnitConceptDisplaySet {
-  default: SpriteDisplaySize;
-  intense: SpriteDisplaySize;
-  ko: SpriteDisplaySize;
-}
-
-interface VehicleState {
-  id: string;
-  username: string;
-  team: TeamId;
-  classId: ClassId;
-  className: string;
+type VehicleState = V1DemoUnitDefinition & {
   x: number;
   y: number;
   hp: number;
@@ -115,32 +144,10 @@ interface VehicleState {
   moveUnits: number;
   alive: boolean;
   defeatReason?: DefeatReason;
-  color: number;
-  accent: number;
-  vehicleSpriteKey: string;
-  vehicleDestroyedSpriteKey: string;
-  vehicleSpriteFaces: 1 | -1;
-  vehicleDisplay: SpriteDisplaySize;
-  vehicleDestroyedDisplay: SpriteDisplaySize;
-  characterSpriteKeys: CharacterSpriteSet;
-  characterSpriteFaces: 1 | -1;
-  characterDisplays: CharacterDisplaySet;
-  characterOffsetX: number;
-  characterOffsetY: number;
-  unitConceptSpriteKeys?: UnitConceptSpriteSet;
-  unitConceptDisplays?: UnitConceptDisplaySet;
-  unitConceptSpriteFaces?: 1 | -1;
-  unitConceptOffsetY?: number;
-  combatHull: CombatHull;
   voidDropPresentation?: VoidDropPresentationState;
-  portraitKey: string;
-}
+};
 
-interface ProjectileState {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
+interface ProjectileState extends ProjectileKinematics {
   shooterId: string;
   team: TeamId;
   trail: Phaser.Math.Vector2[];
@@ -187,47 +194,35 @@ interface SettleOptions {
   forceIds?: Set<string>;
 }
 
-const WORLD_WIDTH = 2400;
-const WORLD_HEIGHT = 900;
-const TERRAIN_STEP = 4;
-const VEHICLE_RADIUS = 27;
-const VEHICLE_HALF_WIDTH = 34;
-const VEHICLE_HALF_HEIGHT = 22;
-const MAX_HP = 100;
-const MIN_ELEVATION_DEG = 5;
-const MAX_ELEVATION_DEG = 90;
-const MAX_MOVE_UNITS = 10;
-const MOVE_PIXELS_PER_UNIT = 16;
-const MOVE_MIN_X = -72;
-const MOVE_MAX_X = WORLD_WIDTH + 72;
-const CLIMB_MAX_ANGLE_DEG = 34;
-const MAX_CLIMB_SLOPE = Math.tan((CLIMB_MAX_ANGLE_DEG * Math.PI) / 180);
-const MAX_POWER = 100;
-const GRAVITY = 440;
-const PROJECTILE_RADIUS = 11;
-const SHOT_SPEED_MIN = 240;
-const SHOT_SPEED_MAX = 780;
-const WIND_FORCE = 34;
-const CRATER_RADIUS = 52;
-const BUNGER_CRATER_RADIUS = 82;
-const DAMAGE_RADIUS = 78;
-const BUNGER_DAMAGE_RADIUS = 92;
-const BUNGER_KNOCKBACK = 82;
-const IMPACT_PREVIEW_SECONDS = 1.25;
-const COMBAT_MARKER_SECONDS = 1.15;
-const TURN_SECONDS = 30;
-const VOID_SURFACE_Y = WORLD_HEIGHT + 260;
-const DEATH_SURFACE_Y = WORLD_HEIGHT - 6;
 const VOID_DROP_DISPLAY_SIZE = scaleBattlefieldDisplay({ width: 354, height: 212 });
 const VISIBLE_VOID_ZONE_HEIGHT = requiredVoidZoneHeight(VOID_DROP_DISPLAY_SIZE);
 const FALLBACK_VISIBLE_VOID_TOP_Y = WORLD_HEIGHT - VISIBLE_VOID_ZONE_HEIGHT;
 const WORLD_RENDER_HEIGHT = WORLD_HEIGHT + VISIBLE_VOID_ZONE_HEIGHT;
-const DEFAULT_TERRAIN_BREAKTHROUGH_Y = WORLD_HEIGHT - 54;
-const VOID_DROP_HORIZONTAL_PADDING = 24;
-const MAX_TERRAIN_SPRITE_TILT_DEG = 20;
+const VEHICLE_SETTLEMENT_TUNING = {
+  vehicleHalfWidth: VEHICLE_HALF_WIDTH,
+  vehicleHalfHeight: VEHICLE_HALF_HEIGHT,
+  moveMinX: MOVE_MIN_X,
+  moveMaxX: MOVE_MAX_X,
+  deathSurfaceY: DEATH_SURFACE_Y,
+  terrainChangePadding: TERRAIN_CHANGE_SETTLE_PADDING,
+  slopeSampleDistance: SETTLEMENT_SLOPE_SAMPLE_DISTANCE,
+  slopeThreshold: SETTLEMENT_SLOPE_THRESHOLD,
+  slopeStep: SETTLEMENT_SLOPE_STEP,
+  maxSlopeIterations: SETTLEMENT_MAX_SLOPE_ITERATIONS,
+};
 const USE_UNIT_CONCEPT_PREVIEW = shouldUseConceptPreviewAssets(window.location.search);
 const USE_STYLE_REFERENCE_BACKGROUND = shouldUseStyleReferenceBackground(window.location.search);
 let currentViewportSupported = true;
+
+const EMPTY_MATCH_INPUT: MatchInputSnapshot = {
+  aimUp: false,
+  aimDown: false,
+  moveLeft: false,
+  moveRight: false,
+  chargeHeld: false,
+  resetPressed: false,
+  collisionZonesTogglePressed: false,
+};
 
 class GravityGridScene extends Phaser.Scene {
   private terrain: number[] = [];
@@ -249,10 +244,7 @@ class GravityGridScene extends Phaser.Scene {
   private combatMarkers: CombatMarker[] = [];
   private visibleVoidTopY = FALLBACK_VISIBLE_VOID_TOP_Y;
 
-  private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
-  private spaceKey?: Phaser.Input.Keyboard.Key;
-  private resetKey?: Phaser.Input.Keyboard.Key;
-  private hullToggleKey?: Phaser.Input.Keyboard.Key;
+  private inputController?: MatchInputController;
 
   private terrainGfx!: Phaser.GameObjects.Graphics;
   private vehicleGfx!: Phaser.GameObjects.Graphics;
@@ -340,10 +332,7 @@ class GravityGridScene extends Phaser.Scene {
   create(): void {
     this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_RENDER_HEIGHT);
     this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_RENDER_HEIGHT);
-    this.cursors = this.input.keyboard?.createCursorKeys();
-    this.spaceKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-    this.resetKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.R);
-    this.hullToggleKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.H);
+    this.inputController = this.createInputController();
 
     this.createBackground();
     this.terrainGfx = this.add.graphics();
@@ -467,16 +456,17 @@ class GravityGridScene extends Phaser.Scene {
     }
 
     const dt = Math.min(deltaMs / 1000, 0.033);
+    const input = this.inputController?.sample() ?? EMPTY_MATCH_INPUT;
     this.updateImpactPreview(dt);
     this.updateCombatMarkers(dt);
     this.updateVoidDropPresentations(dt);
 
-    if (this.resetKey && Phaser.Input.Keyboard.JustDown(this.resetKey)) {
+    if (input.resetPressed) {
       this.startRound();
       return;
     }
 
-    if (this.hullToggleKey && Phaser.Input.Keyboard.JustDown(this.hullToggleKey)) {
+    if (input.collisionZonesTogglePressed) {
       this.setCollisionZonesVisible(!this.showCombatHulls);
     }
 
@@ -508,14 +498,24 @@ class GravityGridScene extends Phaser.Scene {
       return;
     }
 
-    this.handleChargeInput(active, dt);
+    this.handleChargeInput(active, input, dt);
     if (this.turnCommitted || this.projectile) {
       this.drawWorld();
       return;
     }
 
-    this.handleVehicleInput(active, dt);
+    this.handleVehicleInput(active, input, dt);
     this.drawWorld();
+  }
+
+  private createInputController(): MatchInputController {
+    return new MatchInputController({
+      cursors: this.input.keyboard?.createCursorKeys(),
+      spaceKey: this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
+      resetKey: this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.R),
+      hullToggleKey: this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.H),
+      justDown: (key) => Phaser.Input.Keyboard.JustDown(key as Phaser.Input.Keyboard.Key),
+    });
   }
 
   private createBackground(): void {
@@ -601,201 +601,30 @@ class GravityGridScene extends Phaser.Scene {
     const blueOneSpawn = demoMap.map.spawns["blue-1"];
     const redTwoSpawn = demoMap.map.spawns["red-2"];
     const blueTwoSpawn = demoMap.map.spawns["blue-2"];
-    this.vehicles = [
-      {
-        id: "red-1",
-        username: "Nova",
-        team: "red",
-        classId: "bunger",
-        className: "Bunger Rig",
-        x: redOneSpawn.x,
+    const spawnByUnitId = new Map([
+      ["red-1", redOneSpawn],
+      ["blue-1", blueOneSpawn],
+      ["red-2", redTwoSpawn],
+      ["blue-2", blueTwoSpawn],
+    ] as const);
+    this.vehicles = V1_DEMO_UNIT_DEFINITIONS.map((unit) => {
+      const spawn = spawnByUnitId.get(unit.id);
+      if (!spawn) {
+        throw new Error(`Missing spawn for ${unit.id}`);
+      }
+
+      return {
+        ...unit,
+        x: spawn.x,
         y: 0,
         hp: MAX_HP,
-        angle: this.initialAngleForFacing(redOneSpawn.facing),
-        facing: redOneSpawn.facing,
+        angle: this.initialAngleForFacing(spawn.facing),
+        facing: spawn.facing,
         moveUnits: MAX_MOVE_UNITS,
         alive: true,
-        color: 0xff4d5d,
-        accent: 0xffd166,
-        vehicleSpriteKey: "nova-vehicle-sprite",
-        vehicleDestroyedSpriteKey: "nova-vehicle-destroyed",
-        vehicleSpriteFaces: 1,
-        vehicleDisplay: { width: 254, height: 155 },
-        vehicleDestroyedDisplay: { width: 260, height: 211 },
-        characterSpriteKeys: {
-          default: "nova-character-default",
-          ko: "nova-character-ko",
-          intense: "nova-character-intense",
-        },
-        characterSpriteFaces: 1,
-        characterDisplays: {
-          default: { width: 112, height: 150 },
-          ko: { width: 250, height: 94 },
-          intense: { width: 166, height: 148 },
-        },
-        characterOffsetX: -36,
-        characterOffsetY: -34,
-        unitConceptSpriteKeys: {
-          default: "nova-unit-default-concept",
-          intense: "nova-unit-intense",
-          ko: "nova-unit-ko-concept",
-        },
-        unitConceptDisplays: {
-          default: { width: 350, height: 233 },
-          intense: { width: 350, height: 233 },
-          ko: { width: 354, height: 212 },
-        },
-        unitConceptSpriteFaces: 1,
-        unitConceptOffsetY: 28,
-        combatHull: SHARED_V1_VEHICLE_HIT_ZONE,
-        portraitKey: "nova-vehicle",
-      },
-      {
-        id: "blue-1",
-        username: "Vesper",
-        team: "blue",
-        classId: "glitch",
-        className: "Glitch Rover",
-        x: blueOneSpawn.x,
-        y: 0,
-        hp: MAX_HP,
-        angle: this.initialAngleForFacing(blueOneSpawn.facing),
-        facing: blueOneSpawn.facing,
-        moveUnits: MAX_MOVE_UNITS,
-        alive: true,
-        color: 0x4cc9f0,
-        accent: 0xb8f7ff,
-        vehicleSpriteKey: "vesper-vehicle-sprite",
-        vehicleDestroyedSpriteKey: "vesper-vehicle-destroyed",
-        vehicleSpriteFaces: -1,
-        vehicleDisplay: { width: 250, height: 160 },
-        vehicleDestroyedDisplay: { width: 260, height: 169 },
-        characterSpriteKeys: {
-          default: "vesper-character-default",
-          ko: "vesper-character-ko",
-          intense: "vesper-character-intense",
-        },
-        characterSpriteFaces: -1,
-        characterDisplays: {
-          default: { width: 108, height: 151 },
-          ko: { width: 154, height: 149 },
-          intense: { width: 139, height: 150 },
-        },
-        characterOffsetX: 54,
-        characterOffsetY: -34,
-        unitConceptSpriteKeys: {
-          default: "vesper-unit-default-concept",
-          intense: "vesper-unit-intense",
-          ko: "vesper-unit-ko-concept",
-        },
-        unitConceptDisplays: {
-          default: { width: 356, height: 208 },
-          intense: { width: 356, height: 208 },
-          ko: { width: 356, height: 208 },
-        },
-        unitConceptSpriteFaces: -1,
-        unitConceptOffsetY: 25,
-        combatHull: SHARED_V1_VEHICLE_HIT_ZONE,
-        portraitKey: "vesper-vehicle",
-      },
-      {
-        id: "red-2",
-        username: "Kaelii",
-        team: "red",
-        classId: "bouncer",
-        className: "Flashkick Skip-Rig",
-        x: redTwoSpawn.x,
-        y: 0,
-        hp: MAX_HP,
-        angle: this.initialAngleForFacing(redTwoSpawn.facing),
-        facing: redTwoSpawn.facing,
-        moveUnits: MAX_MOVE_UNITS,
-        alive: true,
-        color: 0xff4fb4,
-        accent: 0xffd1f0,
-        vehicleSpriteKey: "kaelii-vehicle-sprite",
-        vehicleDestroyedSpriteKey: "kaelii-vehicle-destroyed",
-        vehicleSpriteFaces: 1,
-        vehicleDisplay: { width: 1, height: 1 },
-        vehicleDestroyedDisplay: { width: 1, height: 1 },
-        characterSpriteKeys: {
-          default: "kaelii-unit-default",
-          ko: "kaelii-unit-ko",
-          intense: "kaelii-unit-intense",
-        },
-        characterSpriteFaces: 1,
-        characterDisplays: {
-          default: { width: 350, height: 233 },
-          ko: { width: 354, height: 212 },
-          intense: { width: 350, height: 233 },
-        },
-        characterOffsetX: 0,
-        characterOffsetY: 24,
-        unitConceptSpriteKeys: {
-          default: "kaelii-unit-default",
-          intense: "kaelii-unit-intense",
-          ko: "kaelii-unit-ko",
-        },
-        unitConceptDisplays: {
-          default: { width: 350, height: 233 },
-          intense: { width: 350, height: 233 },
-          ko: { width: 354, height: 212 },
-        },
-        unitConceptSpriteFaces: 1,
-        unitConceptOffsetY: 28,
-        combatHull: SHARED_V1_VEHICLE_HIT_ZONE,
-        portraitKey: "kaelii-unit-default",
-      },
-      {
-        id: "blue-2",
-        username: "Perlah",
-        team: "blue",
-        classId: "spark",
-        className: "Sunspike Embercart",
-        x: blueTwoSpawn.x,
-        y: 0,
-        hp: MAX_HP,
-        angle: this.initialAngleForFacing(blueTwoSpawn.facing),
-        facing: blueTwoSpawn.facing,
-        moveUnits: MAX_MOVE_UNITS,
-        alive: true,
-        color: 0xff8a24,
-        accent: 0xffd166,
-        vehicleSpriteKey: "perlah-vehicle-sprite",
-        vehicleDestroyedSpriteKey: "perlah-vehicle-destroyed",
-        vehicleSpriteFaces: 1,
-        vehicleDisplay: { width: 1, height: 1 },
-        vehicleDestroyedDisplay: { width: 1, height: 1 },
-        characterSpriteKeys: {
-          default: "perlah-unit-default",
-          ko: "perlah-unit-ko",
-          intense: "perlah-unit-intense",
-        },
-        characterSpriteFaces: 1,
-        characterDisplays: {
-          default: { width: 356, height: 208 },
-          ko: { width: 354, height: 212 },
-          intense: { width: 356, height: 208 },
-        },
-        characterOffsetX: 0,
-        characterOffsetY: 25,
-        unitConceptSpriteKeys: {
-          default: "perlah-unit-default",
-          intense: "perlah-unit-intense",
-          ko: "perlah-unit-ko",
-        },
-        unitConceptDisplays: {
-          default: { width: 356, height: 208 },
-          intense: { width: 356, height: 208 },
-          ko: { width: 354, height: 212 },
-        },
-        unitConceptSpriteFaces: 1,
-        unitConceptOffsetY: 25,
-        combatHull: SHARED_V1_VEHICLE_HIT_ZONE,
-        portraitKey: "perlah-unit-default",
-      },
-    ];
-    this.turnOrder = ["red-1", "blue-1", "red-2", "blue-2"];
+      };
+    });
+    this.turnOrder = V1_DEMO_UNIT_DEFINITIONS.map((unit) => unit.id);
     this.turnIndex = 0;
     this.projectile = undefined;
     this.impactPreview = undefined;
@@ -854,50 +683,44 @@ class GravityGridScene extends Phaser.Scene {
     return this.vehicles.find((vehicle) => vehicle.id === activeId);
   }
 
-  private handleVehicleInput(active: VehicleState, dt: number): void {
-    const cursors = this.cursors;
-    if (!cursors) {
+  private handleVehicleInput(active: VehicleState, input: MatchInputSnapshot, dt: number): void {
+    active.angle = aimAngleAfterInput({
+      angle: active.angle,
+      facing: active.facing,
+      aimUp: input.aimUp,
+      aimDown: input.aimDown,
+      deltaSeconds: dt,
+      angleSpeedDegPerSecond: AIM_SPEED_DEG_PER_SECOND,
+      minElevationDeg: MIN_ELEVATION_DEG,
+      maxElevationDeg: MAX_ELEVATION_DEG,
+    });
+
+    const moveDirection = movementDirectionFromInput(input.moveLeft, input.moveRight);
+    if (moveDirection !== 0) {
+      this.setVehicleFacing(active, moveDirection);
+    }
+
+    if (active.moveUnits <= 0 || moveDirection === 0) {
       return;
     }
 
-    const angleSpeed = 78;
-    if (cursors.up.isDown) {
-      active.angle += active.facing === 1 ? angleSpeed * dt : -angleSpeed * dt;
-    }
-    if (cursors.down.isDown) {
-      active.angle += active.facing === 1 ? -angleSpeed * dt : angleSpeed * dt;
-    }
-    active.angle =
-      active.facing === 1
-        ? Phaser.Math.Clamp(active.angle, MIN_ELEVATION_DEG, MAX_ELEVATION_DEG)
-        : Phaser.Math.Clamp(active.angle, 180 - MAX_ELEVATION_DEG, 180 - MIN_ELEVATION_DEG);
+    const step = resolveMovementStep({
+      x: active.x,
+      moveUnits: active.moveUnits,
+      direction: moveDirection,
+      deltaSeconds: dt,
+      moveSpeedPixelsPerSecond: MOVE_SPEED_PIXELS_PER_SECOND,
+      movePixelsPerUnit: MOVE_PIXELS_PER_UNIT,
+      minX: MOVE_MIN_X,
+      maxX: MOVE_MAX_X,
+      maxClimbSlope: MAX_CLIMB_SLOPE,
+      surfaceAt: (x) => this.surfaceAt(x),
+    });
 
-    const movingLeft = cursors.left.isDown;
-    const movingRight = cursors.right.isDown;
-    if (movingLeft !== movingRight) {
-      this.setVehicleFacing(active, movingLeft ? -1 : 1);
-    }
-
-    if (active.moveUnits <= 0 || movingLeft === movingRight) {
-      return;
-    }
-
-    const moveSpeed = 98;
-    const direction = movingLeft ? -1 : 1;
-    const maxStepDistance = active.moveUnits * MOVE_PIXELS_PER_UNIT;
-    const stepDistance = Math.min(moveSpeed * dt, maxStepDistance);
-    const proposedX = Phaser.Math.Clamp(active.x + direction * stepDistance, MOVE_MIN_X, MOVE_MAX_X);
-    const oldSurface = this.surfaceAt(active.x);
-    const newSurface = this.surfaceAt(proposedX);
-    const distanceMoved = Math.abs(proposedX - active.x);
-    const surfaceDelta = newSurface - oldSurface;
-    const uphillSlope = Math.max(0, -surfaceDelta) / Math.max(distanceMoved, 1);
-    const canTraverse = surfaceDelta >= 0 || uphillSlope <= MAX_CLIMB_SLOPE;
-
-    if (canTraverse) {
-      active.x = proposedX;
+    if (step.moved) {
+      active.x = step.x;
       this.placeVehicleOnSurface(active);
-      active.moveUnits = Math.max(0, active.moveUnits - distanceMoved / MOVE_PIXELS_PER_UNIT);
+      active.moveUnits = step.moveUnits;
       if (!active.alive) {
         this.shotResult = `${active.username} drove into the void.`;
         this.charging = false;
@@ -912,27 +735,33 @@ class GravityGridScene extends Phaser.Scene {
       return;
     }
 
-    const currentElevation = vehicle.facing === 1 ? vehicle.angle : 180 - vehicle.angle;
-    const clampedElevation = Phaser.Math.Clamp(currentElevation, MIN_ELEVATION_DEG, MAX_ELEVATION_DEG);
+    const nextAngle = aimAngleForFacingChange({
+      currentAngle: vehicle.angle,
+      currentFacing: vehicle.facing,
+      nextFacing: facing,
+      minElevationDeg: MIN_ELEVATION_DEG,
+      maxElevationDeg: MAX_ELEVATION_DEG,
+    });
     vehicle.facing = facing;
-    vehicle.angle = facing === 1 ? clampedElevation : 180 - clampedElevation;
+    vehicle.angle = nextAngle;
   }
 
-  private handleChargeInput(active: VehicleState, dt: number): void {
-    const space = this.spaceKey;
-    if (!space) {
-      return;
-    }
+  private handleChargeInput(active: VehicleState, input: MatchInputSnapshot, dt: number): void {
+    const charge = updateChargeState({
+      isCharging: this.charging,
+      charge: this.charge,
+      chargeHeld: input.chargeHeld,
+      deltaSeconds: dt,
+      chargeRatePerSecond: CHARGE_RATE_PER_SECOND,
+      maxPower: MAX_POWER,
+      minFirePower: MIN_FIRE_POWER,
+    });
 
-    if (space.isDown) {
-      this.charging = true;
-      this.charge = Math.min(MAX_POWER, this.charge + dt * 78);
-      return;
-    }
+    this.charging = charge.isCharging;
+    this.charge = charge.charge;
 
-    if (this.charging) {
-      const releasedPower = Math.max(10, this.charge);
-      this.fire(active, releasedPower);
+    if (charge.firePower !== undefined) {
+      this.fire(active, charge.firePower);
     }
   }
 
@@ -940,16 +769,20 @@ class GravityGridScene extends Phaser.Scene {
     this.charging = false;
     this.charge = 0;
     this.turnCommitted = true;
-    const radians = Phaser.Math.DegToRad(active.angle);
-    const speed = Phaser.Math.Linear(SHOT_SPEED_MIN, SHOT_SPEED_MAX, power / MAX_POWER);
-    const muzzleX = active.x + Math.cos(radians) * 48;
-    const muzzleY = active.y - 13 - Math.sin(radians) * 48;
+    const projectile = launchProjectile({
+      shooterX: active.x,
+      shooterY: active.y,
+      angleDeg: active.angle,
+      power,
+      maxPower: MAX_POWER,
+      shotSpeedMin: SHOT_SPEED_MIN,
+      shotSpeedMax: SHOT_SPEED_MAX,
+      muzzleDistance: PROJECTILE_MUZZLE_DISTANCE,
+      muzzleYOffset: PROJECTILE_MUZZLE_Y_OFFSET,
+    });
 
     this.projectile = {
-      x: muzzleX,
-      y: muzzleY,
-      vx: Math.cos(radians) * speed,
-      vy: -Math.sin(radians) * speed,
+      ...projectile,
       shooterId: active.id,
       team: active.team,
       trail: [],
@@ -968,14 +801,15 @@ class GravityGridScene extends Phaser.Scene {
       p.trail.shift();
     }
 
-    const startX = p.x;
-    const startY = p.y;
-    p.vx += this.wind * WIND_FORCE * dt;
-    p.vy += GRAVITY * dt;
-    const nextX = p.x + p.vx * dt;
-    const nextY = p.y + p.vy * dt;
+    const step = stepProjectile({
+      projectile: p,
+      deltaSeconds: dt,
+      wind: this.wind,
+      windForce: WIND_FORCE,
+      gravity: GRAVITY,
+    });
 
-    const collision = this.findProjectileCollision(p, startX, startY, nextX, nextY);
+    const collision = this.findProjectileCollision(p, step.startX, step.startY, step.endX, step.endY);
     if (collision) {
       p.x = collision.x;
       p.y = collision.y;
@@ -984,17 +818,30 @@ class GravityGridScene extends Phaser.Scene {
       return;
     }
 
-    p.x = nextX;
-    p.y = nextY;
+    this.applyProjectileStep(p, step);
 
     this.recenterCameraForProjectileIfNeeded(p);
 
-    if (p.x < 0 || p.x > WORLD_WIDTH || p.y > WORLD_HEIGHT + 120 || p.y < -220) {
+    if (
+      isProjectileOutOfBounds(p, {
+        worldWidth: WORLD_WIDTH,
+        worldHeight: WORLD_HEIGHT,
+        lowerYMargin: PROJECTILE_OUT_OF_BOUNDS_LOWER_Y_MARGIN,
+        upperYMargin: PROJECTILE_OUT_OF_BOUNDS_UPPER_Y_MARGIN,
+      })
+    ) {
       this.shotResult = "Shot flew out of bounds.";
       this.projectile = undefined;
       this.queueRoundEvent(700, () => this.advanceTurn());
       return;
     }
+  }
+
+  private applyProjectileStep(projectile: ProjectileState, step: ProjectileStepResult): void {
+    projectile.x = step.projectile.x;
+    projectile.y = step.projectile.y;
+    projectile.vx = step.projectile.vx;
+    projectile.vy = step.projectile.vy;
   }
 
   private recenterCameraForProjectileIfNeeded(projectile: ProjectileState): void {
@@ -1055,68 +902,93 @@ class GravityGridScene extends Phaser.Scene {
 
   private resolveImpact(x: number, y: number, directHitId?: string): void {
     const shooter = this.vehicles.find((vehicle) => vehicle.id === this.projectile?.shooterId);
-    const isBungerShot = shooter?.classId === "bunger";
-    const craterRadius = isBungerShot ? BUNGER_CRATER_RADIUS : CRATER_RADIUS;
-    const damageRadius = isBungerShot ? BUNGER_DAMAGE_RADIUS : DAMAGE_RADIUS;
+    const impact = resolveProjectileImpact({
+      x,
+      y,
+      directHitId,
+      shooter: shooter
+        ? {
+            id: shooter.id,
+            team: shooter.team,
+            classId: shooter.classId,
+          }
+        : undefined,
+      vehicles: this.vehicles.map((vehicle) => ({
+        id: vehicle.id,
+        username: vehicle.username,
+        team: vehicle.team,
+        alive: vehicle.alive,
+        hp: vehicle.hp,
+        x: vehicle.x,
+        hitZone: this.vehicleHitZoneFor(vehicle),
+      })),
+      tuning: {
+        craterRadius: CRATER_RADIUS,
+        bungerCraterRadius: BUNGER_CRATER_RADIUS,
+        damageRadius: DAMAGE_RADIUS,
+        bungerDamageRadius: BUNGER_DAMAGE_RADIUS,
+        bungerKnockback: BUNGER_KNOCKBACK,
+        moveMinX: MOVE_MIN_X,
+        moveMaxX: MOVE_MAX_X,
+      },
+    });
     this.impactPreview = {
       x,
       y,
-      craterRadius,
-      damageRadius,
-      isBungerShot,
+      craterRadius: impact.craterRadius,
+      damageRadius: impact.damageRadius,
+      isBungerShot: impact.isBungerShot,
       timeLeft: IMPACT_PREVIEW_SECONDS,
     };
-    this.makeCrater(x, y, craterRadius, isBungerShot ? 1.3 : 0.68);
+    this.makeCrater(x, y, impact.craterRadius, impact.craterDepthFactor);
     const damaged: string[] = [];
     const bungeEvents: string[] = [];
-    const affectedVehicleIds = new Set<string>();
-    const defeatMarkedIds = new Set<string>();
-    if (directHitId) {
-      affectedVehicleIds.add(directHitId);
-    }
+    const affectedVehicleIds = new Set(impact.affectedVehicleIds);
+    const defeatMarkedIds = new Set(impact.damageDefeatIds);
 
-    for (const vehicle of this.vehicles) {
-      if (
-        !vehicle.alive ||
-        !shouldApplyWeaponEffect({
-          shooterId: shooter?.id,
-          shooterTeam: shooter?.team,
-          targetId: vehicle.id,
-          targetTeam: vehicle.team,
-        })
-      ) {
+    for (const event of impact.damageEvents) {
+      const vehicle = this.vehicles.find((candidate) => candidate.id === event.vehicleId);
+      if (!vehicle) {
         continue;
       }
-      const d = distanceToVehicleHitZone(x, y, this.vehicleHitZoneFor(vehicle));
-      const directHit = vehicle.id === directHitId;
-      const splashFactor = Phaser.Math.Clamp(1 - d / damageRadius, 0, 1);
-      if (splashFactor > 0 || directHit) {
-        const splash = Math.round((isBungerShot ? 18 : 34) * splashFactor);
-        const damage = vehicle.id === directHitId ? Math.max(isBungerShot ? 22 : 34, splash) : splash;
-        if (damage <= 0) {
-          continue;
-        }
-        affectedVehicleIds.add(vehicle.id);
-        vehicle.hp = Math.max(0, vehicle.hp - damage);
-        damaged.push(`${vehicle.username} -${damage}`);
-        this.addVehicleCombatMarker(vehicle, directHit ? "direct" : "splash", `${directHit ? "DIRECT" : "SPLASH"} -${damage}`);
-        if (vehicle.hp <= 0) {
-          vehicle.alive = false;
-          vehicle.defeatReason = "damage";
-          defeatMarkedIds.add(vehicle.id);
-          this.addVehicleCombatMarker(vehicle, "ko", "KO", 1);
-        }
-        if (isBungerShot && vehicle.alive) {
-          const beforeX = vehicle.x;
-          const knockStrength = splashFactor;
-          const direction = vehicle.x >= x ? 1 : -1;
-          vehicle.x = Phaser.Math.Clamp(vehicle.x + direction * BUNGER_KNOCKBACK * knockStrength, MOVE_MIN_X, MOVE_MAX_X);
-          if (Math.abs(vehicle.x - beforeX) > 12) {
-            affectedVehicleIds.add(vehicle.id);
-            bungeEvents.push(`${vehicle.username} shoved`);
-            this.addVehicleCombatMarker(vehicle, "shoved", "SHOVED", 1);
-          }
-        }
+
+      vehicle.hp = event.hpAfter;
+      damaged.push(`${event.username} -${event.damage}`);
+      this.addVehicleCombatMarker(
+        vehicle,
+        event.hitKind,
+        `${event.hitKind === "direct" ? "DIRECT" : "SPLASH"} -${event.damage}`,
+      );
+
+      if (event.defeated) {
+        vehicle.alive = false;
+        vehicle.defeatReason = "damage";
+        this.addVehicleCombatMarker(vehicle, "ko", "KO", 1);
+      }
+    }
+
+    for (const event of impact.knockbackEvents) {
+      const vehicle = this.vehicles.find((candidate) => candidate.id === event.vehicleId);
+      if (!vehicle) {
+        continue;
+      }
+
+      vehicle.x = event.toX;
+      bungeEvents.push(`${event.username} shoved`);
+      this.addVehicleCombatMarker(vehicle, "shoved", "SHOVED", 1);
+    }
+
+    for (const update of impact.vehicleUpdates) {
+      const vehicle = this.vehicles.find((candidate) => candidate.id === update.vehicleId);
+      if (!vehicle) {
+        continue;
+      }
+
+      vehicle.x = update.x;
+      vehicle.hp = update.hp;
+      vehicle.alive = update.alive;
+      if (update.defeatReason) {
+        vehicle.defeatReason = update.defeatReason;
       }
     }
 
@@ -1124,7 +996,7 @@ class GravityGridScene extends Phaser.Scene {
     const aliveBeforeSettle = new Set(this.vehicles.filter((vehicle) => vehicle.alive).map((vehicle) => vehicle.id));
     const fallEvents = this.settleVehicles({
       changedX: x,
-      changedRadius: Math.max(craterRadius, damageRadius),
+      changedRadius: impact.changedRadius,
       forceIds: affectedVehicleIds,
     });
     for (const vehicle of this.vehicles) {
@@ -1150,20 +1022,15 @@ class GravityGridScene extends Phaser.Scene {
   }
 
   private makeCrater(centerX: number, centerY: number, radius: number, depthFactor = 0.74): void {
-    const start = Math.max(0, Math.floor(centerX - radius));
-    const end = Math.min(WORLD_WIDTH, Math.ceil(centerX + radius));
-    for (let x = start; x <= end; x += 1) {
-      const dx = x - centerX;
-      const inside = radius * radius - dx * dx;
-      if (inside <= 0) {
-        continue;
-      }
-      const carvedSurface = centerY + Math.sqrt(inside) * depthFactor;
-      const breaksThrough = carvedSurface >= this.terrainBreakthroughY();
-      this.terrain[x] = breaksThrough
-        ? VOID_SURFACE_Y
-        : Math.min(VOID_SURFACE_Y, Math.max(this.terrain[x], carvedSurface));
-    }
+    this.terrain = craterTerrain({
+      terrain: this.terrain,
+      impactX: centerX,
+      impactY: centerY,
+      radius,
+      depth: radius * depthFactor,
+      voidSurfaceY: VOID_SURFACE_Y,
+      breakthroughY: this.terrainBreakthroughY(),
+    });
   }
 
   private settleVehicles(options?: SettleOptions): string[] {
@@ -1173,22 +1040,14 @@ class GravityGridScene extends Phaser.Scene {
         continue;
       }
       const forceSettle = options?.forceIds?.has(vehicle.id) ?? false;
-      const terrainMayHaveChanged =
-        !options || Math.abs(vehicle.x - options.changedX) <= options.changedRadius + VEHICLE_HALF_WIDTH + 42;
+      const settlement = this.resolveVehicleSettlement(vehicle, {
+        adjustForSlope: true,
+        changedX: options?.changedX,
+        changedRadius: options?.changedRadius,
+        forceSettle,
+      });
 
-      if (terrainMayHaveChanged || forceSettle) {
-        for (let i = 0; i < 14; i += 1) {
-          const left = this.surfaceAt(vehicle.x - 18);
-          const right = this.surfaceAt(vehicle.x + 18);
-          const slope = right - left;
-          if (Math.abs(slope) < 18) {
-            break;
-          }
-          vehicle.x = Phaser.Math.Clamp(vehicle.x + Math.sign(slope) * 7, MOVE_MIN_X, MOVE_MAX_X);
-        }
-      }
-
-      if (this.placeVehicleOnSurface(vehicle)) {
+      if (this.applyVehicleSettlement(vehicle, settlement)) {
         fallEvents.push(`${vehicle.username} Void Dropped`);
       }
     }
@@ -1307,29 +1166,62 @@ class GravityGridScene extends Phaser.Scene {
   }
 
   private surfaceAt(x: number): number {
-    if (x < 0 || x > WORLD_WIDTH) {
-      return VOID_SURFACE_Y;
-    }
-
-    const index = Phaser.Math.Clamp(Math.round(x), 0, WORLD_WIDTH);
-    return this.terrain[index] ?? VOID_SURFACE_Y;
+    return terrainSurfaceAt(this.terrain, x, {
+      worldWidth: WORLD_WIDTH,
+      voidSurfaceY: VOID_SURFACE_Y,
+    });
   }
 
   private placeVehicleOnSurface(vehicle: VehicleState): boolean {
-    const fallStartX = vehicle.x;
-    const fallStartY = vehicle.y > 0 ? vehicle.y : this.visibleVoidTopY - 40;
-    const surface = this.surfaceAt(vehicle.x);
-    vehicle.y = surface - VEHICLE_HALF_HEIGHT;
+    const settlement = this.resolveVehicleSettlement(vehicle, {
+      adjustForSlope: false,
+    });
 
-    if (surface >= DEATH_SURFACE_Y) {
-      const targetX = this.nearestVoidDisplayX(fallStartX);
+    return this.applyVehicleSettlement(vehicle, settlement);
+  }
+
+  private resolveVehicleSettlement(
+    vehicle: VehicleState,
+    options: {
+      adjustForSlope: boolean;
+      changedX?: number;
+      changedRadius?: number;
+      forceSettle?: boolean;
+    },
+  ): VehicleSettlementResult {
+    return settleVehicleOnTerrain({
+      vehicle: {
+        id: vehicle.id,
+        x: vehicle.x,
+        y: vehicle.y,
+        hp: vehicle.hp,
+        alive: vehicle.alive,
+      },
+      adjustForSlope: options.adjustForSlope,
+      changedX: options.changedX,
+      changedRadius: options.changedRadius,
+      forceSettle: options.forceSettle,
+      tuning: VEHICLE_SETTLEMENT_TUNING,
+      fallbackFallStartY: this.visibleVoidTopY - 40,
+      surfaceAt: (x) => this.surfaceAt(x),
+    });
+  }
+
+  private applyVehicleSettlement(vehicle: VehicleState, settlement: VehicleSettlementResult): boolean {
+    vehicle.x = settlement.x;
+    vehicle.y = settlement.y;
+    vehicle.hp = settlement.hp;
+    vehicle.alive = settlement.alive;
+    if (settlement.defeatReason) {
+      vehicle.defeatReason = settlement.defeatReason;
+    }
+
+    if (settlement.voidDropped) {
+      const targetX = this.nearestVoidDisplayX(settlement.fallStartX);
       const targetY = this.voidDropTargetY();
-      vehicle.alive = false;
-      vehicle.hp = 0;
-      vehicle.defeatReason = "void";
       vehicle.voidDropPresentation = {
-        fromX: fallStartX,
-        fromY: fallStartY,
+        fromX: settlement.fallStartX,
+        fromY: settlement.fallStartY,
         targetX,
         targetY,
         age: 0,
@@ -1381,7 +1273,11 @@ class GravityGridScene extends Phaser.Scene {
       return 0;
     }
 
-    const angle = Phaser.Math.RadToDeg(Math.atan2(right - left, VEHICLE_HALF_WIDTH * 2));
+    const angle = terrainSlopeAngleAt(this.terrain, x, {
+      worldWidth: WORLD_WIDTH,
+      voidSurfaceY: VOID_SURFACE_Y,
+      sampleDistance: VEHICLE_HALF_WIDTH,
+    });
     return Phaser.Math.Clamp(angle, -MAX_TERRAIN_SPRITE_TILT_DEG, MAX_TERRAIN_SPRITE_TILT_DEG);
   }
 
@@ -1772,7 +1668,7 @@ class GravityGridScene extends Phaser.Scene {
     );
   }
 
-  private combatHullFor(vehicle: VehicleState): CombatHull {
+  private combatHullFor(vehicle: VehicleState): CombatHullShape {
     return scaleBattlefieldCombatHull(vehicle.combatHull);
   }
 

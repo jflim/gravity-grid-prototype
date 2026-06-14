@@ -72,6 +72,15 @@ Highlights:
 - Added runtime config so playtest launch mode controls the Online Alpha panel instead of inferring it from the public URL hostname.
 - Reorganized the primary documentation around standard game-development roles: `README.md` as runbook, `docs/GDD.md` as the living Game Design Document, and `docs/PRODUCTION_PLAN.md` as the current v1 milestone scope authority.
 - Added `docs/TECHNICAL_DESIGN.md` as the implementer-facing Technical Design Document for server-authoritative online v1, and recorded the long-term mature presentation direction as future GDD scope.
+- Added the first top-level shared Phaser-free modules for v1 constants and terrain gameplay, wired client/server type checks plus tests to include `shared/`, and added a Unity/Godot-adjacent technical glossary to the TDD.
+- Extracted v1 unit content, shared game model types, vehicle-only collision profile data, and local match tuning constants out of `src/main.ts` into `shared/content`, `shared/model`, and `shared/v1` so human edits can start from data and tested concepts instead of the Phaser scene.
+- Extracted aiming, facing, movement-step, and charge/release behavior into `shared/gameplay/movement.ts`, and added `src/match/MatchInputController.ts` so keyboard sampling is separated from gameplay rules.
+- Extracted projectile launch, wind/gravity stepping, and out-of-bounds checks into `shared/gameplay/projectile.ts` while keeping Phaser responsible for drawing trails and resolving visible collision feedback.
+- Extracted projectile impact damage, self-damage/friendly-fire filtering, crater radius selection, and Bunger knockback into `shared/gameplay/impact.ts` while keeping Phaser responsible for combat markers, terrain drawing, and round flow.
+- Moved swept projectile collision and vehicle-body hit-zone geometry into `shared/gameplay/projectileCollision.ts` and `shared/gameplay/vehicleHitZone.ts`, removing the old client-local helper modules.
+- Extracted vehicle terrain placement, localized post-impact slope nudging, and Void Dropped truth resolution into `shared/gameplay/vehicleSettlement.ts`, leaving the visual fall target and suspension animation in Phaser.
+- Added a TDD naming rule that `v1` remains a product milestone/profile label, while new permanent code modules should use generic names and select milestone behavior through ruleset/content ids.
+- Adopted an HTML-first documentation workflow: markdown remains the canonical editable source, generated HTML is the preferred reading/review surface, local scripts must generate markdown reading copies without AI/manual conversion, and custom HTML is reserved for rich visual/review artifacts.
 - Added horizontal camera side bounds so the battlefield remains centered when the visible camera frame is wider than the world instead of leaving all extra space on one side.
 - Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.
 - Changed projectile camera behavior to keep the battlefield stable while shots are readable, recentering only when a projectile leaves the readable frame.
