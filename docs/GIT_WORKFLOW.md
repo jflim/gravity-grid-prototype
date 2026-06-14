@@ -95,7 +95,7 @@ chore: tag v0.5.0 checkpoint
 
 ## Version Checkpoint Loop
 
-1. Pick one version goal from `docs/BUILD_PLAN.md`.
+1. Pick one version goal from `docs/PRODUCTION_PLAN.md`.
 2. Implement only that goal.
 3. Run `npm run build`.
 4. Update `docs/VERSION_LOG.md`.

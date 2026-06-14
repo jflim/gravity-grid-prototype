@@ -87,7 +87,7 @@
   <main>
     <article>
       <div class="generated">
-        Generated from <a href="VERSION_LOG.md">docs/VERSION_LOG.md</a> on 2026-06-10.
+        Generated from <a href="VERSION_LOG.md">docs/VERSION_LOG.md</a> on 2026-06-14.
         Edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Gravity Canyon Version Log</h1>
@@ -134,7 +134,7 @@
 <li>Added a combat readability design and Slice 1 implementation plan for combat hulls, damage markers, wind bands, and lob-focused map prototypes.</li>
 <li>Added a locked v1 playtest-alpha HTML contract for hosted private-room 2v2 scope, with change-control rules, V2 parking lot boundaries, and acceptance gates.</li>
 <li>Added generated HTML reading copies for human-facing markdown docs via <code>npm run docs:html</code>, plus an HTML docs index.</li>
-<li>Updated planning docs so <code>docs/V1_PLAYTEST_ALPHA.html</code> is the authority for current v1 scope while <code>docs/GAME_DESIGN_SPEC.md</code> remains broader product vision.</li>
+<li>Recorded the first v1 scoping pass in <code>docs/V1_PLAYTEST_ALPHA.html</code> and kept broader product vision separate from current milestone scope.</li>
 <li>Added v1 rule-contract tests and constants for locked roster, modes, seats, room settings, turn timing, reconnect grace, and preset phrase cooldown.</li>
 <li>Added the v1 map pool contract with five map ids, deterministic random selection, spawn layouts, death planes, wind scales, and drawable preview surfaces.</li>
 <li>Added generated v1 map previews at <code>docs/V1_MAP_PREVIEWS.html</code>, linked from the HTML docs index.</li>
@@ -160,6 +160,7 @@
 <li>Made hosted/default playtest loads lighter and more diagnosable by defaulting to runtime match assets, making heavy concept/backdrop art explicit opt-in, and showing Phaser loading/failure status.</li>
 <li>Added optimized WebP delivery assets and <code>npm run optimize:assets</code> so the normal hosted playtest serves the accepted runtime game art at much smaller transfer sizes while keeping PNG sources in the repo.</li>
 <li>Added runtime config so playtest launch mode controls the Online Alpha panel instead of inferring it from the public URL hostname.</li>
+<li>Reorganized the primary documentation around standard game-development roles: <code>README.md</code> as runbook, <code>docs/GDD.md</code> as the living Game Design Document, and <code>docs/PRODUCTION_PLAN.md</code> as the current v1 milestone scope authority.</li>
 <li>Added horizontal camera side bounds so the battlefield remains centered when the visible camera frame is wider than the world instead of leaving all extra space on one side.</li>
 <li>Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.</li>
 <li>Changed projectile camera behavior to keep the battlefield stable while shots are readable, recentering only when a projectile leaves the readable frame.</li>

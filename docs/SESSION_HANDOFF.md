@@ -15,8 +15,9 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
 
 - Product name: Gravity Canyon.
 - Browser-based online multiplayer artillery game.
-- Current locked v1 scope is the hosted private-room playtest alpha in `docs/V1_PLAYTEST_ALPHA.html`.
-- `docs/V1_PLAYTEST_ALPHA.html` supersedes broader planning docs for current v1 scope.
+- Current locked v1 scope is the hosted private-room playtest alpha in `docs/PRODUCTION_PLAN.md`.
+- `docs/GDD.md` is the broader living game design document and does not override the current Production Plan.
+- `docs/V1_PLAYTEST_ALPHA.html` is the original v1 contract snapshot for historical reference.
 - Local Phaser prototype proves movement, aiming, wind, destructible terrain, fall KOs, round reset, and readable HUD.
 - Online foundation uses Colyseus with private rooms, ready checks, placeholder rewards, and a server-owned combat preview.
 - Cosmetics are fun/collectible only and must not affect combat stats, hitboxes, projectile behavior, wind, movement, matchmaking, or rewards.
@@ -99,7 +100,7 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
 
 ## Next Best Step
 
-For v1 scope discipline, use `docs/V1_PLAYTEST_ALPHA.html` as the authority before accepting any new gameplay, roster, asset, UI, economy, social, or polish work as v1. If the request is not required for v1 acceptance, preserve it in the V2 parking lot/context notes instead of expanding v1.
+For v1 scope discipline, use `docs/PRODUCTION_PLAN.md` as the authority before accepting any new gameplay, roster, asset, UI, economy, social, or polish work as v1. If the request is not required for v1 acceptance, preserve it in the GDD parking lot/context notes instead of expanding v1.
 
 For combat feel, keep tuning visible combat hulls and playable v1 map terrain only where they support v1 readability. Advanced wind bands and high-angle/plunge reward rules are future ideas unless the v1 contract is explicitly changed.
 

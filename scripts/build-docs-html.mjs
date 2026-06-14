@@ -7,10 +7,10 @@ const rootMarkdownFiles = ['README.md', 'AGENTS.md'];
 const docsDir = join(root, 'docs');
 const standaloneHtmlFiles = [
   {
-    title: 'V1 Playtest Alpha Contract',
+    title: 'V1 Playtest Alpha Contract Snapshot',
     htmlPath: join(docsDir, 'V1_PLAYTEST_ALPHA.html'),
     source: 'docs/V1_PLAYTEST_ALPHA.html',
-    description: 'Locked V1 scope, acceptance gates, and change-control rules.',
+    description: 'Original V1 scope snapshot retained for historical context.',
   },
   {
     title: 'V1 Map Previews',
@@ -369,6 +369,27 @@ function indexPathFor(htmlPath) {
 }
 
 function writeDocsIndex(pages) {
+  const primarySources = new Set(['README.md', 'docs/GDD.md', 'docs/PRODUCTION_PLAN.md']);
+  const primaryRows = pages
+    .filter((page) => primarySources.has(relative(root, page.markdownPath).split(sep).join('/')))
+    .sort((a, b) => {
+      const order = ['README.md', 'docs/GDD.md', 'docs/PRODUCTION_PLAN.md'];
+      const aPath = relative(root, a.markdownPath).split(sep).join('/');
+      const bPath = relative(root, b.markdownPath).split(sep).join('/');
+      return order.indexOf(aPath) - order.indexOf(bPath);
+    })
+    .map((page) => {
+      const relMarkdown = relative(root, page.markdownPath).split(sep).join('/');
+      const relHtml = indexPathFor(page.htmlPath);
+      const purpose = relMarkdown === 'README.md'
+        ? 'Project runbook, setup, commands, controls, and current runnable state.'
+        : relMarkdown === 'docs/GDD.md'
+          ? 'Living Game Design Document for product direction, rules, art, audio, UX, and future systems.'
+          : 'Current milestone scope authority, v1 acceptance criteria, build order, and change-control rules.';
+      return `<tr><td><a href="${escapeHtml(relHtml)}">${escapeHtml(page.title)}</a></td><td><code>${escapeHtml(relMarkdown)}</code></td><td>${escapeHtml(purpose)}</td></tr>`;
+    })
+    .join('\n');
+
   const standaloneRows = standaloneHtmlFiles
     .filter((page) => existsSync(page.htmlPath))
     .map((page) => {
@@ -378,6 +399,7 @@ function writeDocsIndex(pages) {
     .join('\n');
 
   const rows = pages
+    .filter((page) => !primarySources.has(relative(root, page.markdownPath).split(sep).join('/')))
     .sort((a, b) => relative(root, a.markdownPath).localeCompare(relative(root, b.markdownPath)))
     .map((page) => {
       const relMarkdown = relative(root, page.markdownPath).split(sep).join('/');
@@ -438,11 +460,20 @@ function writeDocsIndex(pages) {
     <header>
       <p>Gravity Canyon documentation</p>
       <h1>Docs Index</h1>
-      <p>This page links the locked v1 HTML contract and generated HTML reading copies of the markdown docs.</p>
-      <p class="callout"><strong>V1 authority:</strong> <a href="V1_PLAYTEST_ALPHA.html">V1 Playtest Alpha Contract</a></p>
+      <p>This page links the primary project docs, supporting references, and generated HTML reading copies.</p>
+      <p class="callout"><strong>Current v1 authority:</strong> <a href="PRODUCTION_PLAN.html">Gravity Canyon Production Plan</a></p>
     </header>
     <section>
-      <h2>Primary HTML Docs</h2>
+      <h2>Primary Project Docs</h2>
+      <table>
+        <thead><tr><th>HTML Page</th><th>Source</th><th>Purpose</th></tr></thead>
+        <tbody>
+${primaryRows}
+        </tbody>
+      </table>
+    </section>
+    <section>
+      <h2>Supporting HTML Docs</h2>
       <table>
         <thead><tr><th>HTML Page</th><th>Source</th><th>Purpose</th></tr></thead>
         <tbody>

@@ -87,7 +87,7 @@
   <main>
     <article>
       <div class="generated">
-        Generated from <a href="SESSION_HANDOFF.md">docs/SESSION_HANDOFF.md</a> on 2026-06-10.
+        Generated from <a href="SESSION_HANDOFF.md">docs/SESSION_HANDOFF.md</a> on 2026-06-14.
         Edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Session Handoff</h1>
@@ -105,8 +105,9 @@
 <ul>
 <li>Product name: Gravity Canyon.</li>
 <li>Browser-based online multiplayer artillery game.</li>
-<li>Current locked v1 scope is the hosted private-room playtest alpha in <code>docs/V1_PLAYTEST_ALPHA.html</code>.</li>
-<li><code>docs/V1_PLAYTEST_ALPHA.html</code> supersedes broader planning docs for current v1 scope.</li>
+<li>Current locked v1 scope is the hosted private-room playtest alpha in <code>docs/PRODUCTION_PLAN.md</code>.</li>
+<li><code>docs/GDD.md</code> is the broader living game design document and does not override the current Production Plan.</li>
+<li><code>docs/V1_PLAYTEST_ALPHA.html</code> is the original v1 contract snapshot for historical reference.</li>
 <li>Local Phaser prototype proves movement, aiming, wind, destructible terrain, fall KOs, round reset, and readable HUD.</li>
 <li>Online foundation uses Colyseus with private rooms, ready checks, placeholder rewards, and a server-owned combat preview.</li>
 <li>Cosmetics are fun/collectible only and must not affect combat stats, hitboxes, projectile behavior, wind, movement, matchmaking, or rewards.</li>
@@ -188,7 +189,7 @@
 <li>Vesper default/KO unit candidates still need production cleanup before replacing the older layered baseline set. Vesper full-unit intense v8 subtle tension scale-stable is active as a runtime test alias.</li>
 </ul>
 <h2>Next Best Step</h2>
-<p>For v1 scope discipline, use <code>docs/V1_PLAYTEST_ALPHA.html</code> as the authority before accepting any new gameplay, roster, asset, UI, economy, social, or polish work as v1. If the request is not required for v1 acceptance, preserve it in the V2 parking lot/context notes instead of expanding v1.</p>
+<p>For v1 scope discipline, use <code>docs/PRODUCTION_PLAN.md</code> as the authority before accepting any new gameplay, roster, asset, UI, economy, social, or polish work as v1. If the request is not required for v1 acceptance, preserve it in the GDD parking lot/context notes instead of expanding v1.</p>
 <p>For combat feel, keep tuning visible combat hulls and playable v1 map terrain only where they support v1 readability. Advanced wind bands and high-angle/plunge reward rules are future ideas unless the v1 contract is explicitly changed.</p>
 <p>For online v1, the next best build direction is to move from the current Colyseus combat preview toward real private-room 1v1/2v2 room settings, seat ownership, persistent match turn order, and server-owned combat results wired into the Phaser match scene.</p>
 <p>For sprites, use the committed Vesper v9/v10 unit candidates as references for the next production pass. The next pass should simplify detail, preserve the light full gloves/tech shorts/chunky sneaker identity, remove the chroma key, split or size layers as needed, and only then promote runtime aliases.</p>

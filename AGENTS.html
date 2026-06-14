@@ -87,7 +87,7 @@
   <main>
     <article>
       <div class="generated">
-        Generated from <a href="AGENTS.md">AGENTS.md</a> on 2026-06-09.
+        Generated from <a href="AGENTS.md">AGENTS.md</a> on 2026-06-14.
         Edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>AGENTS.md</h1>
@@ -101,9 +101,9 @@
 <ul>
 <li>Read <code>README.md</code> for the current runnable state and controls.</li>
 <li>Read <code>docs/SESSION_HANDOFF.md</code> for the latest handoff, next best step, known environment notes, and verification already run.</li>
-<li>Read <code>docs/V1_PLAYTEST_ALPHA.html</code> for the locked v1 playtest-alpha scope, acceptance tests, out-of-scope list, and change-control rules.</li>
-<li>Read <code>docs/GAME_DESIGN_SPEC.md</code> for product direction and locked decisions.</li>
-<li>Read <code>docs/BUILD_PLAN.md</code> before choosing the next milestone.</li>
+<li>Read <code>docs/PRODUCTION_PLAN.md</code> for current v1 scope, acceptance tests, out-of-scope list, build order, and change-control rules.</li>
+<li>Read <code>docs/GDD.md</code> for broader product direction and design context.</li>
+<li>Read <code>docs/V1_PLAYTEST_ALPHA.html</code> as the original v1 contract snapshot if historical context is needed.</li>
 <li>Follow <code>docs/GIT_WORKFLOW.md</code> for commit cadence, branch strategy, and quality gates.</li>
 </ul>
 <h2>Commands</h2>
@@ -138,9 +138,10 @@
 </ul>
 <h2>V1 Scope Lock</h2>
 <ul>
-<li><code>docs/V1_PLAYTEST_ALPHA.html</code> is the authority for current v1 scope.</li>
-<li><code>docs/GAME_DESIGN_SPEC.md</code> is broader multi-version product vision and does not override the v1 contract.</li>
-<li>Before accepting new gameplay, roster, asset, UI, economy, social, or polish work as v1, classify it against <code>docs/V1_PLAYTEST_ALPHA.html</code>.</li>
+<li><code>docs/PRODUCTION_PLAN.md</code> is the authority for current v1 scope.</li>
+<li><code>docs/GDD.md</code> is broader multi-version product vision and does not override the current Production Plan.</li>
+<li><code>docs/V1_PLAYTEST_ALPHA.html</code> is the original v1 contract snapshot and should not override newer Production Plan decisions.</li>
+<li>Before accepting new gameplay, roster, asset, UI, economy, social, or polish work as v1, classify it against <code>docs/PRODUCTION_PLAN.md</code>.</li>
 <li>If a request is not required for v1 acceptance, add it to the V2 parking lot or context notes instead of changing v1.</li>
 <li>To change locked v1 scope, the user must explicitly say: &quot;I am requesting a v1 contract change.&quot;</li>
 <li>When that phrase is used, push back, identify which v1 acceptance test fails without the change, require a tradeoff or deferral, then update the v1 contract and decision log if the change is accepted.</li>

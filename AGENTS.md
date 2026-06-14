@@ -10,9 +10,9 @@
 
 - Read `README.md` for the current runnable state and controls.
 - Read `docs/SESSION_HANDOFF.md` for the latest handoff, next best step, known environment notes, and verification already run.
-- Read `docs/V1_PLAYTEST_ALPHA.html` for the locked v1 playtest-alpha scope, acceptance tests, out-of-scope list, and change-control rules.
-- Read `docs/GAME_DESIGN_SPEC.md` for product direction and locked decisions.
-- Read `docs/BUILD_PLAN.md` before choosing the next milestone.
+- Read `docs/PRODUCTION_PLAN.md` for current v1 scope, acceptance tests, out-of-scope list, build order, and change-control rules.
+- Read `docs/GDD.md` for broader product direction and design context.
+- Read `docs/V1_PLAYTEST_ALPHA.html` as the original v1 contract snapshot if historical context is needed.
 - Follow `docs/GIT_WORKFLOW.md` for commit cadence, branch strategy, and quality gates.
 
 ## Commands
@@ -48,9 +48,10 @@ On Windows inside managed Codex shells, detached watch-mode startup can exit sil
 
 ## V1 Scope Lock
 
-- `docs/V1_PLAYTEST_ALPHA.html` is the authority for current v1 scope.
-- `docs/GAME_DESIGN_SPEC.md` is broader multi-version product vision and does not override the v1 contract.
-- Before accepting new gameplay, roster, asset, UI, economy, social, or polish work as v1, classify it against `docs/V1_PLAYTEST_ALPHA.html`.
+- `docs/PRODUCTION_PLAN.md` is the authority for current v1 scope.
+- `docs/GDD.md` is broader multi-version product vision and does not override the current Production Plan.
+- `docs/V1_PLAYTEST_ALPHA.html` is the original v1 contract snapshot and should not override newer Production Plan decisions.
+- Before accepting new gameplay, roster, asset, UI, economy, social, or polish work as v1, classify it against `docs/PRODUCTION_PLAN.md`.
 - If a request is not required for v1 acceptance, add it to the V2 parking lot or context notes instead of changing v1.
 - To change locked v1 scope, the user must explicitly say: "I am requesting a v1 contract change."
 - When that phrase is used, push back, identify which v1 acceptance test fails without the change, require a tradeoff or deferral, then update the v1 contract and decision log if the change is accepted.

@@ -44,7 +44,7 @@ Highlights:
 - Added a combat readability design and Slice 1 implementation plan for combat hulls, damage markers, wind bands, and lob-focused map prototypes.
 - Added a locked v1 playtest-alpha HTML contract for hosted private-room 2v2 scope, with change-control rules, V2 parking lot boundaries, and acceptance gates.
 - Added generated HTML reading copies for human-facing markdown docs via `npm run docs:html`, plus an HTML docs index.
-- Updated planning docs so `docs/V1_PLAYTEST_ALPHA.html` is the authority for current v1 scope while `docs/GAME_DESIGN_SPEC.md` remains broader product vision.
+- Recorded the first v1 scoping pass in `docs/V1_PLAYTEST_ALPHA.html` and kept broader product vision separate from current milestone scope.
 - Added v1 rule-contract tests and constants for locked roster, modes, seats, room settings, turn timing, reconnect grace, and preset phrase cooldown.
 - Added the v1 map pool contract with five map ids, deterministic random selection, spawn layouts, death planes, wind scales, and drawable preview surfaces.
 - Added generated v1 map previews at `docs/V1_MAP_PREVIEWS.html`, linked from the HTML docs index.
@@ -70,6 +70,7 @@ Highlights:
 - Made hosted/default playtest loads lighter and more diagnosable by defaulting to runtime match assets, making heavy concept/backdrop art explicit opt-in, and showing Phaser loading/failure status.
 - Added optimized WebP delivery assets and `npm run optimize:assets` so the normal hosted playtest serves the accepted runtime game art at much smaller transfer sizes while keeping PNG sources in the repo.
 - Added runtime config so playtest launch mode controls the Online Alpha panel instead of inferring it from the public URL hostname.
+- Reorganized the primary documentation around standard game-development roles: `README.md` as runbook, `docs/GDD.md` as the living Game Design Document, and `docs/PRODUCTION_PLAN.md` as the current v1 milestone scope authority.
 - Added horizontal camera side bounds so the battlefield remains centered when the visible camera frame is wider than the world instead of leaving all extra space on one side.
 - Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.
 - Changed projectile camera behavior to keep the battlefield stable while shots are readable, recentering only when a projectile leaves the readable frame.
