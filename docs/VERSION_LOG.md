@@ -97,6 +97,7 @@ Highlights:
 - Extracted local turn order/index, turn timer, wind, charge state, and committed state into `src/match/TurnController.ts`.
 - Extracted local mutable terrain ownership into `src/match/TerrainController.ts`, keeping active map/heightmap state, crater application, visible void top, and terrain slope reads out of `MatchScene` while deterministic terrain math remains in `shared/gameplay/terrain.ts`.
 - Extracted local vehicle placement application into `src/match/VehicleSettlementController.ts`, keeping shared settlement truth separate from mutable local vehicle updates, Void Dropped presentation assignment, and fall event text.
+- Extracted match preload planning, asset queueing, loading progress, and load-failure status into `src/match/MatchAssetLoader.ts`.
 - Adopted an HTML-first documentation workflow: markdown remains the canonical editable source, generated HTML is the preferred reading/review surface, local scripts must generate markdown reading copies without AI/manual conversion, and custom HTML is reserved for rich visual/review artifacts.
 - Added horizontal camera side bounds so the battlefield remains centered when the visible camera frame is wider than the world instead of leaving all extra space on one side.
 - Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.

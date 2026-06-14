@@ -7,6 +7,7 @@ test("match scene refactor exposes planned module boundaries", () => {
     "src/match/MatchScene.ts",
     "src/match/MatchTypes.ts",
     "src/match/MatchCameraController.ts",
+    "src/match/MatchAssetLoader.ts",
     "src/match/ImpactController.ts",
     "src/match/ProjectileController.ts",
     "src/match/RoundBuilder.ts",
@@ -32,6 +33,7 @@ test("match scene refactor exposes planned module boundaries", () => {
 test("planned match modules export their concrete boundaries", () => {
   const expectedExports = [
     ["src/match/MatchScene.ts", "export class MatchScene"],
+    ["src/match/MatchAssetLoader.ts", "export class MatchAssetLoader"],
     ["src/match/MatchCameraController.ts", "export class MatchCameraController"],
     ["src/match/ImpactController.ts", "export class ImpactController"],
     ["src/match/ProjectileController.ts", "export class ProjectileController"],
@@ -85,4 +87,15 @@ test("match scene delegates vehicle settlement to VehicleSettlementController", 
   assert.match(matchScene, /new VehicleSettlementController/);
   assert.doesNotMatch(matchScene, /settleVehicleOnTerrain/);
   assert.doesNotMatch(matchScene, /VehicleSettlementResult/);
+});
+
+test("match scene delegates asset preload status and image queueing to MatchAssetLoader", () => {
+  const matchScene = readFileSync("src/match/MatchScene.ts", "utf8");
+
+  assert.match(matchScene, /new MatchAssetLoader/);
+  assert.doesNotMatch(matchScene, /RUNTIME_IMAGE_ASSETS/);
+  assert.doesNotMatch(matchScene, /CONCEPT_IMAGE_ASSETS/);
+  assert.doesNotMatch(matchScene, /STYLE_REFERENCE_ASSET/);
+  assert.doesNotMatch(matchScene, /load\.on\("progress"/);
+  assert.doesNotMatch(matchScene, /load\.on\("loaderror"/);
 });

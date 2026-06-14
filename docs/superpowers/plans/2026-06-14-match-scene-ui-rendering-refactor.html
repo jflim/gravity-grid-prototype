@@ -103,6 +103,7 @@
 <li><code>src/main.ts</code>: Browser bootstrap only. Owns Phaser game config, viewport guard, online lobby mount, and CSS import.</li>
 <li><code>src/match/MatchScene.ts</code>: Phaser scene lifecycle and high-level match orchestration. Owns current local browser authority until online server authority replaces it.</li>
 <li><code>src/match/MatchTypes.ts</code>: Scene-local runtime state shapes shared by match UI/rendering modules.</li>
+<li><code>src/match/MatchAssetLoader.ts</code>: Match preload planning, runtime/concept/style-reference asset queueing, and loading/failure status presentation.</li>
 <li><code>src/match/MatchCameraController.ts</code>: Camera viewport, battlefield framing, and projectile recenter decisions.</li>
 <li><code>src/match/ImpactController.ts</code>: Local impact application for crater callback wiring, vehicle mutation, combat marker requests, settlement callback wiring, and shot-result text.</li>
 <li><code>src/match/ProjectileController.ts</code>: Local projectile launch, flight stepping, trail tracking, swept collision lookup, and out-of-bounds orchestration.</li>
@@ -534,6 +535,27 @@ git commit -m &quot;refactor: split match scene ui and renderers&quot;
 <li>[x] <strong>Step 3: Run focused verification</strong></li>
 </ul>
 <p>Run: <code>npm test -- src/match/VehicleSettlementController.test.ts src/match/architecture.test.ts</code></p>
+<p>Expected: PASS.</p>
+<h2>Task 16: Extract Match Asset Loader</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/match/MatchAssetLoader.ts</code></li>
+<li>Create: <code>src/match/MatchAssetLoader.test.ts</code></li>
+<li>Modify: <code>src/match/MatchScene.ts</code></li>
+<li>Modify: <code>src/match/architecture.test.ts</code></li>
+</ul>
+<ul>
+<li>[x] <strong>Step 1: Add failing tests for match preload ownership</strong></li>
+</ul>
+<p>Assert that the asset load plan includes runtime art by default, keeps concept/style-reference assets explicit opt-in, and that <code>MatchScene</code> no longer owns runtime/concept/style-reference asset constants or load-progress handlers.</p>
+<ul>
+<li>[x] <strong>Step 2: Move preload planning and status out of <code>MatchScene</code></strong></li>
+</ul>
+<p>Move runtime asset queueing, concept-preview asset queueing, style-reference asset queueing, preload progress text, load failure text, and load-complete cleanup into <code>MatchAssetLoader</code>.</p>
+<ul>
+<li>[x] <strong>Step 3: Run focused verification</strong></li>
+</ul>
+<p>Run: <code>npm test -- src/match/MatchAssetLoader.test.ts src/match/architecture.test.ts</code></p>
 <p>Expected: PASS.</p>
 <h2>Self-Review</h2>
 <ul>

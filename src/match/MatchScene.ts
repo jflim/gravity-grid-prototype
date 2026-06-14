@@ -72,6 +72,7 @@ import {
   shouldUseConceptPreviewAssets,
   shouldUseStyleReferenceBackground,
 } from "../demoLayout";
+import { buildMatchAssetLoadPlan, MatchAssetLoader } from "./MatchAssetLoader";
 import { ImpactController } from "./ImpactController";
 import { MatchCameraController } from "./MatchCameraController";
 import { MatchController } from "./MatchController";
@@ -100,11 +101,6 @@ import {
   playableMapById,
   type PlayableTerrain,
 } from "../playableMaps";
-import {
-  CONCEPT_IMAGE_ASSETS,
-  RUNTIME_IMAGE_ASSETS,
-  STYLE_REFERENCE_ASSET,
-} from "../runtimeAssets";
 const VOID_DROP_DISPLAY_SIZE = scaleBattlefieldDisplay({ width: 354, height: 212 });
 const VISIBLE_VOID_ZONE_HEIGHT = requiredVoidZoneHeight(VOID_DROP_DISPLAY_SIZE);
 const FALLBACK_VISIBLE_VOID_TOP_Y = WORLD_HEIGHT - VISIBLE_VOID_ZONE_HEIGHT;
@@ -123,6 +119,10 @@ const VEHICLE_SETTLEMENT_TUNING = {
 };
 const USE_UNIT_CONCEPT_PREVIEW = shouldUseConceptPreviewAssets(window.location.search);
 const USE_STYLE_REFERENCE_BACKGROUND = shouldUseStyleReferenceBackground(window.location.search);
+const MATCH_ASSET_LOAD_PLAN = buildMatchAssetLoadPlan({
+  includeConceptPreviewAssets: USE_UNIT_CONCEPT_PREVIEW,
+  includeStyleReferenceBackground: USE_STYLE_REFERENCE_BACKGROUND,
+});
 
 const EMPTY_MATCH_INPUT: MatchInputSnapshot = {
   aimUp: false,
@@ -231,66 +231,17 @@ export class MatchScene extends Phaser.Scene {
   private hudPortrait!: Phaser.GameObjects.Image;
   private commandDeck!: CommandDeck;
   private collisionZonesCheckbox?: HTMLInputElement;
-  private preloadStatusText?: Phaser.GameObjects.Text;
-  private preloadFailed = false;
+  private readonly assetLoader = new MatchAssetLoader({
+    scene: this,
+    plan: MATCH_ASSET_LOAD_PLAN,
+  });
 
   constructor() {
     super("GravityGridScene");
   }
 
   preload(): void {
-    this.mountPreloadStatus();
-
-    if (USE_STYLE_REFERENCE_BACKGROUND) {
-      this.load.image("style-reference", STYLE_REFERENCE_ASSET);
-    }
-
-    for (const [key, path] of Object.entries(RUNTIME_IMAGE_ASSETS)) {
-      this.load.image(key, path);
-    }
-
-    if (USE_UNIT_CONCEPT_PREVIEW) {
-      for (const [key, path] of Object.entries(CONCEPT_IMAGE_ASSETS)) {
-        this.load.image(key, path);
-      }
-    }
-  }
-
-  private mountPreloadStatus(): void {
-    this.preloadFailed = false;
-    this.preloadStatusText = this.add
-      .text(this.scale.width / 2, this.scale.height / 2, "Loading Gravity Canyon 0%", {
-        fontFamily: "Inter, Arial, sans-serif",
-        fontSize: "24px",
-        fontStyle: "700",
-        color: "#9ee8ff",
-        align: "center",
-        stroke: "#07111f",
-        strokeThickness: 5,
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(10000);
-
-    this.load.on("progress", (progress: number) => {
-      if (!this.preloadStatusText || this.preloadFailed) {
-        return;
-      }
-
-      this.preloadStatusText.setText(`Loading Gravity Canyon ${Math.round(progress * 100)}%`);
-    });
-
-    this.load.on("loaderror", (file: { key: string }) => {
-      this.preloadFailed = true;
-      this.preloadStatusText?.setText(`Could not load ${file.key}`);
-    });
-
-    this.load.once("complete", () => {
-      if (!this.preloadFailed) {
-        this.preloadStatusText?.destroy();
-        this.preloadStatusText = undefined;
-      }
-    });
+    this.assetLoader.preload();
   }
 
   create(): void {

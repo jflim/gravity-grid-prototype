@@ -142,6 +142,7 @@
 <li><code>src/main.ts</code> as browser bootstrap only: Phaser config, viewport guard, online lobby mount, and CSS import.</li>
 <li><code>src/match/MatchScene.ts</code> as the playable Phaser scene and local browser-authority orchestration surface.</li>
 <li><code>src/match/MatchTypes.ts</code> for match-scene runtime state shapes shared by UI/rendering modules.</li>
+<li><code>src/match/MatchAssetLoader.ts</code> for match preload planning, runtime/concept/style-reference asset queueing, and loading/failure status presentation.</li>
 <li><code>src/match/MatchController.ts</code> as the local match-flow bridge for active vehicle, alive/movable checks, alive teams, winners, and next-turn decisions.</li>
 <li><code>src/match/MatchCameraController.ts</code> for camera viewport, battlefield framing, and projectile recentering.</li>
 <li><code>src/match/ImpactController.ts</code> for local impact application: crater callback, vehicle damage mutation, knockback mutation, settlement callback, marker requests, and shot-result text.</li>
@@ -417,6 +418,8 @@ src/
 
     MatchInputController.ts
 
+    MatchAssetLoader.ts
+
     MatchCameraController.ts
 
     ImpactController.ts
@@ -581,6 +584,11 @@ src/
 <td>Change browser bootstrap, game config, viewport guard, or online lobby mount</td>
 <td><code>src/main.ts</code></td>
 <td>Startup belongs outside the Phaser scene so the playable scene remains game-focused.</td>
+</tr>
+<tr>
+<td>Change match preload status, normal runtime asset queueing, concept-preview asset opt-in, or style-reference asset opt-in</td>
+<td><code>src/match/MatchAssetLoader.ts</code> and <code>src/runtimeAssets.ts</code></td>
+<td>Asset loading is Phaser lifecycle work, but it should remain separate from match orchestration and combat truth.</td>
 </tr>
 <tr>
 <td>Change local active-vehicle, movable/alive, alive-team, winner, or next-turn bridge logic</td>

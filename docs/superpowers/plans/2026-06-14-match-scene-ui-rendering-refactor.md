@@ -15,6 +15,7 @@
 - `src/main.ts`: Browser bootstrap only. Owns Phaser game config, viewport guard, online lobby mount, and CSS import.
 - `src/match/MatchScene.ts`: Phaser scene lifecycle and high-level match orchestration. Owns current local browser authority until online server authority replaces it.
 - `src/match/MatchTypes.ts`: Scene-local runtime state shapes shared by match UI/rendering modules.
+- `src/match/MatchAssetLoader.ts`: Match preload planning, runtime/concept/style-reference asset queueing, and loading/failure status presentation.
 - `src/match/MatchCameraController.ts`: Camera viewport, battlefield framing, and projectile recenter decisions.
 - `src/match/ImpactController.ts`: Local impact application for crater callback wiring, vehicle mutation, combat marker requests, settlement callback wiring, and shot-result text.
 - `src/match/ProjectileController.ts`: Local projectile launch, flight stepping, trail tracking, swept collision lookup, and out-of-bounds orchestration.
@@ -422,6 +423,27 @@ Move shared settlement helper calls, mutable vehicle placement updates, Void Dro
 - [x] **Step 3: Run focused verification**
 
 Run: `npm test -- src/match/VehicleSettlementController.test.ts src/match/architecture.test.ts`
+Expected: PASS.
+
+## Task 16: Extract Match Asset Loader
+
+**Files:**
+- Create: `src/match/MatchAssetLoader.ts`
+- Create: `src/match/MatchAssetLoader.test.ts`
+- Modify: `src/match/MatchScene.ts`
+- Modify: `src/match/architecture.test.ts`
+
+- [x] **Step 1: Add failing tests for match preload ownership**
+
+Assert that the asset load plan includes runtime art by default, keeps concept/style-reference assets explicit opt-in, and that `MatchScene` no longer owns runtime/concept/style-reference asset constants or load-progress handlers.
+
+- [x] **Step 2: Move preload planning and status out of `MatchScene`**
+
+Move runtime asset queueing, concept-preview asset queueing, style-reference asset queueing, preload progress text, load failure text, and load-complete cleanup into `MatchAssetLoader`.
+
+- [x] **Step 3: Run focused verification**
+
+Run: `npm test -- src/match/MatchAssetLoader.test.ts src/match/architecture.test.ts`
 Expected: PASS.
 
 ## Self-Review
