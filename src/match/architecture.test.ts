@@ -7,6 +7,9 @@ test("match scene refactor exposes planned module boundaries", () => {
     "src/match/MatchScene.ts",
     "src/match/MatchView.ts",
     "src/match/MatchViewFactory.ts",
+    "src/match/MatchViewStateBuilder.ts",
+    "src/match/PlayerActionController.ts",
+    "src/match/ShotFlowController.ts",
     "src/match/MatchTypes.ts",
     "src/match/MatchCameraController.ts",
     "src/match/MatchAssetLoader.ts",
@@ -21,8 +24,13 @@ test("match scene refactor exposes planned module boundaries", () => {
     "src/match/VoidZoneController.ts",
     "src/match/ui/CollisionZonesToggle.ts",
     "src/match/ui/CommandDeck.ts",
+    "src/match/ui/CommandDeckAimDial.ts",
+    "src/match/ui/CommandDeckMeters.ts",
+    "src/match/ui/WindHud.ts",
     "src/match/rendering/TerrainRenderer.ts",
     "src/match/rendering/VehicleRenderer.ts",
+    "src/match/rendering/VehicleOverlayRenderer.ts",
+    "src/match/rendering/VehicleSpriteLayer.ts",
     "src/match/rendering/ProjectileRenderer.ts",
     "src/match/rendering/EffectsRenderer.ts",
     "src/match/rendering/CombatMarkerRenderer.ts",
@@ -39,6 +47,9 @@ test("planned match modules export their concrete boundaries", () => {
     ["src/match/MatchScene.ts", "export class MatchScene"],
     ["src/match/MatchView.ts", "export class MatchView"],
     ["src/match/MatchViewFactory.ts", "export function createMatchViewCollaborators"],
+    ["src/match/MatchViewStateBuilder.ts", "export class MatchViewStateBuilder"],
+    ["src/match/PlayerActionController.ts", "export class PlayerActionController"],
+    ["src/match/ShotFlowController.ts", "export class ShotFlowController"],
     ["src/match/MatchAssetLoader.ts", "export class MatchAssetLoader"],
     ["src/match/MatchCameraController.ts", "export class MatchCameraController"],
     ["src/match/ImpactController.ts", "export class ImpactController"],
@@ -52,8 +63,13 @@ test("planned match modules export their concrete boundaries", () => {
     ["src/match/VoidZoneController.ts", "export class VoidZoneController"],
     ["src/match/ui/CollisionZonesToggle.ts", "export class CollisionZonesToggle"],
     ["src/match/ui/CommandDeck.ts", "export class CommandDeck"],
+    ["src/match/ui/CommandDeckAimDial.ts", "export class CommandDeckAimDial"],
+    ["src/match/ui/CommandDeckMeters.ts", "export class CommandDeckMeters"],
+    ["src/match/ui/WindHud.ts", "export class WindHud"],
     ["src/match/rendering/TerrainRenderer.ts", "export class TerrainRenderer"],
     ["src/match/rendering/VehicleRenderer.ts", "export class VehicleRenderer"],
+    ["src/match/rendering/VehicleOverlayRenderer.ts", "export class VehicleOverlayRenderer"],
+    ["src/match/rendering/VehicleSpriteLayer.ts", "export class VehicleSpriteLayer"],
     ["src/match/rendering/ProjectileRenderer.ts", "export class ProjectileRenderer"],
     ["src/match/rendering/EffectsRenderer.ts", "export class EffectsRenderer"],
     ["src/match/rendering/CombatMarkerRenderer.ts", "export class CombatMarkerRenderer"],
@@ -145,4 +161,29 @@ test("match scene delegates presentation object setup and drawing to MatchView",
   assert.doesNotMatch(matchScene, /private drawVehicles/);
   assert.doesNotMatch(matchScene, /private drawProjectile/);
   assert.doesNotMatch(matchScene, /private drawHud/);
+});
+
+test("command deck delegates specialized HUD drawing to component helpers", () => {
+  const commandDeck = readFileSync("src/match/ui/CommandDeck.ts", "utf8");
+
+  assert.match(commandDeck, /new CommandDeckMeters/);
+  assert.match(commandDeck, /new CommandDeckAimDial/);
+  assert.match(commandDeck, /new WindHud/);
+  assert.doesNotMatch(commandDeck, /private drawLaunchPowerMeter/);
+  assert.doesNotMatch(commandDeck, /private drawMoveMeter/);
+  assert.doesNotMatch(commandDeck, /private drawPanelAimDial/);
+  assert.doesNotMatch(commandDeck, /private drawGlobalRoundStatus/);
+});
+
+test("vehicle renderer delegates sprite and overlay drawing to focused helpers", () => {
+  const vehicleRenderer = readFileSync("src/match/rendering/VehicleRenderer.ts", "utf8");
+
+  assert.match(vehicleRenderer, /new VehicleOverlayRenderer/);
+  assert.match(vehicleRenderer, /new VehicleSpriteLayer/);
+  assert.doesNotMatch(vehicleRenderer, /private drawCombatHull/);
+  assert.doesNotMatch(vehicleRenderer, /private drawHpBar/);
+  assert.doesNotMatch(vehicleRenderer, /private drawLabels/);
+  assert.doesNotMatch(vehicleRenderer, /private drawFootingMarker/);
+  assert.doesNotMatch(vehicleRenderer, /private characterPoseFor/);
+  assert.doesNotMatch(vehicleRenderer, /private orientedOffset/);
 });
