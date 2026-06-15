@@ -62,6 +62,7 @@ Current shared extraction includes:
 - `src/match/MatchCameraController.ts` for camera viewport, battlefield framing, and projectile recentering.
 - `src/match/ImpactController.ts` for local impact application: crater callback, vehicle damage mutation, knockback mutation, settlement callback, marker requests, and shot-result text.
 - `src/match/ProjectileController.ts` for local projectile launch, flight stepping, trail tracking, swept collision lookup, and out-of-bounds orchestration.
+- `src/match/RoundEventScheduler.ts` for delayed local turn/round event scheduling after misses, impacts, and round results.
 - `src/match/RoundBuilder.ts` for local round setup: terrain copy, spawn flattening, starting vehicle state, turn order, visible void top, and round-start message.
 - `src/match/TerrainController.ts` for local mutable terrain state: current playable map, active heightmap copy, surface sampling, crater application, visible void top, and vehicle sprite slope reads.
 - `src/match/TurnController.ts` for local turn order/index, turn timer, wind, charge state, and committed/round-over action state.
@@ -246,6 +247,7 @@ src/
     MatchCameraController.ts
     ImpactController.ts
     ProjectileController.ts
+    RoundEventScheduler.ts
     RoundBuilder.ts
     TerrainController.ts
     TurnController.ts
@@ -317,6 +319,7 @@ Current human editing map:
 | Change local vehicle placement application, Void Dropped presentation assignment, or fall event text after settlement | `src/match/VehicleSettlementController.ts`, `shared/gameplay/vehicleSettlement.ts`, and `src/match/VoidZoneController.ts` | The controller bridges shared settlement truth to mutable local vehicle state and visual Void Dropped presentation without putting that workflow back into `MatchScene`. |
 | Change alive checks, alive-team/winner calculation, or round-over decisions | `shared/match/rounds.ts` | Round outcome truth should be reusable by local browser authority and future server authority. |
 | Change next-turn selection, defeated-vehicle turn skipping, or turn-order wrapping | `shared/match/turns.ts` | Turn sequencing truth should be reusable by local browser authority and future server authority. |
+| Change delayed local turn/round transitions after misses, impacts, or round results | `src/match/RoundEventScheduler.ts` and `src/match/MatchScene.ts` call sites | Delayed Phaser timer ownership should stay testable and separate from match orchestration. |
 | Change browser bootstrap, game config, viewport guard, or online lobby mount | `src/main.ts` | Startup belongs outside the Phaser scene so the playable scene remains game-focused. |
 | Change match preload status, normal runtime asset queueing, concept-preview asset opt-in, or style-reference asset opt-in | `src/match/MatchAssetLoader.ts` and `src/runtimeAssets.ts` | Asset loading is Phaser lifecycle work, but it should remain separate from match orchestration and combat truth. |
 | Change local active-vehicle, movable/alive, alive-team, winner, or next-turn bridge logic | `src/match/MatchController.ts` | The scene uses a controller boundary before those decisions move to server authority. |

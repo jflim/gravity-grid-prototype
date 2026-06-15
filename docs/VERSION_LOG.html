@@ -87,7 +87,7 @@
   <main>
     <article>
       <div class="generated">
-        HTML reading copy generated from <a href="VERSION_LOG.md">docs/VERSION_LOG.md</a> on 2026-06-14.
+        HTML reading copy generated from <a href="VERSION_LOG.md">docs/VERSION_LOG.md</a> on 2026-06-15.
         Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Gravity Canyon Version Log</h1>
@@ -188,6 +188,7 @@
 <li>Extracted local mutable terrain ownership into <code>src/match/TerrainController.ts</code>, keeping active map/heightmap state, crater application, visible void top, and terrain slope reads out of <code>MatchScene</code> while deterministic terrain math remains in <code>shared/gameplay/terrain.ts</code>.</li>
 <li>Extracted local vehicle placement application into <code>src/match/VehicleSettlementController.ts</code>, keeping shared settlement truth separate from mutable local vehicle updates, Void Dropped presentation assignment, and fall event text.</li>
 <li>Extracted match preload planning, asset queueing, loading progress, and load-failure status into <code>src/match/MatchAssetLoader.ts</code>.</li>
+<li>Extracted delayed local turn/round event scheduling into <code>src/match/RoundEventScheduler.ts</code> so post-shot misses, impacts, and round result transitions no longer store Phaser timer ownership directly in <code>MatchScene</code>.</li>
 <li>Adopted an HTML-first documentation workflow: markdown remains the canonical editable source, generated HTML is the preferred reading/review surface, local scripts must generate markdown reading copies without AI/manual conversion, and custom HTML is reserved for rich visual/review artifacts.</li>
 <li>Added horizontal camera side bounds so the battlefield remains centered when the visible camera frame is wider than the world instead of leaving all extra space on one side.</li>
 <li>Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.</li>

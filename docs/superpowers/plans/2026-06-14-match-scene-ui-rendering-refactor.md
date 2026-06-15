@@ -19,6 +19,7 @@
 - `src/match/MatchCameraController.ts`: Camera viewport, battlefield framing, and projectile recenter decisions.
 - `src/match/ImpactController.ts`: Local impact application for crater callback wiring, vehicle mutation, combat marker requests, settlement callback wiring, and shot-result text.
 - `src/match/ProjectileController.ts`: Local projectile launch, flight stepping, trail tracking, swept collision lookup, and out-of-bounds orchestration.
+- `src/match/RoundEventScheduler.ts`: Delayed local turn/round event scheduling after misses, impacts, and round results.
 - `src/match/RoundBuilder.ts`: Local round setup for terrain copy, spawn flattening, starting vehicle state, turn order, and round-start text.
 - `src/match/TerrainController.ts`: Local mutable terrain state, current playable map, active heightmap, crater application, surface sampling, visible void top, and vehicle sprite slope reads.
 - `src/match/TurnController.ts`: Local turn order/index, turn timer, wind, charge state, and committed/round-over action state.
@@ -444,6 +445,27 @@ Move runtime asset queueing, concept-preview asset queueing, style-reference ass
 - [x] **Step 3: Run focused verification**
 
 Run: `npm test -- src/match/MatchAssetLoader.test.ts src/match/architecture.test.ts`
+Expected: PASS.
+
+## Task 17: Extract Round Event Scheduler
+
+**Files:**
+- Create: `src/match/RoundEventScheduler.ts`
+- Create: `src/match/RoundEventScheduler.test.ts`
+- Modify: `src/match/MatchScene.ts`
+- Modify: `src/match/architecture.test.ts`
+
+- [x] **Step 1: Add failing tests for delayed round-event ownership**
+
+Assert that queued events replace previous events, clearing removes pending events without running them, and the pending handle is released after a delayed action runs.
+
+- [x] **Step 2: Move delayed turn/round scheduling out of `MatchScene`**
+
+Move pending delayed event ownership, replacement, clear, and delayed callback release into `RoundEventScheduler`. Keep Phaser-specific `delayedCall` as the injected schedule function.
+
+- [x] **Step 3: Run focused verification**
+
+Run: `npm test -- src/match/RoundEventScheduler.test.ts src/match/architecture.test.ts`
 Expected: PASS.
 
 ## Self-Review

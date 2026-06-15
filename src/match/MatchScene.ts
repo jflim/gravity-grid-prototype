@@ -78,6 +78,7 @@ import { MatchCameraController } from "./MatchCameraController";
 import { MatchController } from "./MatchController";
 import { ProjectileController } from "./ProjectileController";
 import { RoundBuilder } from "./RoundBuilder";
+import { RoundEventScheduler } from "./RoundEventScheduler";
 import { TerrainController } from "./TerrainController";
 import { TurnController } from "./TurnController";
 import { VehicleGeometry } from "./VehicleGeometry";
@@ -186,7 +187,6 @@ export class MatchScene extends Phaser.Scene {
   private impactPreview?: ImpactPreview;
   private shotResult = "";
   private roundOver = false;
-  private pendingRoundEvent?: Phaser.Time.TimerEvent;
   private showCombatHulls = shouldShowCombatHulls(window.location.search);
 
   private inputController?: MatchInputController;
@@ -234,6 +234,9 @@ export class MatchScene extends Phaser.Scene {
   private readonly assetLoader = new MatchAssetLoader({
     scene: this,
     plan: MATCH_ASSET_LOAD_PLAN,
+  });
+  private readonly roundEventScheduler = new RoundEventScheduler({
+    schedule: (delayMs, action) => this.time.delayedCall(delayMs, action),
   });
 
   constructor() {
@@ -541,8 +544,7 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private startRound(): void {
-    this.pendingRoundEvent?.remove(false);
-    this.pendingRoundEvent = undefined;
+    this.roundEventScheduler.clear();
     this.roundOver = false;
     this.combatMarkerRenderer?.clear();
     const round = this.roundBuilder.build({
@@ -711,7 +713,7 @@ export class MatchScene extends Phaser.Scene {
     if (result.kind === "out-of-bounds") {
       this.shotResult = "Shot flew out of bounds.";
       this.projectile = undefined;
-      this.queueRoundEvent(700, () => this.advanceTurn());
+      this.roundEventScheduler.queue(700, () => this.advanceTurn());
       return;
     }
   }
@@ -739,11 +741,11 @@ export class MatchScene extends Phaser.Scene {
     this.drawWorld();
 
     if (this.winningTeam()) {
-      this.queueRoundEvent(900, () => this.endRound());
+      this.roundEventScheduler.queue(900, () => this.endRound());
       return;
     }
 
-    this.queueRoundEvent(900, () => this.advanceTurn());
+    this.roundEventScheduler.queue(900, () => this.advanceTurn());
   }
 
   private makeCrater(centerX: number, centerY: number, radius: number, depthFactor = 0.74): void {
@@ -803,8 +805,7 @@ export class MatchScene extends Phaser.Scene {
       return;
     }
 
-    this.pendingRoundEvent?.remove(false);
-    this.pendingRoundEvent = undefined;
+    this.roundEventScheduler.clear();
     this.roundOver = true;
     this.projectile = undefined;
     this.turnController.endRound();
@@ -814,15 +815,7 @@ export class MatchScene extends Phaser.Scene {
       ? `${winner.toUpperCase()} team wins the round. Next round starting...`
       : "Draw. New round starting...";
     this.drawWorld();
-    this.queueRoundEvent(2400, () => this.startRound());
-  }
-
-  private queueRoundEvent(delayMs: number, action: () => void): void {
-    this.pendingRoundEvent?.remove(false);
-    this.pendingRoundEvent = this.time.delayedCall(delayMs, () => {
-      this.pendingRoundEvent = undefined;
-      action();
-    });
+    this.roundEventScheduler.queue(2400, () => this.startRound());
   }
 
   private frameBattlefield(duration = 0): void {

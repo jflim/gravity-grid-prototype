@@ -87,7 +87,7 @@
   <main>
     <article>
       <div class="generated">
-        HTML reading copy generated from <a href="TECHNICAL_DESIGN.md">docs/TECHNICAL_DESIGN.md</a> on 2026-06-14.
+        HTML reading copy generated from <a href="TECHNICAL_DESIGN.md">docs/TECHNICAL_DESIGN.md</a> on 2026-06-15.
         Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Gravity Canyon Technical Design Document</h1>
@@ -147,6 +147,7 @@
 <li><code>src/match/MatchCameraController.ts</code> for camera viewport, battlefield framing, and projectile recentering.</li>
 <li><code>src/match/ImpactController.ts</code> for local impact application: crater callback, vehicle damage mutation, knockback mutation, settlement callback, marker requests, and shot-result text.</li>
 <li><code>src/match/ProjectileController.ts</code> for local projectile launch, flight stepping, trail tracking, swept collision lookup, and out-of-bounds orchestration.</li>
+<li><code>src/match/RoundEventScheduler.ts</code> for delayed local turn/round event scheduling after misses, impacts, and round results.</li>
 <li><code>src/match/RoundBuilder.ts</code> for local round setup: terrain copy, spawn flattening, starting vehicle state, turn order, visible void top, and round-start message.</li>
 <li><code>src/match/TerrainController.ts</code> for local mutable terrain state: current playable map, active heightmap copy, surface sampling, crater application, visible void top, and vehicle sprite slope reads.</li>
 <li><code>src/match/TurnController.ts</code> for local turn order/index, turn timer, wind, charge state, and committed/round-over action state.</li>
@@ -426,6 +427,8 @@ src/
 
     ProjectileController.ts
 
+    RoundEventScheduler.ts
+
     RoundBuilder.ts
 
     TerrainController.ts
@@ -579,6 +582,11 @@ src/
 <td>Change next-turn selection, defeated-vehicle turn skipping, or turn-order wrapping</td>
 <td><code>shared/match/turns.ts</code></td>
 <td>Turn sequencing truth should be reusable by local browser authority and future server authority.</td>
+</tr>
+<tr>
+<td>Change delayed local turn/round transitions after misses, impacts, or round results</td>
+<td><code>src/match/RoundEventScheduler.ts</code> and <code>src/match/MatchScene.ts</code> call sites</td>
+<td>Delayed Phaser timer ownership should stay testable and separate from match orchestration.</td>
 </tr>
 <tr>
 <td>Change browser bootstrap, game config, viewport guard, or online lobby mount</td>

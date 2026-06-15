@@ -10,6 +10,7 @@ test("match scene refactor exposes planned module boundaries", () => {
     "src/match/MatchAssetLoader.ts",
     "src/match/ImpactController.ts",
     "src/match/ProjectileController.ts",
+    "src/match/RoundEventScheduler.ts",
     "src/match/RoundBuilder.ts",
     "src/match/TerrainController.ts",
     "src/match/TurnController.ts",
@@ -37,6 +38,7 @@ test("planned match modules export their concrete boundaries", () => {
     ["src/match/MatchCameraController.ts", "export class MatchCameraController"],
     ["src/match/ImpactController.ts", "export class ImpactController"],
     ["src/match/ProjectileController.ts", "export class ProjectileController"],
+    ["src/match/RoundEventScheduler.ts", "export class RoundEventScheduler"],
     ["src/match/RoundBuilder.ts", "export class RoundBuilder"],
     ["src/match/TerrainController.ts", "export class TerrainController"],
     ["src/match/TurnController.ts", "export class TurnController"],
@@ -98,4 +100,12 @@ test("match scene delegates asset preload status and image queueing to MatchAsse
   assert.doesNotMatch(matchScene, /STYLE_REFERENCE_ASSET/);
   assert.doesNotMatch(matchScene, /load\.on\("progress"/);
   assert.doesNotMatch(matchScene, /load\.on\("loaderror"/);
+});
+
+test("match scene delegates delayed round events to RoundEventScheduler", () => {
+  const matchScene = readFileSync("src/match/MatchScene.ts", "utf8");
+
+  assert.match(matchScene, /new RoundEventScheduler/);
+  assert.doesNotMatch(matchScene, /pendingRoundEvent/);
+  assert.doesNotMatch(matchScene, /private queueRoundEvent/);
 });

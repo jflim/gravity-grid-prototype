@@ -87,7 +87,7 @@
   <main>
     <article>
       <div class="generated">
-        HTML reading copy generated from <a href="2026-06-14-match-scene-ui-rendering-refactor.md">docs/superpowers/plans/2026-06-14-match-scene-ui-rendering-refactor.md</a> on 2026-06-14.
+        HTML reading copy generated from <a href="2026-06-14-match-scene-ui-rendering-refactor.md">docs/superpowers/plans/2026-06-14-match-scene-ui-rendering-refactor.md</a> on 2026-06-15.
         Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Match Scene UI Rendering Refactor Implementation Plan</h1>
@@ -107,6 +107,7 @@
 <li><code>src/match/MatchCameraController.ts</code>: Camera viewport, battlefield framing, and projectile recenter decisions.</li>
 <li><code>src/match/ImpactController.ts</code>: Local impact application for crater callback wiring, vehicle mutation, combat marker requests, settlement callback wiring, and shot-result text.</li>
 <li><code>src/match/ProjectileController.ts</code>: Local projectile launch, flight stepping, trail tracking, swept collision lookup, and out-of-bounds orchestration.</li>
+<li><code>src/match/RoundEventScheduler.ts</code>: Delayed local turn/round event scheduling after misses, impacts, and round results.</li>
 <li><code>src/match/RoundBuilder.ts</code>: Local round setup for terrain copy, spawn flattening, starting vehicle state, turn order, and round-start text.</li>
 <li><code>src/match/TerrainController.ts</code>: Local mutable terrain state, current playable map, active heightmap, crater application, surface sampling, visible void top, and vehicle sprite slope reads.</li>
 <li><code>src/match/TurnController.ts</code>: Local turn order/index, turn timer, wind, charge state, and committed/round-over action state.</li>
@@ -556,6 +557,27 @@ git commit -m &quot;refactor: split match scene ui and renderers&quot;
 <li>[x] <strong>Step 3: Run focused verification</strong></li>
 </ul>
 <p>Run: <code>npm test -- src/match/MatchAssetLoader.test.ts src/match/architecture.test.ts</code></p>
+<p>Expected: PASS.</p>
+<h2>Task 17: Extract Round Event Scheduler</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/match/RoundEventScheduler.ts</code></li>
+<li>Create: <code>src/match/RoundEventScheduler.test.ts</code></li>
+<li>Modify: <code>src/match/MatchScene.ts</code></li>
+<li>Modify: <code>src/match/architecture.test.ts</code></li>
+</ul>
+<ul>
+<li>[x] <strong>Step 1: Add failing tests for delayed round-event ownership</strong></li>
+</ul>
+<p>Assert that queued events replace previous events, clearing removes pending events without running them, and the pending handle is released after a delayed action runs.</p>
+<ul>
+<li>[x] <strong>Step 2: Move delayed turn/round scheduling out of <code>MatchScene</code></strong></li>
+</ul>
+<p>Move pending delayed event ownership, replacement, clear, and delayed callback release into <code>RoundEventScheduler</code>. Keep Phaser-specific <code>delayedCall</code> as the injected schedule function.</p>
+<ul>
+<li>[x] <strong>Step 3: Run focused verification</strong></li>
+</ul>
+<p>Run: <code>npm test -- src/match/RoundEventScheduler.test.ts src/match/architecture.test.ts</code></p>
 <p>Expected: PASS.</p>
 <h2>Self-Review</h2>
 <ul>
