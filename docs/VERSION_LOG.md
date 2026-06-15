@@ -99,6 +99,7 @@ Highlights:
 - Extracted local vehicle placement application into `src/match/VehicleSettlementController.ts`, keeping shared settlement truth separate from mutable local vehicle updates, Void Dropped presentation assignment, and fall event text.
 - Extracted match preload planning, asset queueing, loading progress, and load-failure status into `src/match/MatchAssetLoader.ts`.
 - Extracted delayed local turn/round event scheduling into `src/match/RoundEventScheduler.ts` so post-shot misses, impacts, and round result transitions no longer store Phaser timer ownership directly in `MatchScene`.
+- Extracted the prototype collision-zone checkbox DOM into `src/match/ui/CollisionZonesToggle.ts`, keeping browser UI setup out of `MatchScene`.
 - Adopted an HTML-first documentation workflow: markdown remains the canonical editable source, generated HTML is the preferred reading/review surface, local scripts must generate markdown reading copies without AI/manual conversion, and custom HTML is reserved for rich visual/review artifacts.
 - Added horizontal camera side bounds so the battlefield remains centered when the visible camera frame is wider than the world instead of leaving all extra space on one side.
 - Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.

@@ -114,6 +114,7 @@
 <li><code>src/match/VehicleGeometry.ts</code>: Facing-aware combat hull centers and projectile hit-zone conversion shared by scene collision and vehicle rendering.</li>
 <li><code>src/match/VehicleSettlementController.ts</code>: Local vehicle placement application, shared settlement calls, Void Dropped presentation assignment, and fall event text.</li>
 <li><code>src/match/VoidZoneController.ts</code>: Visible void-zone geometry and Void Dropped presentation timing.</li>
+<li><code>src/match/ui/CollisionZonesToggle.ts</code>: DOM checkbox mounting and state synchronization for prototype collision-zone visibility.</li>
 <li><code>src/match/ui/CommandDeck.ts</code>: Fixed HUD command deck drawing, active unit info, launch meter, movement meter, and aim dial.</li>
 <li><code>src/match/rendering/TerrainRenderer.ts</code>: Terrain, void hazard, and map landmark drawing.</li>
 <li><code>src/match/rendering/VehicleRenderer.ts</code>: Vehicle/character sprite synchronization, combat hull overlays, labels, and footing markers.</li>
@@ -578,6 +579,27 @@ git commit -m &quot;refactor: split match scene ui and renderers&quot;
 <li>[x] <strong>Step 3: Run focused verification</strong></li>
 </ul>
 <p>Run: <code>npm test -- src/match/RoundEventScheduler.test.ts src/match/architecture.test.ts</code></p>
+<p>Expected: PASS.</p>
+<h2>Task 18: Extract Collision Zones Toggle</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/match/ui/CollisionZonesToggle.ts</code></li>
+<li>Create: <code>src/match/ui/CollisionZonesToggle.test.ts</code></li>
+<li>Modify: <code>src/match/MatchScene.ts</code></li>
+<li>Modify: <code>src/match/architecture.test.ts</code></li>
+</ul>
+<ul>
+<li>[x] <strong>Step 1: Add failing tests for collision-zone DOM ownership</strong></li>
+</ul>
+<p>Assert that the toggle mounts the checkbox, removes an existing toggle, calls the change callback, synchronizes checked state, and that <code>MatchScene</code> no longer owns raw DOM creation or checkbox storage.</p>
+<ul>
+<li>[x] <strong>Step 2: Move collision-zone checkbox DOM out of <code>MatchScene</code></strong></li>
+</ul>
+<p>Move label/input/span creation, old-toggle cleanup, change listener wiring, and checkbox checked-state updates into <code>CollisionZonesToggle</code>. Keep <code>MatchScene</code> responsible only for changing combat-hull visibility and redrawing the world.</p>
+<ul>
+<li>[x] <strong>Step 3: Run focused verification</strong></li>
+</ul>
+<p>Run: <code>npm test -- src/match/ui/CollisionZonesToggle.test.ts src/match/architecture.test.ts</code></p>
 <p>Expected: PASS.</p>
 <h2>Self-Review</h2>
 <ul>

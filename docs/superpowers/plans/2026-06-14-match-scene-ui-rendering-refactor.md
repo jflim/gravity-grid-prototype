@@ -26,6 +26,7 @@
 - `src/match/VehicleGeometry.ts`: Facing-aware combat hull centers and projectile hit-zone conversion shared by scene collision and vehicle rendering.
 - `src/match/VehicleSettlementController.ts`: Local vehicle placement application, shared settlement calls, Void Dropped presentation assignment, and fall event text.
 - `src/match/VoidZoneController.ts`: Visible void-zone geometry and Void Dropped presentation timing.
+- `src/match/ui/CollisionZonesToggle.ts`: DOM checkbox mounting and state synchronization for prototype collision-zone visibility.
 - `src/match/ui/CommandDeck.ts`: Fixed HUD command deck drawing, active unit info, launch meter, movement meter, and aim dial.
 - `src/match/rendering/TerrainRenderer.ts`: Terrain, void hazard, and map landmark drawing.
 - `src/match/rendering/VehicleRenderer.ts`: Vehicle/character sprite synchronization, combat hull overlays, labels, and footing markers.
@@ -466,6 +467,27 @@ Move pending delayed event ownership, replacement, clear, and delayed callback r
 - [x] **Step 3: Run focused verification**
 
 Run: `npm test -- src/match/RoundEventScheduler.test.ts src/match/architecture.test.ts`
+Expected: PASS.
+
+## Task 18: Extract Collision Zones Toggle
+
+**Files:**
+- Create: `src/match/ui/CollisionZonesToggle.ts`
+- Create: `src/match/ui/CollisionZonesToggle.test.ts`
+- Modify: `src/match/MatchScene.ts`
+- Modify: `src/match/architecture.test.ts`
+
+- [x] **Step 1: Add failing tests for collision-zone DOM ownership**
+
+Assert that the toggle mounts the checkbox, removes an existing toggle, calls the change callback, synchronizes checked state, and that `MatchScene` no longer owns raw DOM creation or checkbox storage.
+
+- [x] **Step 2: Move collision-zone checkbox DOM out of `MatchScene`**
+
+Move label/input/span creation, old-toggle cleanup, change listener wiring, and checkbox checked-state updates into `CollisionZonesToggle`. Keep `MatchScene` responsible only for changing combat-hull visibility and redrawing the world.
+
+- [x] **Step 3: Run focused verification**
+
+Run: `npm test -- src/match/ui/CollisionZonesToggle.test.ts src/match/architecture.test.ts`
 Expected: PASS.
 
 ## Self-Review

@@ -70,6 +70,7 @@ Current shared extraction includes:
 - `src/match/VehicleSettlementController.ts` for local vehicle placement application: calling shared settlement truth, mutating local vehicle state, assigning Void Dropped presentation state, and reporting fall events.
 - `src/match/MatchInputController.ts` for client-side input sampling without embedding keyboard state directly in the Phaser scene.
 - `src/match/VoidZoneController.ts` for visible void-zone geometry and Void Dropped presentation state/timing.
+- `src/match/ui/CollisionZonesToggle.ts` for the DOM checkbox that shows/hides prototype collision zones.
 - `src/match/ui/CommandDeck.ts` for the fixed command deck, launch meter, movement meter, active unit info, and wind badge.
 - `src/match/rendering/TerrainRenderer.ts` for terrain, visible void hazard, and map landmarks.
 - `src/match/rendering/VehicleRenderer.ts` for vehicle/character sprites, combat hull overlays, labels, HP bars, and active turn badges.
@@ -259,6 +260,7 @@ src/
       BrowserMatchAuthority.ts
       ServerMatchAuthority.ts
     ui/
+      CollisionZonesToggle.ts
       MatchHud.ts
       CommandDeck.ts
       UnitLabels.ts
@@ -329,6 +331,7 @@ Current human editing map:
 | Change camera viewport, battlefield framing, or projectile recentering | `src/match/MatchCameraController.ts` | Camera behavior is presentation orchestration, separate from combat truth and drawing. |
 | Change visible void-zone bounds, terrain breakthrough padding, Void Dropped target position, or Void Dropped fall-presentation timing | `src/match/VoidZoneController.ts` and `src/voidDropPresentation.ts` | Void-zone presentation should be isolated before the future falling-state fix separates falling from final Void Dropped truth. |
 | Change which keyboard keys mean move, aim, charge, restart, or collision overlay toggle | `src/match/MatchInputController.ts` and `src/match/MatchScene.ts` key setup | Input sampling is client-side controller work; gameplay helpers consume the sampled intent. |
+| Change the on-screen collision-zone checkbox DOM, label, checked state synchronization, or change callback | `src/match/ui/CollisionZonesToggle.ts` | Browser DOM controls should stay in UI modules so the Phaser scene can focus on match orchestration. |
 | Change fixed HUD command deck, launch-power meter, movement meter, aim dial, active unit info, or wind badge | `src/match/ui/CommandDeck.ts` | Command UI should not be mixed into scene lifecycle or combat logic. |
 | Change terrain, void-hazard, or map-landmark drawing | `src/match/rendering/TerrainRenderer.ts` | Terrain rendering is visual presentation over shared terrain state. |
 | Change vehicle sprites, labels, HP bars, combat hull overlays, active turn badge, or footing marker | `src/match/rendering/VehicleRenderer.ts` | Vehicle drawing should own Phaser sprite/text objects but not combat truth. |

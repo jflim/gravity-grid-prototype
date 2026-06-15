@@ -84,6 +84,7 @@ import { TurnController } from "./TurnController";
 import { VehicleGeometry } from "./VehicleGeometry";
 import { VehicleSettlementController } from "./VehicleSettlementController";
 import { VoidZoneController } from "./VoidZoneController";
+import { CollisionZonesToggle } from "./ui/CollisionZonesToggle";
 import { CommandDeck } from "./ui/CommandDeck";
 import { EffectsRenderer } from "./rendering/EffectsRenderer";
 import { CombatMarkerRenderer } from "./rendering/CombatMarkerRenderer";
@@ -230,7 +231,7 @@ export class MatchScene extends Phaser.Scene {
   private movementLabelText!: Phaser.GameObjects.Text;
   private hudPortrait!: Phaser.GameObjects.Image;
   private commandDeck!: CommandDeck;
-  private collisionZonesCheckbox?: HTMLInputElement;
+  private collisionZonesToggle?: CollisionZonesToggle;
   private readonly assetLoader = new MatchAssetLoader({
     scene: this,
     plan: MATCH_ASSET_LOAD_PLAN,
@@ -401,7 +402,13 @@ export class MatchScene extends Phaser.Scene {
       worldUiScale: () => readableWorldUiScale(this.cameras.main.zoom),
     });
 
-    this.mountCollisionZonesToggle();
+    this.collisionZonesToggle = new CollisionZonesToggle({
+      document,
+      mountTarget: document.body,
+      initialVisible: this.showCombatHulls,
+      onChange: (visible) => this.setCollisionZonesVisible(visible),
+    });
+    this.collisionZonesToggle.mount();
     this.startRound();
     this.cameraController.updateViewport();
     this.scale.on("resize", () => {
@@ -510,35 +517,9 @@ export class MatchScene extends Phaser.Scene {
     }
   }
 
-  private mountCollisionZonesToggle(): void {
-    document.querySelector("[data-collision-zones-toggle]")?.remove();
-
-    const label = document.createElement("label");
-    label.className = "collision-zones-toggle";
-    label.dataset.collisionZonesToggle = "true";
-
-    const input = document.createElement("input");
-    input.type = "checkbox";
-    input.checked = this.showCombatHulls;
-    input.setAttribute("aria-label", "Show collision zones");
-
-    const text = document.createElement("span");
-    text.textContent = "Collision zones";
-
-    input.addEventListener("change", () => {
-      this.setCollisionZonesVisible(input.checked);
-    });
-
-    label.append(input, text);
-    document.body.append(label);
-    this.collisionZonesCheckbox = input;
-  }
-
   private setCollisionZonesVisible(visible: boolean): void {
     this.showCombatHulls = visible;
-    if (this.collisionZonesCheckbox) {
-      this.collisionZonesCheckbox.checked = visible;
-    }
+    this.collisionZonesToggle?.setVisible(visible);
     this.shotResult = `Collision zones ${visible ? "shown" : "hidden"}.`;
     this.drawWorld();
   }

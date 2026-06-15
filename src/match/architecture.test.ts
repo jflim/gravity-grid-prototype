@@ -17,6 +17,7 @@ test("match scene refactor exposes planned module boundaries", () => {
     "src/match/VehicleGeometry.ts",
     "src/match/VehicleSettlementController.ts",
     "src/match/VoidZoneController.ts",
+    "src/match/ui/CollisionZonesToggle.ts",
     "src/match/ui/CommandDeck.ts",
     "src/match/rendering/TerrainRenderer.ts",
     "src/match/rendering/VehicleRenderer.ts",
@@ -45,6 +46,7 @@ test("planned match modules export their concrete boundaries", () => {
     ["src/match/VehicleGeometry.ts", "export class VehicleGeometry"],
     ["src/match/VehicleSettlementController.ts", "export class VehicleSettlementController"],
     ["src/match/VoidZoneController.ts", "export class VoidZoneController"],
+    ["src/match/ui/CollisionZonesToggle.ts", "export class CollisionZonesToggle"],
     ["src/match/ui/CommandDeck.ts", "export class CommandDeck"],
     ["src/match/rendering/TerrainRenderer.ts", "export class TerrainRenderer"],
     ["src/match/rendering/VehicleRenderer.ts", "export class VehicleRenderer"],
@@ -108,4 +110,13 @@ test("match scene delegates delayed round events to RoundEventScheduler", () => 
   assert.match(matchScene, /new RoundEventScheduler/);
   assert.doesNotMatch(matchScene, /pendingRoundEvent/);
   assert.doesNotMatch(matchScene, /private queueRoundEvent/);
+});
+
+test("match scene delegates collision-zone DOM controls to CollisionZonesToggle", () => {
+  const matchScene = readFileSync("src/match/MatchScene.ts", "utf8");
+
+  assert.match(matchScene, /new CollisionZonesToggle/);
+  assert.doesNotMatch(matchScene, /document\.createElement/);
+  assert.doesNotMatch(matchScene, /querySelector\("\[data-collision-zones-toggle\]"\)/);
+  assert.doesNotMatch(matchScene, /collisionZonesCheckbox/);
 });

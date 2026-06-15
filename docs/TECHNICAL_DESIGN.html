@@ -155,6 +155,7 @@
 <li><code>src/match/VehicleSettlementController.ts</code> for local vehicle placement application: calling shared settlement truth, mutating local vehicle state, assigning Void Dropped presentation state, and reporting fall events.</li>
 <li><code>src/match/MatchInputController.ts</code> for client-side input sampling without embedding keyboard state directly in the Phaser scene.</li>
 <li><code>src/match/VoidZoneController.ts</code> for visible void-zone geometry and Void Dropped presentation state/timing.</li>
+<li><code>src/match/ui/CollisionZonesToggle.ts</code> for the DOM checkbox that shows/hides prototype collision zones.</li>
 <li><code>src/match/ui/CommandDeck.ts</code> for the fixed command deck, launch meter, movement meter, active unit info, and wind badge.</li>
 <li><code>src/match/rendering/TerrainRenderer.ts</code> for terrain, visible void hazard, and map landmarks.</li>
 <li><code>src/match/rendering/VehicleRenderer.ts</code> for vehicle/character sprites, combat hull overlays, labels, HP bars, and active turn badges.</li>
@@ -451,6 +452,8 @@ src/
 
     ui/
 
+      CollisionZonesToggle.ts
+
       MatchHud.ts
 
       CommandDeck.ts
@@ -632,6 +635,11 @@ src/
 <td>Change which keyboard keys mean move, aim, charge, restart, or collision overlay toggle</td>
 <td><code>src/match/MatchInputController.ts</code> and <code>src/match/MatchScene.ts</code> key setup</td>
 <td>Input sampling is client-side controller work; gameplay helpers consume the sampled intent.</td>
+</tr>
+<tr>
+<td>Change the on-screen collision-zone checkbox DOM, label, checked state synchronization, or change callback</td>
+<td><code>src/match/ui/CollisionZonesToggle.ts</code></td>
+<td>Browser DOM controls should stay in UI modules so the Phaser scene can focus on match orchestration.</td>
 </tr>
 <tr>
 <td>Change fixed HUD command deck, launch-power meter, movement meter, aim dial, active unit info, or wind badge</td>
