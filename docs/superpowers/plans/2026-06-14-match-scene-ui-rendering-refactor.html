@@ -102,6 +102,8 @@
 <ul>
 <li><code>src/main.ts</code>: Browser bootstrap only. Owns Phaser game config, viewport guard, online lobby mount, and CSS import.</li>
 <li><code>src/match/MatchScene.ts</code>: Phaser scene lifecycle and high-level match orchestration. Owns current local browser authority until online server authority replaces it.</li>
+<li><code>src/match/MatchView.ts</code>: Pure presentation facade for world/HUD draw coordination, combat marker forwarding, collision-zone checked-state synchronization, and background creation delegation.</li>
+<li><code>src/match/MatchViewFactory.ts</code>: Phaser construction boundary for graphics/text/image objects, renderer wiring, command deck wiring, collision-zone toggle construction, and background collaborators.</li>
 <li><code>src/match/MatchTypes.ts</code>: Scene-local runtime state shapes shared by match UI/rendering modules.</li>
 <li><code>src/match/MatchAssetLoader.ts</code>: Match preload planning, runtime/concept/style-reference asset queueing, and loading/failure status presentation.</li>
 <li><code>src/match/MatchCameraController.ts</code>: Camera viewport, battlefield framing, and projectile recenter decisions.</li>
@@ -600,6 +602,28 @@ git commit -m &quot;refactor: split match scene ui and renderers&quot;
 <li>[x] <strong>Step 3: Run focused verification</strong></li>
 </ul>
 <p>Run: <code>npm test -- src/match/ui/CollisionZonesToggle.test.ts src/match/architecture.test.ts</code></p>
+<p>Expected: PASS.</p>
+<h2>Task 19: Extract MatchView Facade</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/match/MatchView.ts</code></li>
+<li>Create: <code>src/match/MatchViewFactory.ts</code></li>
+<li>Create: <code>src/match/MatchView.test.ts</code></li>
+<li>Modify: <code>src/match/MatchScene.ts</code></li>
+<li>Modify: <code>src/match/architecture.test.ts</code></li>
+</ul>
+<ul>
+<li>[x] <strong>Step 1: Add failing tests for the presentation boundary</strong></li>
+</ul>
+<p>Assert that <code>MatchView</code> and <code>MatchViewFactory</code> exist, <code>MatchScene</code> constructs <code>MatchView</code>, and <code>MatchScene</code> no longer directly owns renderer construction, command deck construction, collision toggle construction, Phaser graphics creation, Phaser text creation, Phaser image creation, or private draw helper methods.</p>
+<ul>
+<li>[x] <strong>Step 2: Move presentation setup and draw coordination out of <code>MatchScene</code></strong></li>
+</ul>
+<p>Move world/HUD draw coordination, combat-marker lifecycle forwarding, collision-zone checked-state synchronization, and background creation delegation into <code>MatchView</code>. Move Phaser-specific graphics/text/image construction, renderer wiring, command deck wiring, collision-zone DOM object construction, and background collaborator construction into <code>MatchViewFactory</code>.</p>
+<ul>
+<li>[x] <strong>Step 3: Run focused verification</strong></li>
+</ul>
+<p>Run: <code>npm test -- src/match/MatchView.test.ts src/match/architecture.test.ts</code></p>
 <p>Expected: PASS.</p>
 <h2>Self-Review</h2>
 <ul>

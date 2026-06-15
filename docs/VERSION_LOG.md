@@ -81,6 +81,7 @@ Highlights:
 - Extracted vehicle terrain placement, localized post-impact slope nudging, and Void Dropped truth resolution into `shared/gameplay/vehicleSettlement.ts`, leaving the visual fall target and suspension animation in Phaser.
 - Extracted alive checks, alive-team/winner calculation, and round-over decisions into `shared/match/rounds.ts`, plus next-turn selection into `shared/match/turns.ts`, leaving Phaser responsible for timers and drawing.
 - Split the local Phaser client into bootstrap, match scene, match controller, camera controller, command deck UI, and focused terrain/vehicle/projectile/effects renderers so human development no longer starts from a monolithic `src/main.ts`.
+- Extracted `src/match/MatchView.ts` as a pure presentation facade and `src/match/MatchViewFactory.ts` as the Phaser-specific construction boundary, reducing `MatchScene` to lifecycle and match-flow orchestration.
 - Extracted floating combat marker presentation into `src/match/rendering/CombatMarkerRenderer.ts` so direct/splash/shove/KO/Void Dropped text feedback is no longer owned by `MatchScene`.
 - Extracted visible void-zone geometry and Void Dropped presentation timing into `src/match/VoidZoneController.ts`, setting up a cleaner future fix for gravity-driven falling before final void collision.
 - Extracted local round setup into `src/match/RoundBuilder.ts` so map terrain copying, spawn flattening, initial unit state, turn order, and round-start text are testable without reading `MatchScene`.

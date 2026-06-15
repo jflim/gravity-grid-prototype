@@ -56,6 +56,8 @@ Current shared extraction includes:
 - `shared/match/turns.ts` for Phaser-free next-turn selection that skips defeated vehicles while preserving the match turn order.
 - `src/main.ts` as browser bootstrap only: Phaser config, viewport guard, online lobby mount, and CSS import.
 - `src/match/MatchScene.ts` as the playable Phaser scene and local browser-authority orchestration surface.
+- `src/match/MatchView.ts` as the match presentation facade for draw coordination, combat-marker lifecycle forwarding, collision-zone UI synchronization, and HUD/world render state handoff.
+- `src/match/MatchViewFactory.ts` for Phaser-specific graphics/text/image construction, renderer wiring, command deck wiring, collision-zone DOM control construction, and background creation collaborators.
 - `src/match/MatchTypes.ts` for match-scene runtime state shapes shared by UI/rendering modules.
 - `src/match/MatchAssetLoader.ts` for match preload planning, runtime/concept/style-reference asset queueing, and loading/failure status presentation.
 - `src/match/MatchController.ts` as the local match-flow bridge for active vehicle, alive/movable checks, alive teams, winners, and next-turn decisions.
@@ -242,6 +244,8 @@ server/
 src/
   match/
     MatchScene.ts
+    MatchView.ts
+    MatchViewFactory.ts
     MatchController.ts
     MatchInputController.ts
     MatchAssetLoader.ts
@@ -331,6 +335,8 @@ Current human editing map:
 | Change camera viewport, battlefield framing, or projectile recentering | `src/match/MatchCameraController.ts` | Camera behavior is presentation orchestration, separate from combat truth and drawing. |
 | Change visible void-zone bounds, terrain breakthrough padding, Void Dropped target position, or Void Dropped fall-presentation timing | `src/match/VoidZoneController.ts` and `src/voidDropPresentation.ts` | Void-zone presentation should be isolated before the future falling-state fix separates falling from final Void Dropped truth. |
 | Change which keyboard keys mean move, aim, charge, restart, or collision overlay toggle | `src/match/MatchInputController.ts` and `src/match/MatchScene.ts` key setup | Input sampling is client-side controller work; gameplay helpers consume the sampled intent. |
+| Change match presentation state handoff, draw ordering, command-deck draw input, combat-marker lifecycle forwarding, or collision-zone checked-state synchronization | `src/match/MatchView.ts` | `MatchView` is the presentation facade. It coordinates UI/renderers without owning gameplay truth, camera framing, or Phaser object construction. |
+| Change Phaser graphics/text/image creation for the match, renderer construction, command deck construction, background layer creation, or collision-zone DOM object construction | `src/match/MatchViewFactory.ts` and focused modules under `src/match/rendering/` and `src/match/ui/` | Phaser-specific setup should stay out of `MatchScene`, while individual renderers/UI modules keep their own drawing details. |
 | Change the on-screen collision-zone checkbox DOM, label, checked state synchronization, or change callback | `src/match/ui/CollisionZonesToggle.ts` | Browser DOM controls should stay in UI modules so the Phaser scene can focus on match orchestration. |
 | Change fixed HUD command deck, launch-power meter, movement meter, aim dial, active unit info, or wind badge | `src/match/ui/CommandDeck.ts` | Command UI should not be mixed into scene lifecycle or combat logic. |
 | Change terrain, void-hazard, or map-landmark drawing | `src/match/rendering/TerrainRenderer.ts` | Terrain rendering is visual presentation over shared terrain state. |

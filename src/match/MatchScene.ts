@@ -59,7 +59,6 @@ import {
 import {
   scaleBattlefieldDisplay,
 } from "../combatPresentation";
-import { COLLISION_ZONE_OVERLAY_DEPTH } from "../collisionOverlay";
 import {
   DRAMATIC_VOID_DROP_FALL_SECONDS,
   requiredVoidZoneHeight,
@@ -67,7 +66,6 @@ import {
 import {
   getGameViewportSize,
   isSupportedGameViewport,
-  readableWorldUiScale,
   shouldShowCombatHulls,
   shouldUseConceptPreviewAssets,
   shouldUseStyleReferenceBackground,
@@ -84,13 +82,8 @@ import { TurnController } from "./TurnController";
 import { VehicleGeometry } from "./VehicleGeometry";
 import { VehicleSettlementController } from "./VehicleSettlementController";
 import { VoidZoneController } from "./VoidZoneController";
-import { CollisionZonesToggle } from "./ui/CollisionZonesToggle";
-import { CommandDeck } from "./ui/CommandDeck";
-import { EffectsRenderer } from "./rendering/EffectsRenderer";
-import { CombatMarkerRenderer } from "./rendering/CombatMarkerRenderer";
-import { ProjectileRenderer } from "./rendering/ProjectileRenderer";
-import { TerrainRenderer } from "./rendering/TerrainRenderer";
-import { VehicleRenderer } from "./rendering/VehicleRenderer";
+import { MatchView } from "./MatchView";
+import { createMatchViewCollaborators } from "./MatchViewFactory";
 import { MatchInputController, type MatchInputSnapshot } from "./MatchInputController";
 import type {
   ImpactPreview,
@@ -207,31 +200,7 @@ export class MatchScene extends Phaser.Scene {
     surfaceAt: (x) => this.surfaceAt(x),
     createVoidDropPresentation: (input) => this.voidZoneController.createVoidDropPresentation(input),
   });
-  private combatMarkerRenderer?: CombatMarkerRenderer;
-  private effectsRenderer?: EffectsRenderer;
-  private terrainRenderer?: TerrainRenderer;
-  private projectileRenderer?: ProjectileRenderer;
-  private vehicleRenderer?: VehicleRenderer;
-
-  private terrainGfx!: Phaser.GameObjects.Graphics;
-  private vehicleGfx!: Phaser.GameObjects.Graphics;
-  private collisionGfx!: Phaser.GameObjects.Graphics;
-  private projectileGfx!: Phaser.GameObjects.Graphics;
-  private hudGfx!: Phaser.GameObjects.Graphics;
-  private aimGfx!: Phaser.GameObjects.Graphics;
-  private impactGfx!: Phaser.GameObjects.Graphics;
-  private hudText!: Phaser.GameObjects.Text;
-  private rosterText!: Phaser.GameObjects.Text;
-  private eventText!: Phaser.GameObjects.Text;
-  private timerText!: Phaser.GameObjects.Text;
-  private windText!: Phaser.GameObjects.Text;
-  private powerLabelText!: Phaser.GameObjects.Text;
-  private powerHintText!: Phaser.GameObjects.Text;
-  private aimDialText!: Phaser.GameObjects.Text;
-  private movementLabelText!: Phaser.GameObjects.Text;
-  private hudPortrait!: Phaser.GameObjects.Image;
-  private commandDeck!: CommandDeck;
-  private collisionZonesToggle?: CollisionZonesToggle;
+  private matchView?: MatchView;
   private readonly assetLoader = new MatchAssetLoader({
     scene: this,
     plan: MATCH_ASSET_LOAD_PLAN,
@@ -259,162 +228,38 @@ export class MatchScene extends Phaser.Scene {
       frameBottomWorldY: () => this.visibleVoidBottomY(),
     });
 
-    this.createBackground();
-    this.terrainGfx = this.add.graphics();
-    this.aimGfx = this.add.graphics();
-    this.impactGfx = this.add.graphics().setDepth(9);
-    this.vehicleGfx = this.add.graphics();
-    this.collisionGfx = this.add.graphics().setDepth(COLLISION_ZONE_OVERLAY_DEPTH);
-    this.projectileGfx = this.add.graphics();
-    this.hudGfx = this.add.graphics().setScrollFactor(0).setDepth(50);
-    this.effectsRenderer = new EffectsRenderer(this.aimGfx, this.impactGfx, {
-      worldHeight: WORLD_HEIGHT,
-      moveMinX: MOVE_MIN_X,
-      moveMaxX: MOVE_MAX_X,
-      movePixelsPerUnit: MOVE_PIXELS_PER_UNIT,
-      impactPreviewSeconds: IMPACT_PREVIEW_SECONDS,
+    this.matchView = new MatchView({
+      collaborators: createMatchViewCollaborators({
+        scene: this,
+        document,
+        mountTarget: document.body,
+        worldWidth: WORLD_WIDTH,
+        worldHeight: WORLD_HEIGHT,
+        worldRenderHeight: WORLD_RENDER_HEIGHT,
+        projectileRadius: PROJECTILE_RADIUS,
+        showCombatHulls: this.showCombatHulls,
+        useUnitConceptPreview: USE_UNIT_CONCEPT_PREVIEW,
+        useStyleReferenceBackground: USE_STYLE_REFERENCE_BACKGROUND,
+        moveMinX: MOVE_MIN_X,
+        moveMaxX: MOVE_MAX_X,
+        movePixelsPerUnit: MOVE_PIXELS_PER_UNIT,
+        impactPreviewSeconds: IMPACT_PREVIEW_SECONDS,
+        combatMarkerSeconds: COMBAT_MARKER_SECONDS,
+        surfaceAt: (x) => this.surfaceAt(x),
+        onCollisionZonesVisibleChange: (visible) => this.setCollisionZonesVisible(visible),
+      }),
+      worldWidth: WORLD_WIDTH,
+      terrainStep: TERRAIN_STEP,
       surfaceAt: (x) => this.surfaceAt(x),
+      isMovable: (vehicle) => this.isMovable(vehicle),
     });
-    this.terrainRenderer = new TerrainRenderer(this.terrainGfx);
-    this.projectileRenderer = new ProjectileRenderer(this.projectileGfx, PROJECTILE_RADIUS);
-    this.vehicleRenderer = new VehicleRenderer({
-      scene: this,
-      gfx: this.vehicleGfx,
-      collisionGfx: this.collisionGfx,
-      useUnitConceptPreview: USE_UNIT_CONCEPT_PREVIEW,
-      surfaceAt: (x) => this.surfaceAt(x),
-    });
-
-    const textStyle: Phaser.Types.GameObjects.Text.TextStyle = {
-      fontFamily: "Inter, Arial, sans-serif",
-      fontSize: "16px",
-      color: "#f8fbff",
-      stroke: "#10131b",
-      strokeThickness: 4,
-    };
-
-    this.hudText = this.add.text(18, 16, "", textStyle).setScrollFactor(0).setDepth(51);
-    this.rosterText = this.add.text(18, 70, "", textStyle).setScrollFactor(0).setDepth(51);
-    this.eventText = this.add
-      .text(18, 118, "", {
-        ...textStyle,
-        fontSize: "15px",
-        color: "#ffd166",
-      })
-      .setScrollFactor(0)
-      .setDepth(51);
-    this.timerText = this.add
-      .text(this.scale.width / 2, 12, "", {
-        fontFamily: "Inter, Arial, sans-serif",
-        fontSize: "42px",
-        color: "#ffffff",
-        stroke: "#0b1020",
-        strokeThickness: 8,
-        align: "center",
-      })
-      .setOrigin(0.5, 0)
-      .setScrollFactor(0)
-      .setDepth(52);
-    this.windText = this.add
-      .text(24, 16, "", {
-        fontFamily: "Inter, Arial, sans-serif",
-        fontSize: "30px",
-        fontStyle: "700",
-        color: "#8be9ff",
-        stroke: "#0b1020",
-        strokeThickness: 7,
-      })
-      .setOrigin(0, 0)
-      .setScrollFactor(0)
-      .setDepth(52);
-    this.powerLabelText = this.add
-      .text(this.scale.width / 2, this.scale.height - 88, "SHOT POWER", {
-        fontFamily: "Inter, Arial, sans-serif",
-        fontSize: "16px",
-        fontStyle: "700",
-        color: "#fff4c2",
-        stroke: "#0b1020",
-        strokeThickness: 4,
-      })
-      .setOrigin(0.5, 0)
-      .setScrollFactor(0)
-      .setDepth(52);
-    this.powerHintText = this.add
-      .text(this.scale.width / 2, this.scale.height - 44, "", {
-        fontFamily: "Consolas, 'SFMono-Regular', monospace",
-        fontSize: "13px",
-        fontStyle: "700",
-        color: "#fff4c2",
-        stroke: "#0b1020",
-        strokeThickness: 4,
-      })
-      .setOrigin(0, 0)
-      .setScrollFactor(0)
-      .setDepth(52);
-    this.aimDialText = this.add
-      .text(this.scale.width - 142, 24, "", {
-        fontFamily: "Inter, Arial, sans-serif",
-        fontSize: "15px",
-        fontStyle: "700",
-        color: "#f8fbff",
-        stroke: "#0b1020",
-        strokeThickness: 4,
-        align: "center",
-      })
-      .setOrigin(0.5, 0)
-      .setScrollFactor(0)
-      .setDepth(52);
-    this.movementLabelText = this.add
-      .text(this.scale.width / 2, this.scale.height - 88, "MOVE UNITS", {
-        fontFamily: "Inter, Arial, sans-serif",
-        fontSize: "16px",
-        fontStyle: "700",
-        color: "#b9ffd0",
-        stroke: "#0b1020",
-        strokeThickness: 4,
-      })
-      .setOrigin(0, 0)
-      .setScrollFactor(0)
-      .setDepth(52);
-    this.hudPortrait = this.add
-      .image(0, 0, "nova-vehicle")
-      .setScrollFactor(0)
-      .setDepth(52)
-      .setOrigin(0.5);
-    this.commandDeck = new CommandDeck({
-      scene: this,
-      hudGfx: this.hudGfx,
-      hudText: this.hudText,
-      rosterText: this.rosterText,
-      eventText: this.eventText,
-      timerText: this.timerText,
-      windText: this.windText,
-      powerLabelText: this.powerLabelText,
-      powerHintText: this.powerHintText,
-      aimDialText: this.aimDialText,
-      movementLabelText: this.movementLabelText,
-      hudPortrait: this.hudPortrait,
-    });
-    this.combatMarkerRenderer = new CombatMarkerRenderer({
-      scene: this,
-      durationSeconds: COMBAT_MARKER_SECONDS,
-      unitConceptPreview: USE_UNIT_CONCEPT_PREVIEW,
-      worldUiScale: () => readableWorldUiScale(this.cameras.main.zoom),
-    });
-
-    this.collisionZonesToggle = new CollisionZonesToggle({
-      document,
-      mountTarget: document.body,
-      initialVisible: this.showCombatHulls,
-      onChange: (visible) => this.setCollisionZonesVisible(visible),
-    });
-    this.collisionZonesToggle.mount();
+    this.matchView.createBackground();
     this.startRound();
     this.cameraController.updateViewport();
     this.scale.on("resize", () => {
       this.cameraController?.updateViewport();
       this.frameBattlefield(0);
-      this.drawHud();
+      this.drawWorld();
     });
   }
 
@@ -426,7 +271,7 @@ export class MatchScene extends Phaser.Scene {
     const dt = Math.min(deltaMs / 1000, 0.033);
     const input = this.inputController?.sample() ?? EMPTY_MATCH_INPUT;
     this.updateImpactPreview(dt);
-    this.combatMarkerRenderer?.update(dt);
+    this.matchView?.update(dt);
     this.voidZoneController.updatePresentations(this.vehicles, dt);
 
     if (input.resetPressed) {
@@ -485,41 +330,9 @@ export class MatchScene extends Phaser.Scene {
     });
   }
 
-  private createBackground(): void {
-    this.add.rectangle(WORLD_WIDTH / 2, WORLD_RENDER_HEIGHT / 2, WORLD_WIDTH, WORLD_RENDER_HEIGHT, 0x111827);
-    if (USE_STYLE_REFERENCE_BACKGROUND && this.textures.exists("style-reference")) {
-      const reference = this.add
-        .image(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, "style-reference")
-        .setDisplaySize(WORLD_WIDTH, WORLD_HEIGHT)
-        .setAlpha(0.08);
-      reference.setTint(0x8bd7ff);
-    }
-
-    const horizon = this.add.graphics();
-    horizon.fillStyle(0x171f32, 0.45);
-    horizon.fillRect(0, 390, WORLD_WIDTH, WORLD_HEIGHT - 390);
-    horizon.lineStyle(3, 0x42d9ff, 0.2);
-    horizon.lineBetween(0, 390, WORLD_WIDTH, 390);
-
-    const lowerLayer = this.add.graphics();
-    lowerLayer.lineStyle(2, 0x27506f, 0.14);
-    for (let y = 548; y < WORLD_RENDER_HEIGHT; y += 46) {
-      lowerLayer.lineBetween(0, y, WORLD_WIDTH, y + Math.sin(y * 0.023) * 18);
-    }
-    lowerLayer.lineStyle(2, 0xffd166, 0.08);
-    for (let x = 80; x < WORLD_WIDTH; x += 170) {
-      lowerLayer.lineBetween(x, 540, x - 90, WORLD_RENDER_HEIGHT);
-    }
-    lowerLayer.fillStyle(0xdff9ff, 0.18);
-    for (let x = 52; x < WORLD_WIDTH; x += 137) {
-      const y = 575 + ((x * 37) % 260);
-      lowerLayer.fillRect(x, y, 4, 18);
-    }
-  }
-
   private setCollisionZonesVisible(visible: boolean): void {
     this.showCombatHulls = visible;
-    this.collisionZonesToggle?.setVisible(visible);
+    this.matchView?.setCollisionZonesVisible(visible);
     this.shotResult = `Collision zones ${visible ? "shown" : "hidden"}.`;
     this.drawWorld();
   }
@@ -527,7 +340,7 @@ export class MatchScene extends Phaser.Scene {
   private startRound(): void {
     this.roundEventScheduler.clear();
     this.roundOver = false;
-    this.combatMarkerRenderer?.clear();
+    this.matchView?.clearCombatMarkers();
     const round = this.roundBuilder.build({
       playableTerrain: this.buildDefaultDemoMap(),
       units: DEMO_UNIT_DEFINITIONS,
@@ -712,7 +525,7 @@ export class MatchScene extends Phaser.Scene {
       },
       settleVehicles: (options) => this.vehicleSettlementController.settleVehicles(this.vehicles, options),
       addCombatMarker: (vehicle, kind, label, slot) => {
-        this.combatMarkerRenderer?.addForVehicle(vehicle, kind, label, slot);
+        this.matchView?.addCombatMarkerForVehicle(vehicle, kind, label, slot);
       },
     });
 
@@ -843,80 +656,33 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private drawWorld(): void {
-    this.drawTerrain();
-    this.drawAim();
-    this.drawImpactPreview();
-    this.drawVehicles();
-    this.drawProjectile();
-    this.drawHud();
-  }
-
-  private drawTerrain(): void {
-    this.terrainRenderer?.draw({
-      currentDemoMap: this.terrainController.currentMap,
-      worldWidth: WORLD_WIDTH,
-      terrainStep: TERRAIN_STEP,
+    this.matchView?.draw({
+      vehicles: this.vehicles,
+      activeVehicle: this.activeVehicle(),
+      projectile: this.projectile,
+      impactPreview: this.impactPreview,
+      currentMap: this.terrainController.currentMap,
       visibleVoidTopY: this.terrainController.visibleVoidTopY,
       visibleVoidBottomY: this.visibleVoidBottomY(),
       terrainPlatformBottomY: this.terrainPlatformBottomY(),
       terrainBreakthroughY: this.terrainBreakthroughY(),
-      surfaceAt: (x) => this.surfaceAt(x),
-    });
-  }
-  private drawAim(): void {
-    const active = this.activeVehicle();
-    this.effectsRenderer?.drawAim({
-      active,
-      canAct: Boolean(
-        active &&
-          this.isMovable(active) &&
-          !this.projectile &&
-          !this.roundOver &&
-          !this.turnController.isCommitted,
-      ),
+      showCombatHulls: this.showCombatHulls,
+      roundOver: this.roundOver,
+      turnCommitted: this.turnController.isCommitted,
+      charging: this.turnController.isCharging,
+      charge: this.turnController.charge,
+      turnTime: this.turnController.turnTime,
+      cameraZoom: this.cameras.main.zoom,
+      shotResult: this.shotResult,
+      roundComplete: this.roundOver || this.aliveTeams().size <= 1 || Boolean(this.winningTeam()),
+      windLabel: this.windLabel(),
     });
   }
 
-  private drawImpactPreview(): void {
-    this.effectsRenderer?.drawImpactPreview(this.impactPreview);
-  }
   private vehicleHitZoneFor(vehicle: VehicleState): VehicleHitZone {
     return this.vehicleGeometry.hitZoneFor(vehicle);
   }
 
-  private drawVehicles(): void {
-    this.vehicleRenderer?.draw({
-      vehicles: this.vehicles,
-      activeVehicle: this.activeVehicle(),
-      projectileActive: Boolean(this.projectile),
-      roundOver: this.roundOver,
-      turnCommitted: this.turnController.isCommitted,
-      showCombatHulls: this.showCombatHulls,
-      charging: this.turnController.isCharging,
-      turnTime: this.turnController.turnTime,
-      cameraZoom: this.cameras.main.zoom,
-      isMovable: (vehicle) => this.isMovable(vehicle),
-    });
-  }
-  private drawProjectile(): void {
-    this.projectileRenderer?.draw(this.projectile);
-  }
-
-  private drawHud(): void {
-    const active = this.activeVehicle() ?? this.vehicles[0]!;
-    const winner = this.winningTeam();
-    const roundComplete = this.roundOver || this.aliveTeams().size <= 1;
-
-    this.commandDeck.draw({
-      active: active && !roundComplete && !this.turnController.isCommitted ? active : undefined,
-      roundComplete: roundComplete || Boolean(winner),
-      shotResult: this.shotResult,
-      projectileInFlight: Boolean(this.projectile),
-      charging: this.turnController.isCharging,
-      charge: this.turnController.charge,
-      windLabel: this.windLabel(),
-    });
-  }
   private windLabel(): string {
     if (Math.abs(this.turnController.wind) < 0.12) {
       return "calm";

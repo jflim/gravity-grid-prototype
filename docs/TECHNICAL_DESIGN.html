@@ -141,6 +141,8 @@
 <li><code>shared/match/turns.ts</code> for Phaser-free next-turn selection that skips defeated vehicles while preserving the match turn order.</li>
 <li><code>src/main.ts</code> as browser bootstrap only: Phaser config, viewport guard, online lobby mount, and CSS import.</li>
 <li><code>src/match/MatchScene.ts</code> as the playable Phaser scene and local browser-authority orchestration surface.</li>
+<li><code>src/match/MatchView.ts</code> as the match presentation facade for draw coordination, combat-marker lifecycle forwarding, collision-zone UI synchronization, and HUD/world render state handoff.</li>
+<li><code>src/match/MatchViewFactory.ts</code> for Phaser-specific graphics/text/image construction, renderer wiring, command deck wiring, collision-zone DOM control construction, and background creation collaborators.</li>
 <li><code>src/match/MatchTypes.ts</code> for match-scene runtime state shapes shared by UI/rendering modules.</li>
 <li><code>src/match/MatchAssetLoader.ts</code> for match preload planning, runtime/concept/style-reference asset queueing, and loading/failure status presentation.</li>
 <li><code>src/match/MatchController.ts</code> as the local match-flow bridge for active vehicle, alive/movable checks, alive teams, winners, and next-turn decisions.</li>
@@ -416,6 +418,10 @@ src/
 
     MatchScene.ts
 
+    MatchView.ts
+
+    MatchViewFactory.ts
+
     MatchController.ts
 
     MatchInputController.ts
@@ -635,6 +641,16 @@ src/
 <td>Change which keyboard keys mean move, aim, charge, restart, or collision overlay toggle</td>
 <td><code>src/match/MatchInputController.ts</code> and <code>src/match/MatchScene.ts</code> key setup</td>
 <td>Input sampling is client-side controller work; gameplay helpers consume the sampled intent.</td>
+</tr>
+<tr>
+<td>Change match presentation state handoff, draw ordering, command-deck draw input, combat-marker lifecycle forwarding, or collision-zone checked-state synchronization</td>
+<td><code>src/match/MatchView.ts</code></td>
+<td><code>MatchView</code> is the presentation facade. It coordinates UI/renderers without owning gameplay truth, camera framing, or Phaser object construction.</td>
+</tr>
+<tr>
+<td>Change Phaser graphics/text/image creation for the match, renderer construction, command deck construction, background layer creation, or collision-zone DOM object construction</td>
+<td><code>src/match/MatchViewFactory.ts</code> and focused modules under <code>src/match/rendering/</code> and <code>src/match/ui/</code></td>
+<td>Phaser-specific setup should stay out of <code>MatchScene</code>, while individual renderers/UI modules keep their own drawing details.</td>
 </tr>
 <tr>
 <td>Change the on-screen collision-zone checkbox DOM, label, checked state synchronization, or change callback</td>

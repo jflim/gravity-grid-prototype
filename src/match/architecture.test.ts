@@ -5,6 +5,8 @@ import test from "node:test";
 test("match scene refactor exposes planned module boundaries", () => {
   const expectedFiles = [
     "src/match/MatchScene.ts",
+    "src/match/MatchView.ts",
+    "src/match/MatchViewFactory.ts",
     "src/match/MatchTypes.ts",
     "src/match/MatchCameraController.ts",
     "src/match/MatchAssetLoader.ts",
@@ -35,6 +37,8 @@ test("match scene refactor exposes planned module boundaries", () => {
 test("planned match modules export their concrete boundaries", () => {
   const expectedExports = [
     ["src/match/MatchScene.ts", "export class MatchScene"],
+    ["src/match/MatchView.ts", "export class MatchView"],
+    ["src/match/MatchViewFactory.ts", "export function createMatchViewCollaborators"],
     ["src/match/MatchAssetLoader.ts", "export class MatchAssetLoader"],
     ["src/match/MatchCameraController.ts", "export class MatchCameraController"],
     ["src/match/ImpactController.ts", "export class ImpactController"],
@@ -112,11 +116,33 @@ test("match scene delegates delayed round events to RoundEventScheduler", () => 
   assert.doesNotMatch(matchScene, /private queueRoundEvent/);
 });
 
-test("match scene delegates collision-zone DOM controls to CollisionZonesToggle", () => {
+test("match scene delegates collision-zone UI through MatchView", () => {
   const matchScene = readFileSync("src/match/MatchScene.ts", "utf8");
 
-  assert.match(matchScene, /new CollisionZonesToggle/);
+  assert.match(matchScene, /new MatchView/);
   assert.doesNotMatch(matchScene, /document\.createElement/);
   assert.doesNotMatch(matchScene, /querySelector\("\[data-collision-zones-toggle\]"\)/);
   assert.doesNotMatch(matchScene, /collisionZonesCheckbox/);
+});
+
+test("match scene delegates presentation object setup and drawing to MatchView", () => {
+  const matchScene = readFileSync("src/match/MatchScene.ts", "utf8");
+
+  assert.match(matchScene, /new MatchView/);
+  assert.doesNotMatch(matchScene, /new TerrainRenderer/);
+  assert.doesNotMatch(matchScene, /new VehicleRenderer/);
+  assert.doesNotMatch(matchScene, /new ProjectileRenderer/);
+  assert.doesNotMatch(matchScene, /new EffectsRenderer/);
+  assert.doesNotMatch(matchScene, /new CombatMarkerRenderer/);
+  assert.doesNotMatch(matchScene, /new CommandDeck/);
+  assert.doesNotMatch(matchScene, /new CollisionZonesToggle/);
+  assert.doesNotMatch(matchScene, /this\.add\.graphics\(/);
+  assert.doesNotMatch(matchScene, /this\.add\.text\(/);
+  assert.doesNotMatch(matchScene, /this\.add\.image\(/);
+  assert.doesNotMatch(matchScene, /private drawTerrain/);
+  assert.doesNotMatch(matchScene, /private drawAim/);
+  assert.doesNotMatch(matchScene, /private drawImpactPreview/);
+  assert.doesNotMatch(matchScene, /private drawVehicles/);
+  assert.doesNotMatch(matchScene, /private drawProjectile/);
+  assert.doesNotMatch(matchScene, /private drawHud/);
 });
