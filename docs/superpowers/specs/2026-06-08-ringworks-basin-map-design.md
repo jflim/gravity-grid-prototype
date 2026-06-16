@@ -25,14 +25,14 @@ Keep the stable map id `ring-basin` for compatibility, but change the displayed 
 Ringworks Basin should use three playable land spans:
 
 - Left canyon bowl and high lip for the red seats.
-- Central broken ring bridge/island as a destructible shot-lane obstacle.
+- Central broken ring cap as a destructible shot-lane obstacle.
 - Right canyon bowl and high lip for the blue seats.
 
-The central ring bridge creates two large readable air gaps instead of one tiny slot or one empty middle. These gaps should be wide enough to visually fit the current large pilot-plus-vehicle unit scale.
+The central ring cap creates two large readable air gaps instead of one tiny slot or one empty middle. These gaps should be wide enough to visually fit the current large pilot-plus-vehicle unit scale. Side bowls should have visible troughs below the lower seats, while high-lip shelves should be broad enough to stage from instead of reading as thin spikes.
 
 ## Weapon Reads
 
-- Nova / Canyon Breaker: exposed high lips and bridge edges can be carved into Void Drop pressure, but should require setup rather than one free shot.
+- Nova / Canyon Breaker: exposed high lips and ring-cap edges can be carved into Void Drop pressure, but should require setup rather than one free shot.
 - Vesper / Gravity Well: pull impact points near bridge lips and chasm edges should threaten positioning without adding map-specific gravity rules.
 - Kaelii / Skip Roller: side bowls, crater lips, and curved approaches should create obvious rolling routes into trapped or cratered enemies.
 - Perlah / Sunspike Cluster: compact side pockets and the central bridge/island should give cluster shots meaningful area targets.
@@ -50,6 +50,6 @@ The central ring bridge creates two large readable air gaps instead of one tiny 
 
 - Tests prove Ringworks Basin still belongs to the five-map v1 pool under the existing `ring-basin` id.
 - Tests prove the default demo uses Ringworks Basin.
-- Tests prove the center has a playable/destructible bridge/island at the middle and void gaps on both sides that exceed the scaled match sprite footprint with buffer.
-- Tests prove the side terrain has lower bowls and high lips that support weapon-readable play.
+- Tests prove the center has a playable/destructible ring cap at the middle and void gaps on both sides that exceed the scaled match sprite footprint with buffer.
+- Tests prove the side terrain has lower bowl troughs and high-lip staging shelves that support weapon-readable play.
 - Generated HTML map docs reflect the new shape and review notes.

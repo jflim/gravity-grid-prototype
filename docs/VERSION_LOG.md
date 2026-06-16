@@ -115,6 +115,7 @@ Highlights:
 - Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.
 - Changed projectile camera behavior to keep the battlefield stable while shots are readable, recentering only when a projectile leaves the readable frame.
 - Converted the default `ring-basin` demo pass into Ringworks Basin: a B+C weapon-readable novelty map with side bowls/high lips, two readable bridge gaps, and a central destructible ring bridge island.
+- Tuned Ringworks Basin map feel with deeper side bowl troughs, broader high-lip staging shelves, updated four-seat spawns, and a central destructible ring cap so the default map has clearer bunge/positioning targets without adding new mechanics.
 - Added a combat scale and void readability pass: smaller match-view full-unit art, scaled combat hulls/frames/labels, active contact cue, persistent void danger layer, and distinct HP KO versus Void Dropped presentation.
 - Removed non-gameplay character frames, made combat hull overlays visible by default for collision tuning, widened Ringworks Basin bridge gaps against the scaled sprite footprint, and moved Void Dropped display into wide nearby void runs.
 - Allowed self-damage from weapon effects while preserving allied friendly-fire immunity.

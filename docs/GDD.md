@@ -349,7 +349,7 @@ V1 uses a fixed map pool with known spawn points for 1v1 and 2v2. The host can s
 
 ### Current Key Map
 
-Ringworks Basin is the current local demo default. Its design direction is B+C: weapon-readable terrain with enough novelty to motivate continued play. It uses side bowls/high lips, bridge gaps, a central destructible ring bridge island, and faint ring landmarks.
+Ringworks Basin is the current local demo default. Its design direction is B+C: weapon-readable terrain with enough novelty to motivate continued play. It uses deeper side bowls, high-lip staging shelves, readable bridge gaps, a central destructible ring cap, and faint ring landmarks.
 
 ## 16. User Interface And UX
 

@@ -34,7 +34,7 @@ First playable local artillery prototype for Gravity Canyon.
 - Terrain can be blasted through into a visible void beneath the stage, with a persistent danger layer anchored to the current map's lowest playable terrain.
 - Temporary impact rings showing crater size and splash damage range.
 - Floating combat markers call out direct hits, splash hits, knockback, HP KOs, and Void Dropped eliminations.
-- Round starts now use the playable Ringworks Basin v1 map, with exact four-seat spawns, two readable bridge gaps, a central ring bridge island, and weapon-readable side bowls/lips for map-feel testing.
+- Round starts now use the playable Ringworks Basin v1 map, with exact four-seat spawns, two readable bridge gaps, a central destructible ring cap, deeper side bowls, and high-lip staging shelves for map-feel testing.
 - Prototype Bunger shot behavior: larger/deeper excavation, knockback, slope sliding, and Void Dropped KOs, now tuned toward precise 2-3 shot ring-outs.
 - Localized post-impact vehicle settling so distant vehicles are not randomly displaced by unrelated craters.
 - Splash/direct damage, HP bars, turn switching, timeout, round win detection, and automatic round reset.

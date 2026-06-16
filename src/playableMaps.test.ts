@@ -48,12 +48,25 @@ test("Ringworks Basin playable terrain uses readable bridge gaps and weapon terr
   assert.ok(surfaceAt(playable, 1880) - surfaceAt(playable, 1750) >= 90, "right bowl and lip create a visible rolling/crater setup");
 });
 
+test("Ringworks Basin side bowls have readable troughs and high-lip staging shelves", () => {
+  const map = playableMapById("ring-basin");
+  const playable = buildPlayableTerrain(map, { voidSurfaceY: VOID_SURFACE_Y });
+
+  assert.ok(surfaceAt(playable, 600) - surfaceAt(playable, 430) >= 36, "red side has a lower bowl trough after the lower spawn");
+  assert.ok(surfaceAt(playable, 600) - surfaceAt(playable, 730) >= 130, "red high lip towers over the side bowl");
+  assert.ok(Math.abs(surfaceAt(playable, 700) - surfaceAt(playable, 765)) <= 34, "red high lip has enough readable staging shelf");
+
+  assert.ok(surfaceAt(playable, 1840) - surfaceAt(playable, 1970) >= 36, "blue side has a lower bowl trough before the lower spawn");
+  assert.ok(surfaceAt(playable, 1840) - surfaceAt(playable, 1715) >= 130, "blue high lip towers over the side bowl");
+  assert.ok(Math.abs(surfaceAt(playable, 1685) - surfaceAt(playable, 1750)) <= 34, "blue high lip has enough readable staging shelf");
+});
+
 test("Ringworks Basin gaps are wider than the scaled match sprite footprint", () => {
   const novaMatchSprite = scaleBattlefieldDisplay({ width: 354, height: 212 });
   const minimumReadableGap = novaMatchSprite.width + 112;
   const gaps = [
-    { name: "left bridge gap", width: 1100 - 740 },
-    { name: "right bridge gap", width: 1660 - 1300 },
+    { name: "left bridge gap", width: 1135 - 805 },
+    { name: "right bridge gap", width: 1595 - 1265 },
   ];
 
   for (const gap of gaps) {
