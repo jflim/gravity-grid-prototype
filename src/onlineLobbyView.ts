@@ -45,6 +45,11 @@ export function canLocalPlayerEditSlot(role: ClientRole, slotId: ClientSlotId): 
   return false;
 }
 
+export function canLocalPlayerUseLobbyControls(role: ClientRole, phase: string): boolean {
+  const isCaptain = role === "red-captain" || role === "blue-captain";
+  return isCaptain && (phase === "lobby" || phase === "ready");
+}
+
 export function modeLabel(mode: string): string {
   return mode === "1v1" ? "1v1" : "2v2";
 }

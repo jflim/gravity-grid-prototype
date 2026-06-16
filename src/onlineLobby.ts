@@ -1,6 +1,7 @@
 import { resolveOnlineServerUrl } from "./onlineServerUrl";
 import {
   canLocalPlayerEditSlot,
+  canLocalPlayerUseLobbyControls,
   lobbyStatusText,
   localRoleLabel,
   modeLabel,
@@ -249,6 +250,7 @@ export function mountOnlineLobby() {
     const redCaptain = snapshot.players.find((player) => player.sessionId === snapshot.redCaptainSessionId);
     const blueCaptain = snapshot.players.find((player) => player.sessionId === snapshot.blueCaptainSessionId);
     const localRole = localPlayer?.role ?? "spectator";
+    const canUseLobbyControls = canLocalPlayerUseLobbyControls(localRole, snapshot.phase);
     if (localPlayer) {
       localReady = localPlayer.ready;
     }
@@ -262,10 +264,10 @@ export function mountOnlineLobby() {
     })}`;
 
     readyButton!.textContent = localReady ? "Unready" : "Ready";
-    readyButton!.disabled = localRole === "spectator" || snapshot.phase !== "lobby";
+    readyButton!.disabled = !canUseLobbyControls;
     if (modeSelect) {
       modeSelect.value = snapshot.mode === "1v1" ? "1v1" : "2v2";
-      modeSelect.disabled = localRole !== "red-captain" || snapshot.phase !== "lobby";
+      modeSelect.disabled = localRole !== "red-captain" || !canUseLobbyControls;
     }
 
     if (localPlayer && nameplateSelect) {
@@ -279,7 +281,7 @@ export function mountOnlineLobby() {
     }
 
     renderPlayers(snapshot, room?.sessionId ?? "");
-    renderSlots(snapshot, localRole);
+    renderSlots(snapshot, localRole, canUseLobbyControls);
     renderCombat(snapshot);
   }
 
@@ -305,7 +307,7 @@ export function mountOnlineLobby() {
       .join("");
   }
 
-  function renderSlots(snapshot: RoomSnapshot, localRole: string) {
+  function renderSlots(snapshot: RoomSnapshot, localRole: string, canUseLobbyControls: boolean) {
     if (!slotList) {
       return;
     }
@@ -314,7 +316,7 @@ export function mountOnlineLobby() {
       .filter((slot) => slot.active)
       .sort((left, right) => slotSortValue(left.slotId) - slotSortValue(right.slotId))
       .map((slot) => {
-        const editable = snapshot.phase === "lobby" && canLocalPlayerEditSlot(localRole, slot.slotId);
+        const editable = canUseLobbyControls && canLocalPlayerEditSlot(localRole, slot.slotId);
         const options = CHARACTER_OPTIONS.map((characterId) => {
           const selected = characterId === slot.characterId ? " selected" : "";
           return `<option value="${characterId}"${selected}>${capitalize(characterId)}</option>`;

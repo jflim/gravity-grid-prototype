@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  canLocalPlayerUseLobbyControls,
   canLocalPlayerEditSlot,
   lobbyStatusText,
   localRoleLabel,
@@ -21,6 +22,14 @@ test("canLocalPlayerEditSlot follows captain team ownership", () => {
   assert.equal(canLocalPlayerEditSlot("red-captain", "blue-1"), false);
   assert.equal(canLocalPlayerEditSlot("blue-captain", "blue-2"), true);
   assert.equal(canLocalPlayerEditSlot("spectator", "red-1"), false);
+});
+
+test("canLocalPlayerUseLobbyControls keeps captains interactive during ready phase", () => {
+  assert.equal(canLocalPlayerUseLobbyControls("red-captain", "ready"), true);
+  assert.equal(canLocalPlayerUseLobbyControls("blue-captain", "ready"), true);
+  assert.equal(canLocalPlayerUseLobbyControls("red-captain", "lobby"), true);
+  assert.equal(canLocalPlayerUseLobbyControls("spectator", "ready"), false);
+  assert.equal(canLocalPlayerUseLobbyControls("red-captain", "combat-preview"), false);
 });
 
 test("modeLabel and slotLabel keep lobby wording short", () => {
