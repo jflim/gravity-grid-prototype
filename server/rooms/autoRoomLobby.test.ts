@@ -24,6 +24,18 @@ test("assignCaptainRoles makes the first player red, second blue, and extras spe
   assert.equal(roles.get("spectator-session"), "spectator");
 });
 
+test("assignCaptainRoles uses joinOrder rather than input order", () => {
+  const roles = assignCaptainRoles([
+    { sessionId: "spectator-session", joinOrder: 3, ready: false },
+    { sessionId: "blue-session", joinOrder: 2, ready: false },
+    { sessionId: "red-session", joinOrder: 1, ready: false },
+  ]);
+
+  assert.equal(roles.get("red-session"), "red-captain");
+  assert.equal(roles.get("blue-session"), "blue-captain");
+  assert.equal(roles.get("spectator-session"), "spectator");
+});
+
 test("assignCaptainRoles promotes the earliest remaining spectator when a captain leaves", () => {
   const roles = assignCaptainRoles([
     { sessionId: "blue-session", joinOrder: 2, ready: false },
@@ -68,6 +80,40 @@ test("sanitizeCharacterPick keeps valid roster picks and falls back per slot", (
 });
 
 test("isReadyToAutoStart requires both captains ready and valid active slot picks", () => {
+  assert.equal(
+    isReadyToAutoStart({
+      mode: "2v2",
+      redCaptainSessionId: "",
+      blueCaptainSessionId: "blue-session",
+      redReady: true,
+      blueReady: true,
+      selectedCharacters: {
+        "red-1": "nova",
+        "blue-1": "vesper",
+        "red-2": "kaelii",
+        "blue-2": "perlah",
+      },
+    }),
+    false,
+  );
+
+  assert.equal(
+    isReadyToAutoStart({
+      mode: "2v2",
+      redCaptainSessionId: "red-session",
+      blueCaptainSessionId: "",
+      redReady: true,
+      blueReady: true,
+      selectedCharacters: {
+        "red-1": "nova",
+        "blue-1": "vesper",
+        "red-2": "kaelii",
+        "blue-2": "perlah",
+      },
+    }),
+    false,
+  );
+
   assert.equal(
     isReadyToAutoStart({
       mode: "2v2",
