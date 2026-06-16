@@ -9,6 +9,7 @@ import {
   ownerSessionIdForSlot,
   sanitizeCharacterPick,
 } from "./autoRoomLobby.js";
+import { GravityCanyonState, LobbySlotState } from "../schema/GravityCanyonState.js";
 
 const players = [
   { sessionId: "red-session", joinOrder: 1, ready: false },
@@ -164,4 +165,29 @@ test("isReadyToAutoStart requires both captains ready and valid active slot pick
     }),
     false,
   );
+});
+
+test("GravityCanyonState exposes captain lobby defaults", () => {
+  const state = new GravityCanyonState();
+
+  assert.equal(state.mode, "2v2");
+  assert.equal(state.redCaptainSessionId, "");
+  assert.equal(state.blueCaptainSessionId, "");
+  assert.equal(state.spectatorSessionIds.length, 0);
+  assert.equal(state.slots.size, 0);
+});
+
+test("LobbySlotState carries active slot ownership and character selection", () => {
+  const slot = new LobbySlotState();
+  slot.slotId = "red-1";
+  slot.team = "red";
+  slot.ownerSessionId = "red-session";
+  slot.selectedCharacterId = "nova";
+  slot.active = true;
+
+  assert.equal(slot.slotId, "red-1");
+  assert.equal(slot.team, "red");
+  assert.equal(slot.ownerSessionId, "red-session");
+  assert.equal(slot.selectedCharacterId, "nova");
+  assert.equal(slot.active, true);
 });

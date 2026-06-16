@@ -1,12 +1,17 @@
 import { ArraySchema, defineTypes, MapSchema, Schema } from "@colyseus/schema";
+import type { CharacterId, VehicleId } from "../../shared/model/gameTypes.js";
+import type { GameMode } from "../v1/rules.js";
 
 export type RoomPhase = "lobby" | "ready" | "combat-preview" | "round-over";
 export type TeamId = "red" | "blue";
+export type PlayerRole = "red-captain" | "blue-captain" | "spectator";
 
 export class PlayerState extends Schema {
   declare sessionId: string;
   declare displayName: string;
   declare team: TeamId;
+  declare role: PlayerRole;
+  declare joinOrder: number;
   declare ready: boolean;
   declare tokens: number;
   declare equippedNameplate: string;
@@ -17,10 +22,29 @@ export class PlayerState extends Schema {
     this.sessionId = "";
     this.displayName = "Guest";
     this.team = "red";
+    this.role = "spectator";
+    this.joinOrder = 0;
     this.ready = false;
     this.tokens = 0;
     this.equippedNameplate = "Canyon Rookie";
     this.inventory = new ArraySchema<string>();
+  }
+}
+
+export class LobbySlotState extends Schema {
+  declare slotId: VehicleId;
+  declare team: TeamId;
+  declare ownerSessionId: string;
+  declare selectedCharacterId: CharacterId;
+  declare active: boolean;
+
+  constructor() {
+    super();
+    this.slotId = "red-1";
+    this.team = "red";
+    this.ownerSessionId = "";
+    this.selectedCharacterId = "nova";
+    this.active = false;
   }
 }
 
@@ -59,6 +83,10 @@ export class GravityCanyonState extends Schema {
   declare phase: RoomPhase;
   declare status: string;
   declare maxPlayers: number;
+  declare mode: GameMode;
+  declare redCaptainSessionId: string;
+  declare blueCaptainSessionId: string;
+  declare spectatorSessionIds: ArraySchema<string>;
   declare roundNumber: number;
   declare turnNumber: number;
   declare wind: number;
@@ -66,6 +94,7 @@ export class GravityCanyonState extends Schema {
   declare winnerTeam: string;
   declare lastRewardLog: string;
   declare players: MapSchema<PlayerState>;
+  declare slots: MapSchema<LobbySlotState>;
   declare vehicles: ArraySchema<CombatVehicleState>;
 
   constructor() {
@@ -75,6 +104,10 @@ export class GravityCanyonState extends Schema {
     this.phase = "lobby";
     this.status = "Waiting for players.";
     this.maxPlayers = 2;
+    this.mode = "2v2";
+    this.redCaptainSessionId = "";
+    this.blueCaptainSessionId = "";
+    this.spectatorSessionIds = new ArraySchema<string>();
     this.roundNumber = 1;
     this.turnNumber = 0;
     this.wind = 0;
@@ -82,6 +115,7 @@ export class GravityCanyonState extends Schema {
     this.winnerTeam = "";
     this.lastRewardLog = "";
     this.players = new MapSchema<PlayerState>();
+    this.slots = new MapSchema<LobbySlotState>();
     this.vehicles = new ArraySchema<CombatVehicleState>();
   }
 }
@@ -90,10 +124,20 @@ defineTypes(PlayerState, {
   sessionId: "string",
   displayName: "string",
   team: "string",
+  role: "string",
+  joinOrder: "number",
   ready: "boolean",
   tokens: "number",
   equippedNameplate: "string",
   inventory: { array: "string" },
+});
+
+defineTypes(LobbySlotState, {
+  slotId: "string",
+  team: "string",
+  ownerSessionId: "string",
+  selectedCharacterId: "string",
+  active: "boolean",
 });
 
 defineTypes(CombatVehicleState, {
@@ -116,6 +160,10 @@ defineTypes(GravityCanyonState, {
   phase: "string",
   status: "string",
   maxPlayers: "number",
+  mode: "string",
+  redCaptainSessionId: "string",
+  blueCaptainSessionId: "string",
+  spectatorSessionIds: { array: "string" },
   roundNumber: "number",
   turnNumber: "number",
   wind: "number",
@@ -123,5 +171,6 @@ defineTypes(GravityCanyonState, {
   winnerTeam: "string",
   lastRewardLog: "string",
   players: { map: PlayerState },
+  slots: { map: LobbySlotState },
   vehicles: { array: CombatVehicleState },
 });
