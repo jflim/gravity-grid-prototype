@@ -11,6 +11,7 @@
     "build:client": "tsc -p tsconfig.json && vite build --base=./",
     "build:server": "tsc -p tsconfig.server.json",
     "docs:html": "tsx scripts/build-map-previews.ts && tsx scripts/build-map-gameplay-review.ts && node scripts/build-docs-html.mjs",
+    "audit:debt": "node scripts/build-tech-debt-audit.mjs && npm run docs:html",
     "test": "tsx --test \"server/**/*.test.ts\" \"src/**/*.test.ts\" \"shared/**/*.test.ts\" \"scripts/**/*.test.ts\"",
     "verify:runtime-roster": "node scripts/verify-runtime-roster.mjs",
     "assets:normalize-battlefield": "tsx scripts/normalize-battlefield-units.ts",
