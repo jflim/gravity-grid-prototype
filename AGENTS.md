@@ -40,6 +40,7 @@ On Windows inside managed Codex shells, detached watch-mode startup can exit sil
 ## Working Rules
 
 - Keep the prototype playable after each coherent iteration.
+- Keep every code change organized for human contribution: prefer clear ownership boundaries, focused modules, readable names, and small commits that a human developer can review, extend, or replace without untangling agent-specific shortcuts.
 - Run `npm run build` before committing gameplay, UI, networking, or asset integration changes.
 - Run `npm run docs:html` after editing markdown docs that have generated HTML reading copies.
 - Update `docs/VERSION_LOG.md` for meaningful playable checkpoints or project-management changes.
