@@ -6,6 +6,7 @@ import {
   localRoleLabel,
   modeLabel,
   normalizeLobbySlots,
+  stageForRoomPhase,
   slotLabel,
   type LobbySlotView,
 } from "./onlineLobbyView";
@@ -72,6 +73,10 @@ type OnlineClient = {
   joinOrCreate: (roomName: string, options?: Record<string, unknown>) => Promise<OnlineRoom>;
 };
 
+type OnlineLobbyOptions = {
+  onGameplayStart?: () => void;
+};
+
 declare global {
   interface Window {
     Colyseus?: {
@@ -84,84 +89,74 @@ const serverUrl =
   ((import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env?.VITE_COLYSEUS_URL) ??
   resolveOnlineServerUrl(window.location);
 
-export function mountOnlineLobby() {
-  const panel = document.createElement("aside");
-  panel.className = "online-panel";
-  panel.innerHTML = `
-    <div class="online-panel__header">
-      <div>
-        <p class="online-panel__eyebrow">Online Alpha</p>
-        <h1>Gravity Canyon</h1>
-      </div>
-      <span class="online-panel__badge" data-status-badge>Offline</span>
-    </div>
-    <div class="online-panel__field">
-      <label for="display-name">Display Name</label>
-      <input id="display-name" maxlength="18" value="Guest" autocomplete="off" />
-    </div>
-    <div class="online-panel__actions">
-      <button type="button" data-auto-connect>Reconnect</button>
-    </div>
-    <div class="online-panel__room" data-room-block hidden>
-      <div class="online-panel__room-code">
-        <span>Playtest Room</span>
-        <strong data-room-code></strong>
+export function mountOnlineLobby(options: OnlineLobbyOptions = {}) {
+  const stage = document.createElement("section");
+  stage.className = "online-stage";
+  stage.innerHTML = `
+    <aside class="online-panel">
+      <div class="online-panel__header">
+        <div>
+          <p class="online-panel__eyebrow">Online Alpha</p>
+          <h1>Gravity Canyon</h1>
+        </div>
+        <span class="online-panel__badge" data-status-badge>Offline</span>
       </div>
       <div class="online-panel__field">
-        <label for="mode-select">Mode</label>
-        <select id="mode-select" data-mode-select>
-          <option value="2v2">2v2</option>
-          <option value="1v1">1v1</option>
-        </select>
-      </div>
-      <p class="online-panel__status" data-room-status></p>
-      <div class="online-panel__players" data-player-list></div>
-      <div class="online-panel__slots" data-slot-list></div>
-      <div class="online-combat" data-combat-block hidden>
-        <div class="online-combat__meta" data-combat-meta></div>
-        <div class="online-combat__vehicles" data-vehicle-list></div>
-        <div class="online-panel__actions">
-          <button type="button" data-preview-fire>Server Shot</button>
-          <button type="button" data-next-round>Next Round</button>
-        </div>
+        <label for="display-name">Display Name</label>
+        <input id="display-name" maxlength="18" value="Guest" autocomplete="off" />
       </div>
       <div class="online-panel__actions">
-        <button type="button" data-ready-toggle>Ready</button>
-        <button type="button" data-test-capsule>Capsule</button>
+        <button type="button" data-auto-connect>Reconnect</button>
       </div>
-      <div class="online-panel__field">
-        <label for="nameplate-select">Nameplate</label>
-        <select id="nameplate-select" data-nameplate-select></select>
+      <div class="online-panel__room" data-room-block hidden>
+        <div class="online-panel__room-code">
+          <span>Playtest Room</span>
+          <strong data-room-code></strong>
+        </div>
+        <div class="online-panel__field">
+          <label for="mode-select">Mode</label>
+          <select id="mode-select" data-mode-select>
+            <option value="2v2">2v2</option>
+            <option value="1v1">1v1</option>
+          </select>
+        </div>
+        <p class="online-panel__status" data-room-status></p>
+        <div class="online-panel__players" data-player-list></div>
+        <div class="online-panel__slots" data-slot-list></div>
+        <div class="online-panel__actions">
+          <button type="button" data-ready-toggle>Ready</button>
+          <button type="button" data-test-capsule>Capsule</button>
+        </div>
+        <div class="online-panel__field">
+          <label for="nameplate-select">Nameplate</label>
+          <select id="nameplate-select" data-nameplate-select></select>
+        </div>
+        <p class="online-panel__reward" data-reward-log></p>
       </div>
-      <p class="online-panel__reward" data-reward-log></p>
-    </div>
+    </aside>
   `;
 
-  document.body.appendChild(panel);
+  document.body.appendChild(stage);
 
   const client = createOnlineClient();
   let room: OnlineRoom | undefined;
   let latestSnapshot: RoomSnapshot | undefined;
   let localReady = false;
+  let gameplayStarted = false;
 
-  const displayNameInput = panel.querySelector<HTMLInputElement>("#display-name");
-  const reconnectButton = panel.querySelector<HTMLButtonElement>("[data-auto-connect]");
-  const readyButton = panel.querySelector<HTMLButtonElement>("[data-ready-toggle]");
-  const capsuleButton = panel.querySelector<HTMLButtonElement>("[data-test-capsule]");
-  const previewFireButton = panel.querySelector<HTMLButtonElement>("[data-preview-fire]");
-  const nextRoundButton = panel.querySelector<HTMLButtonElement>("[data-next-round]");
-  const nameplateSelect = panel.querySelector<HTMLSelectElement>("[data-nameplate-select]");
-  const modeSelect = panel.querySelector<HTMLSelectElement>("[data-mode-select]");
-  const roomBlock = panel.querySelector<HTMLElement>("[data-room-block]");
-  const roomCodeLabel = panel.querySelector<HTMLElement>("[data-room-code]");
-  const statusBadge = panel.querySelector<HTMLElement>("[data-status-badge]");
-  const roomStatus = panel.querySelector<HTMLElement>("[data-room-status]");
-  const playerList = panel.querySelector<HTMLElement>("[data-player-list]");
-  const slotList = panel.querySelector<HTMLElement>("[data-slot-list]");
-  const combatBlock = panel.querySelector<HTMLElement>("[data-combat-block]");
-  const combatMeta = panel.querySelector<HTMLElement>("[data-combat-meta]");
-  const vehicleList = panel.querySelector<HTMLElement>("[data-vehicle-list]");
-  const rewardLog = panel.querySelector<HTMLElement>("[data-reward-log]");
+  const displayNameInput = stage.querySelector<HTMLInputElement>("#display-name");
+  const reconnectButton = stage.querySelector<HTMLButtonElement>("[data-auto-connect]");
+  const readyButton = stage.querySelector<HTMLButtonElement>("[data-ready-toggle]");
+  const capsuleButton = stage.querySelector<HTMLButtonElement>("[data-test-capsule]");
+  const nameplateSelect = stage.querySelector<HTMLSelectElement>("[data-nameplate-select]");
+  const modeSelect = stage.querySelector<HTMLSelectElement>("[data-mode-select]");
+  const roomBlock = stage.querySelector<HTMLElement>("[data-room-block]");
+  const roomCodeLabel = stage.querySelector<HTMLElement>("[data-room-code]");
+  const statusBadge = stage.querySelector<HTMLElement>("[data-status-badge]");
+  const roomStatus = stage.querySelector<HTMLElement>("[data-room-status]");
+  const playerList = stage.querySelector<HTMLElement>("[data-player-list]");
+  const slotList = stage.querySelector<HTMLElement>("[data-slot-list]");
+  const rewardLog = stage.querySelector<HTMLElement>("[data-reward-log]");
 
   reconnectButton?.addEventListener("click", () => {
     void connectAutoRoom();
@@ -175,7 +170,7 @@ export function mountOnlineLobby() {
     room?.send("setMode", { mode: modeSelect.value });
   });
 
-  panel.addEventListener("change", (event) => {
+  stage.addEventListener("change", (event) => {
     const target = event.target;
     if (!(target instanceof HTMLSelectElement) || !target.dataset.slotSelect) {
       return;
@@ -199,14 +194,6 @@ export function mountOnlineLobby() {
 
   nameplateSelect?.addEventListener("change", () => {
     room?.send("equipNameplate", { nameplate: nameplateSelect.value });
-  });
-
-  previewFireButton?.addEventListener("click", () => {
-    room?.send("previewFire");
-  });
-
-  nextRoundButton?.addEventListener("click", () => {
-    room?.send("startNextRound");
   });
 
   void connectAutoRoom();
@@ -238,7 +225,12 @@ export function mountOnlineLobby() {
   }
 
   function render(snapshot?: RoomSnapshot) {
-    if (!snapshot) {
+    if (!snapshot || gameplayStarted) {
+      return;
+    }
+
+    if (stageForRoomPhase(snapshot.phase) === "gameplay") {
+      startGameplay();
       return;
     }
 
@@ -282,7 +274,6 @@ export function mountOnlineLobby() {
 
     renderPlayers(snapshot, room?.sessionId ?? "");
     renderSlots(snapshot, localRole, canUseLobbyControls);
-    renderCombat(snapshot);
   }
 
   function renderPlayers(snapshot: RoomSnapshot, localSessionId: string) {
@@ -338,54 +329,6 @@ export function mountOnlineLobby() {
       .join("");
   }
 
-  function renderCombat(snapshot: RoomSnapshot) {
-    if (!combatBlock || !combatMeta || !vehicleList || !previewFireButton || !nextRoundButton) {
-      return;
-    }
-
-    const hasCombat = snapshot.vehicles.length > 0;
-    combatBlock.hidden = !hasCombat;
-    if (!hasCombat) {
-      return;
-    }
-
-    const activeVehicle = snapshot.vehicles.find((vehicle) => vehicle.vehicleId === snapshot.activeVehicleId);
-    const localActive = activeVehicle?.ownerSessionId === room?.sessionId;
-    const windLabel = snapshot.wind > 0 ? `+${snapshot.wind}` : String(snapshot.wind);
-    const winnerLabel = snapshot.winnerTeam ? `${capitalize(snapshot.winnerTeam)} team won` : "In progress";
-
-    combatMeta.innerHTML = `
-      <span>Round ${snapshot.roundNumber}</span>
-      <span>Turn ${snapshot.turnNumber || "-"}</span>
-      <span>Wind ${escapeHtml(windLabel)}</span>
-      <strong>${escapeHtml(activeVehicle?.displayName ?? winnerLabel)}</strong>
-    `;
-
-    vehicleList.innerHTML = snapshot.vehicles
-      .map((vehicle) => {
-        const hpRatio = vehicle.maxHp > 0 ? vehicle.hp / vehicle.maxHp : 0;
-        const active = vehicle.vehicleId === snapshot.activeVehicleId ? " online-vehicle--active" : "";
-        const ko = vehicle.alive ? "" : " online-vehicle--ko";
-        return `
-          <div class="online-vehicle online-vehicle--${vehicle.team}${active}${ko}">
-            <div>
-              <strong>${escapeHtml(vehicle.displayName)}</strong>
-              <span>${escapeHtml(vehicle.className)}</span>
-            </div>
-            <div class="online-vehicle__hp" aria-label="${vehicle.hp} HP">
-              <i style="width: ${Math.max(0, Math.min(100, hpRatio * 100))}%"></i>
-            </div>
-            <em>${vehicle.alive ? `${vehicle.hp} HP` : "KO"}</em>
-          </div>
-        `;
-      })
-      .join("");
-
-    previewFireButton.disabled = snapshot.phase !== "combat-preview" || !localActive;
-    previewFireButton.textContent = localActive ? "Server Shot" : "Waiting";
-    nextRoundButton.disabled = snapshot.phase !== "round-over";
-  }
-
   function setBadge(text: string, tone: "neutral" | "ok" | "warn" | "error") {
     if (!statusBadge) {
       return;
@@ -393,6 +336,16 @@ export function mountOnlineLobby() {
 
     statusBadge.textContent = text;
     statusBadge.dataset.tone = tone;
+  }
+
+  function startGameplay() {
+    if (gameplayStarted) {
+      return;
+    }
+
+    gameplayStarted = true;
+    stage.remove();
+    options.onGameplayStart?.();
   }
 }
 

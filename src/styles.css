@@ -115,21 +115,31 @@ canvas {
   accent-color: #8be9ff;
 }
 
-.online-panel {
+.online-stage {
   position: fixed;
-  top: 14px;
-  right: 14px;
-  z-index: 10;
-  width: min(328px, calc(100vw - 28px));
-  max-height: calc(100vh - 28px);
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 24px;
+  overflow: auto;
+  background:
+    linear-gradient(rgba(7, 10, 18, 0.9), rgba(7, 10, 18, 0.96)),
+    #10131b;
+}
+
+.online-panel {
+  width: min(620px, 100%);
+  max-height: calc(100vh - 48px);
   overflow: auto;
   box-sizing: border-box;
-  padding: 14px;
+  padding: 18px;
   color: #f8fbff;
-  background: rgba(14, 17, 27, 0.86);
+  background: rgba(14, 17, 27, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 8px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.36);
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.48);
   backdrop-filter: blur(10px);
 }
 
@@ -352,91 +362,4 @@ canvas {
   min-height: 30px;
   padding: 0 7px;
   font-size: 12px;
-}
-
-.online-combat {
-  display: grid;
-  gap: 8px;
-  margin-top: 10px;
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.11);
-  border-radius: 8px;
-}
-
-.online-combat__meta {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  color: #d8e3f5;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.online-combat__meta strong {
-  grid-column: 1 / -1;
-  color: #ffffff;
-  font-size: 13px;
-}
-
-.online-combat__vehicles {
-  display: grid;
-  gap: 7px;
-}
-
-.online-vehicle {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 74px 38px;
-  align-items: center;
-  gap: 8px;
-  padding: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  border-left: 4px solid #ff727e;
-  border-radius: 8px;
-}
-
-.online-vehicle--blue {
-  border-left-color: #72b7ff;
-}
-
-.online-vehicle--active {
-  outline: 2px solid rgba(255, 255, 255, 0.36);
-}
-
-.online-vehicle--ko {
-  opacity: 0.64;
-}
-
-.online-vehicle strong,
-.online-vehicle span {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.online-vehicle strong {
-  color: #ffffff;
-  font-size: 12px;
-}
-
-.online-vehicle span,
-.online-vehicle em {
-  color: #b7c4db;
-  font-size: 10px;
-  font-style: normal;
-}
-
-.online-vehicle__hp {
-  height: 8px;
-  overflow: hidden;
-  background: rgba(0, 0, 0, 0.36);
-  border-radius: 999px;
-}
-
-.online-vehicle__hp i {
-  display: block;
-  height: 100%;
-  background: linear-gradient(90deg, #8df5b2, #ffe38b);
-  border-radius: inherit;
 }

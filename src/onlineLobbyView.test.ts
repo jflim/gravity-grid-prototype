@@ -7,6 +7,7 @@ import {
   localRoleLabel,
   modeLabel,
   normalizeLobbySlots,
+  stageForRoomPhase,
   slotLabel,
 } from "./onlineLobbyView";
 
@@ -30,6 +31,13 @@ test("canLocalPlayerUseLobbyControls keeps captains interactive during ready pha
   assert.equal(canLocalPlayerUseLobbyControls("red-captain", "lobby"), true);
   assert.equal(canLocalPlayerUseLobbyControls("spectator", "ready"), false);
   assert.equal(canLocalPlayerUseLobbyControls("red-captain", "combat-preview"), false);
+});
+
+test("stageForRoomPhase separates lobby and gameplay scenes", () => {
+  assert.equal(stageForRoomPhase("lobby"), "lobby");
+  assert.equal(stageForRoomPhase("ready"), "lobby");
+  assert.equal(stageForRoomPhase("combat-preview"), "gameplay");
+  assert.equal(stageForRoomPhase("round-over"), "gameplay");
 });
 
 test("modeLabel and slotLabel keep lobby wording short", () => {

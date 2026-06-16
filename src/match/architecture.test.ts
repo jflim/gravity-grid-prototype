@@ -88,6 +88,18 @@ test("main.ts stays a bootstrap instead of owning the Phaser scene", () => {
   assert.doesNotMatch(main, /class GravityGridScene/);
 });
 
+test("online playtest swaps from lobby stage into gameplay bootstrap", () => {
+  const main = readFileSync("src/main.ts", "utf8");
+  const lobby = readFileSync("src/onlineLobby.ts", "utf8");
+
+  assert.match(main, /mountOnlineLobby\(\{\s*onGameplayStart:\s*mountGameplay\s*\}\)/);
+  assert.match(main, /function mountGameplay\(\): void/);
+  assert.match(lobby, /stage\.className = "online-stage"/);
+  assert.match(lobby, /stageForRoomPhase\(snapshot\.phase\) === "gameplay"/);
+  assert.match(lobby, /stage\.remove\(\)/);
+  assert.doesNotMatch(lobby, /data-combat-block|data-preview-fire|data-next-round/);
+});
+
 test("match runtime types stay free of Phaser rendering objects", () => {
   const matchTypes = readFileSync("src/match/MatchTypes.ts", "utf8");
 

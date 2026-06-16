@@ -50,6 +50,10 @@ export function canLocalPlayerUseLobbyControls(role: ClientRole, phase: string):
   return isCaptain && (phase === "lobby" || phase === "ready");
 }
 
+export function stageForRoomPhase(phase: string): "lobby" | "gameplay" {
+  return phase === "combat-preview" || phase === "round-over" ? "gameplay" : "lobby";
+}
+
 export function modeLabel(mode: string): string {
   return mode === "1v1" ? "1v1" : "2v2";
 }

@@ -19,42 +19,58 @@ declare global {
 }
 
 let currentViewportSupported = true;
-
-const initialBrowserViewport = getGameViewportSize(window, document.documentElement);
-const initialViewport = computeGameCanvasSize(initialBrowserViewport);
-currentViewportSupported = isSupportedGameViewport(initialBrowserViewport);
-
-const config: Phaser.Types.Core.GameConfig = {
-  type: Phaser.AUTO,
-  parent: "app",
-  backgroundColor: "#10131b",
-  width: initialViewport.width,
-  height: initialViewport.height,
-  scale: {
-    mode: Phaser.Scale.RESIZE,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-  },
-  physics: {
-    default: "arcade",
-    arcade: {
-      debug: false,
-    },
-  },
-  scene: MatchScene,
-};
-
-const game = new Phaser.Game(config);
-const viewportGuard = mountViewportGuard();
-syncGameViewportSize();
-window.addEventListener("resize", syncGameViewportSize);
-window.visualViewport?.addEventListener("resize", syncGameViewportSize);
-window.visualViewport?.addEventListener("scroll", syncGameViewportSize);
+let game: Phaser.Game | undefined;
+let viewportGuard: HTMLDivElement | undefined;
+let gameplayMounted = false;
 
 if (shouldMountOnlineLobby(window.location.search, window.__GRAVITY_CANYON_CONFIG__)) {
-  mountOnlineLobby();
+  mountOnlineLobby({ onGameplayStart: mountGameplay });
+} else {
+  mountGameplay();
+}
+
+function mountGameplay(): void {
+  if (gameplayMounted) {
+    return;
+  }
+
+  gameplayMounted = true;
+  const initialBrowserViewport = getGameViewportSize(window, document.documentElement);
+  const initialViewport = computeGameCanvasSize(initialBrowserViewport);
+  currentViewportSupported = isSupportedGameViewport(initialBrowserViewport);
+
+  const config: Phaser.Types.Core.GameConfig = {
+    type: Phaser.AUTO,
+    parent: "app",
+    backgroundColor: "#10131b",
+    width: initialViewport.width,
+    height: initialViewport.height,
+    scale: {
+      mode: Phaser.Scale.RESIZE,
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+    },
+    physics: {
+      default: "arcade",
+      arcade: {
+        debug: false,
+      },
+    },
+    scene: MatchScene,
+  };
+
+  game = new Phaser.Game(config);
+  viewportGuard = mountViewportGuard();
+  syncGameViewportSize();
+  window.addEventListener("resize", syncGameViewportSize);
+  window.visualViewport?.addEventListener("resize", syncGameViewportSize);
+  window.visualViewport?.addEventListener("scroll", syncGameViewportSize);
 }
 
 function syncGameViewportSize(): void {
+  if (!game || !viewportGuard) {
+    return;
+  }
+
   const browserViewport = getGameViewportSize(window, document.documentElement);
   const gameViewport = computeGameCanvasSize(browserViewport);
   currentViewportSupported = isSupportedGameViewport(browserViewport);
@@ -89,6 +105,10 @@ function mountViewportGuard(): HTMLDivElement {
 }
 
 function updateViewportGuard(viewport: { width: number; height: number }): void {
+  if (!viewportGuard) {
+    return;
+  }
+
   viewportGuard.hidden = currentViewportSupported;
   const current = viewportGuard.querySelector<HTMLElement>("[data-viewport-guard-current]");
   if (current) {
