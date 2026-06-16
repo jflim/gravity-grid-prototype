@@ -50,7 +50,7 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
   - Combat hulls are visible by default while collision and terrain scale are being tuned, can be toggled with `H` or the on-screen `Collision zones` checkbox, and can start hidden with `?collisionZones=0`.
   - Floating markers call out direct damage, splash damage, Bunger shove, HP KO, and Void Dropped eliminations.
   - Round start defaults to Ringworks Basin from the committed v1 map pool under the stable `ring-basin` id, using exact four-seat spawns, side bowls/high lips, widened readable bridge gaps, a central destructible ring bridge island, and faint ring/bridge landmarks.
-  - The void now has a persistent visual danger layer anchored to the round's lowest playable terrain surface, floating terrain presentation, and suspended Void Dropped unit treatment distinct from HP KO. Void Dropped units fall through a dramatic slow-start presentation into a wide nearby void run without snapping farther than needed.
+  - The void now has a persistent visual danger layer anchored to the round's lowest playable terrain surface, floating terrain presentation, and suspended Void Dropped unit treatment distinct from HP KO. Unsupported units first enter sliding or falling motion; Void Dropped is applied only when the vehicle collision hull reaches the visible void zone, then the defeated unit falls through a dramatic slow-start presentation into a wide nearby void run without snapping farther than needed.
   - The local browser shell now uses a desktop viewport contract: design around 1600 x 900, allow up to 2400 x 1350 presentation size for readability, require 1366 x 768 visible browser pixels, center the fixed game canvas inside larger windows, and show a resize guard below minimum.
   - The command deck now uses explicit viewport layout rules and the browser's smallest reliable visible viewport size so the active player info stays inside the visible browser area on wide/short screens.
   - The command deck is fixed screen-space HUD, not a camera/map-following layer; the playable camera viewport ends at the command deck top so terrain and void visuals cannot intersect it.
@@ -66,6 +66,18 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
 
 - Runtime sprites use stable PNG source filenames and optimized WebP delivery filenames in `public/assets`.
 - Variant/history sprites live under `public/assets/sprite-variants`.
+- The battlefield unit runtime aliases are normalized for map-scale testing with consistent transparent bounds and bottom anchors:
+  - `public/assets/nova-unit-default.png`
+  - `public/assets/vesper-unit-default.png`
+  - `public/assets/kaelii-unit-default.png`
+  - `public/assets/perlah-unit-default.png`
+- `npm run assets:normalize-battlefield` rebuilds default aliases and their existing charge-linked frames from the selected candidates, then `npm run optimize:assets` refreshes the WebP delivery files.
+- Nova's default runtime alias now uses the normalized duo-identity Bunger Rig candidate with warmer human contrast.
+- Vesper, Kaelii, and Perlah now use default battlefield readability candidates:
+  - Vesper readability v2: larger face/head and simplified Glitch Rover mass.
+  - Kaelii readability v1: lower protected perch, readable face, and real wheel/rail skip-rig cues.
+  - Perlah readability v1: raised face/curls above the embercart mass and stronger warm contrast.
+- Kaelii's default/intense display aspect is now the shorter `356 x 208` match frame instead of the older taller `350 x 233` probe frame.
 - Active Nova Defeated KO runtime sprite is:
   - runtime alias: `public/assets/nova-character-ko.png`
   - selected source: `public/assets/sprite-variants/characters/nova/ko/nova-character-ko-v16-marker-aligned-left-pupil.png`

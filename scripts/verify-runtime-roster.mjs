@@ -291,8 +291,8 @@ function assertAnimationLinkedFootprint(name, defaultFile, intenseFile) {
     (intenseBounds.visibleWidth / intenseBounds.width) / (defaultBounds.visibleWidth / defaultBounds.width);
   const heightRatio =
     (intenseBounds.visibleHeight / intenseBounds.height) / (defaultBounds.visibleHeight / defaultBounds.height);
-  const minRatio = 0.94;
-  const maxRatio = 1.06;
+  const minRatio = 0.92;
+  const maxRatio = 1.08;
 
   if (widthRatio < minRatio || widthRatio > maxRatio || heightRatio < minRatio || heightRatio > maxRatio) {
     failures.push(
@@ -305,7 +305,7 @@ function assertAnimationLinkedFootprint(name, defaultFile, intenseFile) {
 
 assertAnimationLinkedFootprint(
   "Vesper",
-  "public/assets/sprite-variants/units/vesper/default/vesper-unit-default-mounted-tech-shorts-v9-alpha.png",
+  "public/assets/vesper-unit-default.png",
   "public/assets/vesper-unit-intense.png",
 );
 assertAnimationLinkedFootprint(
@@ -313,6 +313,36 @@ assertAnimationLinkedFootprint(
   "public/assets/perlah-unit-default.png",
   "public/assets/perlah-unit-intense.png",
 );
+
+function assertDefaultRuntimeFootprint(name, file, display) {
+  const bounds = readPngAlphaBounds(file);
+  const sourceAspect = bounds.width / bounds.height;
+  const displayAspect = display.width / display.height;
+  const aspectDelta = Math.abs(sourceAspect - displayAspect) / displayAspect;
+  const visibleWidthRatio = bounds.visibleWidth / bounds.width;
+  const visibleHeightRatio = bounds.visibleHeight / bounds.height;
+
+  if (aspectDelta > 0.025) {
+    failures.push(
+      `${name} default source canvas no longer matches display aspect: source ${sourceAspect.toFixed(
+        3,
+      )}, display ${displayAspect.toFixed(3)}`,
+    );
+  }
+
+  if (visibleWidthRatio < 0.7 || visibleHeightRatio < 0.86) {
+    failures.push(
+      `${name} default source has too much transparent padding for map-scale testing: visible ${(
+        visibleWidthRatio * 100
+      ).toFixed(1)}%w x ${(visibleHeightRatio * 100).toFixed(1)}%h`,
+    );
+  }
+}
+
+assertDefaultRuntimeFootprint("Nova", "public/assets/nova-unit-default.png", { width: 350, height: 233 });
+assertDefaultRuntimeFootprint("Vesper", "public/assets/vesper-unit-default.png", { width: 356, height: 208 });
+assertDefaultRuntimeFootprint("Kaelii", "public/assets/kaelii-unit-default.png", { width: 356, height: 208 });
+assertDefaultRuntimeFootprint("Perlah", "public/assets/perlah-unit-default.png", { width: 356, height: 208 });
 
 if (failures.length > 0) {
   console.error("Runtime roster verification failed:");

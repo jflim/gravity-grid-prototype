@@ -99,10 +99,18 @@ Original adult character only, no existing IP, no text, no watermark, no blood, 
 
 ## Current Visual Probe Links
 
-Kaelii and Perlah probes are preserved as selected sprite variants, and the current selected v1 test set has also been promoted to stable runtime aliases under `public/assets`.
+Kaelii and Perlah probes are preserved as selected sprite variants, and the current selected v1 test set has also been promoted to stable runtime aliases under `public/assets`. Default runtime aliases and their existing charge-linked frames are normalized for map-scale testing so holding Space does not change apparent unit size.
 
 | Unit | Raw Source | Transparent Probe |
 |---|---|---|
+| Nova duo-identity combat direction v2 | [lab source](../public/assets/sprite-variants/units/nova/default/nova-unit-default-duo-contrast-v2-source.png) | [variant](../public/assets/sprite-variants/units/nova/default/nova-unit-default-duo-contrast-v2-alpha.png) |
+| Nova normalized default runtime | [selected candidate](../public/assets/sprite-variants/units/nova/default/nova-unit-default-duo-contrast-v2-alpha.png) | [normalized runtime variant](../public/assets/sprite-variants/units/nova/default/nova-unit-default-duo-contrast-v2-battlefield-normalized.png) |
+| Vesper default readability v2 | [lab source](../work/asset-lab/2026-06-16-battlefield-readability-pass/source/vesper-unit-default-readability-v2-source.png) | [variant](../public/assets/sprite-variants/units/vesper/default/vesper-unit-default-readability-v2-alpha.png) |
+| Vesper normalized default runtime | [runtime source](../public/assets/vesper-unit-default.png) | [normalized runtime variant](../public/assets/sprite-variants/units/vesper/default/vesper-unit-default-battlefield-normalized.png) |
+| Kaelii default readability v1 | [lab source](../work/asset-lab/2026-06-16-battlefield-readability-pass/source/kaelii-unit-default-readability-v1-source.png) | [variant](../public/assets/sprite-variants/units/kaelii/default/kaelii-unit-default-readability-v1-alpha.png) |
+| Kaelii normalized default runtime | [runtime source](../public/assets/kaelii-unit-default.png) | [normalized runtime variant](../public/assets/sprite-variants/units/kaelii/default/kaelii-unit-default-battlefield-normalized.png) |
+| Perlah default readability v1 | [lab source](../work/asset-lab/2026-06-16-battlefield-readability-pass/source/perlah-unit-default-readability-v1-source.png) | [variant](../public/assets/sprite-variants/units/perlah/default/perlah-unit-default-readability-v1-alpha.png) |
+| Perlah normalized default runtime | [runtime source](../public/assets/perlah-unit-default.png) | [normalized runtime variant](../public/assets/sprite-variants/units/perlah/default/perlah-unit-default-battlefield-normalized.png) |
 | Nova full-unit intense v1 | [variant](../public/assets/sprite-variants/units/nova/intense/nova-unit-intense-bunger-rig-probe-01-alpha.png) | [lab source](../work/asset-lab/2026-06-07-nova-vesper-intense-unit-prompts/source/nova-unit-intense-bunger-rig-probe-01.png) |
 | Vesper full-unit intense v8 subtle tension scale-stable | [variant](../public/assets/sprite-variants/units/vesper/intense/vesper-unit-intense-glitch-rover-probe-08-subtle-tension-scale-stable-normalized-alpha.png) | [lab source](../work/asset-lab/2026-06-07-nova-vesper-intense-unit-prompts/source/vesper-unit-intense-glitch-rover-probe-08-subtle-tension-scale-stable.png) |
 | Kaelii vehicle default | [variant](../public/assets/sprite-variants/units/kaelii/vehicle-default/kaelii-vehicle-default-flashkick-skip-rig-probe-01-alpha.png) | [lab source](../work/asset-lab/2026-06-07-kaelii-perlah-sprite-prompts/source/kaelii-vehicle-default-flashkick-skip-rig-probe-01.png) |
@@ -144,6 +152,8 @@ Detailed prompt pack:
 - Class family: `bunger`
 - Signature vehicle: Redline Bunger Rig
 - Visual identity: Red-haired adult hotshot with goggles, red-black pilot gear, gloves, heavy boots, and an aggressive mounted silhouette.
+- Accepted combat direction: duo-identity artillery unit. Nova should read as the warm human pilot through face, arms, goggles, red hair, and light cream/white clothing contrast, while the Redline Bunger Rig remains the chunky red-and-white terrain-contact and collision body.
+- Current accepted direction candidate: `public/assets/sprite-variants/units/nova/default/nova-unit-default-duo-contrast-v2-alpha.png`. The normalized version is now promoted to the default runtime alias at `public/assets/nova-unit-default.png` for map/scale exploration.
 - Personality: Daring, impatient, competitive, happiest when the terrain gives way.
 - Tiny lore: A canyon circuit ace who made her name blasting rivals off suspended shelves.
 - Active stance: Crouched on top of her Redline Bunger Rig, one boot planted on the chassis, leaning forward like she is about to launch herself with the shot.
@@ -160,6 +170,7 @@ Detailed prompt pack:
 - Personality: Cool, precise, surgical, smug when enemies walk into her fields.
 - Tiny lore: A signal engineer who learned to weaponize broken gravity relays.
 - Active stance: Low seated or crouched on the side of her Glitch Rover, one hand on a glowing control panel, calm and precise.
+- Current default runtime direction: readability v2, with a larger face/head, simplified blue-white rover mass, and warmer face contrast so Vesper remains identifiable at match scale.
 - Intense stance: Same apparent unit size as default, but with believable power-shot tension: joystick grip tight, deck-control hand active, front leg pressing down slightly, the rover allowed a small recoil/compression read, headset lit, cannon reticle active, and compact glitch UI wrapped tightly around the rover.
 - Defeated KO stance: Slumped over the console with her headset askew, blue panels flickering around her like the vehicle crashed mid-signal.
 - Tight generation anchor: `Vesper, cyan-blue adult glitch engineer, short twin-braid accents, blue headset, blue-black tech outfit, chunky blue-white sneakers, crouched at a blue glitch rover console, disruption-field identity.`
@@ -175,10 +186,11 @@ Detailed prompt pack:
 - Personality: Loud, cocky, flirtatious, expressive, reckless when watched, and theatrically annoyed when outplayed.
 - Tiny lore: A former stunt-stream idol who turned ricochet artillery into performance art.
 - Active stance: Perched showily on the Flashkick Skip-Rig, one foot on a cannon rail, hips angled toward the camera, taunting like the match is a stage.
+- Current default runtime direction: readability v1, with a lower perch, clear golden-eyed face, strong bronze-skin contrast, and real wheel/rail vehicle cues.
 - Intense stance: Same perch as default, compressed into an animation-linked recoil keyframe: hands grip tighter, shoulders lower, hips and knees tense, hair and jacket react, and both sneakers stay close to their default vehicle anchors.
 - Defeated KO stance: Slid sideways off her perch, sprawled across the chassis with one sneaker dangling, the rig's spotlight strip dimmed out.
 - Tight generation anchor: `Kaelii, bronze-skinned adult stunt idol, golden eyes, tri-tone black/deep-purple/hot-pink high twin buns with braided wrap loops and pink streaks, pink-black techwear, white sneakers with pink laces, perched on a pink-black springy bouncer skip-rig, ricochet trick-shot identity.`
-- Current probe images: see Current Visual Probe Links above. The v3 no-shoe-wheel default and v5 animation-linked intense/KO probes are the current stronger match-scale candidates.
+- Current probe images: see Current Visual Probe Links above. The readability v1 default is the current runtime default candidate; v5 animation-linked intense/KO probes remain useful state references.
 - Open art note: Kaelii Defeated KO v5 is useful as a candidate, but the KO pupil placement still needs a future artist or refinement pass. The right-eye pupil placement in particular does not feel quite right yet.
 - Runtime test aliases: `public/assets/kaelii-vehicle-sprite.png`, `public/assets/kaelii-vehicle-destroyed.png`, `public/assets/kaelii-unit-default.png`, `public/assets/kaelii-unit-intense.png`, `public/assets/kaelii-unit-ko.png`.
 
@@ -190,10 +202,11 @@ Detailed prompt pack:
 - Personality: Warm, teasing, scrappy, underestimated, and very happy to make the canyon too hot to stand on.
 - Tiny lore: She salvaged old Spark engines from canyon wrecks and rebuilt them into a festival-bright artillery cart.
 - Active stance: Kneeling low against the Sunspike Embercart's heat shield, one hand braced on the cannon housing, compact and ready.
+- Current default runtime direction: readability v1, with her face and curls raised above the embercart mass, stronger warm skin contrast, and simplified orange-black vehicle shapes.
 - Intense stance: Braced behind the heat shield as orange vents flare, hair and wrap details kicked by furnace wind.
 - Defeated KO stance: Draped belly-down across the warm engine cover, hair messy, vehicle vents puffing smoke as if the heat finally overwhelmed the cart.
 - Tight generation anchor: `Perlah, shorter Filipina-inspired adult spark pilot, golden-brown skin, curly black hair with orange highlights, orange-black island salvage racer outfit, kneeling behind an orange-black volcanic embercart heat shield, warm teasing heat-zone identity.`
-- Current probe images: see Current Visual Probe Links above. The v2 compact default probes and v1/v2 gap-fill state probes are the current strongest match-scale candidates.
+- Current probe images: see Current Visual Probe Links above. The readability v1 default is the current runtime default candidate; v1/v2 gap-fill state probes remain useful state references.
 - Runtime test aliases: `public/assets/perlah-vehicle-sprite.png`, `public/assets/perlah-vehicle-destroyed.png`, `public/assets/perlah-unit-default.png`, `public/assets/perlah-unit-intense.png`, `public/assets/perlah-unit-ko.png`.
 
 ### Ari

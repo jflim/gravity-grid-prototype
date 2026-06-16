@@ -21,11 +21,11 @@ export const V1_COLLISION_ART_REVIEWS: readonly CollisionArtRuleInput[] = [
   },
   {
     unitId: "kaelii",
-    display: { width: 350, height: 233 },
+    display: { width: 356, height: 208 },
     hitZone: SHARED_V1_VEHICLE_HIT_ZONE,
-    pilotPose: "standing",
+    pilotPose: "seated",
     protectionCue: "guard-rail",
-    notes: "Kaelii's high pose is accepted only because the skip-rig frame/rails must read as protecting her.",
+    notes: "Kaelii now reads lower in the skip-rig frame, with rails and chassis protecting the pilot.",
   },
   {
     unitId: "perlah",

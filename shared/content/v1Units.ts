@@ -66,9 +66,9 @@ export const DEMO_UNIT_DEFINITIONS = [
     },
     characterSpriteFaces: 1,
     characterDisplays: {
-      default: { width: 350, height: 233 },
+      default: { width: 356, height: 208 },
       ko: { width: 354, height: 212 },
-      intense: { width: 350, height: 233 },
+      intense: { width: 356, height: 208 },
     },
     characterOffsetX: 0,
     characterOffsetY: 28,
@@ -78,8 +78,8 @@ export const DEMO_UNIT_DEFINITIONS = [
       ko: "nova-unit-ko-concept",
     },
     unitConceptDisplays: {
-      default: { width: 350, height: 233 },
-      intense: { width: 350, height: 233 },
+      default: { width: 356, height: 208 },
+      intense: { width: 356, height: 208 },
       ko: { width: 354, height: 212 },
     },
     unitConceptSpriteFaces: 1,

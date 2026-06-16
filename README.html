@@ -87,7 +87,7 @@
   <main>
     <article>
       <div class="generated">
-        HTML reading copy generated from <a href="README.md">README.md</a> on 2026-06-15.
+        HTML reading copy generated from <a href="README.md">README.md</a> on 2026-06-16.
         Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Gravity Canyon Prototype</h1>
@@ -102,6 +102,7 @@
 <li>Left/Right input turns the vehicle, character, and aim direction before moving.</li>
 <li>Facing-aware aim controls so each side's Up/Down input feels consistent.</li>
 <li>Terrain movement allows playable downhill travel and intentional void falls, while terrain faces steeper than the climb-angle limit are not driveable and vehicles need enough grounded footing to stay settled.</li>
+<li>Unsupported vehicles now enter explicit sliding or falling motion before any Void Dropped result is applied.</li>
 <li>Top-safe wind badge visible to everyone; active turn timing lives above the active vehicle only.</li>
 <li>Fixed screen-space command deck with active vehicle portrait, aim dial, movement range meter, and a prominent launch-power meter.</li>
 <li>The command deck keeps a larger bottom safety gutter so control content is not clipped by the browser edge.</li>
@@ -189,6 +190,11 @@ npm run docs:html
 <p>Runtime roster asset check:</p>
 <pre><code class="language-powershell">
 npm run verify:runtime-roster
+
+</code></pre>
+<p>Normalize battlefield unit frames after selecting a new default candidate:</p>
+<pre><code class="language-powershell">
+npm run assets:normalize-battlefield
 
 </code></pre>
 <p>Regenerate optimized WebP delivery assets from the PNG runtime sources:</p>
@@ -285,6 +291,11 @@ dist/index.html
 <td>Checks stable runtime sprite aliases and roster wiring.</td>
 </tr>
 <tr>
+<td><code>npm run assets:normalize-battlefield</code></td>
+<td>After selecting a new default unit candidate</td>
+<td>Rebuilds default match sprites and their existing charge-linked frames with consistent transparent bounds and bottom anchors for map-scale testing.</td>
+</tr>
+<tr>
 <td><code>npm run optimize:assets</code></td>
 <td>After promoting or editing runtime art</td>
 <td>Regenerates compressed WebP delivery files from the PNG art sources.</td>
@@ -342,7 +353,7 @@ dist/index.html
 <h2>Terms</h2>
 <ul>
 <li>Turn: one active vehicle's action window. The turn ends when that vehicle fires, times out, or can no longer act.</li>
-<li>Round: one fresh battlefield from spawn until one team has no alive vehicles left. Falling into the void creates a Void Dropped elimination and sets that vehicle to 0 HP and not alive.</li>
+<li>Round: one fresh battlefield from spawn until one team has no alive vehicles left. A falling vehicle becomes Void Dropped only when its vehicle collision hull touches the visible void zone, then it is set to 0 HP and not alive.</li>
 <li>Match: a future multiplayer room/session made of one or more rounds. The local prototype does not track match score yet, so it currently loops into the next round automatically.</li>
 </ul>
 <h2>Notes</h2>
@@ -354,7 +365,7 @@ dist/index.html
 <li>There is no predicted trajectory line. The muzzle arrow shows current direction, but shot landing is still based on angle, power, wind, and memory.</li>
 <li>Movement treats playable downhill and intentional void falling as allowed traversal; steep uphill or steep non-void downhill faces are blocked by the climb-angle rule, and vehicles without enough supported footing fall instead of perching on cliff edges.</li>
 <li>Vehicle sprites rotate to match the local terrain slope while labels and meters stay horizontal.</li>
-<li>Players can intentionally drive into holes or off the map, which sets that vehicle to 0 HP.</li>
+<li>Players can intentionally drive into holes or off the map, which starts falling motion; the vehicle is only eliminated once its vehicle collision hull reaches the visible void zone.</li>
 <li>Every weapon affects terrain. Bunger weapons are tuned to affect terrain the most.</li>
 <li>Nova is currently set up as the prototype Bunger class so terrain knock-off play can be tested.</li>
 <li>Kaelii and Perlah are accepted as v1 runtime test units for local play; their Bouncer and Spark class-specific shot behavior is still future work, so they currently use the baseline non-Bunger projectile behavior.</li>
@@ -363,6 +374,7 @@ dist/index.html
 <li>Impact rings are temporary debugging/readability feedback: inner ring is crater/terrain effect, outer ring is splash damage range.</li>
 <li>Direct-hit and splash damage use the vehicle hit zone, not pilot hair, pose, outfit, or cosmetic silhouette.</li>
 <li>After a shot, the turn is committed immediately. There is intentionally no post-shot movement window.</li>
+<li>After a shot or movement creates sliding/falling vehicles, turn flow waits for that vehicle motion to settle or reach the void before advancing.</li>
 <li>A round ends when one team has no alive vehicles left. In this prototype, alive means <code>alive = true</code> and HP above 0.</li>
 <li>Finished rounds show the result briefly, then start a fresh round automatically. R still restarts immediately.</li>
 <li>Wind is global round information shown in a fixed top HUD badge; turn time is shown above the active vehicle.</li>
@@ -374,7 +386,7 @@ dist/index.html
 <li>Current sprites are first-pass generated assets, not final production sprites.</li>
 <li>Gameplay rendering uses separate layers for vehicle and playable character sprites.</li>
 <li>Active runtime sprites use stable PNG source filenames and optimized WebP delivery filenames in <code>public/assets</code>; versioned experiments live under <code>public/assets/sprite-variants</code>.</li>
-<li>When runtime art changes, run <code>npm run optimize:assets</code> before <code>npm run verify:runtime-roster</code> so hosted playtest links serve the compressed art.</li>
+<li>When default runtime unit art changes, run <code>npm run assets:normalize-battlefield</code>, then <code>npm run optimize:assets</code>, then <code>npm run verify:runtime-roster</code> so hosted playtest links serve compressed art with consistent map-scale bounds.</li>
 <li>Each vehicle look currently needs a default gameplay sprite and a destroyed gameplay sprite.</li>
 <li>Each playable character currently needs three generated gameplay states: default, KO, and intense shooting.</li>
 <li>Character states should be integrated artwork, not code-drawn facial overlays on top of default art.</li>

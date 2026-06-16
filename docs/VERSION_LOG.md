@@ -91,6 +91,13 @@ Highlights:
 - Fixed movement traversal so vehicles no longer drive down near-vertical non-void terrain faces, while intentional movement into void holes still triggers falling/void-drop behavior.
 - Promoted the accepted mounted Nova and Vesper default/KO unit sprites to stable normal-runtime aliases so `npm run dev` shows the updated gameplay art without concept-preview mode.
 - Added vehicle footing support checks during terrain settlement so units fall from under-supported cliff edges instead of balancing on a center-point terrain sample.
+- Fixed Kaelii's Ringworks Basin spawn-left movement so steep playable footing causes sliding/settling instead of a false fall-through-floor state.
+- Reduced battlefield unit display scale so playable vehicle/character sprites cover less terrain, and preserved movement units when an attempted move immediately turns into falling or sliding instead of controlled travel.
+- Routed visible collision-zone overlays through the same scaled vehicle-only combat-hull bounds used by projectile collision so the debug box stays matched to vehicle size.
+- Applied battlefield scaling to normal runtime unit sprites and rotated visible collision-zone overlays with the same terrain angle as the vehicle body.
+- Locked Nova's current combat art direction to a duo-identity Bunger Rig candidate with warmer human contrast, preserving it as a sprite variant while leaving runtime aliases unchanged.
+- Promoted Nova's normalized duo-identity default into the runtime default alias and normalized battlefield default plus charge-linked runtime frames for consistent map-scale testing.
+- Added a default battle-sprite readability pass for Vesper, Kaelii, and Perlah so all four v1 units read more clearly by face, hair, and color at map-testing scale.
 - Added a TDD naming rule that `v1` remains a product milestone/profile label, while new permanent code modules should use generic names and select milestone behavior through ruleset/content ids.
 - Renamed the current demo unit content exports away from milestone-prefixed symbols so new code consumes `DemoUnitDefinition` and `DEMO_UNIT_DEFINITIONS`.
 - Extracted local projectile launch, flight stepping, trail tracking, swept collision lookup, and out-of-bounds orchestration into `src/match/ProjectileController.ts`.
@@ -99,6 +106,7 @@ Highlights:
 - Extracted local turn order/index, turn timer, wind, charge state, and committed state into `src/match/TurnController.ts`.
 - Extracted local mutable terrain ownership into `src/match/TerrainController.ts`, keeping active map/heightmap state, crater application, visible void top, and terrain slope reads out of `MatchScene` while deterministic terrain math remains in `shared/gameplay/terrain.ts`.
 - Extracted local vehicle placement application into `src/match/VehicleSettlementController.ts`, keeping shared settlement truth separate from mutable local vehicle updates, Void Dropped presentation assignment, and fall event text.
+- Split vehicle instability from Void Dropped resolution: unsupported vehicles now enter sliding or falling motion first, turns wait for that motion to resolve, and Void Dropped is applied only when the vehicle collision hull reaches the visible void zone.
 - Extracted match preload planning, asset queueing, loading progress, and load-failure status into `src/match/MatchAssetLoader.ts`.
 - Extracted delayed local turn/round event scheduling into `src/match/RoundEventScheduler.ts` so post-shot misses, impacts, and round result transitions no longer store Phaser timer ownership directly in `MatchScene`.
 - Extracted the prototype collision-zone checkbox DOM into `src/match/ui/CollisionZonesToggle.ts`, keeping browser UI setup out of `MatchScene`.

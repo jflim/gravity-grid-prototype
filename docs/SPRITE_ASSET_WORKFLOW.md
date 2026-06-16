@@ -95,6 +95,23 @@ Runtime rule:
 - `work/asset-lab/.../source/`: raw green images are acceptable while workshopping.
 - `work/asset-lab/.../processed/`: transparent PNGs created from source images.
 
+### Battlefield Unit Normalization
+
+Default match sprites are used to judge map size, gaps, terrain readability, and collision-zone presentation. After a default unit candidate is selected, run:
+
+```powershell
+npm run assets:normalize-battlefield
+```
+
+The script keeps the stable runtime filenames in `public/assets`, archives normalized copies under `public/assets/sprite-variants/units/<unit>/<state>/`, trims inconsistent transparent padding, preserves the display aspect expected by `shared/content/v1Units.ts`, and anchors the visible unit near the same bottom contact line. It normalizes default match frames plus the existing charge-linked frames so holding Space does not create a size pop. This is a gameplay-readability preparation step, not a final art polish pass, and it does not create new KO, destroyed, portrait, costume, or final animation art.
+
+After default runtime PNGs are normalized, run:
+
+```powershell
+npm run optimize:assets
+npm run verify:runtime-roster
+```
+
 ## Required Unit Asset Checklist
 
 Every playable pilot-plus-vehicle unit needs five gameplay sprite assets before it is runtime-complete:

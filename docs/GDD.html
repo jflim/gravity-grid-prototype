@@ -87,7 +87,7 @@
   <main>
     <article>
       <div class="generated">
-        HTML reading copy generated from <a href="GDD.md">docs/GDD.md</a> on 2026-06-15.
+        HTML reading copy generated from <a href="GDD.md">docs/GDD.md</a> on 2026-06-16.
         Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Gravity Canyon Game Design Document</h1>
@@ -148,6 +148,7 @@
 <p>Terrain is not just decoration. Players should dig, crater, bridge, expose void, create danger, deny movement, and set up future turns.</p>
 <h3>Character And Vehicle Identity</h3>
 <p>Each playable unit is a pilot plus a signature vehicle family. The player should remember both the character and the vehicle as one authored combat identity. The pilot sells personality; the vehicle carries the readable combat footprint.</p>
+<p>The working art model is duo identity: players can say &quot;I am playing Nova,&quot; while combat still reads as Nova plus the Redline Bunger Rig. Match sprites should show the pilot and vehicle together as one compact artillery unit. The pilot must remain visibly human through face, hair, pose, and warm contrast; the vehicle must remain the terrain-contact and collision anchor.</p>
 <h3>Stream-Safe Adult Anime Style</h3>
 <p>The intended art direction is adult anime arcade with strong fanservice appeal, but the default public/playtest asset style must remain stream-safe and platform-safe. The game can be attractive, suggestive, stylish, and deliberately fanservice-forward without becoming explicit pornography in the normal playable build.</p>
 <p>Long term, Gravity Canyon may support a more mature presentation layer for art, ability theming, adult themes, and sounds. That direction must preserve the same core shooter fairness unless a future milestone explicitly defines a separate adult-only mode.</p>
@@ -419,6 +420,9 @@
 <h3>Gameplay Asset Rule</h3>
 <p>Gameplay sprites must support the vehicle-only hit-zone rule. Pilot poses must visually read as protected by, tucked into, or mounted on the vehicle. Cosmetics cannot affect combat collision.</p>
 <p>Source art should remain PNG. Browser delivery should use optimized WebP where practical.</p>
+<p>Current Nova direction: use the duo-identity combat candidate with lighter pilot contrast and visible skin-tone face/arms so Nova reads clearly against the red-and-black Bunger Rig. The normalized version is the current default runtime sprite for map-scale exploration until a deliberate art review replaces it.</p>
+<p>Current match-sprite handling: default unit aliases and their existing charge-linked frames are normalized with consistent transparent bounds and bottom anchors before map testing, so terrain gaps, collision zones, and land readability are judged against comparable runtime sprites without a charge-size pop.</p>
+<p>The current default battlefield pass favors readable pilot identity over preserving every illustration detail. Nova, Vesper, Kaelii, and Perlah should each read by face/hair/color at match scale while the vehicle remains the collision and terrain-contact truth.</p>
 <h2>19. Audio Direction</h2>
 <p>V1 needs minimal, readable, non-voice SFX:</p>
 <ul>

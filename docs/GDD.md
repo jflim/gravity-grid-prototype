@@ -76,6 +76,8 @@ Terrain is not just decoration. Players should dig, crater, bridge, expose void,
 
 Each playable unit is a pilot plus a signature vehicle family. The player should remember both the character and the vehicle as one authored combat identity. The pilot sells personality; the vehicle carries the readable combat footprint.
 
+The working art model is duo identity: players can say "I am playing Nova," while combat still reads as Nova plus the Redline Bunger Rig. Match sprites should show the pilot and vehicle together as one compact artillery unit. The pilot must remain visibly human through face, hair, pose, and warm contrast; the vehicle must remain the terrain-contact and collision anchor.
+
 ### Stream-Safe Adult Anime Style
 
 The intended art direction is adult anime arcade with strong fanservice appeal, but the default public/playtest asset style must remain stream-safe and platform-safe. The game can be attractive, suggestive, stylish, and deliberately fanservice-forward without becoming explicit pornography in the normal playable build.
@@ -434,6 +436,12 @@ Different surfaces can carry different detail levels:
 Gameplay sprites must support the vehicle-only hit-zone rule. Pilot poses must visually read as protected by, tucked into, or mounted on the vehicle. Cosmetics cannot affect combat collision.
 
 Source art should remain PNG. Browser delivery should use optimized WebP where practical.
+
+Current Nova direction: use the duo-identity combat candidate with lighter pilot contrast and visible skin-tone face/arms so Nova reads clearly against the red-and-black Bunger Rig. The normalized version is the current default runtime sprite for map-scale exploration until a deliberate art review replaces it.
+
+Current match-sprite handling: default unit aliases and their existing charge-linked frames are normalized with consistent transparent bounds and bottom anchors before map testing, so terrain gaps, collision zones, and land readability are judged against comparable runtime sprites without a charge-size pop.
+
+The current default battlefield pass favors readable pilot identity over preserving every illustration detail. Nova, Vesper, Kaelii, and Perlah should each read by face/hair/color at match scale while the vehicle remains the collision and terrain-contact truth.
 
 ## 19. Audio Direction
 
