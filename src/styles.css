@@ -276,7 +276,8 @@ canvas {
   line-height: 1.35;
 }
 
-.online-panel__players {
+.online-panel__players,
+.online-panel__slots {
   display: grid;
   gap: 8px;
   margin-top: 10px;
@@ -310,6 +311,47 @@ canvas {
   color: #b7c4db;
   font-size: 11px;
   font-style: normal;
+}
+
+.online-slot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px 46px;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  background: rgba(255, 255, 255, 0.07);
+  border-left: 4px solid #ff727e;
+  border-radius: 8px;
+}
+
+.online-slot--blue {
+  border-left-color: #72b7ff;
+}
+
+.online-slot strong,
+.online-slot span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.online-slot strong {
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.online-slot span,
+.online-slot em {
+  color: #b7c4db;
+  font-size: 11px;
+  font-style: normal;
+}
+
+.online-slot select {
+  min-height: 30px;
+  padding: 0 7px;
+  font-size: 12px;
 }
 
 .online-combat {

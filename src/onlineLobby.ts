@@ -1,13 +1,35 @@
 import { resolveOnlineServerUrl } from "./onlineServerUrl";
+import {
+  canLocalPlayerEditSlot,
+  lobbyStatusText,
+  localRoleLabel,
+  modeLabel,
+  slotLabel,
+} from "./onlineLobbyView";
+
+const CHARACTER_OPTIONS = ["nova", "vesper", "kaelii", "perlah"] as const;
+const SLOT_ORDER = ["red-1", "blue-1", "red-2", "blue-2"];
 
 type PlayerSnapshot = {
   sessionId: string;
   displayName: string;
   team: string;
+  role: string;
+  joinOrder: number;
   ready: boolean;
   tokens: number;
   equippedNameplate: string;
   inventory: string[];
+};
+
+type LobbySlotSnapshot = {
+  slotId: string;
+  team: string;
+  ownerSessionId: string;
+  characterId: string;
+  displayName: string;
+  ready: boolean;
+  active: boolean;
 };
 
 type CombatVehicleSnapshot = {
@@ -26,6 +48,10 @@ type CombatVehicleSnapshot = {
 
 type RoomSnapshot = {
   roomCode: string;
+  mode: string;
+  redCaptainSessionId: string;
+  blueCaptainSessionId: string;
+  spectatorSessionIds: string[];
   phase: string;
   status: string;
   roundNumber: number;
@@ -35,6 +61,7 @@ type RoomSnapshot = {
   winnerTeam: string;
   lastRewardLog: string;
   players: PlayerSnapshot[];
+  slots: LobbySlotSnapshot[];
   vehicles: CombatVehicleSnapshot[];
 };
 
@@ -49,8 +76,7 @@ type OnlineRoom = {
 };
 
 type OnlineClient = {
-  create: (roomName: string, options?: Record<string, unknown>) => Promise<OnlineRoom>;
-  joinById: (roomId: string, options?: Record<string, unknown>) => Promise<OnlineRoom>;
+  joinOrCreate: (roomName: string, options?: Record<string, unknown>) => Promise<OnlineRoom>;
 };
 
 declare global {
@@ -81,20 +107,23 @@ export function mountOnlineLobby() {
       <input id="display-name" maxlength="18" value="Guest" autocomplete="off" />
     </div>
     <div class="online-panel__actions">
-      <button type="button" data-create-room>Create</button>
-      <button type="button" data-join-room>Join</button>
-    </div>
-    <div class="online-panel__field">
-      <label for="room-code">Room Code</label>
-      <input id="room-code" autocomplete="off" />
+      <button type="button" data-auto-connect>Reconnect</button>
     </div>
     <div class="online-panel__room" data-room-block hidden>
       <div class="online-panel__room-code">
-        <span>Room</span>
+        <span>Playtest Room</span>
         <strong data-room-code></strong>
+      </div>
+      <div class="online-panel__field">
+        <label for="mode-select">Mode</label>
+        <select id="mode-select" data-mode-select>
+          <option value="2v2">2v2</option>
+          <option value="1v1">1v1</option>
+        </select>
       </div>
       <p class="online-panel__status" data-room-status></p>
       <div class="online-panel__players" data-player-list></div>
+      <div class="online-panel__slots" data-slot-list></div>
       <div class="online-combat" data-combat-block hidden>
         <div class="online-combat__meta" data-combat-meta></div>
         <div class="online-combat__vehicles" data-vehicle-list></div>
@@ -123,40 +152,46 @@ export function mountOnlineLobby() {
   let localReady = false;
 
   const displayNameInput = panel.querySelector<HTMLInputElement>("#display-name");
-  const roomCodeInput = panel.querySelector<HTMLInputElement>("#room-code");
-  const createButton = panel.querySelector<HTMLButtonElement>("[data-create-room]");
-  const joinButton = panel.querySelector<HTMLButtonElement>("[data-join-room]");
+  const reconnectButton = panel.querySelector<HTMLButtonElement>("[data-auto-connect]");
   const readyButton = panel.querySelector<HTMLButtonElement>("[data-ready-toggle]");
   const capsuleButton = panel.querySelector<HTMLButtonElement>("[data-test-capsule]");
   const previewFireButton = panel.querySelector<HTMLButtonElement>("[data-preview-fire]");
   const nextRoundButton = panel.querySelector<HTMLButtonElement>("[data-next-round]");
   const nameplateSelect = panel.querySelector<HTMLSelectElement>("[data-nameplate-select]");
+  const modeSelect = panel.querySelector<HTMLSelectElement>("[data-mode-select]");
   const roomBlock = panel.querySelector<HTMLElement>("[data-room-block]");
   const roomCodeLabel = panel.querySelector<HTMLElement>("[data-room-code]");
   const statusBadge = panel.querySelector<HTMLElement>("[data-status-badge]");
   const roomStatus = panel.querySelector<HTMLElement>("[data-room-status]");
   const playerList = panel.querySelector<HTMLElement>("[data-player-list]");
+  const slotList = panel.querySelector<HTMLElement>("[data-slot-list]");
   const combatBlock = panel.querySelector<HTMLElement>("[data-combat-block]");
   const combatMeta = panel.querySelector<HTMLElement>("[data-combat-meta]");
   const vehicleList = panel.querySelector<HTMLElement>("[data-vehicle-list]");
   const rewardLog = panel.querySelector<HTMLElement>("[data-reward-log]");
 
-  createButton?.addEventListener("click", async () => {
-    await connect(() => client.create("gravity_canyon", { displayName: displayNameInput?.value }));
-  });
-
-  joinButton?.addEventListener("click", async () => {
-    const roomCode = roomCodeInput?.value.trim();
-    if (!roomCode) {
-      setBadge("Room needed", "warn");
-      return;
-    }
-
-    await connect(() => client.joinById(roomCode, { displayName: displayNameInput?.value }));
+  reconnectButton?.addEventListener("click", () => {
+    void connectAutoRoom();
   });
 
   displayNameInput?.addEventListener("change", () => {
     room?.send("setDisplayName", displayNameInput.value);
+  });
+
+  modeSelect?.addEventListener("change", () => {
+    room?.send("setMode", { mode: modeSelect.value });
+  });
+
+  panel.addEventListener("change", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLSelectElement) || !target.dataset.slotSelect) {
+      return;
+    }
+
+    room?.send("selectCharacter", {
+      slotId: target.dataset.slotId,
+      characterId: target.value,
+    });
   });
 
   readyButton?.addEventListener("click", () => {
@@ -181,13 +216,18 @@ export function mountOnlineLobby() {
     room?.send("startNextRound");
   });
 
+  void connectAutoRoom();
+
+  function connectAutoRoom() {
+    return connect(() => client.joinOrCreate("gravity_canyon", { displayName: displayNameInput?.value }));
+  }
+
   async function connect(join: () => Promise<OnlineRoom>) {
     try {
       setBadge("Connecting", "warn");
       room?.leave();
       room = await join();
       localReady = false;
-      roomCodeInput!.value = room.roomId;
       setBadge("Online", "ok");
 
       room.onStateChange((state) => {
@@ -211,15 +251,31 @@ export function mountOnlineLobby() {
 
     roomBlock!.hidden = false;
     roomCodeLabel!.textContent = snapshot.roomCode || room?.roomId || "";
-    roomStatus!.textContent = snapshot.status;
     rewardLog!.textContent = snapshot.lastRewardLog;
 
     const localPlayer = snapshot.players.find((player) => player.sessionId === room?.sessionId);
+    const redCaptain = snapshot.players.find((player) => player.sessionId === snapshot.redCaptainSessionId);
+    const blueCaptain = snapshot.players.find((player) => player.sessionId === snapshot.blueCaptainSessionId);
+    const localRole = localPlayer?.role ?? "spectator";
     if (localPlayer) {
       localReady = localPlayer.ready;
     }
 
+    roomStatus!.textContent = `${modeLabel(snapshot.mode)} - ${lobbyStatusText({
+      status: snapshot.status,
+      redCaptainName: redCaptain?.displayName ?? "",
+      blueCaptainName: blueCaptain?.displayName ?? "",
+      redReady: Boolean(redCaptain?.ready),
+      blueReady: Boolean(blueCaptain?.ready),
+    })}`;
+
     readyButton!.textContent = localReady ? "Unready" : "Ready";
+    readyButton!.disabled = localRole === "spectator" || snapshot.phase !== "lobby";
+    if (modeSelect) {
+      modeSelect.value = snapshot.mode === "1v1" ? "1v1" : "2v2";
+      modeSelect.disabled = localRole !== "red-captain" || snapshot.phase !== "lobby";
+    }
+
     if (localPlayer && nameplateSelect) {
       const currentValue = nameplateSelect.value || localPlayer.equippedNameplate;
       nameplateSelect.innerHTML = localPlayer.inventory
@@ -230,22 +286,62 @@ export function mountOnlineLobby() {
         : localPlayer.equippedNameplate;
     }
 
-    playerList!.innerHTML = snapshot.players
+    renderPlayers(snapshot, room?.sessionId ?? "");
+    renderSlots(snapshot, localRole);
+    renderCombat(snapshot);
+  }
+
+  function renderPlayers(snapshot: RoomSnapshot, localSessionId: string) {
+    if (!playerList) {
+      return;
+    }
+
+    playerList.innerHTML = snapshot.players
       .map((player) => {
-        const ready = player.ready ? "Ready" : "Waiting";
+        const state = player.role === "spectator" ? "Watching" : player.ready ? "Ready" : "Waiting";
+        const you = player.sessionId === localSessionId ? "You" : "";
         return `
-          <div class="online-player online-player--${player.team}">
+          <div class="online-player online-player--${escapeHtml(player.team)}">
             <div>
               <strong>${escapeHtml(player.displayName)}</strong>
-              <span>${escapeHtml(player.equippedNameplate)}</span>
+              <span>${escapeHtml(localRoleLabel(player.role))}${you ? ` - ${you}` : ""}</span>
             </div>
-            <em>${ready}</em>
+            <em>${state}</em>
           </div>
         `;
       })
       .join("");
+  }
 
-    renderCombat(snapshot);
+  function renderSlots(snapshot: RoomSnapshot, localRole: string) {
+    if (!slotList) {
+      return;
+    }
+
+    slotList.innerHTML = snapshot.slots
+      .filter((slot) => slot.active)
+      .sort((left, right) => slotSortValue(left.slotId) - slotSortValue(right.slotId))
+      .map((slot) => {
+        const editable = snapshot.phase === "lobby" && canLocalPlayerEditSlot(localRole, slot.slotId);
+        const options = CHARACTER_OPTIONS.map((characterId) => {
+          const selected = characterId === slot.characterId ? " selected" : "";
+          return `<option value="${characterId}"${selected}>${capitalize(characterId)}</option>`;
+        }).join("");
+
+        return `
+          <div class="online-slot online-slot--${escapeHtml(slot.team)}">
+            <div>
+              <strong>${escapeHtml(slotLabel(slot.slotId))}</strong>
+              <span>${escapeHtml(slot.displayName || "Open")}</span>
+            </div>
+            <select data-slot-select="true" data-slot-id="${escapeHtml(slot.slotId)}"${editable ? "" : " disabled"}>
+              ${options}
+            </select>
+            <em>${slot.ready ? "Ready" : "Waiting"}</em>
+          </div>
+        `;
+      })
+      .join("");
   }
 
   function renderCombat(snapshot: RoomSnapshot) {
@@ -317,6 +413,10 @@ function createOnlineClient() {
 function getSnapshot(state: unknown): RoomSnapshot {
   const source = state as {
     roomCode?: string;
+    mode?: string;
+    redCaptainSessionId?: string;
+    blueCaptainSessionId?: string;
+    spectatorSessionIds?: string[] | Iterable<string>;
     phase?: string;
     status?: string;
     lastRewardLog?: string;
@@ -326,11 +426,16 @@ function getSnapshot(state: unknown): RoomSnapshot {
     activeVehicleId?: string;
     winnerTeam?: string;
     players?: Map<string, unknown> | Record<string, unknown>;
+    slots?: unknown[] | Iterable<unknown>;
     vehicles?: unknown[] | Iterable<unknown>;
   };
 
   return {
     roomCode: source.roomCode ?? "",
+    mode: source.mode ?? "2v2",
+    redCaptainSessionId: source.redCaptainSessionId ?? "",
+    blueCaptainSessionId: source.blueCaptainSessionId ?? "",
+    spectatorSessionIds: Array.from(source.spectatorSessionIds ?? []),
     phase: source.phase ?? "lobby",
     status: source.status ?? "",
     roundNumber: source.roundNumber ?? 1,
@@ -340,17 +445,20 @@ function getSnapshot(state: unknown): RoomSnapshot {
     winnerTeam: source.winnerTeam ?? "",
     lastRewardLog: source.lastRewardLog ?? "",
     players: getPlayers(source.players),
+    slots: getSlots(source.slots),
     vehicles: getVehicles(source.vehicles),
   };
 }
 
-function getPlayers(players: RoomSnapshot["players"] | Map<string, unknown> | Record<string, unknown> | undefined) {
+function getPlayers(players: Map<string, unknown> | Record<string, unknown> | undefined) {
   const snapshots: PlayerSnapshot[] = [];
   const readPlayer = (player: unknown, key: string) => {
     const source = player as {
       sessionId?: string;
       displayName?: string;
       team?: string;
+      role?: string;
+      joinOrder?: number;
       ready?: boolean;
       tokens?: number;
       equippedNameplate?: string;
@@ -361,6 +469,8 @@ function getPlayers(players: RoomSnapshot["players"] | Map<string, unknown> | Re
       sessionId: source.sessionId ?? key,
       displayName: source.displayName ?? "Guest",
       team: source.team ?? "red",
+      role: source.role ?? "spectator",
+      joinOrder: source.joinOrder ?? 0,
       ready: Boolean(source.ready),
       tokens: source.tokens ?? 0,
       equippedNameplate: source.equippedNameplate ?? "Canyon Rookie",
@@ -373,6 +483,25 @@ function getPlayers(players: RoomSnapshot["players"] | Map<string, unknown> | Re
     iterablePlayers.forEach(readPlayer);
   } else if (players) {
     Object.entries(players).forEach(([key, player]) => readPlayer(player, key));
+  }
+
+  return snapshots;
+}
+
+function getSlots(slots: unknown[] | Iterable<unknown> | undefined) {
+  const snapshots: LobbySlotSnapshot[] = [];
+
+  for (const slot of Array.from(slots ?? [])) {
+    const source = slot as Partial<LobbySlotSnapshot>;
+    snapshots.push({
+      slotId: source.slotId ?? "",
+      team: source.team ?? "red",
+      ownerSessionId: source.ownerSessionId ?? "",
+      characterId: source.characterId ?? "nova",
+      displayName: source.displayName ?? "Guest",
+      ready: Boolean(source.ready),
+      active: source.active ?? false,
+    });
   }
 
   return snapshots;
@@ -403,6 +532,11 @@ function getVehicles(vehicles: unknown[] | Iterable<unknown> | undefined) {
 
 function capitalize(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function slotSortValue(slotId: string) {
+  const index = SLOT_ORDER.indexOf(slotId);
+  return index === -1 ? Number.MAX_SAFE_INTEGER : index;
 }
 
 function escapeHtml(value: string) {
