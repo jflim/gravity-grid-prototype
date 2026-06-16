@@ -8,6 +8,7 @@ This report uses the requested tools:
 
 - **Graphify:** installed from `safishamsi/graphify` as the `graphifyy` Python package, then run with `npm run audit:graphify`.
 - **Fallow:** installed from `fallow-rs/fallow` as the npm dev dependency `fallow`, then run with `npm run audit:fallow`.
+- **Fallow changed-files gate:** `npm run audit:fallow:changed` runs `fallow audit --gate all`, writes `work/audits/fallow-audit.json`, and exits nonzero when the current changes are not human-ready.
 - **Audit builder:** `npm run audit:debt` runs Graphify, runs Fallow, builds this markdown report, then regenerates the HTML docs.
 
 The old local size/coupling score remains in the report as supplemental context, but Graphify and Fallow evidence now drive the top findings.
@@ -17,10 +18,10 @@ The old local size/coupling score remains in the report as supplemental context,
 | Metric | Value |
 | --- | --- |
 | App | Gravity Canyon |
-| Files scanned by local supplement | 132 |
-| Source files | 82 |
+| Files scanned by local supplement | 134 |
+| Source files | 84 |
 | Test files | 50 |
-| Nonblank LOC scanned | 13872 |
+| Nonblank LOC scanned | 13920 |
 | Dependency cycles found | 0 |
 | Default source-file target | 250 nonblank LOC or less |
 | Temporary orchestrator target | 300 nonblank LOC or less |
@@ -35,14 +36,14 @@ Graphify builds the project graph and records structural graph health in `work/a
 | Graph file | `graphify-out/graph.json` |
 | Graphify source command | `graphify update . --force --no-cluster` |
 | Diagnose command | `graphify diagnose multigraph --json --graph graphify-out/graph.json` |
-| Raw node count | 1601 |
-| Post-build node count | 1601 |
-| Raw edge count | 2961 |
-| Post-build edge count | 2622 |
-| Directed unique endpoint pairs | 2624 |
-| Undirected unique endpoint pairs | 2620 |
+| Raw node count | 1610 |
+| Post-build node count | 1610 |
+| Raw edge count | 2976 |
+| Post-build edge count | 2634 |
+| Directed unique endpoint pairs | 2636 |
+| Undirected unique endpoint pairs | 2632 |
 | Collapsed directed endpoint edges | 11 |
-| Dangling endpoint edges | 326 |
+| Dangling endpoint edges | 329 |
 
 ## Fallow evidence
 
@@ -67,7 +68,7 @@ The raw Fallow JSON keeps all findings. The hotspot and remediation tables below
 
 | Package | Location | Action |
 | --- | --- | --- |
-| `@colyseus/sdk` | package.json:29 | Move to devDependencies (only test files import this) |
+| `@colyseus/sdk` | package.json:30 | Move to devDependencies (only test files import this) |
 
 ### Fallow Health Hotspots
 
@@ -167,9 +168,9 @@ These files combine multiple operational concerns in one file. They are candidat
 | `src/match/MatchViewFactory.ts` | 207 | 377 | 1 | 10 | 5 | 1 | dom, phaser |
 | `server/schema/GravityCanyonState.ts` | 163 | 262 | 0 | 0 | 0 | 3 | colyseus, schema |
 | `src/main.ts` | 99 | 334 | 0 | 3 | 10 | 34 | dom, phaser |
-| `scripts/run-graphify-audit.mjs` | 49 | 183 | 0 | 0 | 11 | 0 | filesystem, process |
-| `scripts/run-fallow-audit.mjs` | 43 | 133 | 0 | 0 | 0 | 0 | filesystem, process |
+| `scripts/run-graphify-audit.mjs` | 49 | 186 | 0 | 0 | 11 | 1 | filesystem, process |
 | `scripts/serve-dist.mjs` | 36 | 160 | 0 | 0 | 7 | 2 | filesystem, process |
+| `scripts/run-graphify-hook-check.mjs` | 25 | 150 | 0 | 0 | 8 | 1 | filesystem, process |
 
 ## Cycle Check
 

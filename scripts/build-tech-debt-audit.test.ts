@@ -10,6 +10,7 @@ test("technical debt audit is a committed local docs command", () => {
 
   assert.equal(packageJson.scripts?.["audit:graphify"], "node scripts/run-graphify-audit.mjs");
   assert.equal(packageJson.scripts?.["audit:fallow"], "node scripts/run-fallow-audit.mjs");
+  assert.equal(packageJson.scripts?.["audit:fallow:changed"], "node scripts/run-fallow-changed-audit.mjs");
   assert.equal(
     packageJson.scripts?.["audit:debt"],
     "npm run audit:graphify && npm run audit:fallow && node scripts/build-tech-debt-audit.mjs && npm run docs:html",
@@ -18,6 +19,7 @@ test("technical debt audit is a committed local docs command", () => {
   assert.ok(existsSync("scripts/build-tech-debt-audit.mjs"), "technical debt audit generator exists locally");
   assert.ok(existsSync("scripts/run-graphify-audit.mjs"), "Graphify audit runner exists locally");
   assert.ok(existsSync("scripts/run-fallow-audit.mjs"), "Fallow audit runner exists locally");
+  assert.ok(existsSync("scripts/run-fallow-changed-audit.mjs"), "Fallow changed-files gate exists locally");
 });
 
 test("technical debt audit records Graphify and Fallow evidence", () => {
@@ -34,9 +36,24 @@ test("technical debt audit records Graphify and Fallow evidence", () => {
 
 test("Fallow runner launches through cmd on Windows", () => {
   const script = readFileSync("scripts/run-fallow-audit.mjs", "utf8");
+  const helper = readFileSync("scripts/fallow/runFallowCommand.mjs", "utf8");
 
-  assert.match(script, /cmd\.exe/);
+  assert.match(script, /runFallow/);
+  assert.match(helper, /cmd\.exe/);
   assert.doesNotMatch(script, /spawnSync\(npx/);
+});
+
+test("Fallow changed-files audit is a real commit gate", () => {
+  const script = readFileSync("scripts/run-fallow-changed-audit.mjs", "utf8");
+  const packageJson = JSON.parse(readFileSync("package.json", "utf8")) as {
+    scripts?: Record<string, string>;
+  };
+
+  assert.match(script, /"audit"/);
+  assert.match(script, /"all"/);
+  assert.match(script, /fallow-audit\.json/);
+  assert.match(script, /process\.exit/);
+  assert.equal(packageJson.scripts?.["audit:fallow:changed"], "node scripts/run-fallow-changed-audit.mjs");
 });
 
 test("technical debt audit generator keeps human-sized modules", () => {

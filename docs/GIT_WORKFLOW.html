@@ -97,6 +97,7 @@
 <li>Commit after each coherent iteration or reviewable documentation update.</li>
 <li>Keep commits descriptive and scoped.</li>
 <li>Run <code>npm run build</code> before committing gameplay/code changes.</li>
+<li>Run <code>npm run audit:fallow:changed</code> before committing code changes. This is the changed-files gate; it uses Fallow's <code>--gate all</code> mode so every finding in changed files must be cleaned up, intentionally suppressed, or documented before the commit is considered human-ready.</li>
 <li>Keep generated folders out of Git: <code>node_modules/</code> and <code>dist/</code> are ignored.</li>
 <li>Prefer one focused purpose per commit.</li>
 <li>Do not commit exploratory throwaway changes unless they have become the chosen direction.</li>
@@ -136,6 +137,7 @@ git push
 <p>Before pushing code changes:</p>
 <ul>
 <li>Run <code>npm run build</code>.</li>
+<li>Run <code>npm run audit:fallow:changed</code>.</li>
 <li>Refresh/play the local prototype when the change is visual or gameplay-facing.</li>
 <li>Update docs when terminology, controls, rules, assets, or planning changed.</li>
 <li>Update <code>docs/VERSION_LOG.md</code> for playable checkpoints or meaningful project-management changes.</li>
@@ -143,6 +145,7 @@ git push
 </ul>
 <p>Docs-only commits do not require <code>npm run build</code>, but should still be reviewed for accuracy.</p>
 <p>If markdown docs changed, run <code>npm run docs:html</code> so generated HTML reading copies stay current.</p>
+<p>Use <code>npm run audit:fallow</code> for broad evidence reports and <code>npm run audit:debt</code> for the generated technical-debt audit page. Those commands are diagnostic. <code>npm run audit:fallow:changed</code> is the commit gate and writes <code>work/audits/fallow-audit.json</code>.</p>
 <h2>How Often To Commit</h2>
 <p>Commit when the work reaches a stable checkpoint:</p>
 <ul>

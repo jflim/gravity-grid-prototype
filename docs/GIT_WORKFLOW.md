@@ -7,6 +7,7 @@ This repo should be treated as a sequence of playable checkpoints, not a forever
 - Commit after each coherent iteration or reviewable documentation update.
 - Keep commits descriptive and scoped.
 - Run `npm run build` before committing gameplay/code changes.
+- Run `npm run audit:fallow:changed` before committing code changes. This is the changed-files gate; it uses Fallow's `--gate all` mode so every finding in changed files must be cleaned up, intentionally suppressed, or documented before the commit is considered human-ready.
 - Keep generated folders out of Git: `node_modules/` and `dist/` are ignored.
 - Prefer one focused purpose per commit.
 - Do not commit exploratory throwaway changes unless they have become the chosen direction.
@@ -43,6 +44,7 @@ For tiny docs-only changes, committing directly to `main` is acceptable.
 Before pushing code changes:
 
 - Run `npm run build`.
+- Run `npm run audit:fallow:changed`.
 - Refresh/play the local prototype when the change is visual or gameplay-facing.
 - Update docs when terminology, controls, rules, assets, or planning changed.
 - Update `docs/VERSION_LOG.md` for playable checkpoints or meaningful project-management changes.
@@ -50,6 +52,8 @@ Before pushing code changes:
 
 Docs-only commits do not require `npm run build`, but should still be reviewed for accuracy.
 If markdown docs changed, run `npm run docs:html` so generated HTML reading copies stay current.
+
+Use `npm run audit:fallow` for broad evidence reports and `npm run audit:debt` for the generated technical-debt audit page. Those commands are diagnostic. `npm run audit:fallow:changed` is the commit gate and writes `work/audits/fallow-audit.json`.
 
 ## How Often To Commit
 

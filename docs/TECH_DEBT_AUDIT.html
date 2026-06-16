@@ -97,6 +97,7 @@
 <ul>
 <li><strong>Graphify:</strong> installed from <code>safishamsi/graphify</code> as the <code>graphifyy</code> Python package, then run with <code>npm run audit:graphify</code>.</li>
 <li><strong>Fallow:</strong> installed from <code>fallow-rs/fallow</code> as the npm dev dependency <code>fallow</code>, then run with <code>npm run audit:fallow</code>.</li>
+<li><strong>Fallow changed-files gate:</strong> <code>npm run audit:fallow:changed</code> runs <code>fallow audit --gate all</code>, writes <code>work/audits/fallow-audit.json</code>, and exits nonzero when the current changes are not human-ready.</li>
 <li><strong>Audit builder:</strong> <code>npm run audit:debt</code> runs Graphify, runs Fallow, builds this markdown report, then regenerates the HTML docs.</li>
 </ul>
 <p>The old local size/coupling score remains in the report as supplemental context, but Graphify and Fallow evidence now drive the top findings.</p>
@@ -113,11 +114,11 @@
 </tr>
 <tr>
 <td>Files scanned by local supplement</td>
-<td>132</td>
+<td>134</td>
 </tr>
 <tr>
 <td>Source files</td>
-<td>82</td>
+<td>84</td>
 </tr>
 <tr>
 <td>Test files</td>
@@ -125,7 +126,7 @@
 </tr>
 <tr>
 <td>Nonblank LOC scanned</td>
-<td>13872</td>
+<td>13920</td>
 </tr>
 <tr>
 <td>Dependency cycles found</td>
@@ -166,27 +167,27 @@
 </tr>
 <tr>
 <td>Raw node count</td>
-<td>1601</td>
+<td>1610</td>
 </tr>
 <tr>
 <td>Post-build node count</td>
-<td>1601</td>
+<td>1610</td>
 </tr>
 <tr>
 <td>Raw edge count</td>
-<td>2961</td>
+<td>2976</td>
 </tr>
 <tr>
 <td>Post-build edge count</td>
-<td>2622</td>
+<td>2634</td>
 </tr>
 <tr>
 <td>Directed unique endpoint pairs</td>
-<td>2624</td>
+<td>2636</td>
 </tr>
 <tr>
 <td>Undirected unique endpoint pairs</td>
-<td>2620</td>
+<td>2632</td>
 </tr>
 <tr>
 <td>Collapsed directed endpoint edges</td>
@@ -194,7 +195,7 @@
 </tr>
 <tr>
 <td>Dangling endpoint edges</td>
-<td>326</td>
+<td>329</td>
 </tr>
 </tbody></table>
 <h2>Fallow evidence</h2>
@@ -257,7 +258,7 @@
 <tbody>
 <tr>
 <td><code>@colyseus/sdk</code></td>
-<td>package.json:29</td>
+<td>package.json:30</td>
 <td>Move to devDependencies (only test files import this)</td>
 </tr>
 </tbody></table>
@@ -939,21 +940,11 @@
 <tr>
 <td><code>scripts/run-graphify-audit.mjs</code></td>
 <td>49</td>
-<td>183</td>
+<td>186</td>
 <td>0</td>
 <td>0</td>
 <td>11</td>
-<td>0</td>
-<td>filesystem, process</td>
-</tr>
-<tr>
-<td><code>scripts/run-fallow-audit.mjs</code></td>
-<td>43</td>
-<td>133</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
+<td>1</td>
 <td>filesystem, process</td>
 </tr>
 <tr>
@@ -964,6 +955,16 @@
 <td>0</td>
 <td>7</td>
 <td>2</td>
+<td>filesystem, process</td>
+</tr>
+<tr>
+<td><code>scripts/run-graphify-hook-check.mjs</code></td>
+<td>25</td>
+<td>150</td>
+<td>0</td>
+<td>0</td>
+<td>8</td>
+<td>1</td>
 <td>filesystem, process</td>
 </tr>
 </tbody></table>

@@ -13,6 +13,7 @@
     "docs:html": "tsx scripts/build-map-previews.ts && tsx scripts/build-map-gameplay-review.ts && node scripts/build-docs-html.mjs",
     "audit:graphify": "node scripts/run-graphify-audit.mjs",
     "audit:fallow": "node scripts/run-fallow-audit.mjs",
+    "audit:fallow:changed": "node scripts/run-fallow-changed-audit.mjs",
     "audit:debt": "npm run audit:graphify && npm run audit:fallow && node scripts/build-tech-debt-audit.mjs && npm run docs:html",
     "graphify:hook-check": "node scripts/run-graphify-hook-check.mjs",
     "test": "tsx --test \"server/**/*.test.ts\" \"src/**/*.test.ts\" \"shared/**/*.test.ts\" \"scripts/**/*.test.ts\"",
