@@ -20,6 +20,19 @@ export type ReadyToStartInput = {
   selectedCharacters: Partial<Record<VehicleId, string>>;
 };
 
+export type PreviewSlot = {
+  slotId: VehicleId;
+  ownerSessionId: string;
+  selectedCharacterId: CharacterId;
+};
+
+export type BuildPreviewSlotsInput = {
+  mode: GameMode;
+  redCaptainSessionId: string;
+  blueCaptainSessionId: string;
+  selectedCharacters: Partial<Record<VehicleId, string>>;
+};
+
 const CHARACTER_ID_SET = new Set<string>(CHARACTER_IDS);
 
 const DEFAULT_CHARACTERS: Record<VehicleId, CharacterId> = {
@@ -86,4 +99,12 @@ export function isReadyToAutoStart(input: ReadyToStartInput): boolean {
   }
 
   return activeSlotIdsForMode(input.mode).every((slotId) => CHARACTER_ID_SET.has(input.selectedCharacters[slotId] ?? ""));
+}
+
+export function buildPreviewSlots(input: BuildPreviewSlotsInput): PreviewSlot[] {
+  return activeSlotIdsForMode(input.mode).map((slotId) => ({
+    slotId,
+    ownerSessionId: ownerSessionIdForSlot(slotId, input.redCaptainSessionId, input.blueCaptainSessionId),
+    selectedCharacterId: sanitizeCharacterPick(input.selectedCharacters[slotId], slotId),
+  }));
 }

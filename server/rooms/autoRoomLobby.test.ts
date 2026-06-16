@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   activeSlotIdsForMode,
   assignCaptainRoles,
+  buildPreviewSlots,
   canEditSlot,
   defaultCharacterForSlot,
   isReadyToAutoStart,
@@ -190,4 +191,46 @@ test("LobbySlotState carries active slot ownership and character selection", () 
   assert.equal(slot.ownerSessionId, "red-session");
   assert.equal(slot.selectedCharacterId, "nova");
   assert.equal(slot.active, true);
+});
+
+test("buildPreviewSlots assigns one owner per team in 1v1", () => {
+  assert.deepEqual(
+    buildPreviewSlots({
+      mode: "1v1",
+      redCaptainSessionId: "red-session",
+      blueCaptainSessionId: "blue-session",
+      selectedCharacters: {
+        "red-1": "nova",
+        "blue-1": "vesper",
+        "red-2": "kaelii",
+        "blue-2": "perlah",
+      },
+    }),
+    [
+      { slotId: "red-1", ownerSessionId: "red-session", selectedCharacterId: "nova" },
+      { slotId: "blue-1", ownerSessionId: "blue-session", selectedCharacterId: "vesper" },
+    ],
+  );
+});
+
+test("buildPreviewSlots assigns both same-team slots to the same captain in 2v2", () => {
+  assert.deepEqual(
+    buildPreviewSlots({
+      mode: "2v2",
+      redCaptainSessionId: "red-session",
+      blueCaptainSessionId: "blue-session",
+      selectedCharacters: {
+        "red-1": "nova",
+        "blue-1": "vesper",
+        "red-2": "kaelii",
+        "blue-2": "perlah",
+      },
+    }),
+    [
+      { slotId: "red-1", ownerSessionId: "red-session", selectedCharacterId: "nova" },
+      { slotId: "blue-1", ownerSessionId: "blue-session", selectedCharacterId: "vesper" },
+      { slotId: "red-2", ownerSessionId: "red-session", selectedCharacterId: "kaelii" },
+      { slotId: "blue-2", ownerSessionId: "blue-session", selectedCharacterId: "perlah" },
+    ],
+  );
 });

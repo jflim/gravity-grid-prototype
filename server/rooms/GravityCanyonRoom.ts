@@ -1,6 +1,25 @@
 import { ArraySchema } from "@colyseus/schema";
 import { Client, Room } from "colyseus";
-import { CombatVehicleState, GravityCanyonState, PlayerState, TeamId } from "../schema/GravityCanyonState.js";
+import { unitDefinitionForCharacter } from "../../shared/content/v1Units.js";
+import type { CharacterId, TeamId, VehicleId } from "../../shared/model/gameTypes.js";
+import {
+  activeSlotIdsForMode,
+  assignCaptainRoles,
+  buildPreviewSlots,
+  canEditSlot,
+  defaultCharacterForSlot,
+  isReadyToAutoStart,
+  ownerSessionIdForSlot,
+  sanitizeCharacterPick,
+  type CaptainRole,
+} from "./autoRoomLobby.js";
+import {
+  CombatVehicleState,
+  GravityCanyonState,
+  LobbySlotState,
+  PlayerState,
+} from "../schema/GravityCanyonState.js";
+import { sanitizeDisplayName, type GameMode } from "../v1/rules.js";
 
 type JoinOptions = {
   displayName?: string;
@@ -14,6 +33,15 @@ type EquipMessage = {
   nameplate?: string;
 };
 
+type ModeMessage = {
+  mode?: GameMode;
+};
+
+type SelectCharacterMessage = {
+  slotId?: VehicleId;
+  characterId?: CharacterId;
+};
+
 const cosmeticPool = [
   "Canyon Rookie",
   "Archshot Ace",
@@ -23,13 +51,16 @@ const cosmeticPool = [
 ];
 const PREVIEW_DAMAGE = 40;
 const VEHICLE_MAX_HP = 100;
+const LOBBY_SLOT_IDS: readonly VehicleId[] = ["red-1", "blue-1", "red-2", "blue-2"];
 
 export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
-  maxClients = 2;
+  maxClients = 8;
+  private nextJoinOrder = 1;
 
   onCreate() {
     this.setState(new GravityCanyonState());
-    this.state.roomCode = this.roomId;
+    this.state.roomCode = "auto-room";
+    this.ensureLobbySlots();
 
     this.onMessage("setDisplayName", (client, displayName: string) => {
       const player = this.state.players.get(client.sessionId);
@@ -47,7 +78,44 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
         return;
       }
 
-      player.ready = Boolean(message.ready);
+      player.ready = player.role === "red-captain" || player.role === "blue-captain" ? Boolean(message.ready) : false;
+      this.refreshStatus();
+    });
+
+    this.onMessage("setMode", (client, message: ModeMessage) => {
+      if (this.state.phase !== "lobby" && this.state.phase !== "ready") {
+        return;
+      }
+
+      if (client.sessionId !== this.state.redCaptainSessionId) {
+        return;
+      }
+
+      if (message.mode !== "1v1" && message.mode !== "2v2") {
+        return;
+      }
+
+      this.state.mode = message.mode;
+      this.syncLobbySlots();
+      this.refreshStatus();
+    });
+
+    this.onMessage("selectCharacter", (client, message: SelectCharacterMessage) => {
+      if ((this.state.phase !== "lobby" && this.state.phase !== "ready") || !message.slotId) {
+        return;
+      }
+
+      const player = this.state.players.get(client.sessionId);
+      if (!player || !canEditSlot(player.role as CaptainRole, message.slotId)) {
+        return;
+      }
+
+      const slot = this.state.slots.get(message.slotId);
+      if (!slot || !slot.active) {
+        return;
+      }
+
+      slot.selectedCharacterId = sanitizeCharacterPick(message.characterId, message.slotId);
       this.refreshStatus();
     });
 
@@ -86,7 +154,11 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
     });
 
     this.onMessage("startNextRound", () => {
-      if (this.state.phase !== "round-over" || this.getPlayers().length < this.maxClients) {
+      if (
+        this.state.phase !== "round-over" ||
+        !this.state.redCaptainSessionId ||
+        !this.state.blueCaptainSessionId
+      ) {
         return;
       }
 
@@ -97,11 +169,12 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
     this.refreshStatus();
   }
 
-  onJoin(client: Client, options: JoinOptions) {
+  onJoin(client: Client, options: JoinOptions = {}) {
     const player = new PlayerState();
     player.sessionId = client.sessionId;
     player.displayName = sanitizeDisplayName(options.displayName);
-    player.team = this.nextTeam();
+    player.joinOrder = this.nextJoinOrder;
+    this.nextJoinOrder += 1;
     player.inventory = new ArraySchema<string>("Canyon Rookie");
     player.equippedNameplate = "Canyon Rookie";
 
@@ -111,29 +184,92 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
 
   onLeave(client: Client) {
     this.state.players.delete(client.sessionId);
+
+    if (this.state.phase === "combat-preview" || this.state.phase === "round-over") {
+      this.state.phase = "lobby";
+    }
+
     this.clearCombatPreview();
     this.refreshStatus();
   }
 
-  private nextTeam() {
-    const teams = this.getPlayers().map((player) => player.team);
-    return teams.includes("red") ? "blue" : "red";
+  private syncRoles() {
+    const players = this.getPlayers();
+    const roles = assignCaptainRoles(players);
+    this.state.redCaptainSessionId = "";
+    this.state.blueCaptainSessionId = "";
+    this.state.spectatorSessionIds.splice(0, this.state.spectatorSessionIds.length);
+
+    for (const player of players) {
+      const role = roles.get(player.sessionId) ?? "spectator";
+      player.role = role;
+      player.team = role === "blue-captain" ? "blue" : "red";
+
+      if (role === "red-captain") {
+        this.state.redCaptainSessionId = player.sessionId;
+      } else if (role === "blue-captain") {
+        this.state.blueCaptainSessionId = player.sessionId;
+      } else {
+        player.ready = false;
+        this.state.spectatorSessionIds.push(player.sessionId);
+      }
+    }
+  }
+
+  private ensureLobbySlots() {
+    for (const slotId of LOBBY_SLOT_IDS) {
+      if (!this.state.slots.has(slotId)) {
+        const slot = new LobbySlotState();
+        slot.slotId = slotId;
+        slot.team = teamForSlot(slotId);
+        slot.selectedCharacterId = defaultCharacterForSlot(slotId);
+        this.state.slots.set(slotId, slot);
+      }
+    }
+  }
+
+  private syncLobbySlots() {
+    this.ensureLobbySlots();
+    const activeSlotIds = new Set(activeSlotIdsForMode(this.state.mode));
+
+    for (const [slotId, slot] of this.state.slots.entries() as Iterable<[VehicleId, LobbySlotState]>) {
+      slot.active = activeSlotIds.has(slotId);
+      slot.ownerSessionId = slot.active
+        ? ownerSessionIdForSlot(slotId, this.state.redCaptainSessionId, this.state.blueCaptainSessionId)
+        : "";
+      slot.selectedCharacterId = sanitizeCharacterPick(slot.selectedCharacterId, slotId);
+    }
   }
 
   private refreshStatus() {
-    const players = this.getPlayers();
-    const readyPlayers = players.filter((player) => player.ready);
+    this.syncRoles();
+    this.syncLobbySlots();
 
-    if (players.length < this.maxClients) {
+    const red = this.state.players.get(this.state.redCaptainSessionId);
+    const blue = this.state.players.get(this.state.blueCaptainSessionId);
+    const redReady = red?.ready ?? false;
+    const blueReady = blue?.ready ?? false;
+    const selectedCharacters = this.getSelectedCharacters();
+
+    if (!red || !blue) {
       this.state.phase = "lobby";
-      this.state.status = `Waiting for ${this.maxClients - players.length} player.`;
+      this.state.status = red ? "Waiting for blue captain." : "Waiting for red captain.";
       this.clearCombatPreview();
       return;
     }
 
-    if (readyPlayers.length < players.length) {
+    if (
+      !isReadyToAutoStart({
+        mode: this.state.mode,
+        redCaptainSessionId: this.state.redCaptainSessionId,
+        blueCaptainSessionId: this.state.blueCaptainSessionId,
+        redReady,
+        blueReady,
+        selectedCharacters,
+      })
+    ) {
       this.state.phase = "ready";
-      this.state.status = "Room filled. Waiting for ready checks.";
+      this.state.status = !redReady ? "Waiting for red ready." : "Waiting for blue ready.";
       this.clearCombatPreview();
       return;
     }
@@ -147,19 +283,34 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
     return Array.from(this.state.players.values()) as PlayerState[];
   }
 
+  private getSelectedCharacters(): Partial<Record<VehicleId, string>> {
+    return Object.fromEntries(
+      Array.from(this.state.slots.entries()).map(([slotId, slot]) => [slotId, slot.selectedCharacterId]),
+    ) as Partial<Record<VehicleId, string>>;
+  }
+
   private startCombatPreview() {
-    const players = this.getPlayers().sort((a, b) => teamSort(a.team) - teamSort(b.team));
     this.state.phase = "combat-preview";
     this.state.winnerTeam = "";
     this.state.turnNumber = 1;
     this.state.wind = rollWind();
     this.state.vehicles.splice(0, this.state.vehicles.length);
 
-    for (const player of players) {
-      this.state.vehicles.push(createPreviewVehicle(player));
+    const previewSlots = buildPreviewSlots({
+      mode: this.state.mode,
+      redCaptainSessionId: this.state.redCaptainSessionId,
+      blueCaptainSessionId: this.state.blueCaptainSessionId,
+      selectedCharacters: this.getSelectedCharacters(),
+    });
+
+    for (const slot of previewSlots) {
+      const owner = this.state.players.get(slot.ownerSessionId);
+      if (owner) {
+        this.state.vehicles.push(createPreviewVehicle(slot.slotId, slot.selectedCharacterId, owner));
+      }
     }
 
-    const activeVehicle = this.state.vehicles.find((vehicle) => vehicle.team === "red") ?? this.state.vehicles[0];
+    const activeVehicle = this.state.vehicles[0];
     this.state.activeVehicleId = activeVehicle?.vehicleId ?? "";
     this.state.status = activeVehicle
       ? `Round ${this.state.roundNumber} started. ${activeVehicle.displayName} has the first shot.`
@@ -198,7 +349,7 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
       return;
     }
 
-    const nextVehicle = this.nextAliveVehicle(activeVehicle.team);
+    const nextVehicle = this.nextAliveVehicle(activeVehicle.vehicleId);
     this.state.turnNumber += 1;
     this.state.wind = rollWind();
     this.state.activeVehicleId = nextVehicle?.vehicleId ?? "";
@@ -207,8 +358,18 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
       : `${activeVehicle.displayName}'s server test shot resolved.`;
   }
 
-  private nextAliveVehicle(previousTeam: TeamId) {
-    return this.state.vehicles.find((vehicle) => vehicle.team !== previousTeam && vehicle.alive);
+  private nextAliveVehicle(currentVehicleId: string) {
+    const vehicles = Array.from(this.state.vehicles);
+    const currentIndex = vehicles.findIndex((vehicle) => vehicle.vehicleId === currentVehicleId);
+
+    for (let offset = 1; offset <= vehicles.length; offset += 1) {
+      const candidate = vehicles[(currentIndex + offset + vehicles.length) % vehicles.length];
+      if (candidate?.alive) {
+        return candidate;
+      }
+    }
+
+    return undefined;
   }
 
   private hasAliveTeam(team: TeamId) {
@@ -220,11 +381,13 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
     this.state.winnerTeam = winnerTeam;
     this.state.activeVehicleId = "";
 
+    const rewardedSessionIds = new Set<string>();
     const winners = this.state.vehicles.filter((vehicle) => vehicle.team === winnerTeam);
     for (const vehicle of winners) {
       const player = this.state.players.get(vehicle.ownerSessionId);
-      if (player) {
+      if (player && !rewardedSessionIds.has(player.sessionId)) {
         player.tokens += 1;
+        rewardedSessionIds.add(player.sessionId);
       }
     }
 
@@ -233,33 +396,30 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
   }
 }
 
-function sanitizeDisplayName(displayName = "Guest") {
-  const clean = displayName.replace(/[^\w .-]/g, "").replace(/\s+/g, " ").trim();
-  return clean.slice(0, 18) || "Guest";
-}
-
-function createPreviewVehicle(player: PlayerState) {
+function createPreviewVehicle(slotId: VehicleId, characterId: CharacterId, player: PlayerState) {
+  const unit = unitDefinitionForCharacter(characterId);
+  const team = teamForSlot(slotId);
   const vehicle = new CombatVehicleState();
-  vehicle.vehicleId = `${player.team}-${player.sessionId.slice(0, 6)}`;
+  vehicle.vehicleId = slotId;
   vehicle.ownerSessionId = player.sessionId;
-  vehicle.displayName = player.displayName;
-  vehicle.team = player.team;
-  vehicle.className = player.team === "red" ? "Bunger Rig" : "Glitch Rover";
+  vehicle.displayName = `${player.displayName} / ${unit.username}`;
+  vehicle.team = team;
+  vehicle.className = unit.className;
   vehicle.hp = VEHICLE_MAX_HP;
   vehicle.maxHp = VEHICLE_MAX_HP;
   vehicle.alive = true;
-  vehicle.x = player.team === "red" ? 385 : 1995;
+  vehicle.x = team === "red" ? (slotId === "red-1" ? 385 : 710) : slotId === "blue-1" ? 1995 : 1690;
   vehicle.y = 0;
-  vehicle.angle = player.team === "red" ? 47 : 133;
+  vehicle.angle = team === "red" ? 47 : 133;
   return vehicle;
+}
+
+function teamForSlot(slotId: VehicleId): TeamId {
+  return slotId.startsWith("red-") ? "red" : "blue";
 }
 
 function rollWind() {
   return Math.floor(Math.random() * 25) - 12;
-}
-
-function teamSort(team: TeamId) {
-  return team === "red" ? 0 : 1;
 }
 
 function capitalize(value: string) {
