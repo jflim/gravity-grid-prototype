@@ -5,6 +5,7 @@ import {
   lobbyStatusText,
   localRoleLabel,
   modeLabel,
+  normalizeLobbySlots,
   slotLabel,
 } from "./onlineLobbyView";
 
@@ -50,5 +51,57 @@ test("lobbyStatusText explains the blocked start state", () => {
       blueReady: false,
     }),
     "Waiting for VesperFriend to ready.",
+  );
+});
+
+test("normalizeLobbySlots reads Colyseus map slot state and owner labels", () => {
+  const slots = new Map<string, unknown>([
+    [
+      "red-1",
+      {
+        slotId: "red-1",
+        team: "red",
+        ownerSessionId: "red-session",
+        selectedCharacterId: "kaelii",
+        active: true,
+      },
+    ],
+    [
+      "blue-1",
+      {
+        slotId: "blue-1",
+        team: "blue",
+        ownerSessionId: "blue-session",
+        selectedCharacterId: "vesper",
+        active: true,
+      },
+    ],
+  ]);
+
+  assert.deepEqual(
+    normalizeLobbySlots(slots, [
+      { sessionId: "red-session", displayName: "RedTest", ready: true },
+      { sessionId: "blue-session", displayName: "BlueTest", ready: false },
+    ]),
+    [
+      {
+        slotId: "red-1",
+        team: "red",
+        ownerSessionId: "red-session",
+        characterId: "kaelii",
+        displayName: "RedTest",
+        ready: true,
+        active: true,
+      },
+      {
+        slotId: "blue-1",
+        team: "blue",
+        ownerSessionId: "blue-session",
+        characterId: "vesper",
+        displayName: "BlueTest",
+        ready: false,
+        active: true,
+      },
+    ],
   );
 });

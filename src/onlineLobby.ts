@@ -4,7 +4,9 @@ import {
   lobbyStatusText,
   localRoleLabel,
   modeLabel,
+  normalizeLobbySlots,
   slotLabel,
+  type LobbySlotView,
 } from "./onlineLobbyView";
 
 const CHARACTER_OPTIONS = ["nova", "vesper", "kaelii", "perlah"] as const;
@@ -20,16 +22,6 @@ type PlayerSnapshot = {
   tokens: number;
   equippedNameplate: string;
   inventory: string[];
-};
-
-type LobbySlotSnapshot = {
-  slotId: string;
-  team: string;
-  ownerSessionId: string;
-  characterId: string;
-  displayName: string;
-  ready: boolean;
-  active: boolean;
 };
 
 type CombatVehicleSnapshot = {
@@ -61,7 +53,7 @@ type RoomSnapshot = {
   winnerTeam: string;
   lastRewardLog: string;
   players: PlayerSnapshot[];
-  slots: LobbySlotSnapshot[];
+  slots: LobbySlotView[];
   vehicles: CombatVehicleSnapshot[];
 };
 
@@ -426,9 +418,10 @@ function getSnapshot(state: unknown): RoomSnapshot {
     activeVehicleId?: string;
     winnerTeam?: string;
     players?: Map<string, unknown> | Record<string, unknown>;
-    slots?: unknown[] | Iterable<unknown>;
+    slots?: Map<string, unknown> | Record<string, unknown> | unknown[] | Iterable<unknown>;
     vehicles?: unknown[] | Iterable<unknown>;
   };
+  const players = getPlayers(source.players);
 
   return {
     roomCode: source.roomCode ?? "",
@@ -444,8 +437,8 @@ function getSnapshot(state: unknown): RoomSnapshot {
     activeVehicleId: source.activeVehicleId ?? "",
     winnerTeam: source.winnerTeam ?? "",
     lastRewardLog: source.lastRewardLog ?? "",
-    players: getPlayers(source.players),
-    slots: getSlots(source.slots),
+    players,
+    slots: normalizeLobbySlots(source.slots, players),
     vehicles: getVehicles(source.vehicles),
   };
 }
@@ -483,25 +476,6 @@ function getPlayers(players: Map<string, unknown> | Record<string, unknown> | un
     iterablePlayers.forEach(readPlayer);
   } else if (players) {
     Object.entries(players).forEach(([key, player]) => readPlayer(player, key));
-  }
-
-  return snapshots;
-}
-
-function getSlots(slots: unknown[] | Iterable<unknown> | undefined) {
-  const snapshots: LobbySlotSnapshot[] = [];
-
-  for (const slot of Array.from(slots ?? [])) {
-    const source = slot as Partial<LobbySlotSnapshot>;
-    snapshots.push({
-      slotId: source.slotId ?? "",
-      team: source.team ?? "red",
-      ownerSessionId: source.ownerSessionId ?? "",
-      characterId: source.characterId ?? "nova",
-      displayName: source.displayName ?? "Guest",
-      ready: Boolean(source.ready),
-      active: source.active ?? false,
-    });
   }
 
   return snapshots;
