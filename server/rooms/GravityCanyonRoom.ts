@@ -1,11 +1,9 @@
 import { ArraySchema } from "@colyseus/schema";
 import { Client, Room } from "colyseus";
-import { unitDefinitionForCharacter } from "../../shared/content/v1Units.js";
-import type { CharacterId, TeamId, VehicleId } from "../../shared/model/gameTypes.js";
+import type { CharacterId, VehicleId } from "../../shared/model/gameTypes.js";
 import {
   activeSlotIdsForMode,
   assignCaptainRoles,
-  buildPreviewSlots,
   canEditSlot,
   defaultCharacterForSlot,
   isReadyToAutoStart,
@@ -14,12 +12,17 @@ import {
   type CaptainRole,
 } from "./autoRoomLobby.js";
 import {
-  CombatVehicleState,
   GravityCanyonState,
   LobbySlotState,
   PlayerState,
 } from "../schema/GravityCanyonState.js";
 import { sanitizeDisplayName, type GameMode } from "../v1/rules.js";
+import {
+  clearCombatPreview,
+  previewFireForClient,
+  startCombatPreview,
+  teamForSlot,
+} from "./combatPreview.js";
 
 type JoinOptions = {
   displayName?: string;
@@ -49,8 +52,6 @@ const cosmeticPool = [
   "Mesa Idol",
   "Cloudline Champ",
 ];
-const PREVIEW_DAMAGE = 40;
-const VEHICLE_MAX_HP = 100;
 const LOBBY_SLOT_IDS: readonly VehicleId[] = ["red-1", "blue-1", "red-2", "blue-2"];
 
 export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
@@ -150,7 +151,7 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
     });
 
     this.onMessage("previewFire", (client) => {
-      this.previewFire(client);
+      previewFireForClient(this.state, client.sessionId);
     });
 
     this.onMessage("startNextRound", () => {
@@ -163,7 +164,7 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
       }
 
       this.state.roundNumber += 1;
-      this.startCombatPreview();
+      startCombatPreview(this.state);
     });
 
     this.refreshStatus();
@@ -189,7 +190,7 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
       this.state.phase = "lobby";
     }
 
-    this.clearCombatPreview();
+    clearCombatPreview(this.state);
     this.refreshStatus();
   }
 
@@ -254,7 +255,7 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
     if (!red || !blue) {
       this.state.phase = "lobby";
       this.state.status = red ? "Waiting for blue captain." : "Waiting for red captain.";
-      this.clearCombatPreview();
+      clearCombatPreview(this.state);
       return;
     }
 
@@ -270,12 +271,12 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
     ) {
       this.state.phase = "ready";
       this.state.status = !redReady ? "Waiting for red ready." : "Waiting for blue ready.";
-      this.clearCombatPreview();
+      clearCombatPreview(this.state);
       return;
     }
 
     if (this.state.phase !== "combat-preview" && this.state.phase !== "round-over") {
-      this.startCombatPreview();
+      startCombatPreview(this.state);
     }
   }
 
@@ -288,140 +289,4 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
       Array.from(this.state.slots.entries()).map(([slotId, slot]) => [slotId, slot.selectedCharacterId]),
     ) as Partial<Record<VehicleId, string>>;
   }
-
-  private startCombatPreview() {
-    this.state.phase = "combat-preview";
-    this.state.winnerTeam = "";
-    this.state.turnNumber = 1;
-    this.state.wind = rollWind();
-    this.state.vehicles.splice(0, this.state.vehicles.length);
-
-    const previewSlots = buildPreviewSlots({
-      mode: this.state.mode,
-      redCaptainSessionId: this.state.redCaptainSessionId,
-      blueCaptainSessionId: this.state.blueCaptainSessionId,
-      selectedCharacters: this.getSelectedCharacters(),
-    });
-
-    for (const slot of previewSlots) {
-      const owner = this.state.players.get(slot.ownerSessionId);
-      if (owner) {
-        this.state.vehicles.push(createPreviewVehicle(slot.slotId, slot.selectedCharacterId, owner));
-      }
-    }
-
-    const activeVehicle = this.state.vehicles[0];
-    this.state.activeVehicleId = activeVehicle?.vehicleId ?? "";
-    this.state.status = activeVehicle
-      ? `Round ${this.state.roundNumber} started. ${activeVehicle.displayName} has the first shot.`
-      : "Round started.";
-  }
-
-  private clearCombatPreview() {
-    this.state.turnNumber = 0;
-    this.state.wind = 0;
-    this.state.activeVehicleId = "";
-    this.state.winnerTeam = "";
-    this.state.vehicles.splice(0, this.state.vehicles.length);
-  }
-
-  private previewFire(client: Client) {
-    if (this.state.phase !== "combat-preview") {
-      return;
-    }
-
-    const activeVehicle = this.state.vehicles.find((vehicle) => vehicle.vehicleId === this.state.activeVehicleId);
-    if (!activeVehicle || activeVehicle.ownerSessionId !== client.sessionId || !activeVehicle.alive) {
-      return;
-    }
-
-    const target = this.state.vehicles.find((vehicle) => vehicle.team !== activeVehicle.team && vehicle.alive);
-    if (!target) {
-      this.finishRound(activeVehicle.team);
-      return;
-    }
-
-    target.hp = Math.max(0, target.hp - PREVIEW_DAMAGE);
-    target.alive = target.hp > 0;
-
-    if (!this.hasAliveTeam(target.team)) {
-      this.finishRound(activeVehicle.team);
-      return;
-    }
-
-    const nextVehicle = this.nextAliveVehicle(activeVehicle.vehicleId);
-    this.state.turnNumber += 1;
-    this.state.wind = rollWind();
-    this.state.activeVehicleId = nextVehicle?.vehicleId ?? "";
-    this.state.status = nextVehicle
-      ? `${activeVehicle.displayName}'s server test shot hit ${target.displayName}. ${nextVehicle.displayName} is up.`
-      : `${activeVehicle.displayName}'s server test shot resolved.`;
-  }
-
-  private nextAliveVehicle(currentVehicleId: string) {
-    const vehicles = Array.from(this.state.vehicles);
-    const currentIndex = vehicles.findIndex((vehicle) => vehicle.vehicleId === currentVehicleId);
-
-    for (let offset = 1; offset <= vehicles.length; offset += 1) {
-      const candidate = vehicles[(currentIndex + offset + vehicles.length) % vehicles.length];
-      if (candidate?.alive) {
-        return candidate;
-      }
-    }
-
-    return undefined;
-  }
-
-  private hasAliveTeam(team: TeamId) {
-    return this.state.vehicles.some((vehicle) => vehicle.team === team && vehicle.alive);
-  }
-
-  private finishRound(winnerTeam: TeamId) {
-    this.state.phase = "round-over";
-    this.state.winnerTeam = winnerTeam;
-    this.state.activeVehicleId = "";
-
-    const rewardedSessionIds = new Set<string>();
-    const winners = this.state.vehicles.filter((vehicle) => vehicle.team === winnerTeam);
-    for (const vehicle of winners) {
-      const player = this.state.players.get(vehicle.ownerSessionId);
-      if (player && !rewardedSessionIds.has(player.sessionId)) {
-        player.tokens += 1;
-        rewardedSessionIds.add(player.sessionId);
-      }
-    }
-
-    this.state.status = `${capitalize(winnerTeam)} team wins round ${this.state.roundNumber}.`;
-    this.state.lastRewardLog = `${capitalize(winnerTeam)} team earned 1 preview token.`;
-  }
-}
-
-function createPreviewVehicle(slotId: VehicleId, characterId: CharacterId, player: PlayerState) {
-  const unit = unitDefinitionForCharacter(characterId);
-  const team = teamForSlot(slotId);
-  const vehicle = new CombatVehicleState();
-  vehicle.vehicleId = slotId;
-  vehicle.ownerSessionId = player.sessionId;
-  vehicle.displayName = `${player.displayName} / ${unit.username}`;
-  vehicle.team = team;
-  vehicle.className = unit.className;
-  vehicle.hp = VEHICLE_MAX_HP;
-  vehicle.maxHp = VEHICLE_MAX_HP;
-  vehicle.alive = true;
-  vehicle.x = team === "red" ? (slotId === "red-1" ? 385 : 710) : slotId === "blue-1" ? 1995 : 1690;
-  vehicle.y = 0;
-  vehicle.angle = team === "red" ? 47 : 133;
-  return vehicle;
-}
-
-function teamForSlot(slotId: VehicleId): TeamId {
-  return slotId.startsWith("red-") ? "red" : "blue";
-}
-
-function rollWind() {
-  return Math.floor(Math.random() * 25) - 12;
-}
-
-function capitalize(value: string) {
-  return value.charAt(0).toUpperCase() + value.slice(1);
 }
