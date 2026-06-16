@@ -91,15 +91,24 @@ test("main.ts stays a bootstrap instead of owning the Phaser scene", () => {
 test("online playtest swaps from lobby stage into gameplay bootstrap", () => {
   const main = readFileSync("src/main.ts", "utf8");
   const lobby = readFileSync("src/onlineLobby.ts", "utf8");
+  const dom = readFileSync("src/onlineLobbyDom.ts", "utf8");
   const markup = readFileSync("src/onlineLobbyMarkup.ts", "utf8");
 
   assert.match(main, /mountOnlineLobby\(\{\s*onGameplayStart:\s*mountGameplay\s*\}\)/);
   assert.match(main, /function mountGameplay\(\): void/);
-  assert.match(lobby, /renderLobbyShell\(\)/);
+  assert.match(lobby, /createOnlineLobbyDom/);
+  assert.match(dom, /renderLobbyShell\(\)/);
   assert.match(markup, /class="online-stage"/);
   assert.match(lobby, /stageForRoomPhase\(snapshot\.phase\) === "gameplay"/);
-  assert.match(lobby, /stage\.remove\(\)/);
+  assert.match(lobby, /dom\.remove\(\)/);
   assert.doesNotMatch(lobby, /data-combat-block|data-preview-fire|data-next-round/);
+});
+
+test("online lobby controller delegates DOM rendering", () => {
+  const controller = readFileSync("src/onlineLobby.ts", "utf8");
+
+  assert.match(controller, /createOnlineLobbyDom/);
+  assert.doesNotMatch(controller, /innerHTML\s*=|querySelector<|document\.createElement\("section"\)/);
 });
 
 test("match runtime types stay free of Phaser rendering objects", () => {
