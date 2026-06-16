@@ -157,6 +157,17 @@
 <li>Live matches should move toward server-authoritative combat.</li>
 <li>Gameplay sprites use stable runtime filenames in <code>public/assets</code>; variant/history sprites live under <code>public/assets/sprite-variants</code>.</li>
 </ul>
+<h2>graphify</h2>
+<p>This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.</p>
+<p>When the user types <code>/graphify</code>, invoke the <code>skill</code> tool with <code>skill: &quot;graphify&quot;</code> before doing anything else.</p>
+<p>Rules:</p>
+<ul>
+<li>For codebase questions, first run <code>graphify query &quot;&lt;question&gt;&quot;</code> when graphify-out/graph.json exists. Use <code>graphify path &quot;&lt;A&gt;&quot; &quot;&lt;B&gt;&quot;</code> for relationships and <code>graphify explain &quot;&lt;concept&gt;&quot;</code> for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.</li>
+<li>Dirty graphify-out/ files are expected after hooks or incremental updates; dirty graph files are not a reason to skip graphify. Only skip graphify if the task is about stale or incorrect graph output, or the user explicitly says not to use it.</li>
+<li>If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.</li>
+<li>Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.</li>
+<li>After modifying code, run <code>graphify update .</code> to keep the graph current (AST-only, no API cost).</li>
+</ul>
     </article>
   </main>
 </body>

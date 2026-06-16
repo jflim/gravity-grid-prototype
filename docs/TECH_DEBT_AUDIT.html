@@ -93,12 +93,13 @@
 <h1>Gravity Canyon Technical Debt Audit</h1>
 <p>Generated on 2026-06-16 for the current working tree.</p>
 <h2>Tooling Note</h2>
-<p>The request named Graphify and Fallow. They are not installed in this repository, not exposed as Codex tools, and not available as installable plugins in this session. This report therefore uses a local replacement:</p>
+<p>This report uses the requested tools:</p>
 <ul>
-<li><strong>Graphify-style pass:</strong> relative import graph, incoming dependencies, outgoing dependencies, and cycle detection.</li>
-<li><strong>Fallow-style pass:</strong> file size, branch-density proxy, mixed-concern markers, git churn, and missing sibling-test flags.</li>
+<li><strong>Graphify:</strong> installed from <code>safishamsi/graphify</code> as the <code>graphifyy</code> Python package, then run with <code>npm run audit:graphify</code>.</li>
+<li><strong>Fallow:</strong> installed from <code>fallow-rs/fallow</code> as the npm dev dependency <code>fallow</code>, then run with <code>npm run audit:fallow</code>.</li>
+<li><strong>Audit builder:</strong> <code>npm run audit:debt</code> runs Graphify, runs Fallow, builds this markdown report, then regenerates the HTML docs.</li>
 </ul>
-<p>If Graphify or Fallow become available later, rerun this audit with those tools and compare their findings against this baseline.</p>
+<p>The old local size/coupling score remains in the report as supplemental context, but Graphify and Fallow evidence now drive the top findings.</p>
 <h2>Summary</h2>
 <table>
 <thead><tr>
@@ -111,12 +112,12 @@
 <td>Gravity Canyon</td>
 </tr>
 <tr>
-<td>Files scanned</td>
-<td>129</td>
+<td>Files scanned by local supplement</td>
+<td>132</td>
 </tr>
 <tr>
 <td>Source files</td>
-<td>79</td>
+<td>82</td>
 </tr>
 <tr>
 <td>Test files</td>
@@ -124,7 +125,7 @@
 </tr>
 <tr>
 <td>Nonblank LOC scanned</td>
-<td>13869</td>
+<td>13872</td>
 </tr>
 <tr>
 <td>Dependency cycles found</td>
@@ -139,8 +140,296 @@
 <td>300 nonblank LOC or less</td>
 </tr>
 </tbody></table>
+<h2>Graphify evidence</h2>
+<p>Graphify builds the project graph and records structural graph health in <code>work/audits/graphify-diagnose.json</code>. The generated graph itself stays ignored under <code>graphify-out/</code> so commits do not churn on local graph cache output.</p>
+<table>
+<thead><tr>
+<th>Metric</th>
+<th>Value</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Evidence file</td>
+<td><code>work/audits/graphify-diagnose.json</code></td>
+</tr>
+<tr>
+<td>Graph file</td>
+<td><code>graphify-out/graph.json</code></td>
+</tr>
+<tr>
+<td>Graphify source command</td>
+<td><code>graphify update . --force --no-cluster</code></td>
+</tr>
+<tr>
+<td>Diagnose command</td>
+<td><code>graphify diagnose multigraph --json --graph graphify-out/graph.json</code></td>
+</tr>
+<tr>
+<td>Raw node count</td>
+<td>1601</td>
+</tr>
+<tr>
+<td>Post-build node count</td>
+<td>1601</td>
+</tr>
+<tr>
+<td>Raw edge count</td>
+<td>2961</td>
+</tr>
+<tr>
+<td>Post-build edge count</td>
+<td>2622</td>
+</tr>
+<tr>
+<td>Directed unique endpoint pairs</td>
+<td>2624</td>
+</tr>
+<tr>
+<td>Undirected unique endpoint pairs</td>
+<td>2620</td>
+</tr>
+<tr>
+<td>Collapsed directed endpoint edges</td>
+<td>11</td>
+</tr>
+<tr>
+<td>Dangling endpoint edges</td>
+<td>326</td>
+</tr>
+</tbody></table>
+<h2>Fallow evidence</h2>
+<p>Fallow reports dependency hygiene, circular-dependency status, duplication, hotspots, and function-level complexity. The report is scoped by <code>.fallowrc.json</code> to source, server, shared, and script code while excluding build output, docs, assets, and vendored browser code.</p>
+<p>The raw Fallow JSON keeps all findings. The hotspot and remediation tables below filter out this audit infrastructure so the displayed remediation queue stays focused on app and playtest code.</p>
+<table>
+<thead><tr>
+<th>Metric</th>
+<th>Value</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Evidence files</td>
+<td><code>work/audits/fallow-full.json</code>, <code>work/audits/fallow-health.json</code></td>
+</tr>
+<tr>
+<td>Fallow version</td>
+<td>2.97.0</td>
+</tr>
+<tr>
+<td>Repo hygiene issues</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Circular dependencies</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Boundary violations</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Unresolved imports</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Unused files</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Test-only dependencies</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Health findings</td>
+<td>79</td>
+</tr>
+<tr>
+<td>Remediation targets</td>
+<td>7</td>
+</tr>
+</tbody></table>
+<h3>Fallow Dependency Findings</h3>
+<table>
+<thead><tr>
+<th>Package</th>
+<th>Location</th>
+<th>Action</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>@colyseus/sdk</code></td>
+<td>package.json:29</td>
+<td>Move to devDependencies (only test files import this)</td>
+</tr>
+</tbody></table>
+<h3>Fallow Health Hotspots</h3>
+<table>
+<thead><tr>
+<th>File</th>
+<th>Function</th>
+<th>Line</th>
+<th>Cyclomatic</th>
+<th>Cognitive</th>
+<th>CRAP</th>
+<th>Recommendation</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>src/match/rendering/VehicleRenderer.ts</code></td>
+<td><code>draw</code></td>
+<td>50</td>
+<td>36</td>
+<td>32</td>
+<td>1332</td>
+<td>Refactor <code>draw</code> to reduce complexity (extract helper functions, simplify branching)</td>
+</tr>
+<tr>
+<td><code>scripts/verify-runtime-roster.mjs</code></td>
+<td><code>readPngAlphaBounds</code></td>
+<td>191</td>
+<td>26</td>
+<td>38</td>
+<td>702</td>
+<td>Add test coverage for <code>readPngAlphaBounds</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
+</tr>
+<tr>
+<td><code>src/onlineLobby.ts</code></td>
+<td><code>render</code></td>
+<td>227</td>
+<td>26</td>
+<td>19</td>
+<td>702</td>
+<td>Add test coverage for <code>render</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
+</tr>
+<tr>
+<td><code>scripts/build-docs-html.mjs</code></td>
+<td><code>renderMarkdown</code></td>
+<td>124</td>
+<td>24</td>
+<td>50</td>
+<td>600</td>
+<td>Add test coverage for <code>renderMarkdown</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
+</tr>
+<tr>
+<td><code>shared/gameplay/impact.ts</code></td>
+<td><code>resolveProjectileImpact</code></td>
+<td>80</td>
+<td>22</td>
+<td>35</td>
+<td>506</td>
+<td>Add test coverage for <code>resolveProjectileImpact</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
+</tr>
+<tr>
+<td><code>src/match/ImpactController.ts</code></td>
+<td><code>resolve</code></td>
+<td>30</td>
+<td>18</td>
+<td>23</td>
+<td>342</td>
+<td>Add test coverage for <code>resolve</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
+</tr>
+<tr>
+<td><code>src/match/MatchScene.ts</code></td>
+<td><code>update</code></td>
+<td>322</td>
+<td>17</td>
+<td>16</td>
+<td>306</td>
+<td>Add test coverage for <code>update</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
+</tr>
+<tr>
+<td><code>src/match/rendering/TerrainRenderer.ts</code></td>
+<td><code>drawMapLandmarks</code></td>
+<td>81</td>
+<td>16</td>
+<td>30</td>
+<td>272</td>
+<td>Add test coverage for <code>drawMapLandmarks</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
+</tr>
+<tr>
+<td><code>src/onlineLobbyView.ts</code></td>
+<td><code>readSlot</code></td>
+<td>109</td>
+<td>16</td>
+<td>11</td>
+<td>272</td>
+<td>Add test coverage for <code>readSlot</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
+</tr>
+<tr>
+<td><code>src/onlineLobby.ts</code></td>
+<td><code>getSnapshot</code></td>
+<td>360</td>
+<td>14</td>
+<td>13</td>
+<td>210</td>
+<td>Add test coverage for <code>getSnapshot</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
+</tr>
+<tr>
+<td><code>src/onlineLobby.ts</code></td>
+<td><code>getVehicles</code></td>
+<td>439</td>
+<td>14</td>
+<td>13</td>
+<td>210</td>
+<td>Add test coverage for <code>getVehicles</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
+</tr>
+<tr>
+<td><code>src/match/MatchInputController.ts</code></td>
+<td><code>readMatchInputSnapshot</code></td>
+<td>38</td>
+<td>14</td>
+<td>8</td>
+<td>210</td>
+<td>Add test coverage for <code>readMatchInputSnapshot</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
+</tr>
+</tbody></table>
+<h3>Fallow Remediation Targets</h3>
+<table>
+<thead><tr>
+<th>File</th>
+<th>Priority</th>
+<th>Category</th>
+<th>Recommendation</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>src/match/rendering/VehicleRenderer.ts</code></td>
+<td>23.4</td>
+<td>extract_complex_functions</td>
+<td>Extract draw (cognitive: 32) in 126-LOC file into smaller functions</td>
+</tr>
+<tr>
+<td><code>src/onlineLobbyView.ts</code></td>
+<td>18.9</td>
+<td>add_test_coverage</td>
+<td>3 complex functions lack test coverage path, add tests before modifying</td>
+</tr>
+<tr>
+<td><code>shared/gameplay/impact.ts</code></td>
+<td>11.7</td>
+<td>extract_complex_functions</td>
+<td>Extract resolveProjectileImpact (cognitive: 35) in 196-LOC file into smaller functions</td>
+</tr>
+<tr>
+<td><code>src/match/rendering/TerrainRenderer.ts</code></td>
+<td>11.4</td>
+<td>extract_complex_functions</td>
+<td>Extract drawMapLandmarks (cognitive: 30) in 174-LOC file into smaller functions</td>
+</tr>
+<tr>
+<td><code>scripts/verify-runtime-roster.mjs</code></td>
+<td>4.9</td>
+<td>extract_complex_functions</td>
+<td>Extract readPngAlphaBounds (cognitive: 38) in 356-LOC file into smaller functions</td>
+</tr>
+<tr>
+<td><code>scripts/build-docs-html.mjs</code></td>
+<td>5.8</td>
+<td>extract_complex_functions</td>
+<td>Extract renderMarkdown (cognitive: 50) in 509-LOC file into smaller functions</td>
+</tr>
+</tbody></table>
 <h2>Highest Risk Godfile Candidates</h2>
-<p>Risk score combines nonblank LOC, branch proxy, import fan-in/fan-out, concern mixing, git churn, and lack of a sibling test file. Scores are directional, not a replacement for code review.</p>
+<p>This supplemental score combines nonblank LOC, branch proxy, import fan-in/fan-out, concern mixing, git churn, and lack of a sibling test file. It is useful for finding large ownership problems, while Fallow is better for function-level complexity.</p>
 <table>
 <thead><tr>
 <th>File</th>
@@ -224,16 +513,6 @@
 <td>filesystem</td>
 </tr>
 <tr>
-<td><code>scripts/build-tech-debt-audit.mjs</code></td>
-<td>275</td>
-<td>433</td>
-<td>0</td>
-<td>0</td>
-<td>17</td>
-<td>0</td>
-<td>filesystem, process</td>
-</tr>
-<tr>
 <td><code>src/match/rendering/VehicleRenderer.ts</code></td>
 <td>114</td>
 <td>396</td>
@@ -272,6 +551,16 @@
 <td>28</td>
 <td>1</td>
 <td>phaser</td>
+</tr>
+<tr>
+<td><code>scripts/build-map-gameplay-review.ts</code></td>
+<td>273</td>
+<td>341</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>filesystem</td>
 </tr>
 </tbody></table>
 <h2>Largest Files</h2>
@@ -358,16 +647,6 @@
 <td>filesystem, process</td>
 </tr>
 <tr>
-<td><code>scripts/build-tech-debt-audit.mjs</code></td>
-<td>275</td>
-<td>433</td>
-<td>0</td>
-<td>0</td>
-<td>17</td>
-<td>0</td>
-<td>filesystem, process</td>
-</tr>
-<tr>
 <td><code>scripts/build-map-gameplay-review.ts</code></td>
 <td>273</td>
 <td>341</td>
@@ -407,9 +686,19 @@
 <td>2</td>
 <td>pure/data</td>
 </tr>
+<tr>
+<td><code>server/v1/mapGameplayReview.ts</code></td>
+<td>207</td>
+<td>216</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>3</td>
+<td>pure/data</td>
+</tr>
 </tbody></table>
 <h2>Graphify-Style Centrality</h2>
-<p>These files sit on important dependency paths. Some are healthy shared contracts; others are risky orchestrators.</p>
+<p>These files sit on important dependency paths according to the local import graph supplement. Some are healthy shared contracts; others are risky orchestrators.</p>
 <table>
 <thead><tr>
 <th>File</th>
@@ -618,16 +907,6 @@
 <td>filesystem, process</td>
 </tr>
 <tr>
-<td><code>scripts/build-tech-debt-audit.mjs</code></td>
-<td>275</td>
-<td>433</td>
-<td>0</td>
-<td>0</td>
-<td>17</td>
-<td>0</td>
-<td>filesystem, process</td>
-</tr>
-<tr>
 <td><code>src/match/MatchViewFactory.ts</code></td>
 <td>207</td>
 <td>377</td>
@@ -658,6 +937,26 @@
 <td>dom, phaser</td>
 </tr>
 <tr>
+<td><code>scripts/run-graphify-audit.mjs</code></td>
+<td>49</td>
+<td>183</td>
+<td>0</td>
+<td>0</td>
+<td>11</td>
+<td>0</td>
+<td>filesystem, process</td>
+</tr>
+<tr>
+<td><code>scripts/run-fallow-audit.mjs</code></td>
+<td>43</td>
+<td>133</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>filesystem, process</td>
+</tr>
+<tr>
 <td><code>scripts/serve-dist.mjs</code></td>
 <td>36</td>
 <td>160</td>
@@ -669,14 +968,16 @@
 </tr>
 </tbody></table>
 <h2>Cycle Check</h2>
-<p>No internal import cycles were detected.</p>
+<p>No internal import cycles were detected by the local supplement. Fallow also reports zero circular dependencies in the configured source set.</p>
 <h2>Findings</h2>
 <ol>
-<li><strong>Primary client godfile:</strong> <code>src/onlineLobby.ts</code> combines Colyseus connection, room-state normalization, DOM template ownership, event binding, rendering, and stage transition. This is the most urgent human-handoff issue because lobby behavior is currently changing quickly.</li>
-<li><strong>Primary gameplay godfile:</strong> <code>src/match/MatchScene.ts</code> remains the largest product source file. It already delegates many systems, but it still owns scene lifecycle, input setup, turn flow, projectile advancement, terrain adapter methods, world drawing, and post-motion scheduling.</li>
-<li><strong>Primary server godfile:</strong> <code>server/rooms/GravityCanyonRoom.ts</code> mixes Colyseus message handlers, lobby state synchronization, preview combat setup, preview firing, round rewards, and schema mutation details.</li>
-<li><strong>Script monoliths:</strong> <code>scripts/build-docs-html.mjs</code>, <code>scripts/build-map-previews.ts</code>, and <code>scripts/verify-runtime-roster.mjs</code> are useful but large. They are less risky than runtime files, but they should be split if they become frequent edit targets.</li>
-<li><strong>Healthy shared cores:</strong> <code>shared/gameplay/*</code>, <code>src/match/*Controller.ts</code>, and <code>src/*Presentation.ts</code> files are generally smaller and better tested. They should be protected as stable boundaries.</li>
+<li><strong>Primary client godfile:</strong> <code>src/onlineLobby.ts</code> combines Colyseus connection, room-state normalization, DOM template ownership, event binding, rendering, and stage transition. Fallow also flags <code>render</code>, <code>getSnapshot</code>, and <code>getVehicles</code>, so extraction should start here before playtest lobby behavior grows again.</li>
+<li><strong>Primary rendering hotspot:</strong> <code>src/match/rendering/VehicleRenderer.ts</code> is not the largest file, but Fallow identifies <code>draw</code> as the highest CRAP-risk function. It should be split into named rendering helpers before more sprite and collision-readability work lands.</li>
+<li><strong>Primary gameplay godfile:</strong> <code>src/match/MatchScene.ts</code> remains the largest runtime source file and Fallow flags its <code>update</code> loop. It already delegates many systems, but it still owns scene lifecycle, input setup, turn flow, projectile advancement, terrain adapter methods, world drawing, and post-motion scheduling.</li>
+<li><strong>Primary server godfile:</strong> <code>server/rooms/GravityCanyonRoom.ts</code> mixes Colyseus message handlers, lobby state synchronization, preview combat setup, preview firing, round rewards, and schema mutation details. Fallow specifically flags <code>refreshStatus</code>.</li>
+<li><strong>Script monoliths:</strong> <code>scripts/build-docs-html.mjs</code> and <code>scripts/verify-runtime-roster.mjs</code> are confirmed by Fallow as complexity risks. They are less risky than runtime files, but they should be split because both support repeated agent/human workflows.</li>
+<li><strong>Shared combat complexity:</strong> <code>shared/gameplay/impact.ts</code> and <code>shared/gameplay/vehicleSettlement.ts</code> are not first-pass godfiles, but Fallow flags core gameplay decision functions. Treat them with characterization tests before changing combat truth.</li>
+<li><strong>Dependency hygiene:</strong> Fallow reports <code>@colyseus/sdk</code> as test-only from package imports. Review whether the production browser SDK path is intentionally served from <code>public/vendor/colyseus.js</code>; if yes, move the npm package to <code>devDependencies</code> or add an explicit Fallow ignore with a note.</li>
 </ol>
 <p>This audit scans the checked-out working tree, so active uncommitted work can influence metrics. Use <code>git status --short</code> beside the report when comparing two runs.</p>
 <h2>Remediation Queue</h2>
@@ -695,8 +996,8 @@
 </tr>
 <tr>
 <td>2</td>
-<td><code>server/rooms/GravityCanyonRoom.ts</code></td>
-<td>Room under 280 LOC; preview-combat operations extracted behind named functions.</td>
+<td><code>src/match/rendering/VehicleRenderer.ts</code></td>
+<td><code>draw</code> split into named helpers with focused tests around sprite/body/collision-zone decisions.</td>
 </tr>
 <tr>
 <td>3</td>
@@ -705,13 +1006,18 @@
 </tr>
 <tr>
 <td>4</td>
-<td><code>scripts/build-docs-html.mjs</code></td>
-<td>Build entry under 120 LOC; markdown renderer and docs index writer in separate modules.</td>
+<td><code>server/rooms/GravityCanyonRoom.ts</code></td>
+<td>Room under 280 LOC; preview-combat operations and status refresh extracted behind named functions.</td>
 </tr>
 <tr>
 <td>5</td>
-<td><code>scripts/build-map-previews.ts</code> and <code>scripts/verify-runtime-roster.mjs</code></td>
-<td>Split pure rendering/validation from filesystem orchestration if they keep changing.</td>
+<td><code>scripts/build-docs-html.mjs</code> and <code>scripts/verify-runtime-roster.mjs</code></td>
+<td>Split pure parsing/validation from filesystem orchestration.</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>shared/gameplay/impact.ts</code> and <code>shared/gameplay/vehicleSettlement.ts</code></td>
+<td>Add characterization coverage before reducing complex combat decision functions.</td>
 </tr>
 </tbody></table>
 <h2>Contribution Guardrails</h2>

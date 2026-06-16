@@ -95,8 +95,8 @@
 <p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (<code>- [ ]</code>) syntax for tracking.</p>
 </blockquote>
 <p><strong>Goal:</strong> Deconstruct Gravity Canyon's highest-risk godfiles so future human and AI contributors can change one responsibility without breaking another.</p>
-<p><strong>Architecture:</strong> Use SADD as one bounded extraction per task: add a characterization test, move one responsibility behind a named module boundary, run focused tests, then run the full gate before committing. Runtime files target 250 nonblank LOC or less; temporary orchestration files may stay up to 300 nonblank LOC while active migration is in progress.</p>
-<p><strong>Tech Stack:</strong> TypeScript, Phaser, Colyseus, Node test runner, Vite, local docs HTML generator.</p>
+<p><strong>Architecture:</strong> Use SADD as one bounded extraction per task: add a characterization test, move one responsibility behind a named module boundary, run focused tests, then run the full gate before committing. Runtime files target 250 nonblank LOC or less; temporary orchestration files may stay up to 300 nonblank LOC while active migration is in progress. Graphify supplies structural graph evidence; Fallow supplies dependency hygiene and function-level complexity evidence.</p>
+<p><strong>Tech Stack:</strong> TypeScript, Phaser, Colyseus, Node test runner, Vite, Graphify, Fallow, local docs HTML generator.</p>
 <p>---</p>
 <h2>File Structure</h2>
 <p>Create or modify these ownership boundaries:</p>
@@ -131,6 +131,18 @@
 <td>Colyseus room lifecycle and message routing only. Target: under 280 LOC.</td>
 </tr>
 <tr>
+<td><code>src/match/rendering/VehicleRenderModel.ts</code></td>
+<td>Pure per-vehicle render decisions: defeat presentation, motion label, render position, active state, slope angle, KO tilt, and HP visibility. Target: under 180 LOC.</td>
+</tr>
+<tr>
+<td><code>src/match/rendering/VehicleRenderModel.test.ts</code></td>
+<td>Characterization coverage for the extracted vehicle render model.</td>
+</tr>
+<tr>
+<td><code>src/match/rendering/VehicleRenderer.ts</code></td>
+<td>Imperative drawing loop that clears overlays and delegates to sprite/overlay renderers. Target: under 100 LOC.</td>
+</tr>
+<tr>
 <td><code>src/match/MatchSceneTerrainAdapter.ts</code></td>
 <td>Terrain surface, angle, platform, and void-position adapter methods currently inside <code>MatchScene</code>. Target: under 160 LOC.</td>
 </tr>
@@ -155,6 +167,23 @@
 <td>Thin docs generation entry point. Target: under 120 LOC.</td>
 </tr>
 </tbody></table>
+<h2>Tool-Backed Audit Inputs</h2>
+<p>Run these commands before starting the remediation queue and after each completed task:</p>
+<pre><code class="language-powershell">
+npm run audit:graphify
+
+npm run audit:fallow
+
+npm run audit:debt
+
+</code></pre>
+<p>Expected evidence:</p>
+<ul>
+<li><code>work/audits/graphify-diagnose.json</code> exists and reports a valid graph from <code>graphify-out/graph.json</code>.</li>
+<li><code>work/audits/fallow-full.json</code> exists and reports dependency hygiene.</li>
+<li><code>work/audits/fallow-health.json</code> exists and reports function-level complexity and remediation targets.</li>
+<li><code>docs/TECH_DEBT_AUDIT.html</code> reflects the latest generated markdown.</li>
+</ul>
 <h2>Global Verification</h2>
 <p>Run after every task:</p>
 <pre><code class="language-powershell">
@@ -531,7 +560,258 @@ git add -- server/rooms/GravityCanyonRoom.ts server/rooms/combatPreview.ts serve
 git commit -m &quot;refactor: extract room preview combat&quot;
 
 </code></pre>
-<h2>Task 5: Reduce MatchScene Without Changing Gameplay</h2>
+<h2>Task 5: Split VehicleRenderer Render Decisions</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/match/rendering/VehicleRenderModel.ts</code></li>
+<li>Create: <code>src/match/rendering/VehicleRenderModel.test.ts</code></li>
+<li>Modify: <code>src/match/rendering/VehicleRenderer.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Write the failing render-model test</strong></li>
+</ul>
+<p>Create <code>src/match/rendering/VehicleRenderModel.test.ts</code>:</p>
+<pre><code class="language-ts">
+import assert from &quot;node:assert/strict&quot;;
+
+import test from &quot;node:test&quot;;
+
+import { DEMO_UNIT_DEFINITIONS } from &quot;../../../shared/content/v1Units.js&quot;;
+
+import { vehicleRenderModelFor } from &quot;./VehicleRenderModel&quot;;
+
+import type { VehicleState } from &quot;../MatchTypes&quot;;
+
+
+
+function makeVehicle(overrides: Partial&lt;VehicleState&gt; = {}): VehicleState {
+
+  return {
+
+    ...DEMO_UNIT_DEFINITIONS[0]!,
+
+    x: 100,
+
+    y: 200,
+
+    hp: 100,
+
+    angle: 0,
+
+    facing: 1,
+
+    moveUnits: 10,
+
+    alive: true,
+
+    ...overrides,
+
+  };
+
+}
+
+
+
+test(&quot;vehicleRenderModelFor marks an active movable vehicle&quot;, () =&gt; {
+
+  const model = vehicleRenderModelFor({
+
+    vehicle: makeVehicle(),
+
+    activeVehicleId: &quot;red-1&quot;,
+
+    projectileActive: false,
+
+    roundOver: false,
+
+    turnCommitted: false,
+
+    charging: true,
+
+    turnTime: 18,
+
+    showCombatHulls: true,
+
+    surfaceAt: (x) =&gt; (x &lt; 100 ? 190 : 210),
+
+    isMovable: () =&gt; true,
+
+  });
+
+
+
+  assert.equal(model.active, true);
+
+  assert.equal(model.renderX, 100);
+
+  assert.equal(model.renderY, 200);
+
+  assert.equal(model.showHpBar, true);
+
+  assert.equal(model.showCombatHull, true);
+
+});
+
+
+
+test(&quot;vehicleRenderModelFor keeps falling void drops level&quot;, () =&gt; {
+
+  const vehicle: VehicleState = {
+
+    ...makeVehicle(),
+
+    alive: false,
+
+    defeatReason: &quot;void&quot;,
+
+    motion: { kind: &quot;falling&quot;, velocityY: 40 },
+
+    voidDropPresentation: { fromX: 100, fromY: 200, targetX: 100, targetY: 500, age: 250, duration: 900 },
+
+  };
+
+
+
+  const model = vehicleRenderModelFor({
+
+    vehicle,
+
+    activeVehicleId: &quot;red-1&quot;,
+
+    projectileActive: false,
+
+    roundOver: false,
+
+    turnCommitted: false,
+
+    charging: false,
+
+    turnTime: 0,
+
+    showCombatHulls: true,
+
+    surfaceAt: () =&gt; 300,
+
+    isMovable: () =&gt; true,
+
+  });
+
+
+
+  assert.equal(model.active, false);
+
+  assert.equal(model.slopeAngle, 0);
+
+  assert.equal(model.motionOrDefeatLabel, &quot;FALLING&quot;);
+
+  assert.equal(model.showCombatHull, false);
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Run the focused test and confirm it fails</strong></li>
+</ul>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test src/match/rendering/VehicleRenderModel.test.ts
+
+</code></pre>
+<p>Expected: fail because <code>src/match/rendering/VehicleRenderModel.ts</code> does not exist.</p>
+<ul>
+<li>[ ] <strong>Step 3: Extract the pure model</strong></li>
+</ul>
+<p>Create <code>src/match/rendering/VehicleRenderModel.ts</code> exporting:</p>
+<pre><code class="language-ts">
+export type VehicleRenderModelInput = {
+
+  vehicle: VehicleState;
+
+  activeVehicleId?: string;
+
+  projectileActive: boolean;
+
+  roundOver: boolean;
+
+  turnCommitted: boolean;
+
+  charging: boolean;
+
+  turnTime: number;
+
+  showCombatHulls: boolean;
+
+  surfaceAt: (x: number) =&gt; number;
+
+  isMovable: (vehicle: VehicleState) =&gt; boolean;
+
+};
+
+
+
+export type VehicleRenderModel = {
+
+  active: boolean;
+
+  charging: boolean;
+
+  renderX: number;
+
+  renderY: number;
+
+  alpha: number;
+
+  slopeAngle: number;
+
+  koTilt: number;
+
+  tint?: number;
+
+  motionOrDefeatLabel?: string;
+
+  showCombatHull: boolean;
+
+  showHpBar: boolean;
+
+  turnTime: number;
+
+};
+
+
+
+export function vehicleRenderModelFor(input: VehicleRenderModelInput): VehicleRenderModel;
+
+</code></pre>
+<p>Move the <code>defeatPresentation</code>, <code>motionLabel</code>, <code>alpha</code>, <code>voidDropPosition</code>, <code>active</code>, <code>slopeAngle</code>, <code>koTilt</code>, HP visibility, and combat-hull visibility decisions out of <code>VehicleRenderer.draw</code>.</p>
+<ul>
+<li>[ ] <strong>Step 4: Keep <code>VehicleRenderer</code> imperative only</strong></li>
+</ul>
+<p>In <code>VehicleRenderer.draw</code>, keep <code>worldUiScale</code>, <code>overlayLayout</code>, <code>this.overlays.clear()</code>, the vehicle loop, and the calls to <code>drawFootingMarker</code>, <code>sprites.draw</code>, <code>drawCombatHull</code>, <code>drawHpBar</code>, and <code>drawLabels</code>. All branching inside the loop should use fields from <code>vehicleRenderModelFor</code>.</p>
+<ul>
+<li>[ ] <strong>Step 5: Verify line and complexity targets</strong></li>
+</ul>
+<pre><code class="language-powershell">
+(Get-Content src\match\rendering\VehicleRenderer.ts | Where-Object { $_.Trim() }).Count
+
+npm run audit:fallow
+
+</code></pre>
+<p>Expected: <code>VehicleRenderer.ts</code> is under 100 nonblank LOC and <code>VehicleRenderer.draw</code> is no longer the top Fallow CRAP finding.</p>
+<ul>
+<li>[ ] <strong>Step 6: Verify and commit</strong></li>
+</ul>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test src/match/rendering/VehicleRenderModel.test.ts src/match/rendering/VehicleSpriteLayer.test.ts
+
+npm run build
+
+npm test
+
+git add -- src/match/rendering/VehicleRenderer.ts src/match/rendering/VehicleRenderModel.ts src/match/rendering/VehicleRenderModel.test.ts
+
+git commit -m &quot;refactor: extract vehicle render model&quot;
+
+</code></pre>
+<h2>Task 6: Reduce MatchScene Without Changing Gameplay</h2>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Create: <code>src/match/MatchSceneTerrainAdapter.ts</code></li>
@@ -575,7 +855,7 @@ git add -- src/match/MatchScene.ts src/match/MatchSceneTerrainAdapter.ts src/mat
 git commit -m &quot;refactor: reduce match scene orchestration&quot;
 
 </code></pre>
-<h2>Task 6: Split Docs HTML Generator</h2>
+<h2>Task 7: Split Docs HTML Generator</h2>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Create: <code>scripts/docsHtmlMarkdown.mjs</code></li>
@@ -626,7 +906,7 @@ git add -- scripts/build-docs-html.mjs scripts/docsHtmlMarkdown.mjs scripts/docs
 git commit -m &quot;refactor: split docs html generator&quot;
 
 </code></pre>
-<h2>Task 7: Re-run Debt Audit and Lower Targets</h2>
+<h2>Task 8: Re-run Debt Audit and Lower Targets</h2>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify: <code>docs/TECH_DEBT_AUDIT.md</code></li>

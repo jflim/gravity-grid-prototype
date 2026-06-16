@@ -5,3 +5,6 @@ dist/
 vite.stdout.log
 vite.stderr.log
 work/
+graphify-out/
+.graphify/
+.fallow/

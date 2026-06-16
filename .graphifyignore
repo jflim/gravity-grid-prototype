@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.vite/
+.git/
+work/
+public/assets/
+public/vendor/
+docs/**/*.html
+*.log
