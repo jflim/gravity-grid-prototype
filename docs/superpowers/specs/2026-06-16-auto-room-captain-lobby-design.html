@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Auto-Room Captain Lobby Design</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        HTML reading copy generated from <a href="2026-06-16-auto-room-captain-lobby-design.md">docs/superpowers/specs/2026-06-16-auto-room-captain-lobby-design.md</a> on 2026-06-16.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Auto-Room Captain Lobby Design</h1>
+<p>Status: approved design</p>
+<p>Date: 2026-06-16</p>
+<p>Scope authority: <code>docs/PRODUCTION_PLAN.md</code></p>
+<h2>Purpose</h2>
+<p>The current <code>npm run playtest</code> flow prints a public URL, but that URL only hosts the app. It does not represent a specific room, and the visible Phaser battlefield is still local browser authority. This makes friend testing confusing because a remote player can load the same page without clearly joining the same session or controlling an obvious unit.</p>
+<p>This design defines the next smallest online playtest slice: the generated playtest URL behaves like one shared playtest room. Players do not create or paste room codes yet. Everyone who opens the playtest URL joins the same auto-room lobby, picks identity for their side, readies, and can start a simple server-owned online session.</p>
+<h2>Player Promise</h2>
+<p>When the host runs <code>npm run playtest</code>, the printed URL should be enough for a friend test.</p>
+<p>Expected tester flow:</p>
+<ol>
+<li>Host runs <code>npm run playtest</code>.</li>
+<li>Host opens the printed URL.</li>
+<li>Friend opens the same printed URL.</li>
+<li>Both land in the same lobby.</li>
+<li>Each player sees which side they control.</li>
+<li>Each player chooses characters for their controlled slot or slots.</li>
+<li>Each player readies.</li>
+<li>The game starts a shared online session when the ready rules pass.</li>
+</ol>
+<p>There is no room-code copy step in this slice.</p>
+<h2>Scope</h2>
+<p>In scope:</p>
+<ul>
+<li>Auto-join one shared room for playtest mode.</li>
+<li>Two human online captains.</li>
+<li>First connected player controls red captain.</li>
+<li>Second connected player controls blue captain.</li>
+<li>1v1 and 2v2 mode toggle.</li>
+<li>In 1v1 mode, each captain controls one unit.</li>
+<li>In 2v2 mode, each captain controls both units on their team.</li>
+<li>Display name editing.</li>
+<li>Character selection per owned unit slot.</li>
+<li>Ready state per captain.</li>
+<li>Clear lobby status showing who controls each team and which characters are selected.</li>
+<li>Extra connections become passive spectators with no gameplay control.</li>
+<li>Keep the existing local map demo separate until the online match bridge is implemented.</li>
+</ul>
+<p>Out of scope for this slice:</p>
+<ul>
+<li>General private-room creation.</li>
+<li>Join-by-room-code.</li>
+<li>Share links with <code>?room=</code>.</li>
+<li>True four-human seat ownership.</li>
+<li>Accounts or persistent identity.</li>
+<li>Public room list or matchmaking.</li>
+<li>Full server-authoritative Phaser combat.</li>
+<li>Complete map/settings UI.</li>
+<li>Free-text chat.</li>
+</ul>
+<h2>Lobby Model</h2>
+<p>The room has two captain assignments:</p>
+<ul>
+<li><code>redCaptainSessionId</code></li>
+<li><code>blueCaptainSessionId</code></li>
+</ul>
+<p>Assignment rules:</p>
+<ul>
+<li>The first connected player becomes red captain.</li>
+<li>The second connected player becomes blue captain.</li>
+<li>If a captain leaves before match start, the earliest connected spectator is promoted into the vacant captain role.</li>
+<li>If a captain leaves after match start, this slice can stop or return to the lobby rather than trying to preserve the match.</li>
+<li>Red captain owns the mode toggle before match start.</li>
+</ul>
+<p>Mode choices:</p>
+<ul>
+<li><code>1v1</code>: active slots are <code>red-1</code> and <code>blue-1</code>.</li>
+<li><code>2v2</code>: active slots are <code>red-1</code>, <code>red-2</code>, <code>blue-1</code>, and <code>blue-2</code>.</li>
+</ul>
+<p>Control rules:</p>
+<ul>
+<li>Red captain owns every red active slot.</li>
+<li>Blue captain owns every blue active slot.</li>
+<li>A captain readies once for their whole side.</li>
+</ul>
+<h2>Character Selection</h2>
+<p>The lobby exposes the locked v1 roster:</p>
+<ul>
+<li>Nova.</li>
+<li>Vesper.</li>
+<li>Kaelii.</li>
+<li>Perlah.</li>
+</ul>
+<p>Default selections can be simple and readable:</p>
+<ul>
+<li>Red 1: Nova.</li>
+<li>Red 2: Kaelii.</li>
+<li>Blue 1: Vesper.</li>
+<li>Blue 2: Perlah.</li>
+</ul>
+<p>Players may choose the same character in multiple slots unless a later balance rule changes this. This matches the current v1 tolerance for duplicate characters and keeps the lobby implementation simple.</p>
+<h2>Ready And Start Rules</h2>
+<p>Ready requirements:</p>
+<ul>
+<li>In 1v1 mode, red captain and blue captain must both be connected and ready.</li>
+<li>In 2v2 mode, red captain and blue captain must both be connected and ready.</li>
+<li>Active slots must all have valid character selections.</li>
+</ul>
+<p>Start behavior:</p>
+<ul>
+<li>The first slice auto-starts when both captains are ready.</li>
+<li>The UI should make blocked start reasons visible, such as &quot;Waiting for blue captain&quot; or &quot;Waiting for red ready.&quot;</li>
+</ul>
+<h2>Online Match Bridge</h2>
+<p>This design does not require full Phaser combat to become server-authoritative in the same step.</p>
+<p>The first implementation starts an online server-owned demo state that proves:</p>
+<ul>
+<li>Both captains see the same match participants.</li>
+<li>Both captains see the same mode and character assignments.</li>
+<li>Active turn ownership is obvious.</li>
+<li>Only the captain who owns the active unit can submit the current server test action.</li>
+</ul>
+<p>After that, movement, aim, firing, terrain, damage, Void Dropped resolution, and round/match scoring can be wired into server authority one system at a time.</p>
+<h2>UI Requirements</h2>
+<p>The playtest-mode lobby should replace the current create/join emphasis.</p>
+<p>Required visible information:</p>
+<ul>
+<li>Connection status.</li>
+<li>Local role: Red captain, Blue captain, Spectator, or Waiting.</li>
+<li>Display name.</li>
+<li>Mode toggle: <code>1v1</code> / <code>2v2</code>.</li>
+<li>Team/slot rows.</li>
+<li>Character pick controls for owned slots.</li>
+<li>Ready button.</li>
+<li>Ready state for each captain.</li>
+<li>Clear blocked-start/status text.</li>
+</ul>
+<p>The UI should not imply that the large local battlefield is already the online truth. If the local demo remains visible behind the panel, the lobby text should still make the shared online state the primary focus.</p>
+<h2>Server Data Shape</h2>
+<p>The existing Colyseus room can evolve from the current two-player combat preview.</p>
+<p>Required room state additions:</p>
+<ul>
+<li><code>mode: &quot;1v1&quot; | &quot;2v2&quot;</code></li>
+<li><code>redCaptainSessionId: string</code></li>
+<li><code>blueCaptainSessionId: string</code></li>
+<li><code>spectatorSessionIds</code></li>
+<li><code>slots</code></li>
+<li><code>selectedCharacterId</code> per slot</li>
+<li><code>ownerSessionId</code> per active slot</li>
+<li><code>ready</code> per captain/player</li>
+</ul>
+<p>Required messages:</p>
+<ul>
+<li><code>setDisplayName</code></li>
+<li><code>setMode</code></li>
+<li><code>selectCharacter</code></li>
+<li><code>setReady</code></li>
+<li>Existing server-test action messages can remain temporary while combat is still a preview.</li>
+</ul>
+<h2>Error Handling</h2>
+<p>The server should reject or ignore invalid actions:</p>
+<ul>
+<li>Spectator changing mode or character selections.</li>
+<li>Red captain editing blue slots.</li>
+<li>Blue captain editing red slots.</li>
+<li>Readying without a captain role.</li>
+<li>Selecting an unknown character.</li>
+<li>Starting before both captains are ready.</li>
+<li>Non-active captain submitting the current online action.</li>
+</ul>
+<p>The client should show short status text for user-correctable states instead of failing silently.</p>
+<h2>Testing</h2>
+<p>Unit and integration coverage should prove:</p>
+<ul>
+<li>First player becomes red captain.</li>
+<li>Second player becomes blue captain.</li>
+<li>Extra players do not control a side.</li>
+<li>1v1 mode activates one slot per team.</li>
+<li>2v2 mode activates two slots per team.</li>
+<li>Captains can edit only their owned slots.</li>
+<li>Ready rules require both captains.</li>
+<li>Server start state includes the selected mode, slots, owners, and characters.</li>
+<li>Remote clients resolve the public playtest URL to the same Colyseus origin.</li>
+</ul>
+<p>Manual playtest check:</p>
+<ol>
+<li>Run <code>npm run playtest</code>.</li>
+<li>Open the printed URL in one browser.</li>
+<li>Open the same URL from another connection or browser context.</li>
+<li>Confirm both clients show the same lobby.</li>
+<li>Set 1v1, choose characters, ready both sides, and start/auto-start.</li>
+<li>Reset or restart the room.</li>
+<li>Set 2v2, choose two characters per side, ready both sides, and start/auto-start.</li>
+</ol>
+<h2>Follow-Up Boundary</h2>
+<p>This slice treats extra connections as passive spectators because that is more useful for debugging a hosted test. Spectator camera controls, spectator chat, and spectator interaction are future scope.</p>
+    </article>
+  </main>
+</body>
+</html>

@@ -111,6 +111,7 @@ Highlights:
 - Extracted delayed local turn/round event scheduling into `src/match/RoundEventScheduler.ts` so post-shot misses, impacts, and round result transitions no longer store Phaser timer ownership directly in `MatchScene`.
 - Extracted the prototype collision-zone checkbox DOM into `src/match/ui/CollisionZonesToggle.ts`, keeping browser UI setup out of `MatchScene`.
 - Adopted an HTML-first documentation workflow: markdown remains the canonical editable source, generated HTML is the preferred reading/review surface, local scripts must generate markdown reading copies without AI/manual conversion, and custom HTML is reserved for rich visual/review artifacts.
+- Added the auto-room captain lobby design for the next online playtest slice: one generated playtest URL maps to one shared room, with two human captains able to test 1v1 and 2v2 by controlling one or two units per team.
 - Added horizontal camera side bounds so the battlefield remains centered when the visible camera frame is wider than the world instead of leaving all extra space on one side.
 - Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.
 - Changed projectile camera behavior to keep the battlefield stable while shots are readable, recentering only when a projectile leaves the readable frame.
