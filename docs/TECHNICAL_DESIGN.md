@@ -60,6 +60,7 @@ Current shared extraction includes:
 - `src/match/MatchViewFactory.ts` for Phaser-specific graphics/text/image construction, renderer wiring, command deck wiring, collision-zone DOM control construction, and background creation collaborators.
 - `src/match/MatchTypes.ts` for match-scene runtime state shapes shared by UI/rendering modules.
 - `src/match/MatchAssetLoader.ts` for match preload planning, runtime/concept/style-reference asset queueing, and loading/failure status presentation.
+- `src/match/audio/MatchSoundController.ts` for sound cue timing/muting and `src/match/audio/MatchSoundAssets.ts` for asset-manifest playback with procedural fallback.
 - `src/match/MatchController.ts` as the local match-flow bridge for active vehicle, alive/movable checks, alive teams, winners, and next-turn decisions.
 - `src/match/MatchCameraController.ts` for camera viewport, battlefield framing, and projectile recentering.
 - `src/match/ImpactController.ts` for local impact application: crater callback, vehicle damage mutation, knockback mutation, settlement callback, marker requests, and shot-result text.
@@ -328,6 +329,7 @@ Current human editing map:
 | Change delayed local turn/round transitions after misses, impacts, or round results | `src/match/RoundEventScheduler.ts` and `src/match/MatchScene.ts` call sites | Delayed Phaser timer ownership should stay testable and separate from match orchestration. |
 | Change browser bootstrap, game config, viewport guard, or online lobby mount | `src/main.ts` | Startup belongs outside the Phaser scene so the playable scene remains game-focused. |
 | Change match preload status, normal runtime asset queueing, concept-preview asset opt-in, or style-reference asset opt-in | `src/match/MatchAssetLoader.ts` and `src/runtimeAssets.ts` | Asset loading is Phaser lifecycle work, but it should remain separate from match orchestration and combat truth. |
+| Change match SFX paths, cue-to-audio mapping, or authored/procedural sound fallback | `src/match/audio/MatchSoundAssets.ts`, `src/match/audio/MatchSoundController.ts`, and `docs/SOUND_ASSET_WORKFLOW.md` | Match flow should emit semantic sound cues while the audio layer decides whether authored assets or fallback procedural sounds play. |
 | Change local active-vehicle, movable/alive, alive-team, winner, or next-turn bridge logic | `src/match/MatchController.ts` | The scene uses a controller boundary before those decisions move to server authority. |
 | Change local round setup, spawn flattening width, starting HP/move units, initial facing angle, initial turn order, or round-start message | `src/match/RoundBuilder.ts` and `shared/v1/tuning.ts` | Round initialization should be testable without opening Phaser scene rendering code. |
 | Change local browser terrain ownership, current map handoff, crater callback application, visible void top storage, or scene-facing terrain/slope reads | `src/match/TerrainController.ts` and `shared/gameplay/terrain.ts` | Local terrain state should be readable without opening Phaser lifecycle code, while deterministic terrain math stays shared for future server authority. |

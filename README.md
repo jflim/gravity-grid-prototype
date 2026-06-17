@@ -14,13 +14,14 @@ First playable local artillery prototype for Gravity Canyon.
 - Terrain movement allows playable downhill travel and intentional void falls, while terrain faces steeper than the climb-angle limit are not driveable and vehicles need enough grounded footing to stay settled.
 - Unsupported vehicles now enter explicit sliding or falling motion before any Void Dropped result is applied.
 - Top-safe wind badge visible to everyone; active turn timing lives above the active vehicle only.
+- Manifest-backed non-voice SFX for turn ticks, movement, weapon fire, impact, hit, damage KO, and Void Dropped feedback, with procedural fallback when no file is assigned.
 - Fixed screen-space command deck with active vehicle portrait, aim dial, movement range meter, and a prominent launch-power meter.
 - The command deck keeps a larger bottom safety gutter so control content is not clipped by the browser edge.
 - The playable map renders only above the command deck so terrain and void visuals do not intersect the controls.
 - Desktop viewport contract: the game is designed around 1600 x 900, can present up to 2400 x 1350 for readability on larger displays, centers in larger browser windows, and blocks below a 1366 x 768 visible viewport.
 - Raised turn timer, team/HP bar, name, and class labels above playable unit art.
 - Vehicle sprites tilt with terrain slope for clearer ground contact.
-- Battlefield unit art is scaled as readable game pieces, while high-detail art remains available in HUD/presentation surfaces.
+- Battlefield unit art is scaled as readable game pieces, with face-first default runtime sprites for Vesper, Kaelii, and Perlah while high-detail art remains available in HUD/presentation surfaces.
 - World-space muzzle aim arrow and ground movement range rail for the active player while positioning.
 - Projectile physics with gravity and turn-based wind.
 - Full-battlefield aiming camera so both teams stay visible before firing.
@@ -74,6 +75,20 @@ Then open:
 ```text
 http://127.0.0.1:5173
 ```
+
+To preview the current Tiled-authored Idol Canyon draft in the local match scene, open:
+
+```text
+http://127.0.0.1:5173/?map=idol-canyon-supine-draft
+```
+
+Tiled map authoring:
+
+```powershell
+npm run maps:sync
+```
+
+Edit tracked Tiled source maps under `content/tiled/`, then run `npm run maps:sync` to regenerate the runtime files under `shared/content/maps/`. The game imports the generated `.tiled.json` runtime copies, so avoid hand-editing those unless you are debugging the sync pipeline itself.
 
 If another Vite server is already using `5173`, Vite will print the next available port, usually:
 
@@ -174,6 +189,7 @@ dist/index.html
 | `npm run verify:runtime-roster` | After runtime asset or roster edits | Checks stable runtime sprite aliases and roster wiring. |
 | `npm run assets:normalize-battlefield` | After selecting a new default unit candidate | Rebuilds default match sprites and their existing charge-linked frames with consistent transparent bounds and bottom anchors for map-scale testing. |
 | `npm run optimize:assets` | After promoting or editing runtime art | Regenerates compressed WebP delivery files from the PNG art sources. |
+| `npm run maps:sync` | After editing tracked Tiled `.tmj` source maps | Validates authored Tiled maps and regenerates the runtime `.tiled.json` files consumed by the local demo. |
 | `npm run playtest` | Trusted internet playtest from this computer | Builds the project, serves the built client and Colyseus server from `http://127.0.0.1:2567`, starts a Cloudflare quick tunnel, and prints the share URL. |
 | `npm run playtest:local` | Local playtest server without a tunnel | Builds the project and serves playtest mode locally at `http://127.0.0.1:2567`. |
 | `npm run start:public` | Lower-level preview server only | Serves the built client and Colyseus server from `http://127.0.0.1:2567`; `npm run playtest` is preferred for normal sharing. |
@@ -199,6 +215,7 @@ Primary reading links:
 - Version log: [docs/VERSION_LOG.html](docs/VERSION_LOG.html) (source: `docs/VERSION_LOG.md`)
 - Git workflow: [docs/GIT_WORKFLOW.html](docs/GIT_WORKFLOW.html) (source: `docs/GIT_WORKFLOW.md`)
 - Sprite asset workflow: [docs/SPRITE_ASSET_WORKFLOW.html](docs/SPRITE_ASSET_WORKFLOW.html) (source: `docs/SPRITE_ASSET_WORKFLOW.md`)
+- Sound asset workflow: [docs/SOUND_ASSET_WORKFLOW.html](docs/SOUND_ASSET_WORKFLOW.html) (source: `docs/SOUND_ASSET_WORKFLOW.md`)
 - Session handoff: [docs/SESSION_HANDOFF.html](docs/SESSION_HANDOFF.html) (source: `docs/SESSION_HANDOFF.md`)
 
 ## Controls
@@ -208,6 +225,7 @@ Primary reading links:
 - Hold/release Spacebar: charge and fire.
 - R: restart round.
 - H or the `Collision zones` checkbox: show/hide prototype vehicle collision zones. Zones are visible by default while collision and map scale are being tuned; add `?collisionZones=0` to start hidden.
+- M: mute/unmute minimal prototype sound effects.
 
 ## Terms
 
@@ -240,6 +258,7 @@ Primary reading links:
 - Launch power, movement range, active vehicle identity, and aim angle live in a fixed centered command deck.
 - Active player also gets a world-space aim arrow, raised turn timer badge, and ground movement range rail so movement decisions can be read without covering the character art.
 - Prototype vehicle collision zones are visible by default while collision and terrain scale are being tuned, and can be toggled off with `H`, the on-screen checkbox, or `?collisionZones=0`.
+- Prototype audio is non-voice and manifest-backed: turn ticks, movement pulses, class-flavored weapon launches, impacts, hit feedback, damage KOs, and Void Dropped cues can be assigned to files in [docs/SOUND_ASSET_WORKFLOW.md](docs/SOUND_ASSET_WORKFLOW.md). Missing manifest entries fall back to procedural sounds. `M` toggles sound.
 - The game camera reserves the playfield above a fixed centered command deck, frames the visible void bottom just above that boundary, and keeps the battlefield centered when the camera view is wider than the map.
 - The browser shell is presentation-capped and centered so larger or ultrawide windows improve readability without changing terrain, spawns, collision, void placement, projectile behavior, or the strategic battlefield view.
 - Current sprites are first-pass generated assets, not final production sprites.

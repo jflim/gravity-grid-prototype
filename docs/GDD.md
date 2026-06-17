@@ -441,7 +441,7 @@ Current Nova direction: use the duo-identity combat candidate with lighter pilot
 
 Current match-sprite handling: default unit aliases and their existing charge-linked frames are normalized with consistent transparent bounds and bottom anchors before map testing, so terrain gaps, collision zones, and land readability are judged against comparable runtime sprites without a charge-size pop.
 
-The current default battlefield pass favors readable pilot identity over preserving every illustration detail. Nova, Vesper, Kaelii, and Perlah should each read by face/hair/color at match scale while the vehicle remains the collision and terrain-contact truth.
+The current default battlefield pass favors readable pilot identity over preserving every illustration detail. Nova is the current control; Vesper, Kaelii, and Perlah use face-first default runtime sprites so their face, hair, skin, and clothing contrast separate from their vehicle colors at match scale. The vehicle remains the collision and terrain-contact truth.
 
 ## 19. Audio Direction
 
@@ -451,6 +451,15 @@ V1 needs minimal, readable, non-voice SFX:
 - Impact/explosion feedback.
 - UI-ready/start feedback if easy.
 - No character KO shouts or voice barks required for v1.
+
+Current prototype audio uses manifest-backed authored cues with procedural browser-generated fallback:
+
+- Turn ticks, with sharper final-five-second urgency.
+- Movement pulses while the active vehicle is actually moving.
+- Class-flavored weapon launch sounds for the current four local units.
+- Impact, hit, damage KO, and Void Dropped cues.
+- `M` toggles prototype SFX on and off.
+- Sound replacement workflow lives in [SOUND_ASSET_WORKFLOW.md](SOUND_ASSET_WORKFLOW.md). Runtime non-voice files belong under `public/assets/sfx/`; future voice experiments belong under `public/assets/voice/` but are not v1 default gameplay.
 
 Future audio can include:
 

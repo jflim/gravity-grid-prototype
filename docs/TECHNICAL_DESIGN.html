@@ -87,7 +87,7 @@
   <main>
     <article>
       <div class="generated">
-        HTML reading copy generated from <a href="TECHNICAL_DESIGN.md">docs/TECHNICAL_DESIGN.md</a> on 2026-06-16.
+        HTML reading copy generated from <a href="TECHNICAL_DESIGN.md">docs/TECHNICAL_DESIGN.md</a> on 2026-06-17.
         Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Gravity Canyon Technical Design Document</h1>
@@ -145,6 +145,7 @@
 <li><code>src/match/MatchViewFactory.ts</code> for Phaser-specific graphics/text/image construction, renderer wiring, command deck wiring, collision-zone DOM control construction, and background creation collaborators.</li>
 <li><code>src/match/MatchTypes.ts</code> for match-scene runtime state shapes shared by UI/rendering modules.</li>
 <li><code>src/match/MatchAssetLoader.ts</code> for match preload planning, runtime/concept/style-reference asset queueing, and loading/failure status presentation.</li>
+<li><code>src/match/audio/MatchSoundController.ts</code> for sound cue timing/muting and <code>src/match/audio/MatchSoundAssets.ts</code> for asset-manifest playback with procedural fallback.</li>
 <li><code>src/match/MatchController.ts</code> as the local match-flow bridge for active vehicle, alive/movable checks, alive teams, winners, and next-turn decisions.</li>
 <li><code>src/match/MatchCameraController.ts</code> for camera viewport, battlefield framing, and projectile recentering.</li>
 <li><code>src/match/ImpactController.ts</code> for local impact application: crater callback, vehicle damage mutation, knockback mutation, settlement callback, marker requests, and shot-result text.</li>
@@ -606,6 +607,11 @@ src/
 <td>Change match preload status, normal runtime asset queueing, concept-preview asset opt-in, or style-reference asset opt-in</td>
 <td><code>src/match/MatchAssetLoader.ts</code> and <code>src/runtimeAssets.ts</code></td>
 <td>Asset loading is Phaser lifecycle work, but it should remain separate from match orchestration and combat truth.</td>
+</tr>
+<tr>
+<td>Change match SFX paths, cue-to-audio mapping, or authored/procedural sound fallback</td>
+<td><code>src/match/audio/MatchSoundAssets.ts</code>, <code>src/match/audio/MatchSoundController.ts</code>, and <code>docs/SOUND_ASSET_WORKFLOW.md</code></td>
+<td>Match flow should emit semantic sound cues while the audio layer decides whether authored assets or fallback procedural sounds play.</td>
 </tr>
 <tr>
 <td>Change local active-vehicle, movable/alive, alive-team, winner, or next-turn bridge logic</td>

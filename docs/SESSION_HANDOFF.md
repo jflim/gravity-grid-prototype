@@ -59,6 +59,7 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
   - Horizontal camera side bounds now keep the battlefield centered when the visible frame is wider than the world instead of clamping all extra space to one side.
   - Projectile flight keeps the full battlefield framed while the shot is readable, with recentering reserved for shots that leave the readable frame.
   - Wind now lives in a fixed top-safe HUD badge, while active timer badges, team/HP bars, names, and class labels are raised above playable unit art using tested world-overlay spacing.
+  - Minimal non-voice SFX are wired into the local match for turn ticks, movement pulses, class-flavored weapon launches, impacts, hits, damage KOs, and Void Dropped results. The sound layer now uses `src/match/audio/MatchSoundAssets.ts` as an asset manifest with procedural fallback, so files under `public/assets/sfx/` can replace cues without changing match flow. `M` toggles prototype sound.
   - The combat readability design is saved at `docs/superpowers/specs/2026-06-07-combat-readability-wind-lobs-design.md`.
   - Slice 1 implementation notes are saved at `docs/superpowers/plans/2026-06-07-combat-readability-slice-1.md`.
 
@@ -73,10 +74,10 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
   - `public/assets/perlah-unit-default.png`
 - `npm run assets:normalize-battlefield` rebuilds default aliases and their existing charge-linked frames from the selected candidates, then `npm run optimize:assets` refreshes the WebP delivery files.
 - Nova's default runtime alias now uses the normalized duo-identity Bunger Rig candidate with warmer human contrast.
-- Vesper, Kaelii, and Perlah now use default battlefield readability candidates:
-  - Vesper readability v2: larger face/head and simplified Glitch Rover mass.
-  - Kaelii readability v1: lower protected perch, readable face, and real wheel/rail skip-rig cues.
-  - Perlah readability v1: raised face/curls above the embercart mass and stronger warm contrast.
+- Vesper, Kaelii, and Perlah now use face-first v2 default battlefield candidates:
+  - Vesper face-first v2: darker/less neon Glitch Rover, slimmer tech-pilot body read, more visible skin, and pale face/cyan hair contrast.
+  - Kaelii face-first v2: flirtier stunt-idol pose/expression, more visible warm skin, cream clothing contrast, and darker magenta Flashkick Skip-Rig backing.
+  - Perlah face-first v2: darker charcoal Sunspike Embercart with controlled orange accents so her warm face, curls, and cream/gold outfit contrast read first.
 - Kaelii's default/intense display aspect is now the shorter `356 x 208` match frame instead of the older taller `350 x 233` probe frame.
 - Active Nova Defeated KO runtime sprite is:
   - runtime alias: `public/assets/nova-character-ko.png`
@@ -91,7 +92,7 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
   - `public/assets/nova-unit-intense.png`
   - `public/assets/vesper-unit-intense.png`
 - Vesper intense uses the v8 subtle tension scale-stable footprint-locked candidate. Earlier intense candidates either had a too-wide/low alpha box, read as visually shrunken, or made Vesper/rover feel like a different-size unit during the power-shot swap. The v8 normalized alias matches the default visible alpha footprint while allowing small pilot/rover recoil, leg tension, joystick/deck-control charge action, cannon reticle, headset glow, and compact glitch UI.
-- Perlah intense uses the v2 footprint-locked candidate. It keeps the same apparent size and default leg/vehicle anchors while showing a compact heat-charge reaction.
+- Perlah intense now uses the face-first v4 footprint-matched candidate. It keeps the same apparent runtime footprint as the face-first v2 default while preserving the darker cart and stronger pilot contrast during charge.
 - Default concept-preview unit display boxes and prototype combat hulls are scaled down for match readability so local 2v2-style play has more open battlefield space while full-detail art can remain valuable in HUD/presentation surfaces.
 - Destroyed vehicle sprites exist for Nova and Vesper:
   - `public/assets/nova-vehicle-destroyed.png`

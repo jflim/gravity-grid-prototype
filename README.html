@@ -87,7 +87,7 @@
   <main>
     <article>
       <div class="generated">
-        HTML reading copy generated from <a href="README.md">README.md</a> on 2026-06-16.
+        HTML reading copy generated from <a href="README.md">README.md</a> on 2026-06-17.
         Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Gravity Canyon Prototype</h1>
@@ -104,13 +104,14 @@
 <li>Terrain movement allows playable downhill travel and intentional void falls, while terrain faces steeper than the climb-angle limit are not driveable and vehicles need enough grounded footing to stay settled.</li>
 <li>Unsupported vehicles now enter explicit sliding or falling motion before any Void Dropped result is applied.</li>
 <li>Top-safe wind badge visible to everyone; active turn timing lives above the active vehicle only.</li>
+<li>Manifest-backed non-voice SFX for turn ticks, movement, weapon fire, impact, hit, damage KO, and Void Dropped feedback, with procedural fallback when no file is assigned.</li>
 <li>Fixed screen-space command deck with active vehicle portrait, aim dial, movement range meter, and a prominent launch-power meter.</li>
 <li>The command deck keeps a larger bottom safety gutter so control content is not clipped by the browser edge.</li>
 <li>The playable map renders only above the command deck so terrain and void visuals do not intersect the controls.</li>
 <li>Desktop viewport contract: the game is designed around 1600 x 900, can present up to 2400 x 1350 for readability on larger displays, centers in larger browser windows, and blocks below a 1366 x 768 visible viewport.</li>
 <li>Raised turn timer, team/HP bar, name, and class labels above playable unit art.</li>
 <li>Vehicle sprites tilt with terrain slope for clearer ground contact.</li>
-<li>Battlefield unit art is scaled as readable game pieces, while high-detail art remains available in HUD/presentation surfaces.</li>
+<li>Battlefield unit art is scaled as readable game pieces, with face-first default runtime sprites for Vesper, Kaelii, and Perlah while high-detail art remains available in HUD/presentation surfaces.</li>
 <li>World-space muzzle aim arrow and ground movement range rail for the active player while positioning.</li>
 <li>Projectile physics with gravity and turn-based wind.</li>
 <li>Full-battlefield aiming camera so both teams stay visible before firing.</li>
@@ -162,6 +163,17 @@ npm run dev
 http://127.0.0.1:5173
 
 </code></pre>
+<p>To preview the current Tiled-authored Idol Canyon draft in the local match scene, open:</p>
+<pre><code class="language-text">
+http://127.0.0.1:5173/?map=idol-canyon-supine-draft
+
+</code></pre>
+<p>Tiled map authoring:</p>
+<pre><code class="language-powershell">
+npm run maps:sync
+
+</code></pre>
+<p>Edit tracked Tiled source maps under <code>content/tiled/</code>, then run <code>npm run maps:sync</code> to regenerate the runtime files under <code>shared/content/maps/</code>. The game imports the generated <code>.tiled.json</code> runtime copies, so avoid hand-editing those unless you are debugging the sync pipeline itself.</p>
 <p>If another Vite server is already using <code>5173</code>, Vite will print the next available port, usually:</p>
 <pre><code class="language-text">
 http://127.0.0.1:5174
@@ -301,6 +313,11 @@ dist/index.html
 <td>Regenerates compressed WebP delivery files from the PNG art sources.</td>
 </tr>
 <tr>
+<td><code>npm run maps:sync</code></td>
+<td>After editing tracked Tiled <code>.tmj</code> source maps</td>
+<td>Validates authored Tiled maps and regenerates the runtime <code>.tiled.json</code> files consumed by the local demo.</td>
+</tr>
+<tr>
 <td><code>npm run playtest</code></td>
 <td>Trusted internet playtest from this computer</td>
 <td>Builds the project, serves the built client and Colyseus server from <code>http://127.0.0.1:2567</code>, starts a Cloudflare quick tunnel, and prints the share URL.</td>
@@ -340,6 +357,7 @@ dist/index.html
 <li>Version log: <a href="docs/VERSION_LOG.html">docs/VERSION_LOG.html</a> (source: <code>docs/VERSION_LOG.md</code>)</li>
 <li>Git workflow: <a href="docs/GIT_WORKFLOW.html">docs/GIT_WORKFLOW.html</a> (source: <code>docs/GIT_WORKFLOW.md</code>)</li>
 <li>Sprite asset workflow: <a href="docs/SPRITE_ASSET_WORKFLOW.html">docs/SPRITE_ASSET_WORKFLOW.html</a> (source: <code>docs/SPRITE_ASSET_WORKFLOW.md</code>)</li>
+<li>Sound asset workflow: <a href="docs/SOUND_ASSET_WORKFLOW.html">docs/SOUND_ASSET_WORKFLOW.html</a> (source: <code>docs/SOUND_ASSET_WORKFLOW.md</code>)</li>
 <li>Session handoff: <a href="docs/SESSION_HANDOFF.html">docs/SESSION_HANDOFF.html</a> (source: <code>docs/SESSION_HANDOFF.md</code>)</li>
 </ul>
 <h2>Controls</h2>
@@ -349,6 +367,7 @@ dist/index.html
 <li>Hold/release Spacebar: charge and fire.</li>
 <li>R: restart round.</li>
 <li>H or the <code>Collision zones</code> checkbox: show/hide prototype vehicle collision zones. Zones are visible by default while collision and map scale are being tuned; add <code>?collisionZones=0</code> to start hidden.</li>
+<li>M: mute/unmute minimal prototype sound effects.</li>
 </ul>
 <h2>Terms</h2>
 <ul>
@@ -381,6 +400,7 @@ dist/index.html
 <li>Launch power, movement range, active vehicle identity, and aim angle live in a fixed centered command deck.</li>
 <li>Active player also gets a world-space aim arrow, raised turn timer badge, and ground movement range rail so movement decisions can be read without covering the character art.</li>
 <li>Prototype vehicle collision zones are visible by default while collision and terrain scale are being tuned, and can be toggled off with <code>H</code>, the on-screen checkbox, or <code>?collisionZones=0</code>.</li>
+<li>Prototype audio is non-voice and manifest-backed: turn ticks, movement pulses, class-flavored weapon launches, impacts, hit feedback, damage KOs, and Void Dropped cues can be assigned to files in <a href="docs/SOUND_ASSET_WORKFLOW.html">docs/SOUND_ASSET_WORKFLOW.md</a>. Missing manifest entries fall back to procedural sounds. <code>M</code> toggles sound.</li>
 <li>The game camera reserves the playfield above a fixed centered command deck, frames the visible void bottom just above that boundary, and keeps the battlefield centered when the camera view is wider than the map.</li>
 <li>The browser shell is presentation-capped and centered so larger or ultrawide windows improve readability without changing terrain, spawns, collision, void placement, projectile behavior, or the strategic battlefield view.</li>
 <li>Current sprites are first-pass generated assets, not final production sprites.</li>

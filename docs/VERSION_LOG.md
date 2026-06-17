@@ -5,6 +5,12 @@ Use this as the human-readable checkpoint history. Every meaningful commit shoul
 ## Unreleased
 
 Highlights:
+- Added an asset-backed sound manifest and workflow doc so v1 non-voice SFX can be swapped through `src/match/audio/MatchSoundAssets.ts` and files under `public/assets/sfx/`, while future voice experiments stay organized under `public/assets/voice/` outside default v1 scope.
+- Added minimal procedural non-voice match SFX for turn ticks, movement, class-flavored weapon fire, impacts, hits, damage KOs, and Void Dropped cues, with `M` to mute/unmute prototype sound.
+- Made terrain sliding less eager by treating slopes up to 45 degrees as stable footing, so vehicles only slide when the sampled ground is steeper than that cutoff.
+- Fixed Perlah's live runtime sprite facing metadata so her default and intense full-unit sprites face the correct direction during movement, and removed the resolved bug-list item.
+- Added a tracked Tiled map authoring workflow with `npm run maps:sync`, spawn-separation validation, and a revised Idol Canyon Supine Skeleton draft that keeps four spawns on distinct named callouts outside the locked v1 map pool.
+- Added a first Tiled map import spike: the Supine Idol Canyon draft can be converted from Tiled object layers into the local playable terrain contract and previewed with `?map=idol-canyon-supine-draft` without adding it to the locked v1 map pool.
 - Adopted Gravity Canyon as the working product title.
 - Added Colyseus, Express, and TypeScript server tooling.
 - Added the Colyseus browser SDK as a vendored static browser bundle for stable local Vite development.
@@ -98,6 +104,8 @@ Highlights:
 - Locked Nova's current combat art direction to a duo-identity Bunger Rig candidate with warmer human contrast, preserving it as a sprite variant while leaving runtime aliases unchanged.
 - Promoted Nova's normalized duo-identity default into the runtime default alias and normalized battlefield default plus charge-linked runtime frames for consistent map-scale testing.
 - Added a default battle-sprite readability pass for Vesper, Kaelii, and Perlah so all four v1 units read more clearly by face, hair, and color at map-testing scale.
+- Replaced Vesper, Kaelii, and Perlah default runtime sprites with face-first v2 battlefield variants that keep current unit scale while improving pilot face, hair, skin, and clothing separation from same-color vehicles; v2 darkens Perlah's cart, softens Vesper's neon/body read, and gives Kaelii a flirtier stunt-idol pose.
+- Replaced Perlah's intense runtime source with a face-first v4 footprint-matched candidate so her charge state preserves the darker cart, clearer pilot contrast, and the same apparent gameplay footprint as her default state.
 - Added a TDD naming rule that `v1` remains a product milestone/profile label, while new permanent code modules should use generic names and select milestone behavior through ruleset/content ids.
 - Renamed the current demo unit content exports away from milestone-prefixed symbols so new code consumes `DemoUnitDefinition` and `DEMO_UNIT_DEFINITIONS`.
 - Extracted local projectile launch, flight stepping, trail tracking, swept collision lookup, and out-of-bounds orchestration into `src/match/ProjectileController.ts`.

@@ -87,7 +87,7 @@
   <main>
     <article>
       <div class="generated">
-        HTML reading copy generated from <a href="GDD.md">docs/GDD.md</a> on 2026-06-16.
+        HTML reading copy generated from <a href="GDD.md">docs/GDD.md</a> on 2026-06-17.
         Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Gravity Canyon Game Design Document</h1>
@@ -422,7 +422,7 @@
 <p>Source art should remain PNG. Browser delivery should use optimized WebP where practical.</p>
 <p>Current Nova direction: use the duo-identity combat candidate with lighter pilot contrast and visible skin-tone face/arms so Nova reads clearly against the red-and-black Bunger Rig. The normalized version is the current default runtime sprite for map-scale exploration until a deliberate art review replaces it.</p>
 <p>Current match-sprite handling: default unit aliases and their existing charge-linked frames are normalized with consistent transparent bounds and bottom anchors before map testing, so terrain gaps, collision zones, and land readability are judged against comparable runtime sprites without a charge-size pop.</p>
-<p>The current default battlefield pass favors readable pilot identity over preserving every illustration detail. Nova, Vesper, Kaelii, and Perlah should each read by face/hair/color at match scale while the vehicle remains the collision and terrain-contact truth.</p>
+<p>The current default battlefield pass favors readable pilot identity over preserving every illustration detail. Nova is the current control; Vesper, Kaelii, and Perlah use face-first default runtime sprites so their face, hair, skin, and clothing contrast separate from their vehicle colors at match scale. The vehicle remains the collision and terrain-contact truth.</p>
 <h2>19. Audio Direction</h2>
 <p>V1 needs minimal, readable, non-voice SFX:</p>
 <ul>
@@ -430,6 +430,15 @@
 <li>Impact/explosion feedback.</li>
 <li>UI-ready/start feedback if easy.</li>
 <li>No character KO shouts or voice barks required for v1.</li>
+</ul>
+<p>Current prototype audio uses manifest-backed authored cues with procedural browser-generated fallback:</p>
+<ul>
+<li>Turn ticks, with sharper final-five-second urgency.</li>
+<li>Movement pulses while the active vehicle is actually moving.</li>
+<li>Class-flavored weapon launch sounds for the current four local units.</li>
+<li>Impact, hit, damage KO, and Void Dropped cues.</li>
+<li><code>M</code> toggles prototype SFX on and off.</li>
+<li>Sound replacement workflow lives in <a href="SOUND_ASSET_WORKFLOW.html">SOUND_ASSET_WORKFLOW.md</a>. Runtime non-voice files belong under <code>public/assets/sfx/</code>; future voice experiments belong under <code>public/assets/voice/</code> but are not v1 default gameplay.</li>
 </ul>
 <p>Future audio can include:</p>
 <ul>

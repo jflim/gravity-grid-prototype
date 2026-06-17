@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sound Asset Workflow</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        HTML reading copy generated from <a href="SOUND_ASSET_WORKFLOW.md">docs/SOUND_ASSET_WORKFLOW.md</a> on 2026-06-17.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Sound Asset Workflow</h1>
+<p>Status: active workflow</p>
+<p>Scope: v1 non-voice SFX, with future voice folder guidance</p>
+<p>Runtime manifest: <code>src/match/audio/MatchSoundAssets.ts</code></p>
+<h2>Purpose</h2>
+<p>This document explains how to replace Gravity Canyon's prototype match sounds without editing combat, turn, movement, projectile, or UI flow code.</p>
+<p>The match emits sound cues such as <code>turn-tick</code>, <code>movement</code>, <code>weapon-fire</code>, <code>impact</code>, <code>hit</code>, <code>damage-ko</code>, and <code>void-drop</code>. The audio layer decides whether each cue plays an authored asset or the procedural fallback.</p>
+<h2>V1 Boundary</h2>
+<p>V1 allows:</p>
+<ul>
+<li>One readable non-voice weapon SFX per v1 character or class.</li>
+<li>Minimal non-voice UI, movement, impact, hit, damage KO, and Void Dropped feedback.</li>
+<li>Asset swapping through the manifest.</li>
+</ul>
+<p>V1 does not include:</p>
+<ul>
+<li>Character voice barks.</li>
+<li>KO shouts.</li>
+<li>Music identity.</li>
+<li>Mature/adult-only voice or audio packs.</li>
+</ul>
+<p>Future voice files can be organized now, but they should not be wired into default v1 gameplay unless the v1 contract is explicitly changed.</p>
+<h2>Folder Layout</h2>
+<p>Runtime SFX should live under:</p>
+<pre><code class="language-text">
+public/assets/sfx/
+
+</code></pre>
+<p>Recommended subfolders:</p>
+<pre><code class="language-text">
+public/assets/sfx/ui/
+
+public/assets/sfx/vehicle/
+
+public/assets/sfx/weapons/
+
+public/assets/sfx/combat/
+
+</code></pre>
+<p>Future voice files should live under:</p>
+<pre><code class="language-text">
+public/assets/voice/&lt;character-id&gt;/
+
+</code></pre>
+<p>Example future-only voice layout:</p>
+<pre><code class="language-text">
+public/assets/voice/nova/
+
+public/assets/voice/kaelii/
+
+public/assets/voice/perlah/
+
+public/assets/voice/vesper/
+
+</code></pre>
+<h2>Supported File Types</h2>
+<p>Prefer short <code>.ogg</code> or <code>.mp3</code> files for browser delivery.</p>
+<p>Use <code>.wav</code> only for source or very small temporary tests because it is usually larger. If a browser fails to play a manifest asset, the game falls back to the procedural sound for that cue.</p>
+<h2>How To Replace The Tick Sound</h2>
+<ol>
+<li>Add a new file:</li>
+</ol>
+<pre><code class="language-text">
+public/assets/sfx/ui/turn-tick.ogg
+
+</code></pre>
+<ol>
+<li>Open:</li>
+</ol>
+<pre><code class="language-text">
+src/match/audio/MatchSoundAssets.ts
+
+</code></pre>
+<ol>
+<li>Set the manifest path:</li>
+</ol>
+<pre><code class="language-ts">
+export const MATCH_SOUND_MANIFEST: MatchSoundManifest = {
+
+  ui: {
+
+    turnTick: { src: &quot;assets/sfx/ui/turn-tick.ogg&quot;, volume: 0.6 },
+
+  },
+
+  weaponFire: {
+
+    byClassId: {},
+
+  },
+
+  combat: {},
+
+};
+
+</code></pre>
+<ol>
+<li>Run:</li>
+</ol>
+<pre><code class="language-powershell">
+npm test -- src/match/audio/MatchSoundAssets.test.ts src/match/audio/MatchSoundController.test.ts
+
+npm run build
+
+</code></pre>
+<h2>Cue Manifest Reference</h2>
+<p>The current manifest supports:</p>
+<pre><code class="language-ts">
+ui.turnTick
+
+ui.turnTickUrgent
+
+movement
+
+weaponFire.default
+
+weaponFire.byClassId.bunger
+
+weaponFire.byClassId.flashkick
+
+weaponFire.byClassId.sunspike
+
+weaponFire.byClassId.glitch
+
+combat.impact
+
+combat.hit
+
+combat.damageKo
+
+combat.voidDrop
+
+</code></pre>
+<p>Each entry uses:</p>
+<pre><code class="language-ts">
+{
+
+  src: &quot;assets/sfx/path/to-file.ogg&quot;,
+
+  volume: 0.6,
+
+  playbackRate: 1
+
+}
+
+</code></pre>
+<p><code>volume</code> and <code>playbackRate</code> are optional.</p>
+<h2>Character And Class Mapping</h2>
+<p>Current v1 class ids:</p>
+<table>
+<thead><tr>
+<th>Character</th>
+<th>Class id</th>
+<th>Recommended weapon file</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Nova</td>
+<td><code>bunger</code></td>
+<td><code>assets/sfx/weapons/nova-bunger-fire.ogg</code></td>
+</tr>
+<tr>
+<td>Kaelii</td>
+<td><code>flashkick</code></td>
+<td><code>assets/sfx/weapons/kaelii-flashkick-fire.ogg</code></td>
+</tr>
+<tr>
+<td>Perlah</td>
+<td><code>sunspike</code></td>
+<td><code>assets/sfx/weapons/perlah-sunspike-fire.ogg</code></td>
+</tr>
+<tr>
+<td>Vesper</td>
+<td><code>glitch</code></td>
+<td><code>assets/sfx/weapons/vesper-glitch-fire.ogg</code></td>
+</tr>
+</tbody></table>
+<p>The manifest resolves <code>weaponFire.byClassId</code> first. If a class-specific file is missing, it uses <code>weaponFire.default</code>. If no authored asset is defined, it uses the procedural fallback.</p>
+<h2>Human Editing Rules</h2>
+<ul>
+<li>Do edit <code>src/match/audio/MatchSoundAssets.ts</code> when swapping sound files.</li>
+<li>Do keep files under <code>public/assets/sfx/</code> for v1 sound effects.</li>
+<li>Do keep future voice files under <code>public/assets/voice/</code>.</li>
+<li>Do not add voice barks to default v1 gameplay without a contract change.</li>
+<li>Do not put combat balance, damage, hitbox, or weapon behavior changes in sound files or audio code.</li>
+<li>Do not make cosmetics or voice variants affect gameplay truth.</li>
+</ul>
+<h2>Verification</h2>
+<p>After changing sound files or manifest paths, run:</p>
+<pre><code class="language-powershell">
+npm test -- src/match/audio/MatchSoundAssets.test.ts src/match/audio/MatchSoundController.test.ts
+
+npm run build
+
+</code></pre>
+<p>After editing this markdown document, run:</p>
+<pre><code class="language-powershell">
+npm run docs:html
+
+</code></pre>
+    </article>
+  </main>
+</body>
+</html>

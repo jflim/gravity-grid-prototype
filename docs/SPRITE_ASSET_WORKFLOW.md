@@ -277,12 +277,16 @@ The current art-direction probe is moving toward adult-anime unit sprites, with 
 ```text
 public/assets/sprite-variants/units/nova/defeated-ko/nova-unit-defeated-ko-head-over-heels-v1.png
 public/assets/sprite-variants/units/nova/intense/nova-unit-intense-bunger-rig-probe-01-alpha.png
+public/assets/sprite-variants/units/vesper/default/vesper-unit-default-face-first-v2-alpha.png
+public/assets/sprite-variants/units/kaelii/default/kaelii-unit-default-face-first-v2-alpha.png
+public/assets/sprite-variants/units/perlah/default/perlah-unit-default-face-first-v2-alpha.png
+public/assets/sprite-variants/units/perlah/intense/perlah-unit-intense-face-first-v4-alpha.png
 public/assets/sprite-variants/units/vesper/intense/vesper-unit-intense-glitch-rover-probe-08-subtle-tension-scale-stable-normalized-alpha.png
 public/assets/sprite-variants/units/vesper/default/vesper-unit-default-mounted-tech-shorts-v9.png
 public/assets/sprite-variants/units/vesper/defeated-ko/vesper-unit-defeated-ko-tech-shorts-v10.png
 ```
 
-Vesper default and Defeated KO still need production cleanup before replacing the older layered baseline set. Vesper full-unit intense v8 subtle tension scale-stable is active as a runtime test alias. It preserves the default visible alpha footprint while allowing small pilot/rover recoil, leg tension, joystick/deck-control charge action, and compact glitch UI without a dramatic apparent scale pop. Use the committed unit candidates above, `public/assets/vesper-character-default.png`, and the Vesper vehicle identity as references in a fresh image-generation context, then archive character-layer winners under:
+Vesper, Kaelii, and Perlah default runtime aliases now use face-first v2 battlefield candidates to improve pilot readability at match scale without increasing unit footprint. Vesper v2 specifically avoids the too-bright blue-on-blue read from v1; Perlah v2 darkens the Embercart so she no longer matches the vehicle; Kaelii v2 leans into her flirty stunt-idol role while staying stream-safe. Perlah intense now uses face-first v4 so the charge frame keeps the v2 default's compact footprint and dark-cart contrast. Vesper full-unit intense v8 subtle tension scale-stable is active as a runtime test alias. It preserves the default visible alpha footprint while allowing small pilot/rover recoil, leg tension, joystick/deck-control charge action, and compact glitch UI without a dramatic apparent scale pop. Vesper Defeated KO still needs production cleanup before replacing the older layered baseline set. Use the committed unit candidates above, `public/assets/vesper-character-default.png`, and the Vesper vehicle identity as references in a fresh image-generation context, then archive character-layer winners under:
 
 ```text
 public/assets/sprite-variants/characters/vesper/ko/
