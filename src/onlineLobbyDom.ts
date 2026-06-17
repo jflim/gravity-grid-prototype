@@ -6,10 +6,13 @@ import {
 } from "./onlineLobbyMarkup";
 import type { PlayerSnapshot, RoomSnapshot } from "./onlineLobbySnapshot";
 import {
+  canLocalPlayerChangeMode,
   canLocalPlayerUseLobbyControls,
+  lobbyHostLabel,
   lobbyStatusText,
   modeLabel,
   modeSubLabel,
+  roomDisplayLabel,
 } from "./onlineLobbyView";
 
 export type OnlineLobbyDomHandlers = {
@@ -32,8 +35,8 @@ export type OnlineLobbyDom = {
 };
 
 type LobbyRenderModel = {
-  localRole: string;
   isHost: boolean;
+  canChangeMode: boolean;
   canUseLobbyControls: boolean;
   effectiveReady: boolean;
   statusText: string;
@@ -47,6 +50,7 @@ export function createOnlineLobbyDom(documentRef: Document, handlers: OnlineLobb
   const modeButtons = Array.from(stage.querySelectorAll<HTMLButtonElement>("[data-mode-choice]"));
   const roomBlock = stage.querySelector<HTMLElement>("[data-room-block]");
   const roomCodeLabel = stage.querySelector<HTMLElement>("[data-room-code]");
+  const hostLabel = stage.querySelector<HTMLElement>("[data-host-label]");
   const statusBadge = stage.querySelector<HTMLElement>("[data-status-badge]");
   const roomStatus = stage.querySelector<HTMLElement>("[data-room-status]");
   const playerList = stage.querySelector<HTMLElement>("[data-player-list]");
@@ -66,32 +70,7 @@ export function createOnlineLobbyDom(documentRef: Document, handlers: OnlineLobb
     modeButton.addEventListener("click", () => handlers.modeChanged(modeButton.dataset.modeChoice ?? "2v2"));
   }
 
-  stage.addEventListener("click", (event) => {
-    const target = event.target;
-    if (!(target instanceof HTMLElement)) {
-      return;
-    }
-
-    const seatButton = target.closest<HTMLElement>("[data-seat-action]");
-    if (seatButton) {
-      handleSeatAction(seatButton);
-      return;
-    }
-
-    const characterButton = target.closest<HTMLElement>("[data-character-choice]");
-    if (characterButton) {
-      const characterId = characterButton.dataset.characterChoice ?? "";
-      if (activePickerSlotId && characterId) {
-        handlers.characterSelected(activePickerSlotId, characterId);
-        closePicker();
-      }
-      return;
-    }
-
-    if (target.closest("[data-character-picker-close]")) {
-      closePicker();
-    }
-  });
+  stage.addEventListener("click", handleStageClick);
 
   return {
     stage,
@@ -124,7 +103,8 @@ export function createOnlineLobbyDom(documentRef: Document, handlers: OnlineLobb
     const model = lobbyRenderModel(snapshot, localSessionId, localReady);
 
     showRoomBlock(roomBlock);
-    setElementText(roomCodeLabel, snapshot.roomCode || fallbackRoomId);
+    setElementText(roomCodeLabel, roomDisplayLabel(snapshot.roomCode, fallbackRoomId));
+    setElementText(hostLabel, lobbyHostLabel(snapshot.players, snapshot.hostSessionId, localSessionId));
     setElementText(roomStatus, model.statusText);
     renderReadyButton(readyButton, model);
     renderModeButtons(modeButtons, snapshot.mode, model);
@@ -139,15 +119,7 @@ export function createOnlineLobbyDom(documentRef: Document, handlers: OnlineLobb
       return;
     }
 
-    if (button.dataset.seatAction === "claim") {
-      activePickerSlotId = slotId;
-      handlers.seatClaimed(slotId);
-      return;
-    }
-
-    if (button.dataset.seatAction === "pick") {
-      openPicker(slotId);
-    }
+    handleSeatActionType(slotId, button.dataset.seatAction);
   }
 
   function openPicker(slotId: string): void {
@@ -166,22 +138,119 @@ export function createOnlineLobbyDom(documentRef: Document, handlers: OnlineLobb
   }
 
   function syncOpenPicker(snapshot: RoomSnapshot | undefined): void {
-    if (!snapshot || !activePickerSlotId || !pickerOptions) {
-      return;
-    }
-
-    const slot = snapshot.slots.find((candidate) => candidate.slotId === activePickerSlotId);
-    if (!slot || slot.ownerSessionId !== latestLocalSessionId) {
-      closePicker();
+    const slot = editablePickerSlot(snapshot);
+    if (!slot) {
       return;
     }
 
     setElementText(pickerSlot, slot.slotId);
     setElementHtml(pickerOptions, renderCharacterPickerOptions(slot.characterId));
+    showPicker();
+  }
+
+  function handleStageClick(event: MouseEvent): void {
+    const target = eventTargetElement(event.target);
+    if (!target) {
+      return;
+    }
+
+    handleLobbyClickTarget(target);
+  }
+
+  function handleLobbyClickTarget(target: HTMLElement): void {
+    if (handleSeatClick(target) || handleCharacterClick(target)) {
+      return;
+    }
+
+    closePickerIfRequested(target);
+  }
+
+  function handleSeatClick(target: HTMLElement): boolean {
+    const seatButton = target.closest<HTMLElement>("[data-seat-action]");
+    if (!seatButton) {
+      return false;
+    }
+
+    handleSeatAction(seatButton);
+    return true;
+  }
+
+  function handleCharacterClick(target: HTMLElement): boolean {
+    const characterButton = target.closest<HTMLElement>("[data-character-choice]");
+    if (!characterButton) {
+      return false;
+    }
+
+    selectCharacter(characterButton.dataset.characterChoice ?? "");
+    return true;
+  }
+
+  function selectCharacter(characterId: string): void {
+    if (!activePickerSlotId || !characterId) {
+      return;
+    }
+
+    handlers.characterSelected(activePickerSlotId, characterId);
+    closePicker();
+  }
+
+  function claimSeat(slotId: string): void {
+    activePickerSlotId = slotId;
+    handlers.seatClaimed(slotId);
+  }
+
+  function editablePickerSlot(snapshot: RoomSnapshot | undefined) {
+    if (!canSyncPicker(snapshot)) {
+      return undefined;
+    }
+
+    return editablePickerSlotOrClose(snapshot);
+  }
+
+  function showPicker(): void {
     if (picker) {
       picker.hidden = false;
     }
   }
+
+  function handleSeatActionType(slotId: string, action: string | undefined): void {
+    if (action === "claim") {
+      claimSeat(slotId);
+      return;
+    }
+
+    if (action === "pick") {
+      openPicker(slotId);
+    }
+  }
+
+  function closePickerIfRequested(target: HTMLElement): void {
+    if (target.closest("[data-character-picker-close]")) {
+      closePicker();
+    }
+  }
+
+  function canSyncPicker(snapshot: RoomSnapshot | undefined): snapshot is RoomSnapshot {
+    return Boolean(snapshot && activePickerSlotId && pickerOptions);
+  }
+
+  function editablePickerSlotOrClose(snapshot: RoomSnapshot) {
+    const slot = snapshot.slots.find((candidate) => candidate.slotId === activePickerSlotId);
+    if (pickerSlotIsEditable(slot)) {
+      return slot;
+    }
+
+    closePicker();
+    return undefined;
+  }
+
+  function pickerSlotIsEditable(slot: RoomSnapshot["slots"][number] | undefined): boolean {
+    return Boolean(slot && slot.ownerSessionId === latestLocalSessionId);
+  }
+}
+
+function eventTargetElement(target: EventTarget | null): HTMLElement | undefined {
+  return target instanceof HTMLElement ? target : undefined;
 }
 
 function createOnlineLobbyStage(documentRef: Document): HTMLElement {
@@ -201,11 +270,10 @@ function lobbyRenderModel(
   localReady: boolean,
 ): LobbyRenderModel {
   const localPlayer = playerBySessionId(snapshot.players, localSessionId);
-  const localRole = playerRole(localPlayer);
   const hasOwnedActiveSeat = snapshot.slots.some((slot) => slot.active && slot.ownerSessionId === localSessionId);
   return {
-    localRole,
     isHost: snapshot.hostSessionId === localSessionId,
+    canChangeMode: canLocalPlayerChangeMode(snapshot.hostSessionId === localSessionId, snapshot.phase),
     canUseLobbyControls: canLocalPlayerUseLobbyControls(hasOwnedActiveSeat, snapshot.phase),
     effectiveReady: playerReady(localPlayer, localReady),
     statusText: roomStatusText(snapshot),
@@ -229,10 +297,6 @@ function roomStatusText(snapshot: RoomSnapshot): string {
 
 function playerBySessionId(players: readonly PlayerSnapshot[], sessionId: string): PlayerSnapshot | undefined {
   return players.find((player) => player.sessionId === sessionId);
-}
-
-function playerRole(player: PlayerSnapshot | undefined): string {
-  return player ? player.role : "spectator";
 }
 
 function playerName(player: PlayerSnapshot | undefined): string {
@@ -273,8 +337,21 @@ function renderReadyButton(button: HTMLButtonElement | null, model: LobbyRenderM
 function renderModeButtons(buttons: readonly HTMLButtonElement[], mode: string, model: LobbyRenderModel): void {
   for (const button of buttons) {
     const selected = button.dataset.modeChoice === mode;
-    button.disabled = !model.isHost || model.localRole === "spectator";
+    button.disabled = !model.canChangeMode;
     button.dataset.selected = selected ? "true" : "false";
     button.setAttribute("aria-pressed", selected ? "true" : "false");
+    button.title = modeButtonTitle(model);
   }
+}
+
+function modeButtonTitle(model: LobbyRenderModel): string {
+  if (model.canChangeMode) {
+    return "Choose the playtest mode.";
+  }
+
+  if (!model.isHost) {
+    return "Only the lobby host can change mode.";
+  }
+
+  return "Mode is locked after gameplay starts.";
 }

@@ -148,6 +148,7 @@
 <li>The local map-review demo hides the Online Alpha room panel by default; playtest launch mode shows it automatically.</li>
 <li>Playtest launch mode auto-joins one shared room lobby, then swaps into a shared server-owned gameplay preview after all claimed active seats are ready.</li>
 <li>The playtest lobby now presents Red Team and Blue Team side by side, lets players claim active seats, lets the host choose Duel or Doubles, and shows visual Pilot/Ride character picks before readying.</li>
+<li>The lobby labels the current Lobby Host, presents the generated playtest URL as a shared playtest room instead of exposing the internal <code>auto-room</code> id, and leaves mode changes host-only.</li>
 <li>Placeholder capsule/nameplate state remains server-side, but those controls are hidden from the focused playtest lobby until the cosmetic loop is ready.</li>
 <li>Public preview mode can serve the built client and Colyseus room server from one local port for internet sharing through a trusted tunnel, while staying localhost-only unless <code>HOST=0.0.0.0</code> is explicitly set.</li>
 <li>Playtest pages show a visible loading status and report the failed asset key if Phaser cannot load a required image.</li>

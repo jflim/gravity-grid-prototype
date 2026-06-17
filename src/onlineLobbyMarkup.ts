@@ -13,6 +13,15 @@ import {
 
 const SLOT_ORDER = ["red-1", "blue-1", "red-2", "blue-2"];
 const TEAM_ORDER = ["red", "blue"] as const;
+type SeatAction = "claim" | "pick" | "locked";
+
+type SlotRenderState = {
+  card: LobbyCharacterCard;
+  ownedByLocal: boolean;
+  canClaim: boolean;
+  action: SeatAction;
+  disabled: string;
+};
 
 export function renderLobbyShell(): string {
   return `
@@ -34,9 +43,15 @@ export function renderLobbyShell(): string {
         </div>
         <div class="online-panel__room" data-room-block hidden>
           <div class="online-lobby-roombar">
-            <div class="online-panel__room-code">
-              <span>Playtest Room</span>
-              <strong data-room-code></strong>
+            <div class="online-lobby-roommeta">
+              <div class="online-panel__room-code">
+                <span>Room</span>
+                <strong data-room-code>Room pending</strong>
+              </div>
+              <div class="online-panel__room-code online-panel__host">
+                <span>Lobby Host</span>
+                <strong data-host-label>Assigning host</strong>
+              </div>
             </div>
             <div class="online-lobby-mode">
               <label>
@@ -154,16 +169,11 @@ function renderSlotRow(
   localSessionId: string,
   canUseLobbyControls: boolean,
 ): string {
-  const card = lobbyCharacterCardFor(slot.characterId);
-  const ownedByLocal = canLocalPlayerEditSlot(slot.ownerSessionId, localSessionId);
-  const canClaim = slot.active && canUseLobbyControls && !slot.ownerSessionId;
-  const canPick = slot.active && canUseLobbyControls && ownedByLocal;
-  const action = seatAction(slot, canClaim, canPick);
-  const disabled = action === "locked" ? " disabled" : "";
+  const state = slotRenderState(slot, localSessionId, canUseLobbyControls);
   return `
-    <article class="${escapeHtml(slotClass(slot, ownedByLocal, canClaim))}" data-slot-id="${escapeHtml(slot.slotId)}">
+    <article class="${escapeHtml(slotClass(slot, state.ownedByLocal, state.canClaim))}" data-slot-id="${escapeHtml(slot.slotId)}">
       <div class="online-seat__unit">
-        <img src="${escapeHtml(card.unitImage)}" alt="${escapeHtml(`${card.name} unit art`)}" loading="eager" />
+        <img src="${escapeHtml(state.card.unitImage)}" alt="${escapeHtml(`${state.card.name} unit art`)}" loading="eager" />
       </div>
       <div class="online-seat__body">
         <div class="online-seat__topline">
@@ -174,15 +184,32 @@ function renderSlotRow(
           <em>${escapeHtml(slotStateText(slot))}</em>
         </div>
         <div class="online-seat__loadout">
-          ${renderLoadoutPart("Pilot", card.name, card.pilotImage, card.needsLobbyArt)}
-          ${renderLoadoutPart("Ride", card.rideName, card.rideImage, false)}
+          ${renderLoadoutPart("Pilot", state.card.name, state.card.pilotImage, state.card.needsLobbyArt)}
+          ${renderLoadoutPart("Ride", state.card.rideName, state.card.rideImage, false)}
         </div>
-        <button type="button" data-seat-action="${action}" data-slot-id="${escapeHtml(slot.slotId)}"${disabled}>
-          ${escapeHtml(actionLabel(action, slot))}
+        <button type="button" data-seat-action="${state.action}" data-slot-id="${escapeHtml(slot.slotId)}"${state.disabled}>
+          ${escapeHtml(actionLabel(state.action, slot))}
         </button>
       </div>
     </article>
   `;
+}
+
+function slotRenderState(
+  slot: LobbySlotView,
+  localSessionId: string,
+  canUseLobbyControls: boolean,
+): SlotRenderState {
+  const ownedByLocal = canLocalPlayerEditSlot(slot.ownerSessionId, localSessionId);
+  const canClaim = canClaimSlot(slot, canUseLobbyControls);
+  const action = seatAction(slot, canClaim, canPickSlot(slot, canUseLobbyControls, ownedByLocal));
+  return {
+    card: lobbyCharacterCardFor(slot.characterId),
+    ownedByLocal,
+    canClaim,
+    action,
+    disabled: disabledAttribute(action),
+  };
 }
 
 function renderLoadoutPart(label: string, value: string, image: string, needsLobbyArt: boolean): string {
@@ -248,7 +275,7 @@ function slotStateText(slot: LobbySlotView): string {
   return slot.ready ? "Ready" : "Picking";
 }
 
-function seatAction(slot: LobbySlotView, canClaim: boolean, canPick: boolean): "claim" | "pick" | "locked" {
+function seatAction(slot: LobbySlotView, canClaim: boolean, canPick: boolean): SeatAction {
   if (canPick) {
     return "pick";
   }
@@ -260,21 +287,34 @@ function seatAction(slot: LobbySlotView, canClaim: boolean, canPick: boolean): "
   return "locked";
 }
 
-function actionLabel(action: "claim" | "pick" | "locked", slot: LobbySlotView): string {
+function canClaimSlot(slot: LobbySlotView, canUseLobbyControls: boolean): boolean {
+  return slot.active ? canUseLobbyControls && !slot.ownerSessionId : false;
+}
+
+function canPickSlot(slot: LobbySlotView, canUseLobbyControls: boolean, ownedByLocal: boolean): boolean {
+  return slot.active ? canUseLobbyControls && ownedByLocal : false;
+}
+
+function disabledAttribute(action: SeatAction): string {
+  return action === "locked" ? " disabled" : "";
+}
+
+function actionLabel(action: SeatAction, slot: LobbySlotView): string {
   if (!slot.active) {
     return "Closed";
   }
 
-  if (action === "claim") {
-    return "Claim Seat";
-  }
+  return action === "locked" ? lockedActionLabel(slot) : activeActionLabels[action];
+}
 
-  if (action === "pick") {
-    return "Change Fighter";
-  }
-
+function lockedActionLabel(slot: LobbySlotView): string {
   return slot.ownerSessionId ? "Occupied" : "Closed";
 }
+
+const activeActionLabels: Record<Exclude<SeatAction, "locked">, string> = {
+  claim: "Claim Seat",
+  pick: "Change Fighter",
+};
 
 function slotClass(slot: LobbySlotView, ownedByLocal: boolean, claimable: boolean): string {
   const classes = ["online-slot", `online-slot--${slot.team}`];

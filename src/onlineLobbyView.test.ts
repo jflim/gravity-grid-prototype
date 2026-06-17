@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  canLocalPlayerChangeMode,
   canLocalPlayerUseLobbyControls,
+  lobbyHostLabel,
   canLocalPlayerEditSlot,
   lobbyStatusText,
   localRoleLabel,
   modeLabel,
   normalizeLobbySlots,
+  roomDisplayLabel,
   stageForRoomPhase,
   slotLabel,
 } from "./onlineLobbyView";
@@ -31,6 +34,13 @@ test("canLocalPlayerUseLobbyControls keeps seated players interactive during rea
   assert.equal(canLocalPlayerUseLobbyControls(true, "combat-preview"), false);
 });
 
+test("canLocalPlayerChangeMode allows only the host before gameplay starts", () => {
+  assert.equal(canLocalPlayerChangeMode(true, "lobby"), true);
+  assert.equal(canLocalPlayerChangeMode(true, "ready"), true);
+  assert.equal(canLocalPlayerChangeMode(false, "lobby"), false);
+  assert.equal(canLocalPlayerChangeMode(true, "combat-preview"), false);
+});
+
 test("stageForRoomPhase separates lobby and gameplay scenes", () => {
   assert.equal(stageForRoomPhase("lobby"), "lobby");
   assert.equal(stageForRoomPhase("ready"), "lobby");
@@ -43,6 +53,23 @@ test("modeLabel and slotLabel keep lobby wording short", () => {
   assert.equal(modeLabel("2v2"), "Doubles");
   assert.equal(slotLabel("red-1"), "Red 1");
   assert.equal(slotLabel("blue-2"), "Blue 2");
+});
+
+test("roomDisplayLabel hides internal auto-room naming from players", () => {
+  assert.equal(roomDisplayLabel("auto-room", "real-room-id"), "Shared playtest room");
+  assert.equal(roomDisplayLabel("", "real-room-id"), "real-room-id");
+  assert.equal(roomDisplayLabel("", ""), "Room pending");
+});
+
+test("lobbyHostLabel names the host and marks the local host", () => {
+  const players = [
+    { sessionId: "host-session", displayName: "RedHost" },
+    { sessionId: "friend-session", displayName: "BlueFriend" },
+  ];
+
+  assert.equal(lobbyHostLabel(players, "host-session", "host-session"), "RedHost (You)");
+  assert.equal(lobbyHostLabel(players, "host-session", "friend-session"), "RedHost");
+  assert.equal(lobbyHostLabel(players, "", "friend-session"), "Assigning host");
 });
 
 test("lobbyStatusText explains the blocked start state", () => {

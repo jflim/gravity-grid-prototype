@@ -9,11 +9,13 @@ test("renderLobbyShell owns the online stage shell markup", () => {
     /class="online-stage"/,
     /data-ready-toggle/,
     /data-slot-list/,
+    /data-host-label/,
     /data-mode-choice="1v1"/,
     /data-mode-choice="2v2"/,
     /data-character-picker/,
     /data-character-picker-options/,
     /data-auto-connect hidden/,
+    /Lobby Host/,
     /Host controls mode/,
   ]);
   assertExcludesAll(html, [/>Reconnect</, /Nameplate/, /Capsule/]);
