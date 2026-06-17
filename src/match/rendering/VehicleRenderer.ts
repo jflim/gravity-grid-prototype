@@ -1,12 +1,12 @@
 import Phaser from "phaser";
-import { defeatPresentationFor } from "../../combatPresentation";
 import {
   computeUnitWorldOverlayLayout,
   readableWorldUiScale,
 } from "../../demoLayout";
-import { voidDropRenderPosition } from "../../voidDropPresentation";
 import type { VehicleState } from "../MatchTypes";
+import { type VehicleOverlayDrawKey, vehicleOverlayDrawKeysFor } from "./VehicleOverlayDrawPlan";
 import { VehicleOverlayRenderer } from "./VehicleOverlayRenderer";
+import { vehicleRenderModelFor } from "./VehicleRenderModel";
 import { VehicleSpriteLayer } from "./VehicleSpriteLayer";
 
 export interface VehicleRendererOptions {
@@ -56,70 +56,51 @@ export class VehicleRenderer {
     this.overlays.clear();
 
     for (const vehicle of input.vehicles) {
-      const defeatPresentation = vehicle.alive ? undefined : defeatPresentationFor(vehicle.defeatReason);
-      const motionLabel =
-        vehicle.motion?.kind === "falling"
-          ? "FALLING"
-          : vehicle.motion?.kind === "sliding"
-            ? "SLIDING"
-            : undefined;
-      const alpha = vehicle.alive ? 1 : defeatPresentation?.alpha ?? 0.9;
-      const voidDropPosition =
-        vehicle.voidDropPresentation && defeatPresentation?.label === "VOID DROPPED"
-          ? voidDropRenderPosition(vehicle.voidDropPresentation)
-          : undefined;
-      const renderX = voidDropPosition?.x ?? vehicle.x;
-      const renderY = voidDropPosition?.y ?? defeatPresentation?.y ?? vehicle.y;
-      const active =
-        input.activeVehicle?.id === vehicle.id &&
-        !input.projectileActive &&
-        !input.roundOver &&
-        !input.turnCommitted &&
-        input.isMovable(vehicle);
-      const slopeAngle =
-        vehicle.defeatReason === "void" || vehicle.motion?.kind === "falling"
-          ? 0
-          : this.terrainAngleAt(vehicle.x);
-      const koTilt = vehicle.alive ? 0 : vehicle.team === "red" ? -8 : 8;
-
-      this.overlays.drawFootingMarker(vehicle, active);
-      this.sprites.draw({
+      const model = vehicleRenderModelFor({
         vehicle,
-        active,
+        activeVehicleId: input.activeVehicle?.id,
+        projectileActive: input.projectileActive,
+        roundOver: input.roundOver,
+        turnCommitted: input.turnCommitted,
         charging: input.charging,
-        renderX,
-        renderY,
-        alpha,
-        slopeAngle,
-        koTilt,
-        tint: defeatPresentation?.tint,
+        turnTime: input.turnTime,
+        showCombatHulls: input.showCombatHulls,
+        surfaceAt: this.options.surfaceAt,
+        isMovable: input.isMovable,
       });
 
-      if (input.showCombatHulls && vehicle.alive) {
-        this.overlays.drawCombatHull(vehicle, active, slopeAngle);
-      }
+      this.overlays.drawFootingMarker(vehicle, model.active);
+      this.sprites.draw({
+        vehicle,
+        active: model.active,
+        charging: model.charging,
+        renderX: model.renderX,
+        renderY: model.renderY,
+        alpha: model.alpha,
+        slopeAngle: model.slopeAngle,
+        koTilt: model.koTilt,
+        tint: model.tint,
+      });
 
-      if (vehicle.alive || vehicle.defeatReason === "damage") {
-        this.overlays.drawHpBar(vehicle, renderX, renderY, overlayLayout, worldUiScale);
+      const overlayDrawers: Record<VehicleOverlayDrawKey, () => void> = {
+        combatHull: () => this.overlays.drawCombatHull(vehicle, model.active, model.slopeAngle),
+        hpBar: () => this.overlays.drawHpBar(vehicle, model.renderX, model.renderY, overlayLayout, worldUiScale),
+      };
+
+      for (const drawKey of vehicleOverlayDrawKeysFor(model)) {
+        overlayDrawers[drawKey]();
       }
 
       this.overlays.drawLabels(
         vehicle,
-        renderX,
-        renderY,
+        model.renderX,
+        model.renderY,
         overlayLayout,
         worldUiScale,
-        motionLabel ?? defeatPresentation?.label,
-        active,
-        input.turnTime,
+        model.motionOrDefeatLabel,
+        model.active,
+        model.turnTime,
       );
     }
-  }
-
-  private terrainAngleAt(x: number): number {
-    const sampleDistance = 22;
-    const left = this.options.surfaceAt(x - sampleDistance);
-    const right = this.options.surfaceAt(x + sampleDistance);
-    return Phaser.Math.RadToDeg(Math.atan2(right - left, sampleDistance * 2));
   }
 }
