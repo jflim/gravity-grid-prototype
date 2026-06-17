@@ -13,6 +13,8 @@ import {
   GravityCanyonState,
   LobbySlotState,
   PlayerState,
+  type PlayerRole,
+  type TeamId,
 } from "../schema/GravityCanyonState.js";
 import { sanitizeDisplayName, type GameMode } from "../v1/rules.js";
 import {
@@ -51,6 +53,12 @@ type LobbySeatContext = {
   player: PlayerState;
   slot: LobbySlotState;
   slotId: VehicleId;
+};
+
+type LobbySlotSyncContext = {
+  activeSlotIds: Set<VehicleId>;
+  liveSessionIds: Set<string>;
+  seenOwners: Set<string>;
 };
 
 const cosmeticPool = [
@@ -125,13 +133,12 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
 
   private handleReady(client: Client, message: ReadyMessage): void {
     const player = this.state.players.get(client.sessionId);
-    if (!player) {
+    if (!player || !this.canChangeReadiness(client.sessionId)) {
       return;
     }
 
     player.ready =
       Boolean(message.ready) &&
-      this.playerOwnsActiveSlot(client.sessionId) &&
       this.playerHasValidActiveSelection(client.sessionId);
     this.refreshStatus();
   }
@@ -149,7 +156,7 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
 
   private handleClaimSeat(client: Client, message: ClaimSeatMessage): void {
     const context = this.lobbySeatContext(client, message.slotId);
-    if (!context || this.slotIsOwnedByAnotherPlayer(context.slot, client.sessionId)) {
+    if (!context || !this.slotCanBeClaimed(context.slot)) {
       return;
     }
 
@@ -213,21 +220,11 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
   private syncRoles() {
     const players = this.getPlayers();
     const roles = assignLobbyRoles(players);
-    this.state.hostSessionId = "";
-    this.state.spectatorSessionIds.splice(0, this.state.spectatorSessionIds.length);
+    this.resetLobbyRoles();
 
     for (const player of players) {
       const role = roles.get(player.sessionId) ?? "spectator";
-      player.role = role;
-
-      if (role === "host") {
-        this.state.hostSessionId = player.sessionId;
-      } else {
-        if (role === "spectator") {
-          player.ready = false;
-          this.state.spectatorSessionIds.push(player.sessionId);
-        }
-      }
+      this.syncPlayerRole(player, role);
     }
   }
 
@@ -245,65 +242,21 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
 
   private syncLobbySlots() {
     this.ensureLobbySlots();
-    const activeSlotIds = new Set(activeSlotIdsForMode(this.state.mode));
-    const liveSessionIds = new Set(this.getPlayers().map((player) => player.sessionId));
-    const seenOwners = new Set<string>();
+    const context = this.lobbySlotSyncContext();
 
     for (const [slotId, slot] of this.state.slots.entries() as Iterable<[VehicleId, LobbySlotState]>) {
-      slot.active = activeSlotIds.has(slotId);
-      if (
-        !slot.active ||
-        !liveSessionIds.has(slot.ownerSessionId) ||
-        seenOwners.has(slot.ownerSessionId)
-      ) {
-        slot.ownerSessionId = "";
-      }
-      if (slot.ownerSessionId) {
-        seenOwners.add(slot.ownerSessionId);
-      }
-      slot.selectedCharacterId = sanitizeCharacterPick(slot.selectedCharacterId, slotId);
+      this.syncLobbySlot(slotId, slot, context);
     }
   }
 
   private refreshStatus() {
-    this.ensureLobbySlots();
-    this.syncLobbySlots();
-    this.syncRoles();
-    this.syncPlayerTeams();
+    this.syncLobbyState();
 
-    if (this.state.phase === "combat-preview" || this.state.phase === "round-over") {
+    if (this.isGameplayPhase()) {
       return;
     }
 
-    const host = this.state.players.get(this.state.hostSessionId);
-    if (!host) {
-      this.state.phase = "lobby";
-      this.state.status = "Waiting for players.";
-      clearCombatPreview(this.state);
-      return;
-    }
-
-    const activeSlots = this.getActiveSlots();
-    const openSeat = activeSlots.find((slot) => !slot.ownerSessionId);
-    if (openSeat) {
-      this.state.phase = "lobby";
-      this.state.status = `Waiting for players to claim ${this.modeSeatName()} seats.`;
-      clearCombatPreview(this.state);
-      return;
-    }
-
-    const unreadySlot = activeSlots.find((slot) => !this.state.players.get(slot.ownerSessionId)?.ready);
-    if (unreadySlot) {
-      this.state.phase = "ready";
-      this.state.status = `Waiting for ${this.playerDisplayName(unreadySlot.ownerSessionId)} to ready.`;
-      clearCombatPreview(this.state);
-      return;
-    }
-
-    if (!isReadyToAutoStart({ mode: this.state.mode, players: this.getPlayers(), slots: activeSlots })) {
-      this.state.phase = "ready";
-      this.state.status = "Waiting for valid character picks.";
-      clearCombatPreview(this.state);
+    if (this.applyLobbyStatusRules()) {
       return;
     }
 
@@ -334,18 +287,26 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
     return (this.state.phase === "lobby" || this.state.phase === "ready") && sessionId === this.state.hostSessionId;
   }
 
+  private canChangeReadiness(sessionId: string): boolean {
+    return (this.state.phase === "lobby" || this.state.phase === "ready") && this.playerOwnsActiveSlot(sessionId);
+  }
+
   private lobbySeatContext(client: Client, slotId: VehicleId | undefined): LobbySeatContext | undefined {
-    if ((this.state.phase !== "lobby" && this.state.phase !== "ready") || !slotId) {
+    if (!this.canChangeLobbySeat(slotId)) {
       return undefined;
     }
 
     const player = this.state.players.get(client.sessionId);
-    const slot = this.state.slots.get(slotId);
-    return player && slot?.active ? { player, slot, slotId } : undefined;
+    const slot = this.activeSlotFor(slotId);
+    if (!player || !slot) {
+      return undefined;
+    }
+
+    return { player, slot, slotId };
   }
 
-  private slotIsOwnedByAnotherPlayer(slot: LobbySlotState, sessionId: string): boolean {
-    return Boolean(slot.ownerSessionId && slot.ownerSessionId !== sessionId);
+  private slotCanBeClaimed(slot: LobbySlotState): boolean {
+    return !slot.ownerSessionId;
   }
 
   private releaseSeatsForSession(sessionId: string, exceptSlotId?: VehicleId): void {
@@ -364,8 +325,7 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
 
   private syncPlayerTeams(): void {
     for (const player of this.getPlayers()) {
-      const ownedSlot = this.getActiveSlots().find((slot) => slot.ownerSessionId === player.sessionId);
-      player.team = ownedSlot?.team ?? (player.role === "host" ? "red" : "blue");
+      player.team = this.teamForPlayer(player);
     }
   }
 
@@ -375,5 +335,135 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
 
   private modeSeatName(): string {
     return this.state.mode === "1v1" ? "Duel" : "Doubles";
+  }
+
+  private resetLobbyRoles(): void {
+    this.state.hostSessionId = "";
+    this.state.spectatorSessionIds.splice(0, this.state.spectatorSessionIds.length);
+  }
+
+  private syncPlayerRole(player: PlayerState, role: PlayerRole): void {
+    player.role = role;
+    if (role === "host") {
+      this.state.hostSessionId = player.sessionId;
+      return;
+    }
+
+    if (role === "spectator") {
+      this.markSpectator(player);
+    }
+  }
+
+  private markSpectator(player: PlayerState): void {
+    player.ready = false;
+    this.state.spectatorSessionIds.push(player.sessionId);
+  }
+
+  private lobbySlotSyncContext(): LobbySlotSyncContext {
+    return {
+      activeSlotIds: new Set(activeSlotIdsForMode(this.state.mode)),
+      liveSessionIds: new Set(this.getPlayers().map((player) => player.sessionId)),
+      seenOwners: new Set<string>(),
+    };
+  }
+
+  private syncLobbySlot(slotId: VehicleId, slot: LobbySlotState, context: LobbySlotSyncContext): void {
+    slot.active = context.activeSlotIds.has(slotId);
+    if (this.shouldReleaseSlotOwner(slot, context)) {
+      slot.ownerSessionId = "";
+    }
+    this.rememberSlotOwner(slot, context.seenOwners);
+    slot.selectedCharacterId = sanitizeCharacterPick(slot.selectedCharacterId, slotId);
+  }
+
+  private shouldReleaseSlotOwner(slot: LobbySlotState, context: LobbySlotSyncContext): boolean {
+    return !slot.active || !context.liveSessionIds.has(slot.ownerSessionId) || context.seenOwners.has(slot.ownerSessionId);
+  }
+
+  private rememberSlotOwner(slot: LobbySlotState, seenOwners: Set<string>): void {
+    if (slot.ownerSessionId) {
+      seenOwners.add(slot.ownerSessionId);
+    }
+  }
+
+  private syncLobbyState(): void {
+    this.ensureLobbySlots();
+    this.syncLobbySlots();
+    this.syncRoles();
+    this.syncPlayerTeams();
+  }
+
+  private isGameplayPhase(): boolean {
+    return this.state.phase === "combat-preview" || this.state.phase === "round-over";
+  }
+
+  private applyLobbyStatusRules(): boolean {
+    return [
+      () => this.applyNoHostStatus(),
+      () => this.applyOpenSeatStatus(),
+      () => this.applyUnreadyStatus(),
+      () => this.applyInvalidSelectionStatus(),
+    ].some((applyStatus) => applyStatus());
+  }
+
+  private applyNoHostStatus(): boolean {
+    if (this.state.players.get(this.state.hostSessionId)) {
+      return false;
+    }
+
+    this.setLobbyStatus("Waiting for players.", "lobby");
+    return true;
+  }
+
+  private applyOpenSeatStatus(): boolean {
+    if (!this.getActiveSlots().some((slot) => !slot.ownerSessionId)) {
+      return false;
+    }
+
+    this.setLobbyStatus(`Waiting for players to claim ${this.modeSeatName()} seats.`, "lobby");
+    return true;
+  }
+
+  private applyUnreadyStatus(): boolean {
+    const unreadySlot = this.getActiveSlots().find((slot) => !this.state.players.get(slot.ownerSessionId)?.ready);
+    if (!unreadySlot) {
+      return false;
+    }
+
+    this.setLobbyStatus(`Waiting for ${this.playerDisplayName(unreadySlot.ownerSessionId)} to ready.`, "ready");
+    return true;
+  }
+
+  private applyInvalidSelectionStatus(): boolean {
+    if (isReadyToAutoStart({ mode: this.state.mode, players: this.getPlayers(), slots: this.getActiveSlots() })) {
+      return false;
+    }
+
+    this.setLobbyStatus("Waiting for valid character picks.", "ready");
+    return true;
+  }
+
+  private setLobbyStatus(status: string, phase: "lobby" | "ready"): void {
+    this.state.phase = phase;
+    this.state.status = status;
+    clearCombatPreview(this.state);
+  }
+
+  private canChangeLobbySeat(slotId: VehicleId | undefined): slotId is VehicleId {
+    return Boolean(slotId) && (this.state.phase === "lobby" || this.state.phase === "ready");
+  }
+
+  private activeSlotFor(slotId: VehicleId): LobbySlotState | undefined {
+    const slot = this.state.slots.get(slotId);
+    return slot?.active ? slot : undefined;
+  }
+
+  private teamForPlayer(player: PlayerState): TeamId {
+    const ownedSlot = this.getActiveSlots().find((slot) => slot.ownerSessionId === player.sessionId);
+    return ownedSlot?.team ?? this.defaultTeamForRole(player.role);
+  }
+
+  private defaultTeamForRole(role: PlayerRole): TeamId {
+    return role === "host" ? "red" : "blue";
   }
 }
