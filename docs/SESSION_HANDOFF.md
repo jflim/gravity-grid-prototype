@@ -37,12 +37,12 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
   - winner,
   - validated active-player preview shots,
   - preview token reward on round end.
-- The online preview is available in the floating Online Alpha panel when the local URL includes `?onlinePanel=1`; the default local demo hides that panel for map-review clarity.
-- `npm run playtest` now builds the project, serves the built client plus Colyseus from one localhost-bound port, starts a Cloudflare quick tunnel, and prints the public URL. `npm run playtest:local` starts the same playtest mode without a tunnel. Playtest launch mode, not the public URL hostname, controls the Online Alpha panel. Default and public-preview startup stay bound to `127.0.0.1`; direct all-interface binding requires explicitly setting `HOST=0.0.0.0`.
+- The online preview now starts as a centered auto-room captain lobby and swaps into a shared server-owned gameplay preview after both captains ready. The default local demo hides that flow for map-review clarity unless `?onlinePanel=1` or playtest runtime config enables it.
+- `npm run playtest` now builds the project, serves the built client plus Colyseus from one localhost-bound port, starts a Cloudflare quick tunnel, and prints the public URL. `npm run playtest:local` starts the same playtest mode without a tunnel. Playtest launch mode, not the public URL hostname, controls the Online Alpha flow. Default and public-preview startup stay bound to `127.0.0.1`; direct all-interface binding requires explicitly setting `HOST=0.0.0.0`.
 - Hosted/default playtest mode uses stable runtime gameplay art through optimized WebP delivery files so Cloudflare quick-tunnel loads are lighter while the accepted game art remains part of the normal mode. Art-review concept sprites are opt-in with `?conceptAssets=1`, and the faint Style B backdrop is opt-in with `?styleReference=1`.
 - `npm run optimize:assets` regenerates the WebP delivery files from the PNG runtime and selected art-review sources; run it after promoting or editing runtime art, then run `npm run verify:runtime-roster`.
 - The Phaser scene shows loading progress before the match appears and leaves a failed asset key visible if image loading fails, so remote playtest blank-screen reports have a concrete next debugging clue.
-- Phaser projectile and terrain simulation are not yet synced to the server-owned combat model.
+- Phaser projectile and terrain simulation are not yet synced to the server-owned combat model; online playtest mode uses the shared preview screen instead of dropping into unsynced local Phaser combat.
 - Local combat readability now has prototype combat hulls, floating combat markers, and playable v1 map terrain:
   - Direct-hit projectile collision uses one shared rectangular vehicle-only hit zone instead of the old small center-radius check or pilot-plus-vehicle silhouette collision.
   - Splash damage blooms from the impact point, then measures distance to the nearest edge of each vehicle hit zone.

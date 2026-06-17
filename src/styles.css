@@ -363,3 +363,126 @@ canvas {
   padding: 0 7px;
   font-size: 12px;
 }
+
+.online-gameplay-panel {
+  width: min(760px, 100%);
+}
+
+.online-gameplay-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.online-gameplay-summary span,
+.online-gameplay-active,
+.online-gameplay-vehicle {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.online-gameplay-summary span {
+  min-width: 0;
+  padding: 8px;
+  color: #cfd9eb;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.online-gameplay-summary strong {
+  color: #ffffff;
+  font-family: Consolas, "SFMono-Regular", monospace;
+}
+
+.online-gameplay-active {
+  display: grid;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 12px;
+  border-color: rgba(141, 245, 178, 0.35);
+}
+
+.online-gameplay-active span,
+.online-gameplay-active em {
+  color: #b7c4db;
+  font-size: 12px;
+  font-style: normal;
+}
+
+.online-gameplay-active strong {
+  color: #ffffff;
+  font-size: 18px;
+  line-height: 1.1;
+}
+
+.online-gameplay-vehicles {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.online-gameplay-vehicle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 140px 58px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-left: 4px solid #ff727e;
+}
+
+.online-gameplay-vehicle--blue {
+  border-left-color: #72b7ff;
+}
+
+.online-gameplay-vehicle--active {
+  border-color: rgba(141, 245, 178, 0.42);
+  border-left-color: #8df5b2;
+}
+
+.online-gameplay-vehicle--defeated {
+  opacity: 0.58;
+}
+
+.online-gameplay-vehicle strong,
+.online-gameplay-vehicle span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.online-gameplay-vehicle strong {
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.online-gameplay-vehicle span,
+.online-gameplay-vehicle em {
+  color: #b7c4db;
+  font-size: 11px;
+  font-style: normal;
+}
+
+.online-gameplay-vehicle meter {
+  width: 100%;
+  height: 12px;
+  accent-color: #8df5b2;
+}
+
+.online-gameplay-actions {
+  margin-top: 12px;
+}
+
+@media (max-width: 680px) {
+  .online-gameplay-summary,
+  .online-gameplay-vehicle {
+    grid-template-columns: 1fr;
+  }
+
+  .online-gameplay-summary span {
+    text-align: left;
+  }
+}

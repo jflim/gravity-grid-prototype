@@ -159,17 +159,21 @@ test("main.ts stays a bootstrap instead of owning the Phaser scene", () => {
   assert.doesNotMatch(main, /class GravityGridScene/);
 });
 
-test("online playtest swaps from lobby stage into gameplay bootstrap", () => {
+test("online playtest swaps from lobby stage into shared gameplay preview", () => {
   const main = readFileSync("src/main.ts", "utf8");
   const lobby = readFileSync("src/onlineLobby.ts", "utf8");
   const dom = readFileSync("src/onlineLobbyDom.ts", "utf8");
   const markup = readFileSync("src/onlineLobbyMarkup.ts", "utf8");
+  const preview = readFileSync("src/onlineGameplayPreview.ts", "utf8");
+  const previewMarkup = readFileSync("src/onlineGameplayPreviewMarkup.ts", "utf8");
 
-  assert.match(main, /mountOnlineLobby\(\{\s*onGameplayStart:\s*mountGameplay\s*\}\)/);
+  assert.match(main, /mountOnlineLobby\(\{\s*onGameplayStart:\s*mountOnlineGameplayPreview\s*\}\)/);
   assert.match(main, /function mountGameplay\(\): void/);
   assert.match(lobby, /createOnlineLobbyDom/);
   assert.match(dom, /renderLobbyShell\(\)/);
   assert.match(markup, /class="online-stage"/);
+  assert.match(preview, /renderGameplayPreview\(/);
+  assert.match(previewMarkup, /data-preview-fire/);
   assert.match(lobby, /stageForRoomPhase\(snapshot\.phase\) === "gameplay"/);
   assert.match(lobby, /dom\.remove\(\)/);
   assert.doesNotMatch(lobby, /data-combat-block|data-preview-fire|data-next-round/);

@@ -7,6 +7,7 @@ import {
   shouldMountOnlineLobby,
 } from "./demoLayout";
 import { MatchScene } from "./match/MatchScene";
+import { mountOnlineGameplayPreview } from "./onlineGameplayPreview";
 import { mountOnlineLobby } from "./onlineLobby";
 import "./styles.css";
 
@@ -24,7 +25,7 @@ let viewportGuard: HTMLDivElement | undefined;
 let gameplayMounted = false;
 
 if (shouldMountOnlineLobby(window.location.search, window.__GRAVITY_CANYON_CONFIG__)) {
-  mountOnlineLobby({ onGameplayStart: mountGameplay });
+  mountOnlineLobby({ onGameplayStart: mountOnlineGameplayPreview });
 } else {
   mountGameplay();
 }

@@ -280,6 +280,7 @@ Done:
 - Ready checks.
 - Placeholder reward/nameplate state.
 - Server-owned combat preview state.
+- Auto-room captain lobby with a shared server-owned gameplay preview screen.
 - One-terminal public playtest launcher.
 
 Not done:

@@ -2,24 +2,23 @@ import { resolveOnlineServerUrl } from "./onlineServerUrl";
 import { createOnlineLobbyDom } from "./onlineLobbyDom";
 import { getRoomSnapshot, type RoomSnapshot } from "./onlineLobbySnapshot";
 import { stageForRoomPhase } from "./onlineLobbyView";
-
-type OnlineRoom = {
-  roomId: string;
-  sessionId: string;
-  state: unknown;
-  send: (type: string, message?: unknown) => void;
-  leave: () => Promise<unknown> | unknown;
-  onStateChange: (callback: (state: unknown) => void) => void;
-  onLeave: (callback: () => void) => void;
-};
-
-type OnlineClient = {
-  joinOrCreate: (roomName: string, options?: Record<string, unknown>) => Promise<OnlineRoom>;
-};
+import type { OnlineClient, OnlineGameplaySession, OnlineRoom } from "./onlineRoomTypes";
 
 type OnlineLobbyOptions = {
-  onGameplayStart?: () => void;
+  onGameplayStart?: (session: OnlineGameplaySession) => void;
 };
+
+type LobbyRenderAction =
+  | { type: "skip" }
+  | { type: "start-gameplay"; snapshot: RoomSnapshot }
+  | { type: "show-lobby"; snapshot: RoomSnapshot };
+
+type LobbyRenderHandlers = {
+  startGameplay: (snapshot: RoomSnapshot) => void;
+  showLobby: (snapshot: RoomSnapshot) => void;
+};
+
+const skipLobbyRender: LobbyRenderAction = { type: "skip" };
 
 declare global {
   interface Window {
@@ -85,31 +84,29 @@ export function mountOnlineLobby(options: OnlineLobbyOptions = {}) {
   }
 
   function render(snapshot?: RoomSnapshot) {
-    if (!snapshot || gameplayStarted) {
-      return;
-    }
-
-    if (stageForRoomPhase(snapshot.phase) === "gameplay") {
-      startGameplay();
-      return;
-    }
-
-    const localPlayer = snapshot.players.find((player) => player.sessionId === room?.sessionId);
-    if (localPlayer) {
-      localReady = localPlayer.ready;
-    }
-
-    dom.renderLobby(snapshot, room?.sessionId ?? "", localReady, room?.roomId);
+    applyLobbyRenderAction(nextLobbyRenderAction(snapshot, gameplayStarted), {
+      startGameplay,
+      showLobby: renderLobbySnapshot,
+    });
   }
 
-  function startGameplay() {
-    if (gameplayStarted) {
+  function renderLobbySnapshot(snapshot: RoomSnapshot) {
+    const localSessionId = onlineRoomSessionId(room);
+    localReady = syncedReadyState(snapshot, localSessionId, localReady);
+    dom.renderLobby(snapshot, localSessionId, localReady, onlineRoomId(room));
+  }
+
+  function startGameplay(snapshot: RoomSnapshot) {
+    if (gameplayStarted || !room) {
       return;
     }
 
     gameplayStarted = true;
     dom.remove();
-    options.onGameplayStart?.();
+    options.onGameplayStart?.({
+      room,
+      initialSnapshot: snapshot,
+    });
   }
 }
 
@@ -119,4 +116,52 @@ function createOnlineClient() {
   }
 
   return new window.Colyseus.Client(serverUrl);
+}
+
+function onlineRoomSessionId(room: OnlineRoom | undefined): string {
+  return room ? room.sessionId : "";
+}
+
+function onlineRoomId(room: OnlineRoom | undefined): string | undefined {
+  return room ? room.roomId : undefined;
+}
+
+function nextLobbyRenderAction(snapshot: RoomSnapshot | undefined, gameplayStarted: boolean): LobbyRenderAction {
+  if (gameplayStarted) {
+    return skipLobbyRender;
+  }
+
+  if (!snapshot) {
+    return skipLobbyRender;
+  }
+
+  if (shouldStartGameplay(snapshot)) {
+    return { type: "start-gameplay", snapshot };
+  }
+
+  return { type: "show-lobby", snapshot };
+}
+
+function applyLobbyRenderAction(action: LobbyRenderAction, handlers: LobbyRenderHandlers): void {
+  switch (action.type) {
+    case "start-gameplay":
+      handlers.startGameplay(action.snapshot);
+      return;
+    case "show-lobby":
+      handlers.showLobby(action.snapshot);
+      return;
+  }
+}
+
+function shouldStartGameplay(snapshot: RoomSnapshot): boolean {
+  return stageForRoomPhase(snapshot.phase) === "gameplay";
+}
+
+function syncedReadyState(
+  snapshot: RoomSnapshot,
+  localSessionId: string | undefined,
+  currentReady: boolean,
+): boolean {
+  const localPlayer = snapshot.players.find((player) => player.sessionId === localSessionId);
+  return localPlayer?.ready ?? currentReady;
 }
