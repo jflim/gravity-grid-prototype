@@ -34,7 +34,9 @@ export class VehicleSpriteLayer {
   draw(input: DrawVehicleSpriteInput): void {
     const { vehicle, renderX, renderY, alpha, slopeAngle, koTilt } = input;
     const vehicleKey = vehicle.alive ? vehicle.vehicleSpriteKey : vehicle.vehicleDestroyedSpriteKey;
-    const vehicleDisplay = vehicle.alive ? vehicle.vehicleDisplay : vehicle.vehicleDestroyedDisplay;
+    const vehicleDisplay = scaleBattlefieldDisplay(
+      vehicle.alive ? vehicle.vehicleDisplay : vehicle.vehicleDestroyedDisplay,
+    );
     const vehicleSprite =
       this.vehicleSprites.get(vehicle.id) ?? this.options.scene.add.image(renderX, renderY, vehicleKey);
     if (!this.vehicleSprites.has(vehicle.id)) {
@@ -51,12 +53,17 @@ export class VehicleSpriteLayer {
       const conceptPose = this.characterPoseFor(vehicle, input.active, input.charging);
       const conceptKey = vehicle.unitConceptSpriteKeys[conceptPose];
       const conceptDisplay = scaleBattlefieldDisplay(vehicle.unitConceptDisplays[conceptPose]);
+      const conceptSpriteFaces = this.spriteFacesForPose(
+        vehicle.unitConceptSpriteFaces,
+        vehicle.unitConceptSpritePoseFaces,
+        conceptPose,
+      );
       vehicleSprite
         .setTexture(conceptKey)
         .setOrigin(0.5, 0.86)
         .setPosition(renderX, renderY + scaleBattlefieldOffset(vehicle.unitConceptOffsetY ?? 24))
         .setDisplaySize(conceptDisplay.width, conceptDisplay.height)
-        .setFlipX(vehicle.facing !== vehicle.unitConceptSpriteFaces)
+        .setFlipX(vehicle.facing !== conceptSpriteFaces)
         .setAlpha(alpha)
         .setAngle(slopeAngle + koTilt);
       this.applyTint(vehicleSprite, input.tint);
@@ -67,7 +74,7 @@ export class VehicleSpriteLayer {
     vehicleSprite
       .setTexture(vehicleKey)
       .setOrigin(0.5, 0.86)
-      .setPosition(renderX, renderY + 20)
+      .setPosition(renderX, renderY + scaleBattlefieldOffset(20))
       .setDisplaySize(vehicleDisplay.width, vehicleDisplay.height)
       .setFlipX(vehicle.facing !== vehicle.vehicleSpriteFaces)
       .setAlpha(alpha)
@@ -76,11 +83,16 @@ export class VehicleSpriteLayer {
 
     const characterPose = this.characterPoseFor(vehicle, input.active, input.charging);
     const characterKey = vehicle.characterSpriteKeys[characterPose];
-    const characterDisplay = vehicle.characterDisplays[characterPose];
+    const characterDisplay = scaleBattlefieldDisplay(vehicle.characterDisplays[characterPose]);
+    const characterSpriteFaces = this.spriteFacesForPose(
+      vehicle.characterSpriteFaces,
+      vehicle.characterSpritePoseFaces,
+      characterPose,
+    );
     const characterX = renderX + this.vehicleGeometry.orientedOffset(
       vehicle,
-      vehicle.characterOffsetX,
-      vehicle.characterSpriteFaces,
+      scaleBattlefieldOffset(vehicle.characterOffsetX),
+      characterSpriteFaces,
     );
     const characterSprite =
       this.characterSprites.get(vehicle.id) ?? this.options.scene.add.image(characterX, renderY, characterKey);
@@ -91,9 +103,9 @@ export class VehicleSpriteLayer {
     characterSprite
       .setTexture(characterKey)
       .setOrigin(0.5, 0.88)
-      .setPosition(characterX, renderY + vehicle.characterOffsetY)
+      .setPosition(characterX, renderY + scaleBattlefieldOffset(vehicle.characterOffsetY))
       .setDisplaySize(characterDisplay.width, characterDisplay.height)
-      .setFlipX(vehicle.facing !== vehicle.characterSpriteFaces)
+      .setFlipX(vehicle.facing !== characterSpriteFaces)
       .setAlpha(alpha)
       .setAngle(slopeAngle + koTilt);
     this.applyTint(characterSprite, input.tint);
@@ -105,6 +117,14 @@ export class VehicleSpriteLayer {
     }
 
     return active && charging ? "intense" : "default";
+  }
+
+  private spriteFacesForPose(
+    defaultFacing: 1 | -1,
+    poseFacing: Partial<Record<CharacterPose, 1 | -1>> | undefined,
+    pose: CharacterPose,
+  ): 1 | -1 {
+    return poseFacing?.[pose] ?? defaultFacing;
   }
 
   private applyTint(sprite: Phaser.GameObjects.Image, tint?: number): void {

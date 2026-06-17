@@ -9,7 +9,7 @@ export interface DefeatPresentation {
   y?: number;
 }
 
-export const BATTLEFIELD_UNIT_SCALE = 0.68;
+export const BATTLEFIELD_UNIT_SCALE = 0.58;
 export const VOID_DROP_DISPLAY_Y = 828;
 
 export function scaleBattlefieldDisplay(display: SpriteDisplaySize): SpriteDisplaySize {

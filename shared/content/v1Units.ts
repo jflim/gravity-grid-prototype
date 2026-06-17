@@ -14,6 +14,7 @@ export { SHARED_V1_VEHICLE_HIT_ZONE } from "./v1CollisionProfiles.js";
 
 export type CharacterSpriteSet = Record<CharacterPose, string>;
 export type CharacterDisplaySet = Record<CharacterPose, SpriteDisplaySize>;
+export type CharacterPoseFacingSet = Partial<Record<CharacterPose, Facing>>;
 export type UnitConceptSpriteSet = Record<CharacterPose, string>;
 export type UnitConceptDisplaySet = Record<CharacterPose, SpriteDisplaySize>;
 
@@ -33,12 +34,14 @@ export interface DemoUnitDefinition {
   vehicleDestroyedDisplay: SpriteDisplaySize;
   characterSpriteKeys: CharacterSpriteSet;
   characterSpriteFaces: Facing;
+  characterSpritePoseFaces?: CharacterPoseFacingSet;
   characterDisplays: CharacterDisplaySet;
   characterOffsetX: number;
   characterOffsetY: number;
   unitConceptSpriteKeys?: UnitConceptSpriteSet;
   unitConceptDisplays?: UnitConceptDisplaySet;
   unitConceptSpriteFaces?: Facing;
+  unitConceptSpritePoseFaces?: CharacterPoseFacingSet;
   unitConceptOffsetY?: number;
   combatHull: CombatHullShape;
   portraitKey: string;
@@ -191,6 +194,11 @@ export const DEMO_UNIT_DEFINITIONS = [
       intense: "perlah-unit-intense",
     },
     characterSpriteFaces: 1,
+    characterSpritePoseFaces: {
+      default: -1,
+      intense: -1,
+      ko: 1,
+    },
     characterDisplays: {
       default: { width: 356, height: 208 },
       ko: { width: 354, height: 212 },
@@ -209,6 +217,11 @@ export const DEMO_UNIT_DEFINITIONS = [
       ko: { width: 354, height: 212 },
     },
     unitConceptSpriteFaces: 1,
+    unitConceptSpritePoseFaces: {
+      default: -1,
+      intense: -1,
+      ko: 1,
+    },
     unitConceptOffsetY: 25,
     combatHull: SHARED_V1_VEHICLE_HIT_ZONE,
     portraitKey: "perlah-unit-default",

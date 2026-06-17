@@ -49,7 +49,7 @@ const units: UnitNormalization[] = [
     name: "Vesper",
     state: "default",
     sourcePath:
-      "public/assets/sprite-variants/units/vesper/default/vesper-unit-default-readability-v2-alpha.png",
+      "public/assets/sprite-variants/units/vesper/default/vesper-unit-default-face-first-v2-alpha.png",
     runtimePath: "public/assets/vesper-unit-default.png",
     variantPath:
       "public/assets/sprite-variants/units/vesper/default/vesper-unit-default-battlefield-normalized.png",
@@ -71,7 +71,7 @@ const units: UnitNormalization[] = [
     name: "Kaelii",
     state: "default",
     sourcePath:
-      "public/assets/sprite-variants/units/kaelii/default/kaelii-unit-default-readability-v1-alpha.png",
+      "public/assets/sprite-variants/units/kaelii/default/kaelii-unit-default-face-first-v2-alpha.png",
     runtimePath: "public/assets/kaelii-unit-default.png",
     variantPath:
       "public/assets/sprite-variants/units/kaelii/default/kaelii-unit-default-battlefield-normalized.png",
@@ -93,7 +93,7 @@ const units: UnitNormalization[] = [
     name: "Perlah",
     state: "default",
     sourcePath:
-      "public/assets/sprite-variants/units/perlah/default/perlah-unit-default-readability-v1-alpha.png",
+      "public/assets/sprite-variants/units/perlah/default/perlah-unit-default-face-first-v2-alpha.png",
     runtimePath: "public/assets/perlah-unit-default.png",
     variantPath:
       "public/assets/sprite-variants/units/perlah/default/perlah-unit-default-battlefield-normalized.png",
@@ -104,7 +104,7 @@ const units: UnitNormalization[] = [
     name: "Perlah",
     state: "intense",
     sourcePath:
-      "public/assets/sprite-variants/units/perlah/intense/perlah-unit-intense-sunspike-embercart-probe-02-default-anchored-normalized-alpha.png",
+      "public/assets/sprite-variants/units/perlah/intense/perlah-unit-intense-face-first-v4-alpha.png",
     runtimePath: "public/assets/perlah-unit-intense.png",
     variantPath:
       "public/assets/sprite-variants/units/perlah/intense/perlah-unit-intense-battlefield-normalized.png",
