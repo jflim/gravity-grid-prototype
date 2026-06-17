@@ -49,8 +49,6 @@ export function mountOnlineLobby(options: OnlineLobbyOptions = {}) {
       room?.send("setReady", { ready: localReady });
       render(latestSnapshot);
     },
-    capsuleClicked: () => room?.send("claimTestCapsule"),
-    nameplateChanged: (nameplate) => room?.send("equipNameplate", { nameplate }),
   });
 
   document.body.appendChild(dom.stage);

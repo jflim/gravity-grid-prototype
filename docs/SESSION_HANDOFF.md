@@ -27,7 +27,7 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
 ## Current Implementation State
 
 - Phaser local 1v1 combat is playable locally.
-- Colyseus room create/join, display names, ready checks, placeholder capsule/nameplate rewards are implemented.
+- Colyseus room create/join, display names, ready checks, and placeholder capsule/nameplate reward state are implemented.
 - Server-owned online combat preview is implemented:
   - round number,
   - turn number,
@@ -38,6 +38,7 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
   - validated active-player preview shots,
   - preview token reward on round end.
 - The online preview now starts as a centered auto-room captain lobby and swaps into a shared server-owned gameplay preview after both captains ready. The default local demo hides that flow for map-review clarity unless `?onlinePanel=1` or playtest runtime config enables it.
+- The captain lobby now presents Red Team and Blue Team in two visible columns. Red captain controls mode, each captain controls that team's active character slots, and placeholder cosmetic controls are intentionally hidden from the lobby.
 - `npm run playtest` now builds the project, serves the built client plus Colyseus from one localhost-bound port, starts a Cloudflare quick tunnel, and prints the public URL. `npm run playtest:local` starts the same playtest mode without a tunnel. Playtest launch mode, not the public URL hostname, controls the Online Alpha flow. Default and public-preview startup stay bound to `127.0.0.1`; direct all-interface binding requires explicitly setting `HOST=0.0.0.0`.
 - Hosted/default playtest mode uses stable runtime gameplay art through optimized WebP delivery files so Cloudflare quick-tunnel loads are lighter while the accepted game art remains part of the normal mode. Art-review concept sprites are opt-in with `?conceptAssets=1`, and the faint Style B backdrop is opt-in with `?styleReference=1`.
 - `npm run optimize:assets` regenerates the WebP delivery files from the PNG runtime and selected art-review sources; run it after promoting or editing runtime art, then run `npm run verify:runtime-roster`.

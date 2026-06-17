@@ -1,5 +1,5 @@
-import { escapeHtml, renderLobbyShell, renderPlayerRows, renderSlotRows } from "./onlineLobbyMarkup";
-import type { RoomSnapshot } from "./onlineLobbySnapshot";
+import { renderLobbyShell, renderPlayerRows, renderSlotRows } from "./onlineLobbyMarkup";
+import type { PlayerSnapshot, RoomSnapshot } from "./onlineLobbySnapshot";
 import { canLocalPlayerUseLobbyControls, lobbyStatusText, modeLabel } from "./onlineLobbyView";
 
 export type OnlineLobbyDomHandlers = {
@@ -8,8 +8,6 @@ export type OnlineLobbyDomHandlers = {
   modeChanged: (mode: string) => void;
   slotChanged: (slotId: string, characterId: string) => void;
   readyClicked: () => void;
-  capsuleClicked: () => void;
-  nameplateChanged: (nameplate: string) => void;
 };
 
 export type BadgeTone = "neutral" | "ok" | "warn" | "error";
@@ -22,13 +20,18 @@ export type OnlineLobbyDom = {
   remove: () => void;
 };
 
+type LobbyRenderModel = {
+  localRole: string;
+  canUseLobbyControls: boolean;
+  effectiveReady: boolean;
+  statusText: string;
+};
+
 export function createOnlineLobbyDom(documentRef: Document, handlers: OnlineLobbyDomHandlers): OnlineLobbyDom {
   const stage = createOnlineLobbyStage(documentRef);
   const displayNameInput = stage.querySelector<HTMLInputElement>("#display-name");
   const reconnectButton = stage.querySelector<HTMLButtonElement>("[data-auto-connect]");
   const readyButton = stage.querySelector<HTMLButtonElement>("[data-ready-toggle]");
-  const capsuleButton = stage.querySelector<HTMLButtonElement>("[data-test-capsule]");
-  const nameplateSelect = stage.querySelector<HTMLSelectElement>("[data-nameplate-select]");
   const modeSelect = stage.querySelector<HTMLSelectElement>("[data-mode-select]");
   const roomBlock = stage.querySelector<HTMLElement>("[data-room-block]");
   const roomCodeLabel = stage.querySelector<HTMLElement>("[data-room-code]");
@@ -36,14 +39,11 @@ export function createOnlineLobbyDom(documentRef: Document, handlers: OnlineLobb
   const roomStatus = stage.querySelector<HTMLElement>("[data-room-status]");
   const playerList = stage.querySelector<HTMLElement>("[data-player-list]");
   const slotList = stage.querySelector<HTMLElement>("[data-slot-list]");
-  const rewardLog = stage.querySelector<HTMLElement>("[data-reward-log]");
 
   reconnectButton?.addEventListener("click", () => handlers.reconnect());
   displayNameInput?.addEventListener("change", () => handlers.displayNameChanged(displayNameInput.value));
   modeSelect?.addEventListener("change", () => handlers.modeChanged(modeSelect.value));
   readyButton?.addEventListener("click", () => handlers.readyClicked());
-  capsuleButton?.addEventListener("click", () => handlers.capsuleClicked());
-  nameplateSelect?.addEventListener("change", () => handlers.nameplateChanged(nameplateSelect.value));
 
   stage.addEventListener("change", (event) => {
     const target = event.target;
@@ -69,6 +69,9 @@ export function createOnlineLobbyDom(documentRef: Document, handlers: OnlineLobb
 
     statusBadge.textContent = text;
     statusBadge.dataset.tone = tone;
+    if (reconnectButton) {
+      reconnectButton.hidden = tone !== "error" && text !== "Offline";
+    }
   }
 
   function renderLobby(
@@ -77,62 +80,15 @@ export function createOnlineLobbyDom(documentRef: Document, handlers: OnlineLobb
     localReady: boolean,
     fallbackRoomId = "",
   ): void {
-    if (roomBlock) {
-      roomBlock.hidden = false;
-    }
+    const model = lobbyRenderModel(snapshot, localSessionId, localReady);
 
-    if (roomCodeLabel) {
-      roomCodeLabel.textContent = snapshot.roomCode || fallbackRoomId;
-    }
-
-    if (rewardLog) {
-      rewardLog.textContent = snapshot.lastRewardLog;
-    }
-
-    const localPlayer = snapshot.players.find((player) => player.sessionId === localSessionId);
-    const redCaptain = snapshot.players.find((player) => player.sessionId === snapshot.redCaptainSessionId);
-    const blueCaptain = snapshot.players.find((player) => player.sessionId === snapshot.blueCaptainSessionId);
-    const localRole = localPlayer?.role ?? "spectator";
-    const canUseLobbyControls = canLocalPlayerUseLobbyControls(localRole, snapshot.phase);
-    const effectiveReady = localPlayer?.ready ?? localReady;
-
-    if (roomStatus) {
-      roomStatus.textContent = `${modeLabel(snapshot.mode)} - ${lobbyStatusText({
-        status: snapshot.status,
-        redCaptainName: redCaptain?.displayName ?? "",
-        blueCaptainName: blueCaptain?.displayName ?? "",
-        redReady: Boolean(redCaptain?.ready),
-        blueReady: Boolean(blueCaptain?.ready),
-      })}`;
-    }
-
-    if (readyButton) {
-      readyButton.textContent = effectiveReady ? "Unready" : "Ready";
-      readyButton.disabled = !canUseLobbyControls;
-    }
-
-    if (modeSelect) {
-      modeSelect.value = snapshot.mode === "1v1" ? "1v1" : "2v2";
-      modeSelect.disabled = localRole !== "red-captain" || !canUseLobbyControls;
-    }
-
-    if (localPlayer && nameplateSelect) {
-      const currentValue = nameplateSelect.value || localPlayer.equippedNameplate;
-      nameplateSelect.innerHTML = localPlayer.inventory
-        .map((nameplate) => `<option value="${escapeHtml(nameplate)}">${escapeHtml(nameplate)}</option>`)
-        .join("");
-      nameplateSelect.value = localPlayer.inventory.includes(currentValue)
-        ? currentValue
-        : localPlayer.equippedNameplate;
-    }
-
-    if (playerList) {
-      playerList.innerHTML = renderPlayerRows(snapshot.players, localSessionId);
-    }
-
-    if (slotList) {
-      slotList.innerHTML = renderSlotRows(snapshot.slots, localRole, canUseLobbyControls);
-    }
+    showRoomBlock(roomBlock);
+    setElementText(roomCodeLabel, snapshot.roomCode || fallbackRoomId);
+    setElementText(roomStatus, model.statusText);
+    renderReadyButton(readyButton, model);
+    renderModeSelect(modeSelect, snapshot.mode, model);
+    setElementHtml(playerList, renderPlayerRows(snapshot.players, localSessionId));
+    setElementHtml(slotList, renderSlotRows(snapshot.slots, model.localRole, model.canUseLobbyControls));
   }
 }
 
@@ -145,4 +101,83 @@ function createOnlineLobbyStage(documentRef: Document): HTMLElement {
   }
 
   return stage;
+}
+
+function lobbyRenderModel(
+  snapshot: RoomSnapshot,
+  localSessionId: string,
+  localReady: boolean,
+): LobbyRenderModel {
+  const localPlayer = playerBySessionId(snapshot.players, localSessionId);
+  const localRole = playerRole(localPlayer);
+  return {
+    localRole,
+    canUseLobbyControls: canLocalPlayerUseLobbyControls(localRole, snapshot.phase),
+    effectiveReady: playerReady(localPlayer, localReady),
+    statusText: roomStatusText(snapshot),
+  };
+}
+
+function roomStatusText(snapshot: RoomSnapshot): string {
+  const redCaptain = playerBySessionId(snapshot.players, snapshot.redCaptainSessionId);
+  const blueCaptain = playerBySessionId(snapshot.players, snapshot.blueCaptainSessionId);
+  return `${modeLabel(snapshot.mode)} - ${lobbyStatusText({
+    status: snapshot.status,
+    redCaptainName: playerName(redCaptain),
+    blueCaptainName: playerName(blueCaptain),
+    redReady: playerReady(redCaptain, false),
+    blueReady: playerReady(blueCaptain, false),
+  })}`;
+}
+
+function playerBySessionId(players: readonly PlayerSnapshot[], sessionId: string): PlayerSnapshot | undefined {
+  return players.find((player) => player.sessionId === sessionId);
+}
+
+function playerRole(player: PlayerSnapshot | undefined): string {
+  return player ? player.role : "spectator";
+}
+
+function playerName(player: PlayerSnapshot | undefined): string {
+  return player ? player.displayName : "";
+}
+
+function playerReady(player: PlayerSnapshot | undefined, fallback: boolean): boolean {
+  return player ? player.ready : fallback;
+}
+
+function showRoomBlock(roomBlock: HTMLElement | null): void {
+  if (roomBlock) {
+    roomBlock.hidden = false;
+  }
+}
+
+function setElementText(element: HTMLElement | null, text: string): void {
+  if (element) {
+    element.textContent = text;
+  }
+}
+
+function setElementHtml(element: HTMLElement | null, html: string): void {
+  if (element) {
+    element.innerHTML = html;
+  }
+}
+
+function renderReadyButton(button: HTMLButtonElement | null, model: LobbyRenderModel): void {
+  if (!button) {
+    return;
+  }
+
+  button.textContent = model.effectiveReady ? "Unready" : "Ready";
+  button.disabled = !model.canUseLobbyControls;
+}
+
+function renderModeSelect(select: HTMLSelectElement | null, mode: string, model: LobbyRenderModel): void {
+  if (!select) {
+    return;
+  }
+
+  select.value = mode === "1v1" ? "1v1" : "2v2";
+  select.disabled = model.localRole !== "red-captain" || !model.canUseLobbyControls;
 }

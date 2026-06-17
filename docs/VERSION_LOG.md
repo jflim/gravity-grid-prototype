@@ -19,6 +19,7 @@ Highlights:
 - Added server-owned online combat preview state for round number, turn number, wind, active vehicle, HP, winner, and validated preview shots.
 - Added an online panel combat snapshot with active turn, wind, vehicle HP rows, server-shot action, and next-round action.
 - Replaced the online ready handoff with a shared server-owned gameplay preview screen so remote testers see the same selected characters, active turn, HP, wind, and round result instead of entering separate local Phaser matches.
+- Cleaned up the playtest lobby into a side-by-side Red Team and Blue Team captain view, hid placeholder cosmetic controls, and clarified that Red captain owns the mode setting.
 - Replaced Nova's active KO runtime sprite with the selected prone v16 KO asset.
 - Added a sprite-variant folder convention and workflow doc for frequent sprite iteration.
 - Added a session handoff document with current repo state, active branch, sprite status, Vesper KO generation prompt, next steps, and verification notes.

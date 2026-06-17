@@ -117,7 +117,7 @@
 <h2>Current Implementation State</h2>
 <ul>
 <li>Phaser local 1v1 combat is playable locally.</li>
-<li>Colyseus room create/join, display names, ready checks, placeholder capsule/nameplate rewards are implemented.</li>
+<li>Colyseus room create/join, display names, ready checks, and placeholder capsule/nameplate reward state are implemented.</li>
 <li>Server-owned online combat preview is implemented:</li>
 <li>round number,</li>
 <li>turn number,</li>
@@ -128,6 +128,7 @@
 <li>validated active-player preview shots,</li>
 <li>preview token reward on round end.</li>
 <li>The online preview now starts as a centered auto-room captain lobby and swaps into a shared server-owned gameplay preview after both captains ready. The default local demo hides that flow for map-review clarity unless <code>?onlinePanel=1</code> or playtest runtime config enables it.</li>
+<li>The captain lobby now presents Red Team and Blue Team in two visible columns. Red captain controls mode, each captain controls that team's active character slots, and placeholder cosmetic controls are intentionally hidden from the lobby.</li>
 <li><code>npm run playtest</code> now builds the project, serves the built client plus Colyseus from one localhost-bound port, starts a Cloudflare quick tunnel, and prints the public URL. <code>npm run playtest:local</code> starts the same playtest mode without a tunnel. Playtest launch mode, not the public URL hostname, controls the Online Alpha flow. Default and public-preview startup stay bound to <code>127.0.0.1</code>; direct all-interface binding requires explicitly setting <code>HOST=0.0.0.0</code>.</li>
 <li>Hosted/default playtest mode uses stable runtime gameplay art through optimized WebP delivery files so Cloudflare quick-tunnel loads are lighter while the accepted game art remains part of the normal mode. Art-review concept sprites are opt-in with <code>?conceptAssets=1</code>, and the faint Style B backdrop is opt-in with <code>?styleReference=1</code>.</li>
 <li><code>npm run optimize:assets</code> regenerates the WebP delivery files from the PNG runtime and selected art-review sources; run it after promoting or editing runtime art, then run <code>npm run verify:runtime-roster</code>.</li>
