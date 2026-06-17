@@ -5,6 +5,7 @@ import { MODE_SEATS } from "../server/v1/rules.js";
 import {
   buildPlayableTerrain,
   DEFAULT_DEMO_MAP_ID,
+  demoMapIdFromSearch,
   playableMapById,
   surfaceAt,
 } from "./playableMaps";
@@ -17,6 +18,24 @@ test("local demo defaults to Ringworks Basin for playable map feel testing", () 
 
   assert.equal(DEFAULT_DEMO_MAP_ID, "ring-basin");
   assert.equal(map.name, "Ringworks Basin");
+});
+
+test("local demo can load the Tiled Idol Canyon draft without adding it to the v1 map pool", () => {
+  const map = playableMapById("idol-canyon-supine-draft");
+  const playable = buildPlayableTerrain(map, { voidSurfaceY: VOID_SURFACE_Y });
+
+  assert.equal(map.name, "Idol Canyon: Supine Skeleton");
+  assert.equal(MAPS.some((v1Map) => v1Map.id === map.id), false, "draft map is not a v1 selectable map");
+  assert.ok(surfaceAt(playable, 1035) < map.deathPlaneY, "raised torso plateau becomes playable terrain");
+  assert.ok(surfaceAt(playable, 725) >= VOID_SURFACE_Y, "left gap stays wide enough to read as empty air");
+  assert.ok(surfaceAt(playable, 1450) < map.deathPlaneY, "waist basin becomes a risky playable island");
+  assert.ok(surfaceAt(playable, 1630) >= VOID_SURFACE_Y, "right gap stays wide enough to read as empty air");
+});
+
+test("map query parameter selects a local demo map when it exists", () => {
+  assert.equal(demoMapIdFromSearch("?map=idol-canyon-supine-draft"), "idol-canyon-supine-draft");
+  assert.equal(demoMapIdFromSearch("?map=not-real"), DEFAULT_DEMO_MAP_ID);
+  assert.equal(demoMapIdFromSearch(""), DEFAULT_DEMO_MAP_ID);
 });
 
 test("playable terrain follows v1 map surfaces and keeps all 2v2 spawns safe", () => {

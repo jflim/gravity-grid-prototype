@@ -20,6 +20,7 @@
     "verify:runtime-roster": "node scripts/verify-runtime-roster.mjs",
     "assets:normalize-battlefield": "tsx scripts/normalize-battlefield-units.ts",
     "optimize:assets": "tsx scripts/optimize-runtime-assets.ts",
+    "maps:sync": "tsx scripts/sync-tiled-maps.ts",
     "playtest": "tsx scripts/playtest.ts",
     "playtest:local": "tsx scripts/playtest.ts --local",
     "start:public": "tsx scripts/start-public-preview.ts",

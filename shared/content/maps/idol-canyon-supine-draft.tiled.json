@@ -1,0 +1,556 @@
+{
+  "backgroundcolor": "#101a2e",
+  "compressionlevel": -1,
+  "height": 57,
+  "infinite": false,
+  "layers": [
+    {
+      "draworder": "topdown",
+      "id": 1,
+      "name": "terrain.surface",
+      "objects": [
+        {
+          "height": 0,
+          "id": 10,
+          "name": "head-hair-shelf",
+          "polyline": [
+            {
+              "x": 0,
+              "y": 830
+            },
+            {
+              "x": 115,
+              "y": 790
+            },
+            {
+              "x": 240,
+              "y": 730
+            },
+            {
+              "x": 365,
+              "y": 690
+            },
+            {
+              "x": 490,
+              "y": 705
+            },
+            {
+              "x": 590,
+              "y": 650
+            }
+          ],
+          "properties": [
+            {
+              "name": "gravityCanyon.kind",
+              "type": "string",
+              "value": "surface"
+            }
+          ],
+          "rotation": 0,
+          "type": "terrainSurface",
+          "visible": true,
+          "width": 0,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "height": 0,
+          "id": 11,
+          "name": "raised-torso-plateau",
+          "polyline": [
+            {
+              "x": 845,
+              "y": 665
+            },
+            {
+              "x": 915,
+              "y": 555
+            },
+            {
+              "x": 990,
+              "y": 505
+            },
+            {
+              "x": 1085,
+              "y": 505
+            },
+            {
+              "x": 1180,
+              "y": 585
+            },
+            {
+              "x": 1255,
+              "y": 700
+            }
+          ],
+          "properties": [
+            {
+              "name": "gravityCanyon.kind",
+              "type": "string",
+              "value": "surface"
+            }
+          ],
+          "rotation": 0,
+          "type": "terrainSurface",
+          "visible": true,
+          "width": 0,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "height": 0,
+          "id": 12,
+          "name": "waist-basin-island",
+          "polyline": [
+            {
+              "x": 1395,
+              "y": 735
+            },
+            {
+              "x": 1450,
+              "y": 710
+            },
+            {
+              "x": 1515,
+              "y": 735
+            }
+          ],
+          "properties": [
+            {
+              "name": "gravityCanyon.kind",
+              "type": "string",
+              "value": "surface"
+            }
+          ],
+          "rotation": 0,
+          "type": "terrainSurface",
+          "visible": true,
+          "width": 0,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "height": 0,
+          "id": 13,
+          "name": "knee-tower-boot-shelf",
+          "polyline": [
+            {
+              "x": 1735,
+              "y": 675
+            },
+            {
+              "x": 1805,
+              "y": 520
+            },
+            {
+              "x": 1875,
+              "y": 465
+            },
+            {
+              "x": 1950,
+              "y": 515
+            },
+            {
+              "x": 2025,
+              "y": 640
+            },
+            {
+              "x": 2135,
+              "y": 690
+            },
+            {
+              "x": 2280,
+              "y": 745
+            },
+            {
+              "x": 2400,
+              "y": 830
+            }
+          ],
+          "properties": [
+            {
+              "name": "gravityCanyon.kind",
+              "type": "string",
+              "value": "surface"
+            }
+          ],
+          "rotation": 0,
+          "type": "terrainSurface",
+          "visible": true,
+          "width": 0,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "opacity": 1,
+      "type": "objectgroup",
+      "visible": true,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "draworder": "topdown",
+      "id": 2,
+      "name": "spawn.points",
+      "objects": [
+        {
+          "height": 0,
+          "id": 20,
+          "name": "red-1",
+          "point": true,
+          "properties": [
+            {
+              "name": "seatId",
+              "type": "string",
+              "value": "red-1"
+            },
+            {
+              "name": "facing",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "callout",
+              "type": "string",
+              "value": "Hair Shelf"
+            }
+          ],
+          "rotation": 0,
+          "type": "spawn",
+          "visible": true,
+          "width": 0,
+          "x": 365,
+          "y": 690
+        },
+        {
+          "height": 0,
+          "id": 21,
+          "name": "red-2",
+          "point": true,
+          "properties": [
+            {
+              "name": "seatId",
+              "type": "string",
+              "value": "red-2"
+            },
+            {
+              "name": "facing",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "callout",
+              "type": "string",
+              "value": "Torso Plateau"
+            }
+          ],
+          "rotation": 0,
+          "type": "spawn",
+          "visible": true,
+          "width": 0,
+          "x": 1035,
+          "y": 505
+        },
+        {
+          "height": 0,
+          "id": 22,
+          "name": "blue-1",
+          "point": true,
+          "properties": [
+            {
+              "name": "seatId",
+              "type": "string",
+              "value": "blue-1"
+            },
+            {
+              "name": "facing",
+              "type": "int",
+              "value": -1
+            },
+            {
+              "name": "callout",
+              "type": "string",
+              "value": "Knee Tower"
+            }
+          ],
+          "rotation": 0,
+          "type": "spawn",
+          "visible": true,
+          "width": 0,
+          "x": 1875,
+          "y": 465
+        },
+        {
+          "height": 0,
+          "id": 23,
+          "name": "blue-2",
+          "point": true,
+          "properties": [
+            {
+              "name": "seatId",
+              "type": "string",
+              "value": "blue-2"
+            },
+            {
+              "name": "facing",
+              "type": "int",
+              "value": -1
+            },
+            {
+              "name": "callout",
+              "type": "string",
+              "value": "Boot Shelf"
+            }
+          ],
+          "rotation": 0,
+          "type": "spawn",
+          "visible": true,
+          "width": 0,
+          "x": 2180,
+          "y": 705
+        }
+      ],
+      "opacity": 1,
+      "type": "objectgroup",
+      "visible": true,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "draworder": "topdown",
+      "id": 3,
+      "name": "callouts",
+      "objects": [
+        {
+          "height": 140,
+          "id": 30,
+          "name": "Head Ramp",
+          "rotation": 0,
+          "type": "callout",
+          "visible": true,
+          "width": 300,
+          "x": 40,
+          "y": 700
+        },
+        {
+          "height": 130,
+          "id": 31,
+          "name": "Hair Shelf",
+          "rotation": 0,
+          "type": "callout",
+          "visible": true,
+          "width": 300,
+          "x": 310,
+          "y": 610
+        },
+        {
+          "height": 190,
+          "id": 32,
+          "name": "Left Drop",
+          "rotation": 0,
+          "type": "callout",
+          "visible": true,
+          "width": 250,
+          "x": 610,
+          "y": 660
+        },
+        {
+          "height": 210,
+          "id": 33,
+          "name": "Torso Plateau",
+          "rotation": 0,
+          "type": "callout",
+          "visible": true,
+          "width": 430,
+          "x": 830,
+          "y": 470
+        },
+        {
+          "height": 150,
+          "id": 34,
+          "name": "Waist Basin",
+          "rotation": 0,
+          "type": "callout",
+          "visible": true,
+          "width": 190,
+          "x": 1360,
+          "y": 690
+        },
+        {
+          "height": 220,
+          "id": 35,
+          "name": "Knee Tower",
+          "rotation": 0,
+          "type": "callout",
+          "visible": true,
+          "width": 310,
+          "x": 1730,
+          "y": 440
+        },
+        {
+          "height": 150,
+          "id": 36,
+          "name": "Boot Shelf",
+          "rotation": 0,
+          "type": "callout",
+          "visible": true,
+          "width": 350,
+          "x": 2050,
+          "y": 660
+        }
+      ],
+      "opacity": 0.72,
+      "type": "objectgroup",
+      "visible": true,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "draworder": "topdown",
+      "id": 4,
+      "name": "landmarks",
+      "objects": [
+        {
+          "height": 140,
+          "id": 40,
+          "name": "head-and-hair-left-region",
+          "properties": [
+            {
+              "name": "landmarkType",
+              "type": "string",
+              "value": "shelf"
+            }
+          ],
+          "rotation": 0,
+          "type": "landmark",
+          "visible": true,
+          "width": 590,
+          "x": 0,
+          "y": 650
+        },
+        {
+          "height": 210,
+          "id": 41,
+          "name": "raised-torso-mid-region",
+          "properties": [
+            {
+              "name": "landmarkType",
+              "type": "string",
+              "value": "shelf"
+            }
+          ],
+          "rotation": 0,
+          "type": "landmark",
+          "visible": true,
+          "width": 430,
+          "x": 830,
+          "y": 470
+        },
+        {
+          "height": 160,
+          "id": 42,
+          "name": "waist-basin-risk-island",
+          "properties": [
+            {
+              "name": "landmarkType",
+              "type": "string",
+              "value": "ring"
+            }
+          ],
+          "rotation": 0,
+          "type": "landmark",
+          "visible": true,
+          "width": 180,
+          "x": 1365,
+          "y": 680
+        },
+        {
+          "height": 270,
+          "id": 43,
+          "name": "knee-and-boot-right-region",
+          "properties": [
+            {
+              "name": "landmarkType",
+              "type": "string",
+              "value": "spire"
+            }
+          ],
+          "rotation": 0,
+          "type": "landmark",
+          "visible": true,
+          "width": 650,
+          "x": 1735,
+          "y": 440
+        }
+      ],
+      "opacity": 0.5,
+      "type": "objectgroup",
+      "visible": true,
+      "x": 0,
+      "y": 0
+    }
+  ],
+  "nextlayerid": 5,
+  "nextobjectid": 44,
+  "orientation": "orthogonal",
+  "properties": [
+    {
+      "name": "gravityCanyon.mapId",
+      "type": "string",
+      "value": "idol-canyon-supine-draft"
+    },
+    {
+      "name": "gravityCanyon.name",
+      "type": "string",
+      "value": "Idol Canyon: Supine Skeleton"
+    },
+    {
+      "name": "gravityCanyon.summary",
+      "type": "string",
+      "value": "Tiled-authored supine idol terrain skeleton with distinct tactical regions"
+    },
+    {
+      "name": "gravityCanyon.tacticalRole",
+      "type": "string",
+      "value": "authoring pipeline proof with distinct spawns, readable gaps, and body-shaped shot lanes"
+    },
+    {
+      "name": "gravityCanyon.terrainModel",
+      "type": "string",
+      "value": "heightfield-draft"
+    },
+    {
+      "name": "gravityCanyon.worldWidth",
+      "type": "int",
+      "value": 2400
+    },
+    {
+      "name": "gravityCanyon.deathPlaneY",
+      "type": "int",
+      "value": 900
+    },
+    {
+      "name": "gravityCanyon.windScale",
+      "type": "float",
+      "value": 1.05
+    },
+    {
+      "name": "gravityCanyon.terrainSeedSalt",
+      "type": "int",
+      "value": 181
+    },
+    {
+      "name": "gravityCanyon.status",
+      "type": "string",
+      "value": "draft-runtime-spike"
+    }
+  ],
+  "renderorder": "right-down",
+  "tiledversion": "1.11.0",
+  "tileheight": 16,
+  "tilesets": [],
+  "tilewidth": 16,
+  "type": "map",
+  "version": "1.10",
+  "width": 150
+}

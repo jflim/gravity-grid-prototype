@@ -1,13 +1,22 @@
-import { MAPS, type V1Map } from "../server/v1/maps.js";
+import { MAPS } from "../server/v1/maps.js";
+import idolCanyonSupineDraft from "../shared/content/maps/idol-canyon-supine-draft.tiled.json";
+import { tiledMapToPlayableMap, type TiledMapDocument } from "../shared/content/tiledMapImporter.js";
 import {
   buildTerrainHeightmap,
   surfaceAt as terrainSurfaceAt,
 } from "../shared/gameplay/terrain.js";
+import type { PlayableMapDefinition } from "../shared/model/mapTypes.js";
 
-export const DEFAULT_DEMO_MAP_ID = "ring-basin" satisfies V1Map["id"];
+export const DEFAULT_DEMO_MAP_ID = "ring-basin";
+
+export const TILED_DRAFT_MAPS = [
+  tiledMapToPlayableMap(idolCanyonSupineDraft as unknown as TiledMapDocument),
+] as const;
+
+const PLAYABLE_MAPS: readonly PlayableMapDefinition[] = [...MAPS, ...TILED_DRAFT_MAPS];
 
 export interface PlayableTerrain {
-  map: V1Map;
+  map: PlayableMapDefinition;
   terrain: number[];
   voidSurfaceY: number;
 }
@@ -16,11 +25,16 @@ interface PlayableTerrainOptions {
   voidSurfaceY: number;
 }
 
-export function playableMapById(mapId: V1Map["id"]): V1Map {
-  return MAPS.find((map) => map.id === mapId) ?? MAPS[0];
+export function playableMapById(mapId: string): PlayableMapDefinition {
+  return PLAYABLE_MAPS.find((map) => map.id === mapId) ?? PLAYABLE_MAPS.find((map) => map.id === DEFAULT_DEMO_MAP_ID)!;
 }
 
-export function buildPlayableTerrain(map: V1Map, options: PlayableTerrainOptions): PlayableTerrain {
+export function demoMapIdFromSearch(search: string): string {
+  const mapId = new URLSearchParams(search).get("map") ?? DEFAULT_DEMO_MAP_ID;
+  return PLAYABLE_MAPS.some((map) => map.id === mapId) ? mapId : DEFAULT_DEMO_MAP_ID;
+}
+
+export function buildPlayableTerrain(map: PlayableMapDefinition, options: PlayableTerrainOptions): PlayableTerrain {
   return {
     map,
     terrain: buildTerrainHeightmap({
