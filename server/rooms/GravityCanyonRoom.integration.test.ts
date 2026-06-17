@@ -32,16 +32,29 @@ test("auto-room playtest flow puts two clients in one combat preview", async () 
     firstRoom = firstJoinedRoom;
     secondRoom = secondJoinedRoom;
 
-    await waitFor(() => Boolean(firstJoinedRoom.state.blueCaptainSessionId), "second captain assignment");
+    await waitFor(
+      () =>
+        Boolean(firstJoinedRoom.state.hostSessionId) &&
+        Boolean(firstJoinedRoom.state.players.get(secondJoinedRoom.sessionId)),
+      "host and player assignment",
+    );
 
     assert.equal(firstJoinedRoom.roomId, secondJoinedRoom.roomId);
     assert.equal(firstJoinedRoom.state.roomCode, "auto-room");
-    assert.equal(firstJoinedRoom.state.redCaptainSessionId, firstJoinedRoom.sessionId);
-    assert.equal(firstJoinedRoom.state.blueCaptainSessionId, secondJoinedRoom.sessionId);
-    assert.equal(firstJoinedRoom.state.players.get(firstJoinedRoom.sessionId)?.role, "red-captain");
-    assert.equal(firstJoinedRoom.state.players.get(secondJoinedRoom.sessionId)?.role, "blue-captain");
+    assert.equal(firstJoinedRoom.state.hostSessionId, firstJoinedRoom.sessionId);
+    assert.equal(firstJoinedRoom.state.players.get(firstJoinedRoom.sessionId)?.role, "host");
+    assert.equal(firstJoinedRoom.state.players.get(secondJoinedRoom.sessionId)?.role, "player");
 
     firstJoinedRoom.send("setMode", { mode: "1v1" });
+    firstJoinedRoom.send("claimSeat", { slotId: "red-1" });
+    secondJoinedRoom.send("claimSeat", { slotId: "blue-1" });
+    await waitFor(
+      () =>
+        firstJoinedRoom.state.slots.get("red-1")?.ownerSessionId === firstJoinedRoom.sessionId &&
+        firstJoinedRoom.state.slots.get("blue-1")?.ownerSessionId === secondJoinedRoom.sessionId,
+      "seat claims",
+    );
+
     firstJoinedRoom.send("selectCharacter", { slotId: "red-1", characterId: "kaelii" });
     secondJoinedRoom.send("selectCharacter", { slotId: "blue-1", characterId: "perlah" });
     firstJoinedRoom.send("setReady", { ready: true });

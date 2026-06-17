@@ -3,7 +3,7 @@ import { CHARACTER_IDS } from "../../shared/model/gameTypes.js";
 import type { GameMode } from "../v1/rules.js";
 import { MODE_SEATS } from "../v1/rules.js";
 
-export type CaptainRole = "red-captain" | "blue-captain" | "spectator";
+export type LobbyRole = "host" | "player" | "spectator";
 
 export type LobbyPlayerInput = {
   sessionId: string;
@@ -11,13 +11,17 @@ export type LobbyPlayerInput = {
   ready: boolean;
 };
 
+export type LobbySlotInput = {
+  slotId: string;
+  ownerSessionId: string;
+  selectedCharacterId?: string;
+  active?: boolean;
+};
+
 export type ReadyToStartInput = {
   mode: GameMode;
-  redCaptainSessionId: string;
-  blueCaptainSessionId: string;
-  redReady: boolean;
-  blueReady: boolean;
-  selectedCharacters: Partial<Record<VehicleId, string>>;
+  players: readonly LobbyPlayerInput[];
+  slots: readonly LobbySlotInput[];
 };
 
 export type PreviewSlot = {
@@ -28,9 +32,7 @@ export type PreviewSlot = {
 
 export type BuildPreviewSlotsInput = {
   mode: GameMode;
-  redCaptainSessionId: string;
-  blueCaptainSessionId: string;
-  selectedCharacters: Partial<Record<VehicleId, string>>;
+  slots: readonly LobbySlotInput[];
 };
 
 const CHARACTER_ID_SET = new Set<string>(CHARACTER_IDS);
@@ -42,18 +44,12 @@ const DEFAULT_CHARACTERS: Record<VehicleId, CharacterId> = {
   "blue-2": "perlah",
 };
 
-export function assignCaptainRoles(players: readonly LobbyPlayerInput[]): Map<string, CaptainRole> {
+export function assignLobbyRoles(players: readonly LobbyPlayerInput[]): Map<string, LobbyRole> {
   const sorted = [...players].sort((a, b) => a.joinOrder - b.joinOrder);
-  const roles = new Map<string, CaptainRole>();
+  const roles = new Map<string, LobbyRole>();
 
   sorted.forEach((player, index) => {
-    if (index === 0) {
-      roles.set(player.sessionId, "red-captain");
-    } else if (index === 1) {
-      roles.set(player.sessionId, "blue-captain");
-    } else {
-      roles.set(player.sessionId, "spectator");
-    }
+    roles.set(player.sessionId, index === 0 ? "host" : "player");
   });
 
   return roles;
@@ -63,24 +59,8 @@ export function activeSlotIdsForMode(mode: GameMode): VehicleId[] {
   return MODE_SEATS[mode].map((seat) => seat.seatId as VehicleId);
 }
 
-export function canEditSlot(role: CaptainRole, slotId: VehicleId): boolean {
-  if (role === "red-captain") {
-    return slotId.startsWith("red-");
-  }
-
-  if (role === "blue-captain") {
-    return slotId.startsWith("blue-");
-  }
-
-  return false;
-}
-
-export function ownerSessionIdForSlot(
-  slotId: VehicleId,
-  redCaptainSessionId: string,
-  blueCaptainSessionId: string,
-): string {
-  return slotId.startsWith("red-") ? redCaptainSessionId : blueCaptainSessionId;
+export function canEditSlot(ownerSessionId: string, sessionId: string): boolean {
+  return ownerSessionId.length > 0 && ownerSessionId === sessionId;
 }
 
 export function defaultCharacterForSlot(slotId: VehicleId): CharacterId {
@@ -94,17 +74,39 @@ export function sanitizeCharacterPick(value: unknown, slotId: VehicleId): Charac
 }
 
 export function isReadyToAutoStart(input: ReadyToStartInput): boolean {
-  if (!input.redCaptainSessionId || !input.blueCaptainSessionId || !input.redReady || !input.blueReady) {
-    return false;
-  }
+  const playersBySessionId = new Map(input.players.map((player) => [player.sessionId, player]));
+  const slotsById = new Map(input.slots.map((slot) => [slot.slotId, slot]));
+  const seenOwners = new Set<string>();
 
-  return activeSlotIdsForMode(input.mode).every((slotId) => CHARACTER_ID_SET.has(input.selectedCharacters[slotId] ?? ""));
+  return activeSlotIdsForMode(input.mode).every((slotId) => {
+    const slot = slotsById.get(slotId);
+    if (!slot || slot.active === false || !slot.ownerSessionId || seenOwners.has(slot.ownerSessionId)) {
+      return false;
+    }
+
+    const owner = playersBySessionId.get(slot.ownerSessionId);
+    if (!owner?.ready) {
+      return false;
+    }
+
+    seenOwners.add(slot.ownerSessionId);
+    return CHARACTER_ID_SET.has(slot.selectedCharacterId ?? "");
+  });
 }
 
 export function buildPreviewSlots(input: BuildPreviewSlotsInput): PreviewSlot[] {
-  return activeSlotIdsForMode(input.mode).map((slotId) => ({
-    slotId,
-    ownerSessionId: ownerSessionIdForSlot(slotId, input.redCaptainSessionId, input.blueCaptainSessionId),
-    selectedCharacterId: sanitizeCharacterPick(input.selectedCharacters[slotId], slotId),
-  }));
+  const slotsById = new Map(input.slots.map((slot) => [slot.slotId, slot]));
+
+  return activeSlotIdsForMode(input.mode)
+    .map((slotId) => {
+      const slot = slotsById.get(slotId);
+      return slot?.ownerSessionId
+        ? {
+            slotId,
+            ownerSessionId: slot.ownerSessionId,
+            selectedCharacterId: sanitizeCharacterPick(slot.selectedCharacterId, slotId),
+          }
+        : undefined;
+    })
+    .filter((slot): slot is PreviewSlot => Boolean(slot));
 }

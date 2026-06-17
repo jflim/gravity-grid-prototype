@@ -11,26 +11,24 @@ import {
   slotLabel,
 } from "./onlineLobbyView";
 
-test("localRoleLabel names the local captain role", () => {
-  assert.equal(localRoleLabel("red-captain"), "Red captain");
-  assert.equal(localRoleLabel("blue-captain"), "Blue captain");
+test("localRoleLabel names host and player roles", () => {
+  assert.equal(localRoleLabel("host"), "Host");
+  assert.equal(localRoleLabel("player"), "Player");
   assert.equal(localRoleLabel("spectator"), "Spectator");
   assert.equal(localRoleLabel("unknown"), "Waiting");
 });
 
-test("canLocalPlayerEditSlot follows captain team ownership", () => {
-  assert.equal(canLocalPlayerEditSlot("red-captain", "red-1"), true);
-  assert.equal(canLocalPlayerEditSlot("red-captain", "blue-1"), false);
-  assert.equal(canLocalPlayerEditSlot("blue-captain", "blue-2"), true);
-  assert.equal(canLocalPlayerEditSlot("spectator", "red-1"), false);
+test("canLocalPlayerEditSlot follows claimed seat ownership", () => {
+  assert.equal(canLocalPlayerEditSlot("red-session", "red-session"), true);
+  assert.equal(canLocalPlayerEditSlot("red-session", "blue-session"), false);
+  assert.equal(canLocalPlayerEditSlot("", "red-session"), false);
 });
 
-test("canLocalPlayerUseLobbyControls keeps captains interactive during ready phase", () => {
-  assert.equal(canLocalPlayerUseLobbyControls("red-captain", "ready"), true);
-  assert.equal(canLocalPlayerUseLobbyControls("blue-captain", "ready"), true);
-  assert.equal(canLocalPlayerUseLobbyControls("red-captain", "lobby"), true);
-  assert.equal(canLocalPlayerUseLobbyControls("spectator", "ready"), false);
-  assert.equal(canLocalPlayerUseLobbyControls("red-captain", "combat-preview"), false);
+test("canLocalPlayerUseLobbyControls keeps seated players interactive during ready phase", () => {
+  assert.equal(canLocalPlayerUseLobbyControls(true, "ready"), true);
+  assert.equal(canLocalPlayerUseLobbyControls(true, "lobby"), true);
+  assert.equal(canLocalPlayerUseLobbyControls(false, "ready"), false);
+  assert.equal(canLocalPlayerUseLobbyControls(true, "combat-preview"), false);
 });
 
 test("stageForRoomPhase separates lobby and gameplay scenes", () => {
@@ -41,8 +39,8 @@ test("stageForRoomPhase separates lobby and gameplay scenes", () => {
 });
 
 test("modeLabel and slotLabel keep lobby wording short", () => {
-  assert.equal(modeLabel("1v1"), "1v1");
-  assert.equal(modeLabel("2v2"), "2v2");
+  assert.equal(modeLabel("1v1"), "Duel");
+  assert.equal(modeLabel("2v2"), "Doubles");
   assert.equal(slotLabel("red-1"), "Red 1");
   assert.equal(slotLabel("blue-2"), "Blue 2");
 });
@@ -50,22 +48,20 @@ test("modeLabel and slotLabel keep lobby wording short", () => {
 test("lobbyStatusText explains the blocked start state", () => {
   assert.equal(
     lobbyStatusText({
-      status: "Waiting for blue captain.",
-      redCaptainName: "NovaHost",
-      blueCaptainName: "",
-      redReady: true,
-      blueReady: false,
+      status: "Waiting for blue seat.",
+      hostName: "NovaHost",
+      openSeatCount: 1,
+      nextReadyName: "",
     }),
-    "Waiting for blue captain.",
+    "Waiting for blue seat.",
   );
 
   assert.equal(
     lobbyStatusText({
       status: "",
-      redCaptainName: "NovaHost",
-      blueCaptainName: "VesperFriend",
-      redReady: true,
-      blueReady: false,
+      hostName: "NovaHost",
+      openSeatCount: 0,
+      nextReadyName: "VesperFriend",
     }),
     "Waiting for VesperFriend to ready.",
   );

@@ -37,8 +37,8 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
   - winner,
   - validated active-player preview shots,
   - preview token reward on round end.
-- The online preview now starts as a centered auto-room captain lobby and swaps into a shared server-owned gameplay preview after both captains ready. The default local demo hides that flow for map-review clarity unless `?onlinePanel=1` or playtest runtime config enables it.
-- The captain lobby now presents Red Team and Blue Team in two visible columns. Red captain controls mode, each captain controls that team's active character slots, and placeholder cosmetic controls are intentionally hidden from the lobby.
+- The online preview now starts as a centered auto-room host/seat lobby and swaps into a shared server-owned gameplay preview after all active claimed seats are ready. The default local demo hides that flow for map-review clarity unless `?onlinePanel=1` or playtest runtime config enables it.
+- The playtest lobby now presents Red Team and Blue Team in two visible columns. Players claim open active seats, the host controls Duel/Doubles mode, each seat owner picks their own character through a visual Pilot/Ride menu, and placeholder cosmetic controls are intentionally hidden from the lobby.
 - `npm run playtest` now builds the project, serves the built client plus Colyseus from one localhost-bound port, starts a Cloudflare quick tunnel, and prints the public URL. `npm run playtest:local` starts the same playtest mode without a tunnel. Playtest launch mode, not the public URL hostname, controls the Online Alpha flow. Default and public-preview startup stay bound to `127.0.0.1`; direct all-interface binding requires explicitly setting `HOST=0.0.0.0`.
 - Hosted/default playtest mode uses stable runtime gameplay art through optimized WebP delivery files so Cloudflare quick-tunnel loads are lighter while the accepted game art remains part of the normal mode. Art-review concept sprites are opt-in with `?conceptAssets=1`, and the faint Style B backdrop is opt-in with `?styleReference=1`.
 - `npm run optimize:assets` regenerates the WebP delivery files from the PNG runtime and selected art-review sources; run it after promoting or editing runtime art, then run `npm run verify:runtime-roster`.
@@ -119,7 +119,7 @@ For v1 scope discipline, use `docs/PRODUCTION_PLAN.md` as the authority before a
 
 For combat feel, keep tuning visible combat hulls and playable v1 map terrain only where they support v1 readability. Advanced wind bands and high-angle/plunge reward rules are future ideas unless the v1 contract is explicitly changed.
 
-For online v1, the next best build direction is to follow `docs/TECHNICAL_DESIGN.md`: move from the current Colyseus combat preview toward real private-room 1v1/2v2 room settings, seat ownership, persistent match turn order, and server-owned combat results wired into the Phaser match scene.
+For online v1, the next best build direction is to follow `docs/TECHNICAL_DESIGN.md`: extend the current host/seat lobby with the remaining real room settings, persistent match turn order, and server-owned combat results wired into the Phaser match scene.
 
 For sprites, use the committed Vesper v9/v10 unit candidates as references for the next production pass. The next pass should simplify detail, preserve the light full gloves/tech shorts/chunky sneaker identity, remove the chroma key, split or size layers as needed, and only then promote runtime aliases.
 

@@ -4,7 +4,7 @@ import type { GameMode } from "../v1/rules.js";
 
 export type RoomPhase = "lobby" | "ready" | "combat-preview" | "round-over";
 export type TeamId = "red" | "blue";
-export type PlayerRole = "red-captain" | "blue-captain" | "spectator";
+export type PlayerRole = "host" | "player" | "spectator";
 
 export class PlayerState extends Schema {
   declare sessionId: string;
@@ -84,8 +84,7 @@ export class GravityCanyonState extends Schema {
   declare status: string;
   declare maxPlayers: number;
   declare mode: GameMode;
-  declare redCaptainSessionId: string;
-  declare blueCaptainSessionId: string;
+  declare hostSessionId: string;
   declare spectatorSessionIds: ArraySchema<string>;
   declare roundNumber: number;
   declare turnNumber: number;
@@ -103,10 +102,9 @@ export class GravityCanyonState extends Schema {
     this.roomCode = "";
     this.phase = "lobby";
     this.status = "Waiting for players.";
-    this.maxPlayers = 2;
+    this.maxPlayers = 4;
     this.mode = "2v2";
-    this.redCaptainSessionId = "";
-    this.blueCaptainSessionId = "";
+    this.hostSessionId = "";
     this.spectatorSessionIds = new ArraySchema<string>();
     this.roundNumber = 1;
     this.turnNumber = 0;
@@ -161,8 +159,7 @@ defineTypes(GravityCanyonState, {
   status: "string",
   maxPlayers: "number",
   mode: "string",
-  redCaptainSessionId: "string",
-  blueCaptainSessionId: "string",
+  hostSessionId: "string",
   spectatorSessionIds: { array: "string" },
   roundNumber: "number",
   turnNumber: "number",

@@ -280,14 +280,13 @@ Done:
 - Ready checks.
 - Placeholder reward/nameplate state.
 - Server-owned combat preview state.
-- Auto-room captain lobby with a shared server-owned gameplay preview screen.
+- Auto-room host/seat lobby with Duel/Doubles mode, visual character selection, ready checks, and a shared server-owned gameplay preview screen.
 - One-terminal public playtest launcher.
 
 Not done:
 
-- Full online seat ownership.
-- Full online 1v1/2v2 room settings.
-- Online character selection wired to match start.
+- Full online room settings beyond Duel/Doubles, including best-of-1/best-of-3 and map select/random.
+- Online character selection wired into the real Phaser match start.
 - Phaser match driven by Colyseus room state.
 - Server-authoritative movement/projectile/terrain/damage.
 - Full round/match scoring online.
@@ -299,13 +298,12 @@ Recommended next sequence:
 
 1. Fix playtest tunnel reliability by forcing Cloudflare Tunnel HTTP/2.
 2. Build real room settings for 1v1/2v2, best-of-1/best-of-3, and map select/random.
-3. Build seat ownership and character selection.
-4. Build ready/start flow using selected seats and settings.
-5. Wire Phaser match start from room state.
-6. Move turn order, movement, aim, fire, projectile, terrain, damage, KO, and round result to server authority.
-7. Validate 1v1 online.
-8. Validate 2v2 format online.
-9. Run four-human 2v2 gold validation.
+3. Add remaining room settings for best-of-1/best-of-3 and map select/random.
+4. Wire Phaser match start from host settings, claimed seats, and selected characters.
+5. Move turn order, movement, aim, fire, projectile, terrain, damage, KO, and round result to server authority.
+6. Validate 1v1 online.
+7. Validate 2v2 format online.
+8. Run four-human 2v2 gold validation.
 
 ## 18. Quality Gates
 

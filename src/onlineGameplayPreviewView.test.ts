@@ -26,7 +26,7 @@ test("activeVehicleFor returns the active server vehicle", () => {
   assert.equal(activeVehicleFor(snapshot)?.displayName, "Blue / Vesper");
 });
 
-test("canStartNextPreviewRound allows the red captain after a round-over state", () => {
+test("canStartNextPreviewRound allows the host after a round-over state", () => {
   const snapshot = previewRoomSnapshot({
     phase: "round-over",
   });

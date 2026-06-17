@@ -9,8 +9,12 @@ test("renderLobbyShell owns the online stage shell markup", () => {
     /class="online-stage"/,
     /data-ready-toggle/,
     /data-slot-list/,
+    /data-mode-choice="1v1"/,
+    /data-mode-choice="2v2"/,
+    /data-character-picker/,
+    /data-character-picker-options/,
     /data-auto-connect hidden/,
-    /Red captain controls mode/,
+    /Host controls mode/,
   ]);
   assertExcludesAll(html, [/>Reconnect</, /Nameplate/, /Capsule/]);
 });
@@ -22,7 +26,7 @@ test("renderPlayerRows escapes display names and marks the local player", () => 
         sessionId: "red-session",
         displayName: "<Red>",
         team: "red",
-        role: "red-captain",
+        role: "host",
         joinOrder: 1,
         ready: true,
         tokens: 0,
@@ -33,7 +37,7 @@ test("renderPlayerRows escapes display names and marks the local player", () => 
     "red-session",
   );
 
-  assertIncludesAll(html, [/&lt;Red&gt;/, /Red captain - You/]);
+  assertIncludesAll(html, [/&lt;Red&gt;/, /Host - You/]);
   assertExcludesAll(html, [/<Red>/]);
 });
 
@@ -59,8 +63,8 @@ test("renderSlotRows groups visible seats by team", () => {
         active: true,
       },
     ],
-    "red-captain",
-    true,
+    "red-session",
+    "ready",
   );
 
   assertIncludesAll(html, [
@@ -68,12 +72,17 @@ test("renderSlotRows groups visible seats by team", () => {
     /online-team-column online-team-column--blue/,
     /Red Team/,
     /Blue Team/,
-    /Red controls this team/,
-    /Open blue captain seat/,
+    /Red is ready/,
+    /Open blue seat/,
+    /data-seat-action="pick"/,
+    /data-seat-action="claim"/,
+    /src="\/assets\/nova-unit-default.webp"/,
+    /src="\/assets\/nova-vehicle-sprite.webp"/,
   ]);
+  assertExcludesAll(html, [/<select/]);
 });
 
-test("renderSlotRows disables slots the local player cannot edit", () => {
+test("renderSlotRows locks seats owned by another player", () => {
   const html = renderSlotRows(
     [
       {
@@ -86,11 +95,11 @@ test("renderSlotRows disables slots the local player cannot edit", () => {
         active: true,
       },
     ],
-    "red-captain",
-    true,
+    "red-session",
+    "ready",
   );
 
-  assertIncludesAll(html, [/Blue 1/, /value="vesper" selected/, /disabled/]);
+  assertIncludesAll(html, [/Blue 1/, /Vesper/, /Occupied/, /disabled/]);
 });
 
 function assertIncludesAll(html: string, patterns: RegExp[]): void {

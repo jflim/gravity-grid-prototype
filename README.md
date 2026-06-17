@@ -56,8 +56,8 @@ First playable local artillery prototype for Gravity Canyon.
   - server-owned combat preview state with round, turn, wind, active vehicle, HP, winner, and validated preview shot actions.
 - Browser client uses the vendored Colyseus browser SDK at `public/vendor/colyseus.js` to keep Vite dev mode stable on Windows.
 - The local map-review demo hides the Online Alpha room panel by default; playtest launch mode shows it automatically.
-- Playtest launch mode auto-joins one shared captain lobby, then swaps into a shared server-owned gameplay preview after both captains ready.
-- The playtest lobby now presents Red Team and Blue Team side by side, with each captain's active slots and character picks visible before readying.
+- Playtest launch mode auto-joins one shared room lobby, then swaps into a shared server-owned gameplay preview after all claimed active seats are ready.
+- The playtest lobby now presents Red Team and Blue Team side by side, lets players claim active seats, lets the host choose Duel or Doubles, and shows visual Pilot/Ride character picks before readying.
 - Placeholder capsule/nameplate state remains server-side, but those controls are hidden from the focused playtest lobby until the cosmetic loop is ready.
 - Public preview mode can serve the built client and Colyseus room server from one local port for internet sharing through a trusted tunnel, while staying localhost-only unless `HOST=0.0.0.0` is explicitly set.
 - Playtest pages show a visible loading status and report the failed asset key if Phaser cannot load a required image.

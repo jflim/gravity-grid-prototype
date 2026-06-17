@@ -28,12 +28,12 @@
   },
   "dependencies": {
     "@colyseus/schema": "^4.0.26",
-    "@colyseus/sdk": "^0.17.42",
     "colyseus": "^0.17.10",
     "express": "^5.2.1",
     "phaser": "^3.90.0"
   },
   "devDependencies": {
+    "@colyseus/sdk": "^0.17.42",
     "@types/express": "^5.0.6",
     "@types/node": "^25.9.2",
     "concurrently": "^10.0.3",

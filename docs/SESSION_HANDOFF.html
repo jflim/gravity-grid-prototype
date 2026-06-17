@@ -127,8 +127,8 @@
 <li>winner,</li>
 <li>validated active-player preview shots,</li>
 <li>preview token reward on round end.</li>
-<li>The online preview now starts as a centered auto-room captain lobby and swaps into a shared server-owned gameplay preview after both captains ready. The default local demo hides that flow for map-review clarity unless <code>?onlinePanel=1</code> or playtest runtime config enables it.</li>
-<li>The captain lobby now presents Red Team and Blue Team in two visible columns. Red captain controls mode, each captain controls that team's active character slots, and placeholder cosmetic controls are intentionally hidden from the lobby.</li>
+<li>The online preview now starts as a centered auto-room host/seat lobby and swaps into a shared server-owned gameplay preview after all active claimed seats are ready. The default local demo hides that flow for map-review clarity unless <code>?onlinePanel=1</code> or playtest runtime config enables it.</li>
+<li>The playtest lobby now presents Red Team and Blue Team in two visible columns. Players claim open active seats, the host controls Duel/Doubles mode, each seat owner picks their own character through a visual Pilot/Ride menu, and placeholder cosmetic controls are intentionally hidden from the lobby.</li>
 <li><code>npm run playtest</code> now builds the project, serves the built client plus Colyseus from one localhost-bound port, starts a Cloudflare quick tunnel, and prints the public URL. <code>npm run playtest:local</code> starts the same playtest mode without a tunnel. Playtest launch mode, not the public URL hostname, controls the Online Alpha flow. Default and public-preview startup stay bound to <code>127.0.0.1</code>; direct all-interface binding requires explicitly setting <code>HOST=0.0.0.0</code>.</li>
 <li>Hosted/default playtest mode uses stable runtime gameplay art through optimized WebP delivery files so Cloudflare quick-tunnel loads are lighter while the accepted game art remains part of the normal mode. Art-review concept sprites are opt-in with <code>?conceptAssets=1</code>, and the faint Style B backdrop is opt-in with <code>?styleReference=1</code>.</li>
 <li><code>npm run optimize:assets</code> regenerates the WebP delivery files from the PNG runtime and selected art-review sources; run it after promoting or editing runtime art, then run <code>npm run verify:runtime-roster</code>.</li>
@@ -206,7 +206,7 @@
 <h2>Next Best Step</h2>
 <p>For v1 scope discipline, use <code>docs/PRODUCTION_PLAN.md</code> as the authority before accepting any new gameplay, roster, asset, UI, economy, social, or polish work as v1. If the request is not required for v1 acceptance, preserve it in the GDD parking lot/context notes instead of expanding v1.</p>
 <p>For combat feel, keep tuning visible combat hulls and playable v1 map terrain only where they support v1 readability. Advanced wind bands and high-angle/plunge reward rules are future ideas unless the v1 contract is explicitly changed.</p>
-<p>For online v1, the next best build direction is to follow <code>docs/TECHNICAL_DESIGN.md</code>: move from the current Colyseus combat preview toward real private-room 1v1/2v2 room settings, seat ownership, persistent match turn order, and server-owned combat results wired into the Phaser match scene.</p>
+<p>For online v1, the next best build direction is to follow <code>docs/TECHNICAL_DESIGN.md</code>: extend the current host/seat lobby with the remaining real room settings, persistent match turn order, and server-owned combat results wired into the Phaser match scene.</p>
 <p>For sprites, use the committed Vesper v9/v10 unit candidates as references for the next production pass. The next pass should simplify detail, preserve the light full gloves/tech shorts/chunky sneaker identity, remove the chroma key, split or size layers as needed, and only then promote runtime aliases.</p>
 <p>Recommended Vesper direction:</p>
 <pre><code class="language-text">

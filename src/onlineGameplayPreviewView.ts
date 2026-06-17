@@ -19,7 +19,7 @@ export function canFireActiveVehicle(snapshot: RoomSnapshot, localSessionId: str
 }
 
 export function canStartNextPreviewRound(snapshot: RoomSnapshot, localSessionId: string): boolean {
-  return snapshot.phase === "round-over" && snapshot.redCaptainSessionId === localSessionId;
+  return snapshot.phase === "round-over" && snapshot.hostSessionId === localSessionId;
 }
 
 export function gameplayPreviewBadge(snapshot: RoomSnapshot): string {

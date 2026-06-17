@@ -19,7 +19,7 @@ Highlights:
 - Added server-owned online combat preview state for round number, turn number, wind, active vehicle, HP, winner, and validated preview shots.
 - Added an online panel combat snapshot with active turn, wind, vehicle HP rows, server-shot action, and next-round action.
 - Replaced the online ready handoff with a shared server-owned gameplay preview screen so remote testers see the same selected characters, active turn, HP, wind, and round result instead of entering separate local Phaser matches.
-- Cleaned up the playtest lobby into a side-by-side Red Team and Blue Team captain view, hid placeholder cosmetic controls, and clarified that Red captain owns the mode setting.
+- Rebuilt the playtest lobby as a real host/seat flow: players claim Red/Blue seats, the host picks Duel or Doubles, each seat owner chooses a character from a visual Pilot/Ride menu, and ready checks start the shared server-owned gameplay preview.
 - Replaced Nova's active KO runtime sprite with the selected prone v16 KO asset.
 - Added a sprite-variant folder convention and workflow doc for frequent sprite iteration.
 - Added a session handoff document with current repo state, active branch, sprite status, Vesper KO generation prompt, next steps, and verification notes.
@@ -121,8 +121,8 @@ Highlights:
 - Extracted delayed local turn/round event scheduling into `src/match/RoundEventScheduler.ts` so post-shot misses, impacts, and round result transitions no longer store Phaser timer ownership directly in `MatchScene`.
 - Extracted the prototype collision-zone checkbox DOM into `src/match/ui/CollisionZonesToggle.ts`, keeping browser UI setup out of `MatchScene`.
 - Adopted an HTML-first documentation workflow: markdown remains the canonical editable source, generated HTML is the preferred reading/review surface, local scripts must generate markdown reading copies without AI/manual conversion, and custom HTML is reserved for rich visual/review artifacts.
-- Added the auto-room captain lobby design for the next online playtest slice: one generated playtest URL maps to one shared room, with two human captains able to test 1v1 and 2v2 by controlling one or two units per team.
-- Added the implementation plan for the auto-room captain lobby slice, covering pure lobby rules, Colyseus schema/room state, auto-join browser UI, documentation, and verification.
+- Added the initial auto-room lobby design for the next online playtest slice: one generated playtest URL maps to one shared room, with two remote testers able to validate 1v1 and 2v2 flow.
+- Added the implementation plan for the initial auto-room lobby slice, covering pure lobby rules, Colyseus schema/room state, auto-join browser UI, documentation, and verification.
 - Added horizontal camera side bounds so the battlefield remains centered when the visible camera frame is wider than the world instead of leaving all extra space on one side.
 - Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.
 - Changed projectile camera behavior to keep the battlefield stable while shots are readable, recentering only when a projectile leaves the readable frame.

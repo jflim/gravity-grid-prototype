@@ -1,4 +1,4 @@
-export type ClientRole = "red-captain" | "blue-captain" | "spectator" | string;
+export type ClientRole = "host" | "player" | "spectator" | string;
 export type ClientSlotId = "red-1" | "blue-1" | "red-2" | "blue-2" | string;
 
 export type LobbySlotView = {
@@ -18,12 +18,12 @@ export type LobbySlotOwnerView = {
 };
 
 export function localRoleLabel(role: ClientRole): string {
-  if (role === "red-captain") {
-    return "Red captain";
+  if (role === "host") {
+    return "Host";
   }
 
-  if (role === "blue-captain") {
-    return "Blue captain";
+  if (role === "player") {
+    return "Player";
   }
 
   if (role === "spectator") {
@@ -33,21 +33,12 @@ export function localRoleLabel(role: ClientRole): string {
   return "Waiting";
 }
 
-export function canLocalPlayerEditSlot(role: ClientRole, slotId: ClientSlotId): boolean {
-  if (role === "red-captain") {
-    return slotId.startsWith("red-");
-  }
-
-  if (role === "blue-captain") {
-    return slotId.startsWith("blue-");
-  }
-
-  return false;
+export function canLocalPlayerEditSlot(ownerSessionId: string, localSessionId: string): boolean {
+  return ownerSessionId.length > 0 && ownerSessionId === localSessionId;
 }
 
-export function canLocalPlayerUseLobbyControls(role: ClientRole, phase: string): boolean {
-  const isCaptain = role === "red-captain" || role === "blue-captain";
-  return isCaptain && (phase === "lobby" || phase === "ready");
+export function canLocalPlayerUseLobbyControls(hasOwnedActiveSeat: boolean, phase: string): boolean {
+  return hasOwnedActiveSeat && (phase === "lobby" || phase === "ready");
 }
 
 export function stageForRoomPhase(phase: string): "lobby" | "gameplay" {
@@ -55,7 +46,11 @@ export function stageForRoomPhase(phase: string): "lobby" | "gameplay" {
 }
 
 export function modeLabel(mode: string): string {
-  return mode === "1v1" ? "1v1" : "2v2";
+  return mode === "1v1" ? "Duel" : "Doubles";
+}
+
+export function modeSubLabel(mode: string): string {
+  return mode === "1v1" ? "1 fighter per side" : "2 fighters per side";
 }
 
 export function slotLabel(slotId: ClientSlotId): string {
@@ -66,29 +61,24 @@ export function slotLabel(slotId: ClientSlotId): string {
 
 export function lobbyStatusText(input: {
   status: string;
-  redCaptainName: string;
-  blueCaptainName: string;
-  redReady: boolean;
-  blueReady: boolean;
+  hostName: string;
+  openSeatCount: number;
+  nextReadyName: string;
 }): string {
   if (input.status) {
     return input.status;
   }
 
-  if (!input.redCaptainName) {
-    return "Waiting for red captain.";
+  if (!input.hostName) {
+    return "Waiting for host.";
   }
 
-  if (!input.blueCaptainName) {
-    return "Waiting for blue captain.";
+  if (input.openSeatCount > 0) {
+    return `Waiting for ${input.openSeatCount} open seat${input.openSeatCount === 1 ? "" : "s"} to be claimed.`;
   }
 
-  if (!input.redReady) {
-    return `Waiting for ${input.redCaptainName} to ready.`;
-  }
-
-  if (!input.blueReady) {
-    return `Waiting for ${input.blueCaptainName} to ready.`;
+  if (input.nextReadyName) {
+    return `Waiting for ${input.nextReadyName} to ready.`;
   }
 
   return "Starting match.";

@@ -3,13 +3,11 @@ import { Client, Room } from "colyseus";
 import type { CharacterId, VehicleId } from "../../shared/model/gameTypes.js";
 import {
   activeSlotIdsForMode,
-  assignCaptainRoles,
+  assignLobbyRoles,
   canEditSlot,
   defaultCharacterForSlot,
   isReadyToAutoStart,
-  ownerSessionIdForSlot,
   sanitizeCharacterPick,
-  type CaptainRole,
 } from "./autoRoomLobby.js";
 import {
   GravityCanyonState,
@@ -45,6 +43,16 @@ type SelectCharacterMessage = {
   characterId?: CharacterId;
 };
 
+type ClaimSeatMessage = {
+  slotId?: VehicleId;
+};
+
+type LobbySeatContext = {
+  player: PlayerState;
+  slot: LobbySlotState;
+  slotId: VehicleId;
+};
+
 const cosmeticPool = [
   "Canyon Rookie",
   "Archshot Ace",
@@ -63,109 +71,19 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
     this.state.roomCode = "auto-room";
     this.ensureLobbySlots();
 
-    this.onMessage("setDisplayName", (client, displayName: string) => {
-      const player = this.state.players.get(client.sessionId);
-      if (!player) {
-        return;
-      }
-
-      player.displayName = sanitizeDisplayName(displayName);
-      this.refreshStatus();
-    });
-
-    this.onMessage("setReady", (client, message: ReadyMessage) => {
-      const player = this.state.players.get(client.sessionId);
-      if (!player) {
-        return;
-      }
-
-      player.ready = player.role === "red-captain" || player.role === "blue-captain" ? Boolean(message.ready) : false;
-      this.refreshStatus();
-    });
-
-    this.onMessage("setMode", (client, message: ModeMessage) => {
-      if (this.state.phase !== "lobby" && this.state.phase !== "ready") {
-        return;
-      }
-
-      if (client.sessionId !== this.state.redCaptainSessionId) {
-        return;
-      }
-
-      if (message.mode !== "1v1" && message.mode !== "2v2") {
-        return;
-      }
-
-      this.state.mode = message.mode;
-      this.syncLobbySlots();
-      this.refreshStatus();
-    });
-
-    this.onMessage("selectCharacter", (client, message: SelectCharacterMessage) => {
-      if ((this.state.phase !== "lobby" && this.state.phase !== "ready") || !message.slotId) {
-        return;
-      }
-
-      const player = this.state.players.get(client.sessionId);
-      if (!player || !canEditSlot(player.role as CaptainRole, message.slotId)) {
-        return;
-      }
-
-      const slot = this.state.slots.get(message.slotId);
-      if (!slot || !slot.active) {
-        return;
-      }
-
-      slot.selectedCharacterId = sanitizeCharacterPick(message.characterId, message.slotId);
-      this.refreshStatus();
-    });
-
-    this.onMessage("claimTestCapsule", (client) => {
-      const player = this.state.players.get(client.sessionId);
-      if (!player) {
-        return;
-      }
-
-      const cosmetic = cosmeticPool[Math.floor(Math.random() * cosmeticPool.length)];
-      player.tokens += 1;
-
-      if (!player.inventory.includes(cosmetic)) {
-        player.inventory.push(cosmetic);
-        player.equippedNameplate = cosmetic;
-        this.state.lastRewardLog = `${player.displayName} unlocked ${cosmetic}.`;
-      } else {
-        player.tokens += 2;
-        this.state.lastRewardLog = `${player.displayName} found duplicate ${cosmetic} and gained Sparks.`;
-      }
-    });
-
-    this.onMessage("equipNameplate", (client, message: EquipMessage) => {
-      const player = this.state.players.get(client.sessionId);
-      if (!player || !message.nameplate) {
-        return;
-      }
-
-      if (player.inventory.includes(message.nameplate)) {
-        player.equippedNameplate = message.nameplate;
-      }
-    });
-
-    this.onMessage("previewFire", (client) => {
-      previewFireForClient(this.state, client.sessionId);
-    });
-
-    this.onMessage("startNextRound", () => {
-      if (
-        this.state.phase !== "round-over" ||
-        !this.state.redCaptainSessionId ||
-        !this.state.blueCaptainSessionId
-      ) {
-        return;
-      }
-
-      this.state.roundNumber += 1;
-      startCombatPreview(this.state);
-    });
+    this.onMessage("setDisplayName", (client, displayName: string) =>
+      this.handleDisplayName(client, displayName),
+    );
+    this.onMessage("setReady", (client, message: ReadyMessage) => this.handleReady(client, message));
+    this.onMessage("setMode", (client, message: ModeMessage) => this.handleMode(client, message));
+    this.onMessage("claimSeat", (client, message: ClaimSeatMessage) => this.handleClaimSeat(client, message));
+    this.onMessage("selectCharacter", (client, message: SelectCharacterMessage) =>
+      this.handleSelectCharacter(client, message),
+    );
+    this.onMessage("claimTestCapsule", (client) => this.handleClaimTestCapsule(client));
+    this.onMessage("equipNameplate", (client, message: EquipMessage) => this.handleEquipNameplate(client, message));
+    this.onMessage("previewFire", (client) => previewFireForClient(this.state, client.sessionId));
+    this.onMessage("startNextRound", (client) => this.handleStartNextRound(client));
 
     this.refreshStatus();
   }
@@ -185,6 +103,7 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
 
   onLeave(client: Client) {
     this.state.players.delete(client.sessionId);
+    this.releaseSeatsForSession(client.sessionId);
 
     if (this.state.phase === "combat-preview" || this.state.phase === "round-over") {
       this.state.phase = "lobby";
@@ -194,25 +113,120 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
     this.refreshStatus();
   }
 
+  private handleDisplayName(client: Client, displayName: string): void {
+    const player = this.state.players.get(client.sessionId);
+    if (!player) {
+      return;
+    }
+
+    player.displayName = sanitizeDisplayName(displayName);
+    this.refreshStatus();
+  }
+
+  private handleReady(client: Client, message: ReadyMessage): void {
+    const player = this.state.players.get(client.sessionId);
+    if (!player) {
+      return;
+    }
+
+    player.ready =
+      Boolean(message.ready) &&
+      this.playerOwnsActiveSlot(client.sessionId) &&
+      this.playerHasValidActiveSelection(client.sessionId);
+    this.refreshStatus();
+  }
+
+  private handleMode(client: Client, message: ModeMessage): void {
+    if (!this.canChangeLobby(client.sessionId) || (message.mode !== "1v1" && message.mode !== "2v2")) {
+      return;
+    }
+
+    this.state.mode = message.mode;
+    this.resetReadiness();
+    this.syncLobbySlots();
+    this.refreshStatus();
+  }
+
+  private handleClaimSeat(client: Client, message: ClaimSeatMessage): void {
+    const context = this.lobbySeatContext(client, message.slotId);
+    if (!context || this.slotIsOwnedByAnotherPlayer(context.slot, client.sessionId)) {
+      return;
+    }
+
+    this.releaseSeatsForSession(client.sessionId, context.slotId);
+    context.slot.ownerSessionId = client.sessionId;
+    context.slot.selectedCharacterId = sanitizeCharacterPick(context.slot.selectedCharacterId, context.slotId);
+    context.player.ready = false;
+    this.refreshStatus();
+  }
+
+  private handleSelectCharacter(client: Client, message: SelectCharacterMessage): void {
+    const context = this.lobbySeatContext(client, message.slotId);
+    if (!context || !canEditSlot(context.slot.ownerSessionId, client.sessionId)) {
+      return;
+    }
+
+    context.slot.selectedCharacterId = sanitizeCharacterPick(message.characterId, context.slotId);
+    context.player.ready = false;
+    this.refreshStatus();
+  }
+
+  private handleClaimTestCapsule(client: Client): void {
+    const player = this.state.players.get(client.sessionId);
+    if (!player) {
+      return;
+    }
+
+    const cosmetic = cosmeticPool[Math.floor(Math.random() * cosmeticPool.length)];
+    player.tokens += 1;
+
+    if (!player.inventory.includes(cosmetic)) {
+      player.inventory.push(cosmetic);
+      player.equippedNameplate = cosmetic;
+      this.state.lastRewardLog = `${player.displayName} unlocked ${cosmetic}.`;
+    } else {
+      player.tokens += 2;
+      this.state.lastRewardLog = `${player.displayName} found duplicate ${cosmetic} and gained Sparks.`;
+    }
+  }
+
+  private handleEquipNameplate(client: Client, message: EquipMessage): void {
+    const player = this.state.players.get(client.sessionId);
+    if (!player || !message.nameplate) {
+      return;
+    }
+
+    if (player.inventory.includes(message.nameplate)) {
+      player.equippedNameplate = message.nameplate;
+    }
+  }
+
+  private handleStartNextRound(client: Client): void {
+    if (this.state.phase !== "round-over" || client.sessionId !== this.state.hostSessionId) {
+      return;
+    }
+
+    this.state.roundNumber += 1;
+    startCombatPreview(this.state);
+  }
+
   private syncRoles() {
     const players = this.getPlayers();
-    const roles = assignCaptainRoles(players);
-    this.state.redCaptainSessionId = "";
-    this.state.blueCaptainSessionId = "";
+    const roles = assignLobbyRoles(players);
+    this.state.hostSessionId = "";
     this.state.spectatorSessionIds.splice(0, this.state.spectatorSessionIds.length);
 
     for (const player of players) {
       const role = roles.get(player.sessionId) ?? "spectator";
       player.role = role;
-      player.team = role === "blue-captain" ? "blue" : "red";
 
-      if (role === "red-captain") {
-        this.state.redCaptainSessionId = player.sessionId;
-      } else if (role === "blue-captain") {
-        this.state.blueCaptainSessionId = player.sessionId;
+      if (role === "host") {
+        this.state.hostSessionId = player.sessionId;
       } else {
-        player.ready = false;
-        this.state.spectatorSessionIds.push(player.sessionId);
+        if (role === "spectator") {
+          player.ready = false;
+          this.state.spectatorSessionIds.push(player.sessionId);
+        }
       }
     }
   }
@@ -232,61 +246,134 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
   private syncLobbySlots() {
     this.ensureLobbySlots();
     const activeSlotIds = new Set(activeSlotIdsForMode(this.state.mode));
+    const liveSessionIds = new Set(this.getPlayers().map((player) => player.sessionId));
+    const seenOwners = new Set<string>();
 
     for (const [slotId, slot] of this.state.slots.entries() as Iterable<[VehicleId, LobbySlotState]>) {
       slot.active = activeSlotIds.has(slotId);
-      slot.ownerSessionId = slot.active
-        ? ownerSessionIdForSlot(slotId, this.state.redCaptainSessionId, this.state.blueCaptainSessionId)
-        : "";
+      if (
+        !slot.active ||
+        !liveSessionIds.has(slot.ownerSessionId) ||
+        seenOwners.has(slot.ownerSessionId)
+      ) {
+        slot.ownerSessionId = "";
+      }
+      if (slot.ownerSessionId) {
+        seenOwners.add(slot.ownerSessionId);
+      }
       slot.selectedCharacterId = sanitizeCharacterPick(slot.selectedCharacterId, slotId);
     }
   }
 
   private refreshStatus() {
-    this.syncRoles();
+    this.ensureLobbySlots();
     this.syncLobbySlots();
+    this.syncRoles();
+    this.syncPlayerTeams();
 
-    const red = this.state.players.get(this.state.redCaptainSessionId);
-    const blue = this.state.players.get(this.state.blueCaptainSessionId);
-    const redReady = red?.ready ?? false;
-    const blueReady = blue?.ready ?? false;
-    const selectedCharacters = this.getSelectedCharacters();
+    if (this.state.phase === "combat-preview" || this.state.phase === "round-over") {
+      return;
+    }
 
-    if (!red || !blue) {
+    const host = this.state.players.get(this.state.hostSessionId);
+    if (!host) {
       this.state.phase = "lobby";
-      this.state.status = red ? "Waiting for blue captain." : "Waiting for red captain.";
+      this.state.status = "Waiting for players.";
       clearCombatPreview(this.state);
       return;
     }
 
-    if (
-      !isReadyToAutoStart({
-        mode: this.state.mode,
-        redCaptainSessionId: this.state.redCaptainSessionId,
-        blueCaptainSessionId: this.state.blueCaptainSessionId,
-        redReady,
-        blueReady,
-        selectedCharacters,
-      })
-    ) {
+    const activeSlots = this.getActiveSlots();
+    const openSeat = activeSlots.find((slot) => !slot.ownerSessionId);
+    if (openSeat) {
+      this.state.phase = "lobby";
+      this.state.status = `Waiting for players to claim ${this.modeSeatName()} seats.`;
+      clearCombatPreview(this.state);
+      return;
+    }
+
+    const unreadySlot = activeSlots.find((slot) => !this.state.players.get(slot.ownerSessionId)?.ready);
+    if (unreadySlot) {
       this.state.phase = "ready";
-      this.state.status = !redReady ? "Waiting for red ready." : "Waiting for blue ready.";
+      this.state.status = `Waiting for ${this.playerDisplayName(unreadySlot.ownerSessionId)} to ready.`;
       clearCombatPreview(this.state);
       return;
     }
 
-    if (this.state.phase !== "combat-preview" && this.state.phase !== "round-over") {
-      startCombatPreview(this.state);
+    if (!isReadyToAutoStart({ mode: this.state.mode, players: this.getPlayers(), slots: activeSlots })) {
+      this.state.phase = "ready";
+      this.state.status = "Waiting for valid character picks.";
+      clearCombatPreview(this.state);
+      return;
     }
+
+    startCombatPreview(this.state);
   }
 
   private getPlayers() {
     return Array.from(this.state.players.values()) as PlayerState[];
   }
 
-  private getSelectedCharacters(): Partial<Record<VehicleId, string>> {
-    return Object.fromEntries(
-      Array.from(this.state.slots.entries()).map(([slotId, slot]) => [slotId, slot.selectedCharacterId]),
-    ) as Partial<Record<VehicleId, string>>;
+  private getActiveSlots(): LobbySlotState[] {
+    const activeSlotIds = new Set(activeSlotIdsForMode(this.state.mode));
+    return Array.from(this.state.slots.entries())
+      .filter(([slotId]) => activeSlotIds.has(slotId as VehicleId))
+      .map(([, slot]) => slot as LobbySlotState);
+  }
+
+  private playerOwnsActiveSlot(sessionId: string): boolean {
+    return this.getActiveSlots().some((slot) => slot.ownerSessionId === sessionId);
+  }
+
+  private playerHasValidActiveSelection(sessionId: string): boolean {
+    const slot = this.getActiveSlots().find((activeSlot) => activeSlot.ownerSessionId === sessionId);
+    return slot ? sanitizeCharacterPick(slot.selectedCharacterId, slot.slotId) === slot.selectedCharacterId : false;
+  }
+
+  private canChangeLobby(sessionId: string): boolean {
+    return (this.state.phase === "lobby" || this.state.phase === "ready") && sessionId === this.state.hostSessionId;
+  }
+
+  private lobbySeatContext(client: Client, slotId: VehicleId | undefined): LobbySeatContext | undefined {
+    if ((this.state.phase !== "lobby" && this.state.phase !== "ready") || !slotId) {
+      return undefined;
+    }
+
+    const player = this.state.players.get(client.sessionId);
+    const slot = this.state.slots.get(slotId);
+    return player && slot?.active ? { player, slot, slotId } : undefined;
+  }
+
+  private slotIsOwnedByAnotherPlayer(slot: LobbySlotState, sessionId: string): boolean {
+    return Boolean(slot.ownerSessionId && slot.ownerSessionId !== sessionId);
+  }
+
+  private releaseSeatsForSession(sessionId: string, exceptSlotId?: VehicleId): void {
+    for (const [slotId, slot] of this.state.slots.entries() as Iterable<[VehicleId, LobbySlotState]>) {
+      if (slot.ownerSessionId === sessionId && slotId !== exceptSlotId) {
+        slot.ownerSessionId = "";
+      }
+    }
+  }
+
+  private resetReadiness(): void {
+    for (const player of this.getPlayers()) {
+      player.ready = false;
+    }
+  }
+
+  private syncPlayerTeams(): void {
+    for (const player of this.getPlayers()) {
+      const ownedSlot = this.getActiveSlots().find((slot) => slot.ownerSessionId === player.sessionId);
+      player.team = ownedSlot?.team ?? (player.role === "host" ? "red" : "blue");
+    }
+  }
+
+  private playerDisplayName(sessionId: string): string {
+    return this.state.players.get(sessionId)?.displayName ?? "Guest";
+  }
+
+  private modeSeatName(): string {
+    return this.state.mode === "1v1" ? "Duel" : "Doubles";
   }
 }

@@ -2,12 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   activeSlotIdsForMode,
-  assignCaptainRoles,
+  assignLobbyRoles,
   buildPreviewSlots,
   canEditSlot,
   defaultCharacterForSlot,
   isReadyToAutoStart,
-  ownerSessionIdForSlot,
   sanitizeCharacterPick,
 } from "./autoRoomLobby.js";
 import { GravityCanyonState, LobbySlotState } from "../schema/GravityCanyonState.js";
@@ -18,34 +17,30 @@ const players = [
   { sessionId: "spectator-session", joinOrder: 3, ready: false },
 ];
 
-test("assignCaptainRoles makes the first player red, second blue, and extras spectators", () => {
-  const roles = assignCaptainRoles(players);
+test("assignLobbyRoles makes the first player host and keeps later joiners as players", () => {
+  const roles = assignLobbyRoles(players);
 
-  assert.equal(roles.get("red-session"), "red-captain");
-  assert.equal(roles.get("blue-session"), "blue-captain");
-  assert.equal(roles.get("spectator-session"), "spectator");
+  assertDefaultLobbyRoles(roles);
 });
 
-test("assignCaptainRoles uses joinOrder rather than input order", () => {
-  const roles = assignCaptainRoles([
+test("assignLobbyRoles uses joinOrder rather than input order", () => {
+  const roles = assignLobbyRoles([
     { sessionId: "spectator-session", joinOrder: 3, ready: false },
     { sessionId: "blue-session", joinOrder: 2, ready: false },
     { sessionId: "red-session", joinOrder: 1, ready: false },
   ]);
 
-  assert.equal(roles.get("red-session"), "red-captain");
-  assert.equal(roles.get("blue-session"), "blue-captain");
-  assert.equal(roles.get("spectator-session"), "spectator");
+  assertDefaultLobbyRoles(roles);
 });
 
-test("assignCaptainRoles promotes the earliest remaining spectator when a captain leaves", () => {
-  const roles = assignCaptainRoles([
+test("assignLobbyRoles transfers host to the earliest remaining player", () => {
+  const roles = assignLobbyRoles([
     { sessionId: "blue-session", joinOrder: 2, ready: false },
     { sessionId: "spectator-session", joinOrder: 3, ready: false },
   ]);
 
-  assert.equal(roles.get("blue-session"), "red-captain");
-  assert.equal(roles.get("spectator-session"), "blue-captain");
+  assert.equal(roles.get("blue-session"), "host");
+  assert.equal(roles.get("spectator-session"), "player");
 });
 
 test("activeSlotIdsForMode exposes one unit per team in 1v1 and two per team in 2v2", () => {
@@ -53,22 +48,13 @@ test("activeSlotIdsForMode exposes one unit per team in 1v1 and two per team in 
   assert.deepEqual(activeSlotIdsForMode("2v2"), ["red-1", "blue-1", "red-2", "blue-2"]);
 });
 
-test("captains can edit only their own team slots", () => {
-  assert.equal(canEditSlot("red-captain", "red-1"), true);
-  assert.equal(canEditSlot("red-captain", "blue-1"), false);
-  assert.equal(canEditSlot("blue-captain", "blue-2"), true);
-  assert.equal(canEditSlot("blue-captain", "red-2"), false);
-  assert.equal(canEditSlot("spectator", "red-1"), false);
+test("only the owning player can edit a claimed slot", () => {
+  assert.equal(canEditSlot("red-session", "red-session"), true);
+  assert.equal(canEditSlot("red-session", "blue-session"), false);
+  assert.equal(canEditSlot("", "red-session"), false);
 });
 
-test("ownerSessionIdForSlot maps every active slot to its team captain", () => {
-  assert.equal(ownerSessionIdForSlot("red-1", "red-session", "blue-session"), "red-session");
-  assert.equal(ownerSessionIdForSlot("red-2", "red-session", "blue-session"), "red-session");
-  assert.equal(ownerSessionIdForSlot("blue-1", "red-session", "blue-session"), "blue-session");
-  assert.equal(ownerSessionIdForSlot("blue-2", "red-session", "blue-session"), "blue-session");
-});
-
-test("defaultCharacterForSlot preserves the two-captain 2v2 test roster", () => {
+test("defaultCharacterForSlot preserves the four-seat 2v2 test roster", () => {
   assert.equal(defaultCharacterForSlot("red-1"), "nova");
   assert.equal(defaultCharacterForSlot("red-2"), "kaelii");
   assert.equal(defaultCharacterForSlot("blue-1"), "vesper");
@@ -81,20 +67,20 @@ test("sanitizeCharacterPick keeps valid roster picks and falls back per slot", (
   assert.equal(sanitizeCharacterPick(undefined, "blue-2"), "perlah");
 });
 
-test("isReadyToAutoStart requires both captains ready and valid active slot picks", () => {
+test("isReadyToAutoStart requires every active seat to be claimed, ready, and valid", () => {
   assert.equal(
     isReadyToAutoStart({
       mode: "2v2",
-      redCaptainSessionId: "",
-      blueCaptainSessionId: "blue-session",
-      redReady: true,
-      blueReady: true,
-      selectedCharacters: {
-        "red-1": "nova",
-        "blue-1": "vesper",
-        "red-2": "kaelii",
-        "blue-2": "perlah",
-      },
+      players: [
+        { sessionId: "red-session", joinOrder: 1, ready: true },
+        { sessionId: "blue-session", joinOrder: 2, ready: true },
+      ],
+      slots: [
+        lobbySlot("red-1", "red-session", "nova"),
+        lobbySlot("blue-1", "blue-session", "vesper"),
+        lobbySlot("red-2", "", "kaelii"),
+        lobbySlot("blue-2", "perlah-session", "perlah"),
+      ],
     }),
     false,
   );
@@ -102,16 +88,18 @@ test("isReadyToAutoStart requires both captains ready and valid active slot pick
   assert.equal(
     isReadyToAutoStart({
       mode: "2v2",
-      redCaptainSessionId: "red-session",
-      blueCaptainSessionId: "",
-      redReady: true,
-      blueReady: true,
-      selectedCharacters: {
-        "red-1": "nova",
-        "blue-1": "vesper",
-        "red-2": "kaelii",
-        "blue-2": "perlah",
-      },
+      players: [
+        { sessionId: "red-session", joinOrder: 1, ready: true },
+        { sessionId: "blue-session", joinOrder: 2, ready: false },
+        { sessionId: "kaelii-session", joinOrder: 3, ready: true },
+        { sessionId: "perlah-session", joinOrder: 4, ready: true },
+      ],
+      slots: [
+        lobbySlot("red-1", "red-session", "nova"),
+        lobbySlot("blue-1", "blue-session", "vesper"),
+        lobbySlot("red-2", "kaelii-session", "kaelii"),
+        lobbySlot("blue-2", "perlah-session", "perlah"),
+      ],
     }),
     false,
   );
@@ -119,16 +107,18 @@ test("isReadyToAutoStart requires both captains ready and valid active slot pick
   assert.equal(
     isReadyToAutoStart({
       mode: "2v2",
-      redCaptainSessionId: "red-session",
-      blueCaptainSessionId: "blue-session",
-      redReady: true,
-      blueReady: false,
-      selectedCharacters: {
-        "red-1": "nova",
-        "blue-1": "vesper",
-        "red-2": "kaelii",
-        "blue-2": "perlah",
-      },
+      players: [
+        { sessionId: "red-session", joinOrder: 1, ready: true },
+        { sessionId: "blue-session", joinOrder: 2, ready: true },
+        { sessionId: "kaelii-session", joinOrder: 3, ready: true },
+        { sessionId: "perlah-session", joinOrder: 4, ready: true },
+      ],
+      slots: [
+        lobbySlot("red-1", "red-session", "nova"),
+        lobbySlot("blue-1", "blue-session", "vesper"),
+        lobbySlot("red-2", "kaelii-session", "kaelii"),
+        lobbySlot("blue-2", "perlah-session", "not-real"),
+      ],
     }),
     false,
   );
@@ -136,44 +126,28 @@ test("isReadyToAutoStart requires both captains ready and valid active slot pick
   assert.equal(
     isReadyToAutoStart({
       mode: "2v2",
-      redCaptainSessionId: "red-session",
-      blueCaptainSessionId: "blue-session",
-      redReady: true,
-      blueReady: true,
-      selectedCharacters: {
-        "red-1": "nova",
-        "blue-1": "vesper",
-        "red-2": "kaelii",
-        "blue-2": "perlah",
-      },
+      players: [
+        { sessionId: "red-session", joinOrder: 1, ready: true },
+        { sessionId: "blue-session", joinOrder: 2, ready: true },
+        { sessionId: "kaelii-session", joinOrder: 3, ready: true },
+        { sessionId: "perlah-session", joinOrder: 4, ready: true },
+      ],
+      slots: [
+        lobbySlot("red-1", "red-session", "nova"),
+        lobbySlot("blue-1", "blue-session", "vesper"),
+        lobbySlot("red-2", "kaelii-session", "kaelii"),
+        lobbySlot("blue-2", "perlah-session", "perlah"),
+      ],
     }),
     true,
   );
-
-  assert.equal(
-    isReadyToAutoStart({
-      mode: "2v2",
-      redCaptainSessionId: "red-session",
-      blueCaptainSessionId: "blue-session",
-      redReady: true,
-      blueReady: true,
-      selectedCharacters: {
-        "red-1": "nova",
-        "blue-1": "vesper",
-        "red-2": "not-real",
-        "blue-2": "perlah",
-      },
-    }),
-    false,
-  );
 });
 
-test("GravityCanyonState exposes captain lobby defaults", () => {
+test("GravityCanyonState exposes host lobby defaults", () => {
   const state = new GravityCanyonState();
 
   assert.equal(state.mode, "2v2");
-  assert.equal(state.redCaptainSessionId, "");
-  assert.equal(state.blueCaptainSessionId, "");
+  assert.equal(state.hostSessionId, "");
   assert.equal(state.spectatorSessionIds.length, 0);
   assert.equal(state.slots.size, 0);
 });
@@ -193,44 +167,54 @@ test("LobbySlotState carries active slot ownership and character selection", () 
   assert.equal(slot.active, true);
 });
 
-test("buildPreviewSlots assigns one owner per team in 1v1", () => {
+test("buildPreviewSlots uses the claimed active seats in 1v1", () => {
   assert.deepEqual(
     buildPreviewSlots({
       mode: "1v1",
-      redCaptainSessionId: "red-session",
-      blueCaptainSessionId: "blue-session",
-      selectedCharacters: {
-        "red-1": "nova",
-        "blue-1": "vesper",
-        "red-2": "kaelii",
-        "blue-2": "perlah",
-      },
+      slots: [
+        lobbySlot("red-1", "red-session", "kaelii"),
+        lobbySlot("blue-1", "blue-session", "perlah"),
+        lobbySlot("red-2", "kaelii-session", "nova"),
+      ],
     }),
     [
-      { slotId: "red-1", ownerSessionId: "red-session", selectedCharacterId: "nova" },
-      { slotId: "blue-1", ownerSessionId: "blue-session", selectedCharacterId: "vesper" },
+      { slotId: "red-1", ownerSessionId: "red-session", selectedCharacterId: "kaelii" },
+      { slotId: "blue-1", ownerSessionId: "blue-session", selectedCharacterId: "perlah" },
     ],
   );
 });
 
-test("buildPreviewSlots assigns both same-team slots to the same captain in 2v2", () => {
+test("buildPreviewSlots uses one owner per claimed seat in 2v2", () => {
   assert.deepEqual(
     buildPreviewSlots({
       mode: "2v2",
-      redCaptainSessionId: "red-session",
-      blueCaptainSessionId: "blue-session",
-      selectedCharacters: {
-        "red-1": "nova",
-        "blue-1": "vesper",
-        "red-2": "kaelii",
-        "blue-2": "perlah",
-      },
+      slots: [
+        lobbySlot("red-1", "red-session", "nova"),
+        lobbySlot("blue-1", "blue-session", "vesper"),
+        lobbySlot("red-2", "kaelii-session", "kaelii"),
+        lobbySlot("blue-2", "perlah-session", "perlah"),
+      ],
     }),
     [
       { slotId: "red-1", ownerSessionId: "red-session", selectedCharacterId: "nova" },
       { slotId: "blue-1", ownerSessionId: "blue-session", selectedCharacterId: "vesper" },
-      { slotId: "red-2", ownerSessionId: "red-session", selectedCharacterId: "kaelii" },
-      { slotId: "blue-2", ownerSessionId: "blue-session", selectedCharacterId: "perlah" },
+      { slotId: "red-2", ownerSessionId: "kaelii-session", selectedCharacterId: "kaelii" },
+      { slotId: "blue-2", ownerSessionId: "perlah-session", selectedCharacterId: "perlah" },
     ],
   );
 });
+
+function lobbySlot(slotId: string, ownerSessionId: string, selectedCharacterId: string) {
+  return {
+    slotId,
+    ownerSessionId,
+    selectedCharacterId,
+    active: true,
+  };
+}
+
+function assertDefaultLobbyRoles(roles: Map<string, string>): void {
+  assert.equal(roles.get("red-session"), "host");
+  assert.equal(roles.get("blue-session"), "player");
+  assert.equal(roles.get("spectator-session"), "player");
+}

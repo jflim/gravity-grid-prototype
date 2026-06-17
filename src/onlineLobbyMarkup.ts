@@ -1,12 +1,16 @@
 import type { PlayerSnapshot } from "./onlineLobbySnapshot";
 import {
+  LOBBY_CHARACTER_CARDS,
+  lobbyCharacterCardFor,
+  type LobbyCharacterCard,
+} from "./onlineLobbyCharacters";
+import {
   canLocalPlayerEditSlot,
   localRoleLabel,
   slotLabel,
   type LobbySlotView,
 } from "./onlineLobbyView";
 
-const CHARACTER_OPTIONS = ["nova", "vesper", "kaelii", "perlah"] as const;
 const SLOT_ORDER = ["red-1", "blue-1", "red-2", "blue-2"];
 const TEAM_ORDER = ["red", "blue"] as const;
 
@@ -34,15 +38,15 @@ export function renderLobbyShell(): string {
               <span>Playtest Room</span>
               <strong data-room-code></strong>
             </div>
-            <div class="online-panel__field online-lobby-mode">
-              <label for="mode-select">
+            <div class="online-lobby-mode">
+              <label>
                 Mode
-                <span>Red captain controls mode</span>
+                <span>Host controls mode</span>
               </label>
-              <select id="mode-select" data-mode-select aria-label="Mode - Red captain controls mode">
-                <option value="2v2">2v2</option>
-                <option value="1v1">1v1</option>
-              </select>
+              <div class="online-mode-toggle" role="group" aria-label="Mode - Host controls mode">
+                <button type="button" data-mode-choice="1v1">Duel<span>1 fighter per side</span></button>
+                <button type="button" data-mode-choice="2v2">Doubles<span>2 fighters per side</span></button>
+              </div>
             </div>
           </div>
           <p class="online-panel__status" data-room-status></p>
@@ -51,6 +55,18 @@ export function renderLobbyShell(): string {
           <div class="online-panel__actions">
             <button type="button" data-ready-toggle>Ready</button>
           </div>
+        </div>
+        <div class="online-character-picker" data-character-picker hidden>
+          <section class="online-character-picker__panel" role="dialog" aria-modal="true" aria-label="Choose character">
+            <header>
+              <div>
+                <span>Choose Fighter</span>
+                <strong data-character-picker-slot>Seat</strong>
+              </div>
+              <button type="button" data-character-picker-close aria-label="Close character picker">Close</button>
+            </header>
+            <div class="online-character-picker__options" data-character-picker-options></div>
+          </section>
         </div>
       </aside>
     </section>
@@ -63,11 +79,16 @@ export function renderPlayerRows(players: readonly PlayerSnapshot[], localSessio
 
 export function renderSlotRows(
   slots: readonly LobbySlotView[],
-  localRole: string,
-  canUseLobbyControls: boolean,
+  localSessionId: string,
+  phase: string,
 ): string {
   const sortedSlots = [...slots].sort((left, right) => slotSortValue(left.slotId) - slotSortValue(right.slotId));
-  return TEAM_ORDER.map((team) => renderTeamColumn(team, sortedSlots, localRole, canUseLobbyControls)).join("");
+  const canUseLobbyControls = phase === "lobby" || phase === "ready";
+  return TEAM_ORDER.map((team) => renderTeamColumn(team, sortedSlots, localSessionId, canUseLobbyControls)).join("");
+}
+
+export function renderCharacterPickerOptions(selectedCharacterId: string): string {
+  return LOBBY_CHARACTER_CARDS.map((card) => renderCharacterChoice(card, selectedCharacterId)).join("");
 }
 
 export function escapeHtml(value: string): string {
@@ -111,7 +132,7 @@ function playerStateText(player: PlayerSnapshot): string {
 function renderTeamColumn(
   team: "red" | "blue",
   slots: readonly LobbySlotView[],
-  localRole: string,
+  localSessionId: string,
   canUseLobbyControls: boolean,
 ): string {
   const teamSlots = slots.filter((slot) => slot.team === team);
@@ -122,7 +143,7 @@ function renderTeamColumn(
         <span>${escapeHtml(teamControlText(teamSlots, team))}</span>
       </header>
       <div class="online-team-column__slots">
-        ${teamSlots.map((slot) => renderSlotRow(slot, localRole, canUseLobbyControls)).join("")}
+        ${teamSlots.map((slot) => renderSlotRow(slot, localSessionId, canUseLobbyControls)).join("")}
       </div>
     </section>
   `;
@@ -130,39 +151,81 @@ function renderTeamColumn(
 
 function renderSlotRow(
   slot: LobbySlotView,
-  localRole: string,
+  localSessionId: string,
   canUseLobbyControls: boolean,
 ): string {
-  const editable = slot.active && canUseLobbyControls && canLocalPlayerEditSlot(localRole, slot.slotId);
-  const disabled = editable ? "" : " disabled";
+  const card = lobbyCharacterCardFor(slot.characterId);
+  const ownedByLocal = canLocalPlayerEditSlot(slot.ownerSessionId, localSessionId);
+  const canClaim = slot.active && canUseLobbyControls && !slot.ownerSessionId;
+  const canPick = slot.active && canUseLobbyControls && ownedByLocal;
+  const action = seatAction(slot, canClaim, canPick);
+  const disabled = action === "locked" ? " disabled" : "";
   return `
-    <label class="${escapeHtml(slotClass(slot, editable))}">
-      <div>
-        <strong>${escapeHtml(slotLabel(slot.slotId))}</strong>
-        <span>${escapeHtml(slotSeatText(slot))}</span>
+    <article class="${escapeHtml(slotClass(slot, ownedByLocal, canClaim))}" data-slot-id="${escapeHtml(slot.slotId)}">
+      <div class="online-seat__unit">
+        <img src="${escapeHtml(card.unitImage)}" alt="${escapeHtml(`${card.name} unit art`)}" loading="eager" />
       </div>
-      <select data-slot-select="true" data-slot-id="${escapeHtml(slot.slotId)}"${disabled}>
-        ${characterOptions(slot.characterId)}
-      </select>
-      <em>${escapeHtml(slotStateText(slot))}</em>
-    </label>
+      <div class="online-seat__body">
+        <div class="online-seat__topline">
+          <div>
+            <strong>${escapeHtml(slotLabel(slot.slotId))}</strong>
+            <span>${escapeHtml(slotSeatText(slot))}</span>
+          </div>
+          <em>${escapeHtml(slotStateText(slot))}</em>
+        </div>
+        <div class="online-seat__loadout">
+          ${renderLoadoutPart("Pilot", card.name, card.pilotImage, card.needsLobbyArt)}
+          ${renderLoadoutPart("Ride", card.rideName, card.rideImage, false)}
+        </div>
+        <button type="button" data-seat-action="${action}" data-slot-id="${escapeHtml(slot.slotId)}"${disabled}>
+          ${escapeHtml(actionLabel(action, slot))}
+        </button>
+      </div>
+    </article>
   `;
 }
 
-function characterOptions(selectedCharacterId: string): string {
-  return CHARACTER_OPTIONS.map((characterId) => {
-    const selected = characterId === selectedCharacterId ? " selected" : "";
-    return `<option value="${characterId}"${selected}>${capitalize(characterId)}</option>`;
-  }).join("");
+function renderLoadoutPart(label: string, value: string, image: string, needsLobbyArt: boolean): string {
+  return `
+    <figure class="online-seat__part">
+      <img src="${escapeHtml(image)}" alt="${escapeHtml(`${value} ${label.toLowerCase()}`)}" loading="eager" />
+      <figcaption>
+        <span>${escapeHtml(label)}</span>
+        <strong>${escapeHtml(value)}</strong>
+        ${needsLobbyArt ? "<em>Lobby art needed</em>" : ""}
+      </figcaption>
+    </figure>
+  `;
+}
+
+function renderCharacterChoice(card: LobbyCharacterCard, selectedCharacterId: string): string {
+  const selected = card.characterId === selectedCharacterId;
+  return `
+    <button type="button" class="online-character-choice${selected ? " online-character-choice--selected" : ""}" data-character-choice="${escapeHtml(card.characterId)}">
+      <span class="online-character-choice__unit">
+        <img src="${escapeHtml(card.unitImage)}" alt="${escapeHtml(`${card.name} unit art`)}" loading="eager" />
+      </span>
+      <span class="online-character-choice__meta">
+        <strong>${escapeHtml(card.name)}</strong>
+        <span>${escapeHtml(card.rideName)}</span>
+      </span>
+      <span class="online-character-choice__parts">
+        <img src="${escapeHtml(card.pilotImage)}" alt="${escapeHtml(`${card.name} pilot`)}" loading="eager" />
+        <img src="${escapeHtml(card.rideImage)}" alt="${escapeHtml(`${card.rideName} ride`)}" loading="eager" />
+      </span>
+    </button>
+  `;
 }
 
 function teamControlText(slots: readonly LobbySlotView[], team: "red" | "blue"): string {
-  const activeSlot = slots.find((slot) => slot.active);
-  if (!activeSlot?.ownerSessionId) {
-    return `Open ${team} captain seat`;
+  const activeSlots = slots.filter((slot) => slot.active);
+  const openCount = activeSlots.filter((slot) => !slot.ownerSessionId).length;
+  if (openCount > 0) {
+    return `${openCount} open ${team} seat${openCount === 1 ? "" : "s"}`;
   }
 
-  return `${activeSlot.displayName || capitalize(team)} controls this team`;
+  const readyCount = activeSlots.filter((slot) => slot.ready).length;
+  return `${capitalize(team)} is ${readyCount === activeSlots.length ? "ready" : "picking"}`;
 }
 
 function slotSeatText(slot: LobbySlotView): string {
@@ -171,10 +234,10 @@ function slotSeatText(slot: LobbySlotView): string {
   }
 
   if (!slot.ownerSessionId) {
-    return `Open ${slot.team} captain seat`;
+    return `Open ${slot.team} seat`;
   }
 
-  return slot.displayName || "Captain";
+  return slot.displayName || "Player";
 }
 
 function slotStateText(slot: LobbySlotView): string {
@@ -185,13 +248,44 @@ function slotStateText(slot: LobbySlotView): string {
   return slot.ready ? "Ready" : "Picking";
 }
 
-function slotClass(slot: LobbySlotView, editable: boolean): string {
+function seatAction(slot: LobbySlotView, canClaim: boolean, canPick: boolean): "claim" | "pick" | "locked" {
+  if (canPick) {
+    return "pick";
+  }
+
+  if (canClaim) {
+    return "claim";
+  }
+
+  return "locked";
+}
+
+function actionLabel(action: "claim" | "pick" | "locked", slot: LobbySlotView): string {
+  if (!slot.active) {
+    return "Closed";
+  }
+
+  if (action === "claim") {
+    return "Claim Seat";
+  }
+
+  if (action === "pick") {
+    return "Change Fighter";
+  }
+
+  return slot.ownerSessionId ? "Occupied" : "Closed";
+}
+
+function slotClass(slot: LobbySlotView, ownedByLocal: boolean, claimable: boolean): string {
   const classes = ["online-slot", `online-slot--${slot.team}`];
   if (!slot.active) {
     classes.push("online-slot--inactive");
   }
-  if (editable) {
-    classes.push("online-slot--editable");
+  if (ownedByLocal) {
+    classes.push("online-slot--owned");
+  }
+  if (claimable) {
+    classes.push("online-slot--claimable");
   }
 
   return classes.join(" ");

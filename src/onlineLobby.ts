@@ -43,7 +43,8 @@ export function mountOnlineLobby(options: OnlineLobbyOptions = {}) {
     reconnect: () => void connectAutoRoom(),
     displayNameChanged: (value) => room?.send("setDisplayName", value),
     modeChanged: (mode) => room?.send("setMode", { mode }),
-    slotChanged: (slotId, characterId) => room?.send("selectCharacter", { slotId, characterId }),
+    seatClaimed: (slotId) => room?.send("claimSeat", { slotId }),
+    characterSelected: (slotId, characterId) => room?.send("selectCharacter", { slotId, characterId }),
     readyClicked: () => {
       localReady = !localReady;
       room?.send("setReady", { ready: localReady });

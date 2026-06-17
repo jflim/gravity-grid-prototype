@@ -335,14 +335,13 @@ I am requesting a v1 contract change.
 <li>Ready checks.</li>
 <li>Placeholder reward/nameplate state.</li>
 <li>Server-owned combat preview state.</li>
-<li>Auto-room captain lobby with a shared server-owned gameplay preview screen.</li>
+<li>Auto-room host/seat lobby with Duel/Doubles mode, visual character selection, ready checks, and a shared server-owned gameplay preview screen.</li>
 <li>One-terminal public playtest launcher.</li>
 </ul>
 <p>Not done:</p>
 <ul>
-<li>Full online seat ownership.</li>
-<li>Full online 1v1/2v2 room settings.</li>
-<li>Online character selection wired to match start.</li>
+<li>Full online room settings beyond Duel/Doubles, including best-of-1/best-of-3 and map select/random.</li>
+<li>Online character selection wired into the real Phaser match start.</li>
 <li>Phaser match driven by Colyseus room state.</li>
 <li>Server-authoritative movement/projectile/terrain/damage.</li>
 <li>Full round/match scoring online.</li>
@@ -353,9 +352,8 @@ I am requesting a v1 contract change.
 <ol>
 <li>Fix playtest tunnel reliability by forcing Cloudflare Tunnel HTTP/2.</li>
 <li>Build real room settings for 1v1/2v2, best-of-1/best-of-3, and map select/random.</li>
-<li>Build seat ownership and character selection.</li>
-<li>Build ready/start flow using selected seats and settings.</li>
-<li>Wire Phaser match start from room state.</li>
+<li>Add remaining room settings for best-of-1/best-of-3 and map select/random.</li>
+<li>Wire Phaser match start from host settings, claimed seats, and selected characters.</li>
 <li>Move turn order, movement, aim, fire, projectile, terrain, damage, KO, and round result to server authority.</li>
 <li>Validate 1v1 online.</li>
 <li>Validate 2v2 format online.</li>

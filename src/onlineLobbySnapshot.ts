@@ -29,8 +29,7 @@ export type CombatVehicleSnapshot = {
 export type RoomSnapshot = {
   roomCode: string;
   mode: string;
-  redCaptainSessionId: string;
-  blueCaptainSessionId: string;
+  hostSessionId: string;
   spectatorSessionIds: string[];
   phase: string;
   status: string;
@@ -48,8 +47,7 @@ export type RoomSnapshot = {
 type RoomStateSource = {
   roomCode?: string;
   mode?: string;
-  redCaptainSessionId?: string;
-  blueCaptainSessionId?: string;
+  hostSessionId?: string;
   spectatorSessionIds?: string[] | Iterable<string>;
   phase?: string;
   status?: string;
@@ -71,8 +69,7 @@ export function getRoomSnapshot(state: unknown): RoomSnapshot {
   return {
     roomCode: source.roomCode ?? "",
     mode: source.mode ?? "2v2",
-    redCaptainSessionId: source.redCaptainSessionId ?? "",
-    blueCaptainSessionId: source.blueCaptainSessionId ?? "",
+    hostSessionId: source.hostSessionId ?? "",
     spectatorSessionIds: Array.from(source.spectatorSessionIds ?? []),
     phase: source.phase ?? "lobby",
     status: source.status ?? "",

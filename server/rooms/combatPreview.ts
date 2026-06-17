@@ -19,9 +19,7 @@ export function startCombatPreview(state: GravityCanyonState): void {
 
   const previewSlots = buildPreviewSlots({
     mode: state.mode,
-    redCaptainSessionId: state.redCaptainSessionId,
-    blueCaptainSessionId: state.blueCaptainSessionId,
-    selectedCharacters: selectedCharactersFor(state),
+    slots: Array.from(state.slots.values()),
   });
 
   for (const slot of previewSlots) {
@@ -103,12 +101,6 @@ export function createPreviewVehicle(
 
 export function teamForSlot(slotId: VehicleId): TeamId {
   return slotId.startsWith("red-") ? "red" : "blue";
-}
-
-function selectedCharactersFor(state: GravityCanyonState): Partial<Record<VehicleId, string>> {
-  return Object.fromEntries(
-    Array.from(state.slots.entries()).map(([slotId, slot]) => [slotId, slot.selectedCharacterId]),
-  ) as Partial<Record<VehicleId, string>>;
 }
 
 function nextAliveVehicle(state: GravityCanyonState, currentVehicleId: string): CombatVehicleState | undefined {

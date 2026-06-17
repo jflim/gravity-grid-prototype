@@ -51,8 +51,7 @@ test("previewFireForClient advances the turn after damaging the first living ene
 function readyState(): GravityCanyonState {
   const state = new GravityCanyonState();
   state.mode = "1v1";
-  state.redCaptainSessionId = "red-session";
-  state.blueCaptainSessionId = "blue-session";
+  state.hostSessionId = "red-session";
   state.players.set("red-session", playerState("red-session", "Red"));
   state.players.set("blue-session", playerState("blue-session", "Blue"));
   state.slots.set("red-1", slotState("red-1", "red-session", "kaelii"));

@@ -9,7 +9,7 @@ test("getRoomSnapshot converts room state into plain lobby data", () => {
       {
         sessionId: "red-session",
         displayName: "Red",
-        role: "red-captain",
+        role: "host",
         ready: true,
         inventory: ["Canyon Rookie", "Bridge Breaker"],
       },
@@ -19,7 +19,7 @@ test("getRoomSnapshot converts room state into plain lobby data", () => {
       {
         sessionId: "blue-session",
         displayName: "Blue",
-        role: "blue-captain",
+        role: "player",
         ready: false,
       },
     ],
@@ -56,12 +56,14 @@ test("getRoomSnapshot converts room state into plain lobby data", () => {
     roomCode: "auto-room",
     mode: "1v1",
     phase: "ready",
+    hostSessionId: "red-session",
     players,
     slots,
     vehicles,
   });
 
   assert.equal(snapshot.roomCode, "auto-room");
+  assert.equal(snapshot.hostSessionId, "red-session");
   assert.equal(snapshot.mode, "1v1");
   assert.equal(snapshot.phase, "ready");
   assert.equal(snapshot.players[0]?.displayName, "Red");
