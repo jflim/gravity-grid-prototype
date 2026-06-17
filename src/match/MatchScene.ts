@@ -41,8 +41,11 @@ import {
   TERRAIN_CHANGE_SETTLE_PADDING,
   TERRAIN_STEP,
   TURN_SECONDS,
+  VEHICLE_FALL_GRAVITY_PIXELS_PER_SECOND_SQUARED,
   VEHICLE_HALF_HEIGHT,
   VEHICLE_HALF_WIDTH,
+  VEHICLE_MAX_FALL_SPEED_PIXELS_PER_SECOND,
+  VEHICLE_SLIDE_SPEED_PIXELS_PER_SECOND,
   VOID_DROP_HORIZONTAL_PADDING,
   VOID_SURFACE_Y,
   V1_WORLD_HEIGHT as WORLD_HEIGHT,
@@ -81,6 +84,7 @@ import { createMatchViewCollaborators } from "./MatchViewFactory";
 import { MatchViewStateBuilder } from "./MatchViewStateBuilder";
 import { PlayerActionController } from "./PlayerActionController";
 import { MatchInputController, type MatchInputSnapshot } from "./MatchInputController";
+import { createBrowserSoundEngine, MatchSoundController } from "./audio/MatchSoundController";
 import type {
   ImpactPreview,
   ProjectileState,
@@ -88,7 +92,7 @@ import type {
 } from "./MatchTypes";
 import {
   buildPlayableTerrain,
-  DEFAULT_DEMO_MAP_ID,
+  demoMapIdFromSearch,
   playableMapById,
   type PlayableTerrain,
 } from "../playableMaps";
@@ -108,6 +112,11 @@ const VEHICLE_SETTLEMENT_TUNING = {
   slopeStep: SETTLEMENT_SLOPE_STEP,
   maxSlopeIterations: SETTLEMENT_MAX_SLOPE_ITERATIONS,
 };
+const VEHICLE_MOTION_TUNING = {
+  slideSpeedPixelsPerSecond: VEHICLE_SLIDE_SPEED_PIXELS_PER_SECOND,
+  fallGravityPixelsPerSecondSquared: VEHICLE_FALL_GRAVITY_PIXELS_PER_SECOND_SQUARED,
+  maxFallSpeedPixelsPerSecond: VEHICLE_MAX_FALL_SPEED_PIXELS_PER_SECOND,
+};
 const USE_UNIT_CONCEPT_PREVIEW = shouldUseConceptPreviewAssets(window.location.search);
 const USE_STYLE_REFERENCE_BACKGROUND = shouldUseStyleReferenceBackground(window.location.search);
 const MATCH_ASSET_LOAD_PLAN = buildMatchAssetLoadPlan({
@@ -123,6 +132,13 @@ const EMPTY_MATCH_INPUT: MatchInputSnapshot = {
   chargeHeld: false,
   resetPressed: false,
   collisionZonesTogglePressed: false,
+  soundMuteTogglePressed: false,
+};
+
+type VehicleDamageSnapshot = {
+  hp: number;
+  alive: boolean;
+  defeatReason?: VehicleState["defeatReason"];
 };
 
 export class MatchScene extends Phaser.Scene {
@@ -172,6 +188,9 @@ export class MatchScene extends Phaser.Scene {
     turnSeconds: TURN_SECONDS,
     windSource: () => Phaser.Math.FloatBetween(-1, 1),
   });
+  private readonly soundController = new MatchSoundController({
+    engine: createBrowserSoundEngine(),
+  });
   private readonly roundBuilder = new RoundBuilder({
     maxHp: MAX_HP,
     maxMoveUnits: MAX_MOVE_UNITS,
@@ -209,9 +228,15 @@ export class MatchScene extends Phaser.Scene {
     setChargeState: (charge) => this.turnController.setChargeState(charge),
     fire: (vehicle, power) => this.fire(vehicle, power),
     resetCharge: () => this.turnController.resetCharge(),
-    onVehicleMoved: () => this.frameBattlefield(0),
-    onVehicleDroveIntoVoid: (vehicle) => {
-      this.shotResult = `${vehicle.username} drove into the void.`;
+    onVehicleMoved: () => {
+      this.playerMovedThisFrame = true;
+      this.frameBattlefield(0);
+    },
+    onVehicleMotionStarted: (vehicle) => {
+      this.shotResult =
+        vehicle.motion?.kind === "sliding"
+          ? `${vehicle.username} started sliding.`
+          : `${vehicle.username} started falling.`;
     },
   });
   private vehicles: VehicleState[] = [];
@@ -219,7 +244,9 @@ export class MatchScene extends Phaser.Scene {
   private impactPreview?: ImpactPreview;
   private shotResult = "";
   private roundOver = false;
+  private waitingForVehicleMotionResolution = false;
   private showCombatHulls = shouldShowCombatHulls(window.location.search);
+  private playerMovedThisFrame = false;
 
   private inputController?: MatchInputController;
   private cameraController?: MatchCameraController;
@@ -233,9 +260,14 @@ export class MatchScene extends Phaser.Scene {
   });
   private readonly vehicleSettlementController = new VehicleSettlementController({
     tuning: VEHICLE_SETTLEMENT_TUNING,
+    motionTuning: VEHICLE_MOTION_TUNING,
     visibleVoidTopY: () => this.terrainController.visibleVoidTopY,
     terrainBreakthroughY: () => this.terrainBreakthroughY(),
     surfaceAt: (x) => this.surfaceAt(x),
+    hitZoneBottom: (vehicle) => {
+      const hitZone = this.vehicleHitZoneFor(vehicle);
+      return hitZone.centerY + hitZone.height / 2;
+    },
     createVoidDropPresentation: (input) => this.voidZoneController.createVoidDropPresentation(input),
   });
   private matchView?: MatchView;
@@ -322,7 +354,31 @@ export class MatchScene extends Phaser.Scene {
       this.setCollisionZonesVisible(!this.showCombatHulls);
     }
 
+    if (input.soundMuteTogglePressed) {
+      this.setSoundMuted(this.soundController.toggleMuted());
+    }
+
     if (this.roundOver) {
+      return;
+    }
+
+    const motionEvents = this.updateVehicleMotions(dt);
+    if (this.vehicleSettlementController.hasActiveVehicleMotion(this.vehicles)) {
+      this.frameBattlefield(0);
+      this.drawWorld();
+      return;
+    }
+
+    if (this.waitingForVehicleMotionResolution) {
+      this.waitingForVehicleMotionResolution = false;
+      this.queuePostMotionResolution(900);
+      this.drawWorld();
+      return;
+    }
+
+    if (motionEvents.length > 0) {
+      this.queuePostMotionResolution(900);
+      this.drawWorld();
       return;
     }
 
@@ -343,7 +399,13 @@ export class MatchScene extends Phaser.Scene {
       return;
     }
 
-    if (this.turnController.tick(dt) === "timed-out") {
+    const tickResult = this.turnController.tick(dt);
+    this.soundController.updateTurnTick({
+      activeVehicleId: active.id,
+      turnTime: this.turnController.turnTime,
+      canAct: true,
+    });
+    if (tickResult === "timed-out") {
       this.shotResult = `${active.username} timed out.`;
       this.advanceTurn();
       return;
@@ -355,7 +417,12 @@ export class MatchScene extends Phaser.Scene {
       return;
     }
 
+    this.playerMovedThisFrame = false;
     this.playerActionController.handleVehicleInput(active, input, dt);
+    this.soundController.updateMovement({
+      moving: this.playerMovedThisFrame,
+      deltaSeconds: dt,
+    });
     this.drawWorld();
   }
 
@@ -365,6 +432,7 @@ export class MatchScene extends Phaser.Scene {
       spaceKey: this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
       resetKey: this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.R),
       hullToggleKey: this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.H),
+      soundMuteKey: this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.M),
       justDown: (key) => Phaser.Input.Keyboard.JustDown(key as Phaser.Input.Keyboard.Key),
     });
   }
@@ -376,9 +444,15 @@ export class MatchScene extends Phaser.Scene {
     this.drawWorld();
   }
 
+  private setSoundMuted(muted: boolean): void {
+    this.shotResult = `Sound ${muted ? "muted" : "on"}.`;
+    this.drawWorld();
+  }
+
   private startRound(): void {
     this.roundEventScheduler.clear();
     this.roundOver = false;
+    this.waitingForVehicleMotionResolution = false;
     this.matchView?.clearCombatMarkers();
     const round = this.roundBuilder.build({
       playableTerrain: this.buildDefaultDemoMap(),
@@ -400,7 +474,8 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private buildDefaultDemoMap(): PlayableTerrain {
-    return buildPlayableTerrain(playableMapById(DEFAULT_DEMO_MAP_ID), { voidSurfaceY: VOID_SURFACE_Y });
+    const demoMapId = demoMapIdFromSearch(window.location.search);
+    return buildPlayableTerrain(playableMapById(demoMapId), { voidSurfaceY: VOID_SURFACE_Y });
   }
 
   private beginTurn(): void {
@@ -410,6 +485,7 @@ export class MatchScene extends Phaser.Scene {
     }
 
     this.turnController.beginTurn();
+    this.soundController.beginTurn(active.id, this.turnController.turnTime);
     this.prepareStartedTurn(active);
   }
 
@@ -433,6 +509,7 @@ export class MatchScene extends Phaser.Scene {
     const shot = this.shotFlowController.fire(active, power);
     this.projectile = shot.projectile;
     this.shotResult = shot.shotResult;
+    this.soundController.playWeaponFire(active.classId);
   }
 
   private updateProjectile(dt: number): void {
@@ -440,6 +517,7 @@ export class MatchScene extends Phaser.Scene {
       return;
     }
 
+    const damageBefore = this.vehicleDamageSnapshot();
     const result = this.shotFlowController.advanceProjectile({
       projectile: this.projectile,
       vehicles: this.vehicles,
@@ -454,6 +532,12 @@ export class MatchScene extends Phaser.Scene {
     this.projectile = result.projectile;
     this.impactPreview = result.impactPreview;
     this.shotResult = result.shotResult;
+    this.playProjectileResolutionSounds(result.impactPreview !== undefined, damageBefore);
+    if (this.vehicleSettlementController.hasActiveVehicleMotion(this.vehicles)) {
+      this.waitingForVehicleMotionResolution = true;
+      return;
+    }
+
     const action = result.nextEvent.kind === "end-round" ? () => this.endRound() : () => this.advanceTurn();
     this.roundEventScheduler.queue(result.nextEvent.delayMs, action);
   }
@@ -474,6 +558,7 @@ export class MatchScene extends Phaser.Scene {
     }
 
     this.projectile = undefined;
+    this.waitingForVehicleMotionResolution = false;
     this.turnController.resetActionState();
 
     const decision = this.matchController.resolveNextTurn({
@@ -495,7 +580,7 @@ export class MatchScene extends Phaser.Scene {
   }
 
   private isMovable(vehicle: VehicleState): boolean {
-    return this.matchController.isMovable(vehicle, this.turnController.turnOrder);
+    return !vehicle.motion && this.matchController.isMovable(vehicle, this.turnController.turnOrder);
   }
 
   private isAlive(vehicle: VehicleState): boolean {
@@ -517,6 +602,7 @@ export class MatchScene extends Phaser.Scene {
 
     this.roundEventScheduler.clear();
     this.roundOver = true;
+    this.waitingForVehicleMotionResolution = false;
     this.projectile = undefined;
     this.turnController.endRound();
 
@@ -598,6 +684,73 @@ export class MatchScene extends Phaser.Scene {
 
   private vehicleHitZoneFor(vehicle: VehicleState): VehicleHitZone {
     return this.vehicleGeometry.hitZoneFor(vehicle);
+  }
+
+  private updateVehicleMotions(deltaSeconds: number): string[] {
+    const aliveBeforeMotion = new Set(
+      this.vehicles.filter((vehicle) => vehicle.alive).map((vehicle) => vehicle.id),
+    );
+    const motionEvents = this.vehicleSettlementController.updateVehicleMotion(this.vehicles, deltaSeconds);
+    if (motionEvents.length <= 0) {
+      return motionEvents;
+    }
+
+    for (const vehicle of this.vehicles) {
+      if (aliveBeforeMotion.has(vehicle.id) && !vehicle.alive && vehicle.defeatReason === "void") {
+        this.matchView?.addCombatMarkerForVehicle(vehicle, "bunged", "VOID DROPPED");
+        this.soundController.playVoidDrop();
+      }
+    }
+
+    this.shotResult = motionEvents.join(" / ");
+    return motionEvents;
+  }
+
+  private queuePostMotionResolution(delayMs: number): void {
+    const action = this.winningTeam() ? () => this.endRound() : () => this.advanceTurn();
+    this.roundEventScheduler.queue(delayMs, action);
+  }
+
+  private vehicleDamageSnapshot(): Map<string, VehicleDamageSnapshot> {
+    return new Map(
+      this.vehicles.map((vehicle) => [
+        vehicle.id,
+        {
+          hp: vehicle.hp,
+          alive: vehicle.alive,
+          defeatReason: vehicle.defeatReason,
+        },
+      ]),
+    );
+  }
+
+  private playProjectileResolutionSounds(hasImpact: boolean, damageBefore: Map<string, VehicleDamageSnapshot>): void {
+    if (hasImpact) {
+      this.soundController.playImpact();
+    }
+
+    let hit = false;
+    let damageKo = false;
+    for (const vehicle of this.vehicles) {
+      const previous = damageBefore.get(vehicle.id);
+      if (!previous || vehicle.hp >= previous.hp) {
+        continue;
+      }
+
+      if (previous.alive && !vehicle.alive && vehicle.defeatReason === "damage") {
+        damageKo = true;
+      } else {
+        hit = true;
+      }
+    }
+
+    if (hit) {
+      this.soundController.playHit();
+    }
+
+    if (damageKo) {
+      this.soundController.playDamageKo();
+    }
   }
 }
 

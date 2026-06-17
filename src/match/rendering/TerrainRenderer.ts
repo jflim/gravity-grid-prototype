@@ -123,10 +123,6 @@ export class TerrainRenderer {
           break;
         }
         case "shelf": {
-          if (pass === "highlight") {
-            this.gfx.lineStyle(5, 0xffd166, 0.22);
-            this.gfx.lineBetween(landmark.x - landmark.width / 2, landmark.y, landmark.x + landmark.width / 2, landmark.y);
-          }
           break;
         }
         case "spire": {

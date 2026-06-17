@@ -141,7 +141,10 @@ export class MatchView {
   private drawHud(state: MatchViewState): void {
     const active = state.activeVehicle ?? state.vehicles[0];
     this.options.collaborators.commandDeck.draw({
-      active: active && !state.roundComplete && !state.turnCommitted ? active : undefined,
+      active:
+        active && this.options.isMovable(active) && !state.roundComplete && !state.turnCommitted
+          ? active
+          : undefined,
       roundComplete: state.roundComplete,
       shotResult: state.shotResult,
       projectileInFlight: Boolean(state.projectile),

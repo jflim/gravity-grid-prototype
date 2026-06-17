@@ -57,6 +57,12 @@ export class VehicleRenderer {
 
     for (const vehicle of input.vehicles) {
       const defeatPresentation = vehicle.alive ? undefined : defeatPresentationFor(vehicle.defeatReason);
+      const motionLabel =
+        vehicle.motion?.kind === "falling"
+          ? "FALLING"
+          : vehicle.motion?.kind === "sliding"
+            ? "SLIDING"
+            : undefined;
       const alpha = vehicle.alive ? 1 : defeatPresentation?.alpha ?? 0.9;
       const voidDropPosition =
         vehicle.voidDropPresentation && defeatPresentation?.label === "VOID DROPPED"
@@ -70,7 +76,10 @@ export class VehicleRenderer {
         !input.roundOver &&
         !input.turnCommitted &&
         input.isMovable(vehicle);
-      const slopeAngle = vehicle.defeatReason === "void" ? 0 : this.terrainAngleAt(vehicle.x);
+      const slopeAngle =
+        vehicle.defeatReason === "void" || vehicle.motion?.kind === "falling"
+          ? 0
+          : this.terrainAngleAt(vehicle.x);
       const koTilt = vehicle.alive ? 0 : vehicle.team === "red" ? -8 : 8;
 
       this.overlays.drawFootingMarker(vehicle, active);
@@ -87,7 +96,7 @@ export class VehicleRenderer {
       });
 
       if (input.showCombatHulls && vehicle.alive) {
-        this.overlays.drawCombatHull(vehicle, active);
+        this.overlays.drawCombatHull(vehicle, active, slopeAngle);
       }
 
       if (vehicle.alive || vehicle.defeatReason === "damage") {
@@ -100,7 +109,7 @@ export class VehicleRenderer {
         renderY,
         overlayLayout,
         worldUiScale,
-        defeatPresentation?.label,
+        motionLabel ?? defeatPresentation?.label,
         active,
         input.turnTime,
       );

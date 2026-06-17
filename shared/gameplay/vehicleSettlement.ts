@@ -19,6 +19,16 @@ export interface VehicleSettlementVehicle {
   alive: boolean;
 }
 
+export type VehicleSettlementMotion =
+  | {
+      kind: "falling";
+      velocityY: number;
+    }
+  | {
+      kind: "sliding";
+      direction: -1 | 1;
+    };
+
 export interface VehicleSettlementInput {
   vehicle: VehicleSettlementVehicle;
   tuning: VehicleSettlementTuning;
@@ -41,11 +51,17 @@ export interface VehicleSettlementResult {
   voidDropped: boolean;
   fallStartX: number;
   fallStartY: number;
+  motion?: VehicleSettlementMotion;
 }
 
 const FOOTING_SAMPLE_COUNT = 7;
 const MINIMUM_FOOTING_SUPPORT_RATIO = 2 / 3;
 const FOOTING_SURFACE_TOLERANCE = 8;
+
+interface FootingAnalysis {
+  terrainSamples: number;
+  stableSamples: number;
+}
 
 export function settleVehicleOnTerrain(input: VehicleSettlementInput): VehicleSettlementResult {
   if (!input.vehicle.alive) {
@@ -70,7 +86,7 @@ export function settleVehicleOnTerrain(input: VehicleSettlementInput): VehicleSe
       const left = input.surfaceAt(x - input.tuning.slopeSampleDistance);
       const right = input.surfaceAt(x + input.tuning.slopeSampleDistance);
       const slope = right - left;
-      if (Math.abs(slope) < input.tuning.slopeThreshold) {
+      if (!isSlopeTooSteep(slope, input.tuning.slopeThreshold)) {
         break;
       }
 
@@ -83,20 +99,45 @@ export function settleVehicleOnTerrain(input: VehicleSettlementInput): VehicleSe
   const fallStartX = x;
   const fallStartY = input.vehicle.y > 0 ? input.vehicle.y : input.fallbackFallStartY;
   const surface = input.surfaceAt(x);
-  const y = surface - input.tuning.vehicleHalfHeight;
+  const footing = analyzeFooting(input, x, surface);
 
-  if (surface >= input.tuning.deathSurfaceY || !hasEnoughFootingSupport(input, x, surface)) {
+  if (surface >= input.tuning.deathSurfaceY || !hasEnoughTerrainUnderFooting(footing)) {
+    return {
+      vehicleId: input.vehicle.id,
+      x,
+      y: fallStartY,
+      hp: input.vehicle.hp,
+      alive: true,
+      adjustedForSlope,
+      voidDropped: false,
+      fallStartX,
+      fallStartY,
+      motion: {
+        kind: "falling",
+        velocityY: 0,
+      },
+    };
+  }
+
+  const y = surface - input.tuning.vehicleHalfHeight;
+  const slideDirection = hasEnoughStableFooting(footing)
+    ? downhillDirectionForRest(input, x)
+    : downhillDirectionForFootprint(input, x);
+  if (slideDirection !== 0) {
     return {
       vehicleId: input.vehicle.id,
       x,
       y,
-      hp: 0,
-      alive: false,
-      defeatReason: "void",
+      hp: input.vehicle.hp,
+      alive: true,
       adjustedForSlope,
-      voidDropped: true,
+      voidDropped: false,
       fallStartX,
       fallStartY,
+      motion: {
+        kind: "sliding",
+        direction: slideDirection,
+      },
     };
   }
 
@@ -113,20 +154,58 @@ export function settleVehicleOnTerrain(input: VehicleSettlementInput): VehicleSe
   };
 }
 
-function hasEnoughFootingSupport(input: VehicleSettlementInput, x: number, centerSurface: number): boolean {
-  let supportedSamples = 0;
+function downhillDirectionForRest(input: VehicleSettlementInput, x: number): -1 | 0 | 1 {
+  const left = input.surfaceAt(x - input.tuning.slopeSampleDistance);
+  const right = input.surfaceAt(x + input.tuning.slopeSampleDistance);
+  const slope = right - left;
+  if (!isSlopeTooSteep(slope, input.tuning.slopeThreshold)) {
+    return 0;
+  }
+
+  return Math.sign(slope) as -1 | 1;
+}
+
+function downhillDirectionForFootprint(input: VehicleSettlementInput, x: number): -1 | 0 | 1 {
+  const left = input.surfaceAt(x - input.tuning.vehicleHalfWidth);
+  const right = input.surfaceAt(x + input.tuning.vehicleHalfWidth);
+  const slope = right - left;
+  if (isSlopeTooSteep(slope, input.tuning.slopeThreshold)) {
+    return Math.sign(slope) as -1 | 1;
+  }
+
+  return downhillDirectionForRest(input, x);
+}
+
+function analyzeFooting(input: VehicleSettlementInput, x: number, centerSurface: number): FootingAnalysis {
+  let terrainSamples = 0;
+  let stableSamples = 0;
 
   for (let sample = 0; sample < FOOTING_SAMPLE_COUNT; sample += 1) {
     const t = sample / (FOOTING_SAMPLE_COUNT - 1);
     const sampleX = x - input.tuning.vehicleHalfWidth + t * input.tuning.vehicleHalfWidth * 2;
     const sampleSurface = input.surfaceAt(sampleX);
 
+    if (sampleSurface < input.tuning.deathSurfaceY) {
+      terrainSamples += 1;
+    }
+
     if (surfaceSupportsFooting(input, sampleX, x, sampleSurface, centerSurface)) {
-      supportedSamples += 1;
+      stableSamples += 1;
     }
   }
 
-  return supportedSamples / FOOTING_SAMPLE_COUNT >= MINIMUM_FOOTING_SUPPORT_RATIO;
+  return {
+    terrainSamples,
+    stableSamples,
+  };
+}
+
+function hasEnoughTerrainUnderFooting(footing: FootingAnalysis): boolean {
+  return footing.terrainSamples / FOOTING_SAMPLE_COUNT >= MINIMUM_FOOTING_SUPPORT_RATIO;
+}
+
+function hasEnoughStableFooting(footing: FootingAnalysis): boolean {
+  return footing.stableSamples / FOOTING_SAMPLE_COUNT >= MINIMUM_FOOTING_SUPPORT_RATIO;
 }
 
 function surfaceSupportsFooting(
@@ -164,6 +243,10 @@ function shouldAdjustForSlope(input: VehicleSettlementInput): boolean {
     Math.abs(input.vehicle.x - input.changedX) <=
     input.changedRadius + input.tuning.vehicleHalfWidth + input.tuning.terrainChangePadding
   );
+}
+
+function isSlopeTooSteep(slope: number, threshold: number): boolean {
+  return Math.abs(slope) > threshold;
 }
 
 function clamp(value: number, min: number, max: number): number {

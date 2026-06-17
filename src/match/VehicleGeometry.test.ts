@@ -46,3 +46,36 @@ test("vehicle geometry converts combat hull into projectile hit zone", () => {
     height: hull.height,
   });
 });
+
+test("vehicle geometry exposes the same scaled rectangle for visible collision zones", () => {
+  const geometry = new VehicleGeometry();
+  const vehicle = vehicleState(1);
+  const hull = scaleBattlefieldCombatHull(vehicle.combatHull);
+
+  assert.deepEqual(geometry.combatHullBoundsFor(vehicle), {
+    left: vehicle.x + hull.offsetX - hull.width / 2,
+    top: vehicle.y + hull.offsetY - hull.height / 2,
+    width: hull.width,
+    height: hull.height,
+  });
+});
+
+test("vehicle geometry rotates visible collision-zone corners around the scaled hull center", () => {
+  const geometry = new VehicleGeometry();
+  const vehicle = vehicleState(1);
+  const center = geometry.combatHullCenter(vehicle);
+  const hull = scaleBattlefieldCombatHull(vehicle.combatHull);
+
+  assert.deepEqual(geometry.combatHullCornersFor(vehicle, 0), [
+    { x: center.x - hull.width / 2, y: center.y - hull.height / 2 },
+    { x: center.x + hull.width / 2, y: center.y - hull.height / 2 },
+    { x: center.x + hull.width / 2, y: center.y + hull.height / 2 },
+    { x: center.x - hull.width / 2, y: center.y + hull.height / 2 },
+  ]);
+
+  const rotated = geometry.combatHullCornersFor(vehicle, 90);
+  assert.ok(Math.abs(rotated[0]!.x - (center.x + hull.height / 2)) < 0.001);
+  assert.ok(Math.abs(rotated[0]!.y - (center.y - hull.width / 2)) < 0.001);
+  assert.ok(Math.abs(rotated[2]!.x - (center.x - hull.height / 2)) < 0.001);
+  assert.ok(Math.abs(rotated[2]!.y - (center.y + hull.width / 2)) < 0.001);
+});

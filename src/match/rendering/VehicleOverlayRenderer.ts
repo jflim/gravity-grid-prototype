@@ -42,20 +42,22 @@ export class VehicleOverlayRenderer {
     this.options.gfx.lineBetween(leftX, surface - 4, rightX, surface - 4);
   }
 
-  drawCombatHull(vehicle: VehicleState, active: boolean): void {
-    const hull = this.vehicleGeometry.combatHullFor(vehicle);
+  drawCombatHull(vehicle: VehicleState, active: boolean, angleDegrees: number): void {
+    const corners = this.vehicleGeometry.combatHullCornersFor(vehicle, angleDegrees);
     const hullCenter = this.vehicleGeometry.combatHullCenter(vehicle);
     const hullColor = active ? 0xffffff : vehicle.accent;
     const overlay = collisionZoneOverlayStyle(active, hullColor);
-    const left = hullCenter.x - hull.width / 2;
-    const top = hullCenter.y - hull.height / 2;
     this.options.collisionGfx.fillStyle(overlay.fillColor, overlay.fillAlpha);
-    this.options.collisionGfx.fillRoundedRect(left, top, hull.width, hull.height, 8);
+    this.options.collisionGfx.fillPoints(corners, true);
     this.options.collisionGfx.lineStyle(overlay.lineWidth, overlay.lineColor, overlay.lineAlpha);
-    this.options.collisionGfx.strokeRoundedRect(left, top, hull.width, hull.height, 8);
+    this.options.collisionGfx.strokePoints(corners, true, true);
     this.options.collisionGfx.lineStyle(overlay.crossWidth, overlay.crossColor, overlay.crossAlpha);
-    this.options.collisionGfx.lineBetween(left + 8, hullCenter.y, left + hull.width - 8, hullCenter.y);
-    this.options.collisionGfx.lineBetween(hullCenter.x, top + 8, hullCenter.x, top + hull.height - 8);
+    const topMidpoint = midpoint(corners[0]!, corners[1]!);
+    const rightMidpoint = midpoint(corners[1]!, corners[2]!);
+    const bottomMidpoint = midpoint(corners[2]!, corners[3]!);
+    const leftMidpoint = midpoint(corners[3]!, corners[0]!);
+    this.options.collisionGfx.lineBetween(leftMidpoint.x, leftMidpoint.y, rightMidpoint.x, rightMidpoint.y);
+    this.options.collisionGfx.lineBetween(topMidpoint.x, topMidpoint.y, bottomMidpoint.x, bottomMidpoint.y);
   }
 
   drawHpBar(
@@ -173,4 +175,11 @@ export class VehicleOverlayRenderer {
       .setDepth(16);
     this.vehicleLabels.push(turnTag);
   }
+}
+
+function midpoint(a: { x: number; y: number }, b: { x: number; y: number }): { x: number; y: number } {
+  return {
+    x: (a.x + b.x) / 2,
+    y: (a.y + b.y) / 2,
+  };
 }

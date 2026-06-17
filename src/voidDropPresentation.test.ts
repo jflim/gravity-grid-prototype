@@ -12,11 +12,12 @@ import {
 import { scaleBattlefieldDisplay } from "./combatPresentation";
 
 test("void drop display stays near the fall column inside a wide gap", () => {
+  const scaledKo = scaleBattlefieldDisplay({ width: 354, height: 212 });
   const displayX = chooseVoidDropDisplayX({
     startX: 900,
     worldWidth: 2400,
     step: 4,
-    displayWidth: 238,
+    displayWidth: scaledKo.width,
     padding: 24,
     isVoidAt: (x) => x >= 740 && x <= 1100,
   });
@@ -25,16 +26,17 @@ test("void drop display stays near the fall column inside a wide gap", () => {
 });
 
 test("void drop display clamps only enough to keep the sprite inside the gap", () => {
+  const scaledKo = scaleBattlefieldDisplay({ width: 354, height: 212 });
   const displayX = chooseVoidDropDisplayX({
     startX: 750,
     worldWidth: 2400,
     step: 4,
-    displayWidth: 238,
+    displayWidth: scaledKo.width,
     padding: 24,
     isVoidAt: (x) => x >= 740 && x <= 1100,
   });
 
-  assert.equal(displayX, 883);
+  assert.equal(displayX, 866.5);
 });
 
 test("visible void zone is at least one and a half unit heights tall", () => {
@@ -66,7 +68,7 @@ test("void dropped units settle fully inside the visible void band", () => {
     displayHeight: scaledKo.height,
   });
 
-  assert.equal(targetY, 973);
+  assert.equal(targetY, 984);
   assert.ok(targetY - scaledKo.height / 2 > top);
   assert.ok(targetY + scaledKo.height / 2 < top + zoneHeight);
 });

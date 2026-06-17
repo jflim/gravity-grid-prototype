@@ -1,6 +1,9 @@
 import type { ProjectileKinematics } from "../../shared/gameplay/projectile.js";
+import type { VehicleSettlementMotion } from "../../shared/gameplay/vehicleSettlement.js";
 import type { DemoUnitDefinition } from "../../shared/content/v1Units.js";
 import type { DefeatReason, TeamId } from "../../shared/model/gameTypes.js";
+
+export type VehicleMotionState = VehicleSettlementMotion;
 
 export type VehicleState = DemoUnitDefinition & {
   x: number;
@@ -11,6 +14,7 @@ export type VehicleState = DemoUnitDefinition & {
   moveUnits: number;
   alive: boolean;
   defeatReason?: DefeatReason;
+  motion?: VehicleMotionState;
   voidDropPresentation?: VoidDropPresentationState;
 };
 

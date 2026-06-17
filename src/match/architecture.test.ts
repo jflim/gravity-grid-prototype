@@ -210,3 +210,13 @@ test("vehicle renderer delegates sprite and overlay drawing to focused helpers",
   assert.doesNotMatch(vehicleRenderer, /private characterPoseFor/);
   assert.doesNotMatch(vehicleRenderer, /private orientedOffset/);
 });
+
+test("terrain renderer does not draw shelf landmarks as fake gameplay rails", () => {
+  const terrainRenderer = readFileSync("src/match/rendering/TerrainRenderer.ts", "utf8");
+
+  assert.doesNotMatch(
+    terrainRenderer,
+    /case "shelf":[\s\S]*?lineBetween/,
+    "shelf and callout landmarks should not render as horizontal yellow lines in the live match view",
+  );
+});

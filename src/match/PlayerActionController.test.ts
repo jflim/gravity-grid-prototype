@@ -13,6 +13,7 @@ const baseInput: MatchInputSnapshot = {
   chargeHeld: false,
   resetPressed: false,
   collisionZonesTogglePressed: false,
+  soundMuteTogglePressed: false,
 };
 
 function vehicle(overrides: Partial<VehicleState> = {}): VehicleState {
@@ -58,7 +59,7 @@ function createHarness(overrides: Partial<PlayerActionControllerOptions> = {}) {
     fire: (_target, power) => events.push(`fire:${power}`),
     resetCharge: () => events.push("reset-charge"),
     onVehicleMoved: () => events.push("moved"),
-    onVehicleDroveIntoVoid: (target) => events.push(`${target.username}:void`),
+    onVehicleMotionStarted: (target) => events.push(`${target.username}:${target.motion?.kind}`),
     ...overrides,
   });
 
@@ -104,17 +105,20 @@ test("player action controller turns a charge release into a fire request", () =
   assert.deepEqual(events, ["charge:false:0", "fire:20"]);
 });
 
-test("player action controller reports when movement settlement void drops the active vehicle", () => {
+test("player action controller reports when movement settlement starts active vehicle motion", () => {
   const active = vehicle();
   const { controller, events } = createHarness({
     placeVehicleOnSurface: (target) => {
-      target.alive = false;
-      target.defeatReason = "void";
+      target.motion = {
+        kind: "falling",
+        velocityY: 0,
+      };
       events.push("placed");
     },
   });
 
   controller.handleVehicleInput(active, { ...baseInput, moveRight: true }, 0.5);
 
-  assert.deepEqual(events, ["placed", "Nova:void", "reset-charge", "moved"]);
+  assert.equal(active.moveUnits, 10);
+  assert.deepEqual(events, ["placed", "Nova:falling", "reset-charge", "moved"]);
 });

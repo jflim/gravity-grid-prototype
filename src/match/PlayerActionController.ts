@@ -33,7 +33,7 @@ export interface PlayerActionControllerOptions {
   fire: (vehicle: VehicleState, power: number) => void;
   resetCharge: () => void;
   onVehicleMoved: (vehicle: VehicleState) => void;
-  onVehicleDroveIntoVoid: (vehicle: VehicleState) => void;
+  onVehicleMotionStarted: (vehicle: VehicleState) => void;
 }
 
 export class PlayerActionController {
@@ -78,13 +78,16 @@ export class PlayerActionController {
       return;
     }
 
+    const previousMoveUnits = active.moveUnits;
     active.x = step.x;
     this.options.placeVehicleOnSurface(active);
-    active.moveUnits = step.moveUnits;
 
-    if (!active.alive) {
-      this.options.onVehicleDroveIntoVoid(active);
+    if (active.motion) {
+      active.moveUnits = previousMoveUnits;
+      this.options.onVehicleMotionStarted(active);
       this.options.resetCharge();
+    } else {
+      active.moveUnits = step.moveUnits;
     }
 
     this.options.onVehicleMoved(active);

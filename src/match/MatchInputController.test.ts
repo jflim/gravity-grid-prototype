@@ -9,6 +9,7 @@ function key(isDown: boolean): KeyboardKeyLike {
 test("match input snapshot reads combat movement, aim, charge, and one-shot commands", () => {
   const resetKey = key(true);
   const hullToggleKey = key(true);
+  const soundMuteKey = key(true);
 
   const snapshot = readMatchInputSnapshot({
     cursors: {
@@ -20,7 +21,8 @@ test("match input snapshot reads combat movement, aim, charge, and one-shot comm
     spaceKey: key(true),
     resetKey,
     hullToggleKey,
-    justDown: (candidate) => candidate === resetKey,
+    soundMuteKey,
+    justDown: (candidate) => candidate === resetKey || candidate === soundMuteKey,
   });
 
   assert.deepEqual(snapshot, {
@@ -31,5 +33,6 @@ test("match input snapshot reads combat movement, aim, charge, and one-shot comm
     chargeHeld: true,
     resetPressed: true,
     collisionZonesTogglePressed: false,
+    soundMuteTogglePressed: true,
   });
 });

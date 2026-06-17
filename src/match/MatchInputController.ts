@@ -17,6 +17,7 @@ export interface MatchInputSnapshot {
   chargeHeld: boolean;
   resetPressed: boolean;
   collisionZonesTogglePressed: boolean;
+  soundMuteTogglePressed: boolean;
 }
 
 export interface MatchInputSnapshotInput {
@@ -24,6 +25,7 @@ export interface MatchInputSnapshotInput {
   spaceKey?: KeyboardKeyLike;
   resetKey?: KeyboardKeyLike;
   hullToggleKey?: KeyboardKeyLike;
+  soundMuteKey?: KeyboardKeyLike;
   justDown?: (key: KeyboardKeyLike) => boolean;
 }
 
@@ -46,5 +48,6 @@ export function readMatchInputSnapshot(input: MatchInputSnapshotInput): MatchInp
     chargeHeld: input.spaceKey?.isDown ?? false,
     resetPressed: input.resetKey ? justDown(input.resetKey) : false,
     collisionZonesTogglePressed: input.hullToggleKey ? justDown(input.hullToggleKey) : false,
+    soundMuteTogglePressed: input.soundMuteKey ? justDown(input.soundMuteKey) : false,
   };
 }
