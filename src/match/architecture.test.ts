@@ -2,12 +2,35 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 
+function readMatchScene(): string {
+  return readFileSync("src/match/MatchScene.ts", "utf8");
+}
+
+function assertMatchSceneDelegates(required: readonly RegExp[], forbidden: readonly RegExp[]): void {
+  const matchScene = readMatchScene();
+
+  for (const pattern of required) {
+    assert.match(matchScene, pattern);
+  }
+
+  for (const pattern of forbidden) {
+    assert.doesNotMatch(matchScene, pattern);
+  }
+}
+
 test("match scene refactor exposes planned module boundaries", () => {
   const expectedFiles = [
     "src/match/MatchScene.ts",
     "src/match/MatchView.ts",
     "src/match/MatchViewFactory.ts",
     "src/match/MatchViewStateBuilder.ts",
+    "src/match/MatchSceneTerrainAdapter.ts",
+    "src/match/MatchSceneShotFlow.ts",
+    "src/match/MatchSceneShotControllers.ts",
+    "src/match/MatchSceneShotFlowTypes.ts",
+    "src/match/MatchSceneProjectileFlow.ts",
+    "src/match/MatchSceneShotResolution.ts",
+    "src/match/MatchSceneVehicleMotionFlow.ts",
     "src/match/PlayerActionController.ts",
     "src/match/ShotFlowController.ts",
     "src/match/MatchTypes.ts",
@@ -48,6 +71,13 @@ test("planned match modules export their concrete boundaries", () => {
     ["src/match/MatchView.ts", "export class MatchView"],
     ["src/match/MatchViewFactory.ts", "export function createMatchViewCollaborators"],
     ["src/match/MatchViewStateBuilder.ts", "export class MatchViewStateBuilder"],
+    ["src/match/MatchSceneTerrainAdapter.ts", "export class MatchSceneTerrainAdapter"],
+    ["src/match/MatchSceneShotFlow.ts", "export class MatchSceneShotFlow"],
+    ["src/match/MatchSceneShotControllers.ts", "export function createSceneShotFlowController"],
+    ["src/match/MatchSceneShotFlowTypes.ts", "export interface MatchSceneShotFlowOptions"],
+    ["src/match/MatchSceneProjectileFlow.ts", "export function updateSceneProjectile"],
+    ["src/match/MatchSceneShotResolution.ts", "export function vehicleDamageSnapshot"],
+    ["src/match/MatchSceneVehicleMotionFlow.ts", "export function updateVehicleMotionsForScene"],
     ["src/match/PlayerActionController.ts", "export class PlayerActionController"],
     ["src/match/ShotFlowController.ts", "export class ShotFlowController"],
     ["src/match/MatchAssetLoader.ts", "export class MatchAssetLoader"],
@@ -79,6 +109,47 @@ test("planned match modules export their concrete boundaries", () => {
   for (const [file, expectedExport] of expectedExports) {
     assert.match(readFileSync(file, "utf8"), new RegExp(expectedExport));
   }
+});
+
+test("match scene stays below the first orchestration extraction target", () => {
+  const matchScene = readMatchScene();
+  const nonblankLines = matchScene.split(/\r?\n/).filter((line) => line.trim()).length;
+
+  assert.ok(nonblankLines <= 360, `MatchScene.ts has ${nonblankLines} nonblank lines; expected <= 360`);
+});
+
+test("match scene adapters stay human-sized", () => {
+  const lineCountFor = (path: string) =>
+    readFileSync(path, "utf8").split(/\r?\n/).filter((line) => line.trim()).length;
+
+  assert.ok(
+    lineCountFor("src/match/MatchSceneTerrainAdapter.ts") <= 160,
+    "MatchSceneTerrainAdapter.ts should stay under 160 nonblank lines",
+  );
+  assert.ok(
+    lineCountFor("src/match/MatchSceneShotFlow.ts") <= 300,
+    "MatchSceneShotFlow.ts should stay under the temporary 300-line orchestration ceiling",
+  );
+  assert.ok(
+    lineCountFor("src/match/MatchSceneShotControllers.ts") <= 220,
+    "MatchSceneShotControllers.ts should stay under 220 nonblank lines",
+  );
+  assert.ok(
+    lineCountFor("src/match/MatchSceneShotFlowTypes.ts") <= 80,
+    "MatchSceneShotFlowTypes.ts should stay under 80 nonblank lines",
+  );
+  assert.ok(
+    lineCountFor("src/match/MatchSceneProjectileFlow.ts") <= 120,
+    "MatchSceneProjectileFlow.ts should stay under 120 nonblank lines",
+  );
+  assert.ok(
+    lineCountFor("src/match/MatchSceneShotResolution.ts") <= 120,
+    "MatchSceneShotResolution.ts should stay under 120 nonblank lines",
+  );
+  assert.ok(
+    lineCountFor("src/match/MatchSceneVehicleMotionFlow.ts") <= 80,
+    "MatchSceneVehicleMotionFlow.ts should stay under 80 nonblank lines",
+  );
 });
 
 test("main.ts stays a bootstrap instead of owning the Phaser scene", () => {
@@ -120,70 +191,72 @@ test("match runtime types stay free of Phaser rendering objects", () => {
 });
 
 test("match scene delegates terrain state to TerrainController", () => {
-  const matchScene = readFileSync("src/match/MatchScene.ts", "utf8");
-
-  assert.match(matchScene, /new TerrainController/);
-  assert.doesNotMatch(matchScene, /craterTerrain/);
-  assert.doesNotMatch(matchScene, /terrainAngleAt as terrainSlopeAngleAt/);
-  assert.doesNotMatch(matchScene, /surfaceAt as terrainSurfaceAt/);
+  assertMatchSceneDelegates(
+    [/new TerrainController/],
+    [/craterTerrain/, /terrainAngleAt as terrainSlopeAngleAt/, /surfaceAt as terrainSurfaceAt/],
+  );
 });
 
 test("match scene delegates vehicle settlement to VehicleSettlementController", () => {
-  const matchScene = readFileSync("src/match/MatchScene.ts", "utf8");
-
-  assert.match(matchScene, /new VehicleSettlementController/);
-  assert.doesNotMatch(matchScene, /settleVehicleOnTerrain/);
-  assert.doesNotMatch(matchScene, /VehicleSettlementResult/);
+  assertMatchSceneDelegates(
+    [/new VehicleSettlementController/],
+    [/settleVehicleOnTerrain/, /VehicleSettlementResult/],
+  );
 });
 
 test("match scene delegates asset preload status and image queueing to MatchAssetLoader", () => {
-  const matchScene = readFileSync("src/match/MatchScene.ts", "utf8");
-
-  assert.match(matchScene, /new MatchAssetLoader/);
-  assert.doesNotMatch(matchScene, /RUNTIME_IMAGE_ASSETS/);
-  assert.doesNotMatch(matchScene, /CONCEPT_IMAGE_ASSETS/);
-  assert.doesNotMatch(matchScene, /STYLE_REFERENCE_ASSET/);
-  assert.doesNotMatch(matchScene, /load\.on\("progress"/);
-  assert.doesNotMatch(matchScene, /load\.on\("loaderror"/);
+  assertMatchSceneDelegates(
+    [/new MatchAssetLoader/],
+    [
+      /RUNTIME_IMAGE_ASSETS/,
+      /CONCEPT_IMAGE_ASSETS/,
+      /STYLE_REFERENCE_ASSET/,
+      /load\.on\("progress"/,
+      /load\.on\("loaderror"/,
+    ],
+  );
 });
 
 test("match scene delegates delayed round events to RoundEventScheduler", () => {
-  const matchScene = readFileSync("src/match/MatchScene.ts", "utf8");
-
-  assert.match(matchScene, /new RoundEventScheduler/);
-  assert.doesNotMatch(matchScene, /pendingRoundEvent/);
-  assert.doesNotMatch(matchScene, /private queueRoundEvent/);
+  assertMatchSceneDelegates(
+    [/new RoundEventScheduler/],
+    [/pendingRoundEvent/, /private queueRoundEvent/],
+  );
 });
 
 test("match scene delegates collision-zone UI through MatchView", () => {
-  const matchScene = readFileSync("src/match/MatchScene.ts", "utf8");
-
-  assert.match(matchScene, /new MatchView/);
-  assert.doesNotMatch(matchScene, /document\.createElement/);
-  assert.doesNotMatch(matchScene, /querySelector\("\[data-collision-zones-toggle\]"\)/);
-  assert.doesNotMatch(matchScene, /collisionZonesCheckbox/);
+  assertMatchSceneDelegates(
+    [/new MatchView/],
+    [
+      /document\.createElement/,
+      /querySelector\("\[data-collision-zones-toggle\]"\)/,
+      /collisionZonesCheckbox/,
+    ],
+  );
 });
 
 test("match scene delegates presentation object setup and drawing to MatchView", () => {
-  const matchScene = readFileSync("src/match/MatchScene.ts", "utf8");
-
-  assert.match(matchScene, /new MatchView/);
-  assert.doesNotMatch(matchScene, /new TerrainRenderer/);
-  assert.doesNotMatch(matchScene, /new VehicleRenderer/);
-  assert.doesNotMatch(matchScene, /new ProjectileRenderer/);
-  assert.doesNotMatch(matchScene, /new EffectsRenderer/);
-  assert.doesNotMatch(matchScene, /new CombatMarkerRenderer/);
-  assert.doesNotMatch(matchScene, /new CommandDeck/);
-  assert.doesNotMatch(matchScene, /new CollisionZonesToggle/);
-  assert.doesNotMatch(matchScene, /this\.add\.graphics\(/);
-  assert.doesNotMatch(matchScene, /this\.add\.text\(/);
-  assert.doesNotMatch(matchScene, /this\.add\.image\(/);
-  assert.doesNotMatch(matchScene, /private drawTerrain/);
-  assert.doesNotMatch(matchScene, /private drawAim/);
-  assert.doesNotMatch(matchScene, /private drawImpactPreview/);
-  assert.doesNotMatch(matchScene, /private drawVehicles/);
-  assert.doesNotMatch(matchScene, /private drawProjectile/);
-  assert.doesNotMatch(matchScene, /private drawHud/);
+  assertMatchSceneDelegates(
+    [/new MatchView/],
+    [
+      /new TerrainRenderer/,
+      /new VehicleRenderer/,
+      /new ProjectileRenderer/,
+      /new EffectsRenderer/,
+      /new CombatMarkerRenderer/,
+      /new CommandDeck/,
+      /new CollisionZonesToggle/,
+      /this\.add\.graphics\(/,
+      /this\.add\.text\(/,
+      /this\.add\.image\(/,
+      /private drawTerrain/,
+      /private drawAim/,
+      /private drawImpactPreview/,
+      /private drawVehicles/,
+      /private drawProjectile/,
+      /private drawHud/,
+    ],
+  );
 });
 
 test("command deck delegates specialized HUD drawing to component helpers", () => {

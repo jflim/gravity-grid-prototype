@@ -1,46 +1,23 @@
 import Phaser from "phaser";
-import type { VehicleHitZone } from "../../shared/gameplay/vehicleHitZone.js";
 import { DEMO_UNIT_DEFINITIONS } from "../../shared/content/v1Units.js";
-import type { TeamId } from "../../shared/model/gameTypes.js";
 import {
-  AIM_SPEED_DEG_PER_SECOND,
-  BUNGER_CRATER_RADIUS,
-  BUNGER_DAMAGE_RADIUS,
-  BUNGER_KNOCKBACK,
-  CHARGE_RATE_PER_SECOND,
   COMBAT_MARKER_SECONDS,
-  CRATER_RADIUS,
-  DAMAGE_RADIUS,
   DEATH_SURFACE_Y,
   DEFAULT_TERRAIN_BREAKTHROUGH_Y,
-  GRAVITY,
   IMPACT_PREVIEW_SECONDS,
-  MAX_CLIMB_SLOPE,
-  MAX_ELEVATION_DEG,
   MAX_HP,
   MAX_MOVE_UNITS,
-  MAX_POWER,
   MAX_TERRAIN_SPRITE_TILT_DEG,
-  MIN_ELEVATION_DEG,
-  MIN_FIRE_POWER,
   MOVE_MAX_X,
   MOVE_MIN_X,
   MOVE_PIXELS_PER_UNIT,
-  MOVE_SPEED_PIXELS_PER_SECOND,
   PROJECTILE_RADIUS,
-  PROJECTILE_MUZZLE_DISTANCE,
-  PROJECTILE_MUZZLE_Y_OFFSET,
-  PROJECTILE_OUT_OF_BOUNDS_LOWER_Y_MARGIN,
-  PROJECTILE_OUT_OF_BOUNDS_UPPER_Y_MARGIN,
   SETTLEMENT_MAX_SLOPE_ITERATIONS,
   SETTLEMENT_SLOPE_SAMPLE_DISTANCE,
   SETTLEMENT_SLOPE_STEP,
   SETTLEMENT_SLOPE_THRESHOLD,
-  SHOT_SPEED_MAX,
-  SHOT_SPEED_MIN,
   TERRAIN_CHANGE_SETTLE_PADDING,
   TERRAIN_STEP,
-  TURN_SECONDS,
   VEHICLE_FALL_GRAVITY_PIXELS_PER_SECOND_SQUARED,
   VEHICLE_HALF_HEIGHT,
   VEHICLE_HALF_WIDTH,
@@ -50,7 +27,6 @@ import {
   VOID_SURFACE_Y,
   V1_WORLD_HEIGHT as WORLD_HEIGHT,
   V1_WORLD_WIDTH as WORLD_WIDTH,
-  WIND_FORCE,
 } from "../../shared/v1/tuning.js";
 import {
   scaleBattlefieldDisplay,
@@ -67,29 +43,20 @@ import {
   shouldUseStyleReferenceBackground,
 } from "../demoLayout";
 import { buildMatchAssetLoadPlan, MatchAssetLoader } from "./MatchAssetLoader";
-import { ImpactController } from "./ImpactController";
 import { MatchCameraController } from "./MatchCameraController";
-import { MatchController } from "./MatchController";
-import { ProjectileController } from "./ProjectileController";
 import { RoundBuilder } from "./RoundBuilder";
 import { RoundEventScheduler } from "./RoundEventScheduler";
-import { ShotFlowController } from "./ShotFlowController";
+import { MatchSceneShotFlow } from "./MatchSceneShotFlow";
+import { MatchSceneTerrainAdapter } from "./MatchSceneTerrainAdapter";
 import { TerrainController } from "./TerrainController";
-import { TurnController } from "./TurnController";
 import { VehicleGeometry } from "./VehicleGeometry";
 import { VehicleSettlementController } from "./VehicleSettlementController";
 import { VoidZoneController } from "./VoidZoneController";
 import { MatchView } from "./MatchView";
 import { createMatchViewCollaborators } from "./MatchViewFactory";
 import { MatchViewStateBuilder } from "./MatchViewStateBuilder";
-import { PlayerActionController } from "./PlayerActionController";
 import { MatchInputController, type MatchInputSnapshot } from "./MatchInputController";
-import { createBrowserSoundEngine, MatchSoundController } from "./audio/MatchSoundController";
-import type {
-  ImpactPreview,
-  ProjectileState,
-  VehicleState,
-} from "./MatchTypes";
+import type { VehicleState } from "./MatchTypes";
 import {
   buildPlayableTerrain,
   demoMapIdFromSearch,
@@ -135,62 +102,8 @@ const EMPTY_MATCH_INPUT: MatchInputSnapshot = {
   soundMuteTogglePressed: false,
 };
 
-type VehicleDamageSnapshot = {
-  hp: number;
-  alive: boolean;
-  defeatReason?: VehicleState["defeatReason"];
-};
-
 export class MatchScene extends Phaser.Scene {
-  private readonly matchController = new MatchController();
   private readonly vehicleGeometry = new VehicleGeometry();
-  private readonly impactController = new ImpactController({
-    craterRadius: CRATER_RADIUS,
-    bungerCraterRadius: BUNGER_CRATER_RADIUS,
-    damageRadius: DAMAGE_RADIUS,
-    bungerDamageRadius: BUNGER_DAMAGE_RADIUS,
-    bungerKnockback: BUNGER_KNOCKBACK,
-    moveMinX: MOVE_MIN_X,
-    moveMaxX: MOVE_MAX_X,
-    impactPreviewSeconds: IMPACT_PREVIEW_SECONDS,
-  });
-  private readonly projectileController = new ProjectileController({
-    projectileRadius: PROJECTILE_RADIUS,
-    maxPower: MAX_POWER,
-    shotSpeedMin: SHOT_SPEED_MIN,
-    shotSpeedMax: SHOT_SPEED_MAX,
-    muzzleDistance: PROJECTILE_MUZZLE_DISTANCE,
-    muzzleYOffset: PROJECTILE_MUZZLE_Y_OFFSET,
-    windForce: WIND_FORCE,
-    gravity: GRAVITY,
-    worldWidth: WORLD_WIDTH,
-    worldHeight: WORLD_HEIGHT,
-    lowerYMargin: PROJECTILE_OUT_OF_BOUNDS_LOWER_Y_MARGIN,
-    upperYMargin: PROJECTILE_OUT_OF_BOUNDS_UPPER_Y_MARGIN,
-    maxTrailPoints: 34,
-  });
-  private readonly shotFlowController = new ShotFlowController({
-    projectileController: this.projectileController,
-    impactController: this.impactController,
-    surfaceAt: (x) => this.surfaceAt(x),
-    hitZoneFor: (vehicle) => this.vehicleHitZoneFor(vehicle),
-    makeCrater: (x, y, radius, depthFactor) => this.makeCrater(x, y, radius, depthFactor),
-    settleVehicles: (options) => this.vehicleSettlementController.settleVehicles(this.vehicles, options),
-    addCombatMarker: (vehicle, kind, label, slot) => {
-      this.matchView?.addCombatMarkerForVehicle(vehicle, kind, label, slot);
-    },
-    recenterForProjectileIfNeeded: (projectile) => {
-      this.cameraController?.recenterForProjectileIfNeeded(projectile);
-    },
-    winningTeam: () => this.winningTeam(),
-  });
-  private readonly turnController = new TurnController({
-    turnSeconds: TURN_SECONDS,
-    windSource: () => Phaser.Math.FloatBetween(-1, 1),
-  });
-  private readonly soundController = new MatchSoundController({
-    engine: createBrowserSoundEngine(),
-  });
   private readonly roundBuilder = new RoundBuilder({
     maxHp: MAX_HP,
     maxMoveUnits: MAX_MOVE_UNITS,
@@ -206,50 +119,6 @@ export class MatchScene extends Phaser.Scene {
     deathSurfaceY: DEATH_SURFACE_Y,
     maxTerrainSpriteTiltDeg: MAX_TERRAIN_SPRITE_TILT_DEG,
   });
-  private readonly playerActionController = new PlayerActionController({
-    aimSpeedDegPerSecond: AIM_SPEED_DEG_PER_SECOND,
-    minElevationDeg: MIN_ELEVATION_DEG,
-    maxElevationDeg: MAX_ELEVATION_DEG,
-    moveSpeedPixelsPerSecond: MOVE_SPEED_PIXELS_PER_SECOND,
-    movePixelsPerUnit: MOVE_PIXELS_PER_UNIT,
-    minX: MOVE_MIN_X,
-    maxX: MOVE_MAX_X,
-    maxClimbSlope: MAX_CLIMB_SLOPE,
-    fallSurfaceY: DEATH_SURFACE_Y,
-    chargeRatePerSecond: CHARGE_RATE_PER_SECOND,
-    maxPower: MAX_POWER,
-    minFirePower: MIN_FIRE_POWER,
-    surfaceAt: (x) => this.surfaceAt(x),
-    placeVehicleOnSurface: (vehicle) => this.vehicleSettlementController.placeVehicleOnSurface(vehicle),
-    chargeState: () => ({
-      isCharging: this.turnController.isCharging,
-      charge: this.turnController.charge,
-    }),
-    setChargeState: (charge) => this.turnController.setChargeState(charge),
-    fire: (vehicle, power) => this.fire(vehicle, power),
-    resetCharge: () => this.turnController.resetCharge(),
-    onVehicleMoved: () => {
-      this.playerMovedThisFrame = true;
-      this.frameBattlefield(0);
-    },
-    onVehicleMotionStarted: (vehicle) => {
-      this.shotResult =
-        vehicle.motion?.kind === "sliding"
-          ? `${vehicle.username} started sliding.`
-          : `${vehicle.username} started falling.`;
-    },
-  });
-  private vehicles: VehicleState[] = [];
-  private projectile?: ProjectileState;
-  private impactPreview?: ImpactPreview;
-  private shotResult = "";
-  private roundOver = false;
-  private waitingForVehicleMotionResolution = false;
-  private showCombatHulls = shouldShowCombatHulls(window.location.search);
-  private playerMovedThisFrame = false;
-
-  private inputController?: MatchInputController;
-  private cameraController?: MatchCameraController;
   private readonly voidZoneController = new VoidZoneController({
     worldWidth: WORLD_WIDTH,
     terrainStep: TERRAIN_STEP,
@@ -258,26 +127,53 @@ export class MatchScene extends Phaser.Scene {
     horizontalPadding: VOID_DROP_HORIZONTAL_PADDING,
     fallDurationSeconds: DRAMATIC_VOID_DROP_FALL_SECONDS,
   });
+  private readonly terrainAdapter = new MatchSceneTerrainAdapter({
+    terrainController: this.terrainController,
+    voidZoneController: this.voidZoneController,
+  });
   private readonly vehicleSettlementController = new VehicleSettlementController({
     tuning: VEHICLE_SETTLEMENT_TUNING,
     motionTuning: VEHICLE_MOTION_TUNING,
-    visibleVoidTopY: () => this.terrainController.visibleVoidTopY,
-    terrainBreakthroughY: () => this.terrainBreakthroughY(),
-    surfaceAt: (x) => this.surfaceAt(x),
+    visibleVoidTopY: () => this.terrainAdapter.visibleVoidTopY,
+    terrainBreakthroughY: () => this.terrainAdapter.terrainBreakthroughY(),
+    surfaceAt: (x) => this.terrainAdapter.surfaceAt(x),
     hitZoneBottom: (vehicle) => {
-      const hitZone = this.vehicleHitZoneFor(vehicle);
+      const hitZone = this.vehicleGeometry.hitZoneFor(vehicle);
       return hitZone.centerY + hitZone.height / 2;
     },
     createVoidDropPresentation: (input) => this.voidZoneController.createVoidDropPresentation(input),
   });
+  private readonly roundEventScheduler = new RoundEventScheduler({
+    schedule: (delayMs, action) => this.time.delayedCall(delayMs, action),
+  });
+  private vehicles: VehicleState[] = [];
+  private showCombatHulls = shouldShowCombatHulls(window.location.search);
+
+  private inputController?: MatchInputController;
+  private cameraController?: MatchCameraController;
   private matchView?: MatchView;
+  private readonly shotFlow = new MatchSceneShotFlow({
+    terrain: this.terrainAdapter,
+    vehicleSettlementController: this.vehicleSettlementController,
+    roundEventScheduler: this.roundEventScheduler,
+    windSource: () => Phaser.Math.FloatBetween(-1, 1),
+    vehicles: () => this.vehicles,
+    hitZoneFor: (vehicle) => this.vehicleGeometry.hitZoneFor(vehicle),
+    addCombatMarkerForVehicle: (vehicle, kind, label, slot) => {
+      this.matchView?.addCombatMarkerForVehicle(vehicle, kind, label, slot);
+    },
+    recenterForProjectileIfNeeded: (projectile) => {
+      this.cameraController?.recenterForProjectileIfNeeded(projectile);
+    },
+    frameBattlefield: (duration = 0) => this.frameBattlefield(duration),
+    stopCameraFollow: () => this.cameras.main.stopFollow(),
+    drawWorld: () => this.drawWorld(),
+    restartRound: () => this.startRound(),
+  });
   private readonly matchViewStateBuilder = new MatchViewStateBuilder();
   private readonly assetLoader = new MatchAssetLoader({
     scene: this,
     plan: MATCH_ASSET_LOAD_PLAN,
-  });
-  private readonly roundEventScheduler = new RoundEventScheduler({
-    schedule: (delayMs, action) => this.time.delayedCall(delayMs, action),
   });
 
   constructor() {
@@ -296,7 +192,7 @@ export class MatchScene extends Phaser.Scene {
       scene: this,
       worldWidth: WORLD_WIDTH,
       worldRenderHeight: WORLD_RENDER_HEIGHT,
-      frameBottomWorldY: () => this.visibleVoidBottomY(),
+      frameBottomWorldY: () => this.terrainAdapter.visibleVoidBottomY(),
     });
 
     this.matchView = new MatchView({
@@ -316,13 +212,13 @@ export class MatchScene extends Phaser.Scene {
         movePixelsPerUnit: MOVE_PIXELS_PER_UNIT,
         impactPreviewSeconds: IMPACT_PREVIEW_SECONDS,
         combatMarkerSeconds: COMBAT_MARKER_SECONDS,
-        surfaceAt: (x) => this.surfaceAt(x),
+        surfaceAt: (x) => this.terrainAdapter.surfaceAt(x),
         onCollisionZonesVisibleChange: (visible) => this.setCollisionZonesVisible(visible),
       }),
       worldWidth: WORLD_WIDTH,
       terrainStep: TERRAIN_STEP,
-      surfaceAt: (x) => this.surfaceAt(x),
-      isMovable: (vehicle) => this.isMovable(vehicle),
+      surfaceAt: (x) => this.terrainAdapter.surfaceAt(x),
+      isMovable: (vehicle) => this.shotFlow.isMovable(vehicle),
     });
     this.matchView.createBackground();
     this.startRound();
@@ -341,89 +237,15 @@ export class MatchScene extends Phaser.Scene {
 
     const dt = Math.min(deltaMs / 1000, 0.033);
     const input = this.inputController?.sample() ?? EMPTY_MATCH_INPUT;
-    this.updateImpactPreview(dt);
+    this.shotFlow.updateImpactPreview(dt);
     this.matchView?.update(dt);
     this.voidZoneController.updatePresentations(this.vehicles, dt);
 
-    if (input.resetPressed) {
-      this.startRound();
+    if (this.handleSceneCommandInput(input)) {
       return;
     }
 
-    if (input.collisionZonesTogglePressed) {
-      this.setCollisionZonesVisible(!this.showCombatHulls);
-    }
-
-    if (input.soundMuteTogglePressed) {
-      this.setSoundMuted(this.soundController.toggleMuted());
-    }
-
-    if (this.roundOver) {
-      return;
-    }
-
-    const motionEvents = this.updateVehicleMotions(dt);
-    if (this.vehicleSettlementController.hasActiveVehicleMotion(this.vehicles)) {
-      this.frameBattlefield(0);
-      this.drawWorld();
-      return;
-    }
-
-    if (this.waitingForVehicleMotionResolution) {
-      this.waitingForVehicleMotionResolution = false;
-      this.queuePostMotionResolution(900);
-      this.drawWorld();
-      return;
-    }
-
-    if (motionEvents.length > 0) {
-      this.queuePostMotionResolution(900);
-      this.drawWorld();
-      return;
-    }
-
-    if (this.projectile) {
-      this.updateProjectile(dt);
-      this.drawWorld();
-      return;
-    }
-
-    if (this.turnController.isCommitted) {
-      this.drawWorld();
-      return;
-    }
-
-    const active = this.activeVehicle() ?? this.vehicles[0]!;
-    if (!active || !this.isMovable(active)) {
-      this.advanceTurn();
-      return;
-    }
-
-    const tickResult = this.turnController.tick(dt);
-    this.soundController.updateTurnTick({
-      activeVehicleId: active.id,
-      turnTime: this.turnController.turnTime,
-      canAct: true,
-    });
-    if (tickResult === "timed-out") {
-      this.shotResult = `${active.username} timed out.`;
-      this.advanceTurn();
-      return;
-    }
-
-    this.playerActionController.handleChargeInput(active, input, dt);
-    if (this.turnController.isCommitted || this.projectile) {
-      this.drawWorld();
-      return;
-    }
-
-    this.playerMovedThisFrame = false;
-    this.playerActionController.handleVehicleInput(active, input, dt);
-    this.soundController.updateMovement({
-      moving: this.playerMovedThisFrame,
-      deltaSeconds: dt,
-    });
-    this.drawWorld();
+    this.shotFlow.updateActiveRound(input, dt);
   }
 
   private createInputController(): MatchInputController {
@@ -437,22 +259,37 @@ export class MatchScene extends Phaser.Scene {
     });
   }
 
+  private handleSceneCommandInput(input: MatchInputSnapshot): boolean {
+    if (input.resetPressed) {
+      this.startRound();
+      return true;
+    }
+
+    if (input.collisionZonesTogglePressed) {
+      this.setCollisionZonesVisible(!this.showCombatHulls);
+    }
+
+    if (input.soundMuteTogglePressed) {
+      this.setSoundMuted(this.shotFlow.toggleSoundMuted());
+    }
+
+    return false;
+  }
+
   private setCollisionZonesVisible(visible: boolean): void {
     this.showCombatHulls = visible;
     this.matchView?.setCollisionZonesVisible(visible);
-    this.shotResult = `Collision zones ${visible ? "shown" : "hidden"}.`;
+    this.shotFlow.setShotResult(`Collision zones ${visible ? "shown" : "hidden"}.`);
     this.drawWorld();
   }
 
   private setSoundMuted(muted: boolean): void {
-    this.shotResult = `Sound ${muted ? "muted" : "on"}.`;
+    this.shotFlow.setShotResult(`Sound ${muted ? "muted" : "on"}.`);
     this.drawWorld();
   }
 
   private startRound(): void {
     this.roundEventScheduler.clear();
-    this.roundOver = false;
-    this.waitingForVehicleMotionResolution = false;
     this.matchView?.clearCombatMarkers();
     const round = this.roundBuilder.build({
       playableTerrain: this.buildDefaultDemoMap(),
@@ -464,154 +301,15 @@ export class MatchScene extends Phaser.Scene {
       visibleVoidTopY: round.visibleVoidTopY,
     });
     this.vehicles = round.vehicles;
-    this.turnController.startRound(round.turnOrder);
-    this.projectile = undefined;
-    this.impactPreview = undefined;
-    this.shotResult = round.shotResult;
+    this.shotFlow.startRound(round.turnOrder, round.shotResult);
     this.vehicleSettlementController.settleVehicles(this.vehicles);
-    this.beginTurn();
+    this.shotFlow.beginTurn();
     this.drawWorld();
   }
 
   private buildDefaultDemoMap(): PlayableTerrain {
     const demoMapId = demoMapIdFromSearch(window.location.search);
     return buildPlayableTerrain(playableMapById(demoMapId), { voidSurfaceY: VOID_SURFACE_Y });
-  }
-
-  private beginTurn(): void {
-    const active = this.activeVehicle();
-    if (!active) {
-      return;
-    }
-
-    this.turnController.beginTurn();
-    this.soundController.beginTurn(active.id, this.turnController.turnTime);
-    this.prepareStartedTurn(active);
-  }
-
-  private prepareStartedTurn(active: VehicleState): void {
-    active.moveUnits = MAX_MOVE_UNITS;
-    this.impactPreview = undefined;
-    this.cameras.main.stopFollow();
-    this.frameBattlefield(450);
-  }
-
-  private activeVehicle(): VehicleState | undefined {
-    return this.matchController.activeVehicle(
-      this.vehicles,
-      this.turnController.turnOrder,
-      this.turnController.activeTurnIndex,
-    );
-  }
-
-  private fire(active: VehicleState, power: number): void {
-    this.turnController.commitTurn();
-    const shot = this.shotFlowController.fire(active, power);
-    this.projectile = shot.projectile;
-    this.shotResult = shot.shotResult;
-    this.soundController.playWeaponFire(active.classId);
-  }
-
-  private updateProjectile(dt: number): void {
-    if (!this.projectile) {
-      return;
-    }
-
-    const damageBefore = this.vehicleDamageSnapshot();
-    const result = this.shotFlowController.advanceProjectile({
-      projectile: this.projectile,
-      vehicles: this.vehicles,
-      wind: this.turnController.wind,
-      deltaSeconds: dt,
-    });
-
-    if (result.kind === "in-flight") {
-      return;
-    }
-
-    this.projectile = result.projectile;
-    this.impactPreview = result.impactPreview;
-    this.shotResult = result.shotResult;
-    this.playProjectileResolutionSounds(result.impactPreview !== undefined, damageBefore);
-    if (this.vehicleSettlementController.hasActiveVehicleMotion(this.vehicles)) {
-      this.waitingForVehicleMotionResolution = true;
-      return;
-    }
-
-    const action = result.nextEvent.kind === "end-round" ? () => this.endRound() : () => this.advanceTurn();
-    this.roundEventScheduler.queue(result.nextEvent.delayMs, action);
-  }
-
-  private makeCrater(centerX: number, centerY: number, radius: number, depthFactor = 0.74): void {
-    this.terrainController.makeCrater({
-      x: centerX,
-      y: centerY,
-      radius,
-      depthFactor,
-      breakthroughY: this.terrainBreakthroughY(),
-    });
-  }
-
-  private advanceTurn(): void {
-    if (this.roundOver) {
-      return;
-    }
-
-    this.projectile = undefined;
-    this.waitingForVehicleMotionResolution = false;
-    this.turnController.resetActionState();
-
-    const decision = this.matchController.resolveNextTurn({
-      turnOrder: this.turnController.turnOrder,
-      currentTurnIndex: this.turnController.turnIndex,
-      vehicles: this.vehicles,
-    });
-
-    if (decision.kind === "round-over") {
-      this.endRound();
-      return;
-    }
-
-    this.turnController.advanceTo(decision.nextTurnIndex);
-    const active = this.activeVehicle();
-    if (active) {
-      this.prepareStartedTurn(active);
-    }
-  }
-
-  private isMovable(vehicle: VehicleState): boolean {
-    return !vehicle.motion && this.matchController.isMovable(vehicle, this.turnController.turnOrder);
-  }
-
-  private isAlive(vehicle: VehicleState): boolean {
-    return this.matchController.isAlive(vehicle);
-  }
-
-  private aliveTeams(): Set<TeamId> {
-    return this.matchController.aliveTeams(this.vehicles);
-  }
-
-  private winningTeam(): TeamId | undefined {
-    return this.matchController.winningTeam(this.vehicles);
-  }
-
-  private endRound(): void {
-    if (this.roundOver) {
-      return;
-    }
-
-    this.roundEventScheduler.clear();
-    this.roundOver = true;
-    this.waitingForVehicleMotionResolution = false;
-    this.projectile = undefined;
-    this.turnController.endRound();
-
-    const winner = this.winningTeam();
-    this.shotResult = winner
-      ? `${winner.toUpperCase()} team wins the round. Next round starting...`
-      : "Draw. New round starting...";
-    this.drawWorld();
-    this.roundEventScheduler.queue(2400, () => this.startRound());
   }
 
   private frameBattlefield(duration = 0): void {
@@ -622,135 +320,30 @@ export class MatchScene extends Phaser.Scene {
     );
   }
 
-  private surfaceAt(x: number): number {
-    return this.terrainController.surfaceAt(x);
-  }
-
-  private terrainBreakthroughY(): number {
-    return this.voidZoneController.terrainBreakthroughY(this.terrainController.visibleVoidTopY);
-  }
-
-  private terrainPlatformBottomY(): number {
-    return this.voidZoneController.terrainPlatformBottomY(this.terrainController.visibleVoidTopY);
-  }
-
-  private visibleVoidBottomY(): number {
-    return this.voidZoneController.visibleVoidBottomY(this.terrainController.visibleVoidTopY);
-  }
-
-  private voidDropTargetY(): number {
-    return this.voidZoneController.voidDropTargetY(this.terrainController.visibleVoidTopY);
-  }
-
-  private terrainAngleAt(x: number): number {
-    return this.terrainController.terrainAngleAt(x);
-  }
-
-  private updateImpactPreview(dt: number): void {
-    if (!this.impactPreview) {
-      return;
-    }
-
-    this.impactPreview.timeLeft -= dt;
-    if (this.impactPreview.timeLeft <= 0) {
-      this.impactPreview = undefined;
-    }
-  }
-
   private drawWorld(): void {
+    const shot = this.shotFlow.viewState();
     this.matchView?.draw(this.matchViewStateBuilder.build({
       vehicles: this.vehicles,
-      activeVehicle: this.activeVehicle(),
-      projectile: this.projectile,
-      impactPreview: this.impactPreview,
-      currentMap: this.terrainController.currentMap,
-      visibleVoidTopY: this.terrainController.visibleVoidTopY,
-      visibleVoidBottomY: this.visibleVoidBottomY(),
-      terrainPlatformBottomY: this.terrainPlatformBottomY(),
-      terrainBreakthroughY: this.terrainBreakthroughY(),
+      activeVehicle: this.shotFlow.activeVehicle(),
+      projectile: shot.projectile,
+      impactPreview: shot.impactPreview,
+      currentMap: this.terrainAdapter.currentMap,
+      visibleVoidTopY: this.terrainAdapter.visibleVoidTopY,
+      visibleVoidBottomY: this.terrainAdapter.visibleVoidBottomY(),
+      terrainPlatformBottomY: this.terrainAdapter.terrainPlatformBottomY(),
+      terrainBreakthroughY: this.terrainAdapter.terrainBreakthroughY(),
       showCombatHulls: this.showCombatHulls,
-      roundOver: this.roundOver,
-      turnCommitted: this.turnController.isCommitted,
-      charging: this.turnController.isCharging,
-      charge: this.turnController.charge,
-      turnTime: this.turnController.turnTime,
+      roundOver: shot.roundOver,
+      turnCommitted: shot.turnCommitted,
+      charging: shot.charging,
+      charge: shot.charge,
+      turnTime: shot.turnTime,
       cameraZoom: this.cameras.main.zoom,
-      shotResult: this.shotResult,
-      aliveTeamCount: this.aliveTeams().size,
-      winningTeam: this.winningTeam(),
-      wind: this.turnController.wind,
+      shotResult: shot.shotResult,
+      aliveTeamCount: this.shotFlow.aliveTeams().size,
+      winningTeam: this.shotFlow.winningTeam(),
+      wind: shot.wind,
     }));
-  }
-
-  private vehicleHitZoneFor(vehicle: VehicleState): VehicleHitZone {
-    return this.vehicleGeometry.hitZoneFor(vehicle);
-  }
-
-  private updateVehicleMotions(deltaSeconds: number): string[] {
-    const aliveBeforeMotion = new Set(
-      this.vehicles.filter((vehicle) => vehicle.alive).map((vehicle) => vehicle.id),
-    );
-    const motionEvents = this.vehicleSettlementController.updateVehicleMotion(this.vehicles, deltaSeconds);
-    if (motionEvents.length <= 0) {
-      return motionEvents;
-    }
-
-    for (const vehicle of this.vehicles) {
-      if (aliveBeforeMotion.has(vehicle.id) && !vehicle.alive && vehicle.defeatReason === "void") {
-        this.matchView?.addCombatMarkerForVehicle(vehicle, "bunged", "VOID DROPPED");
-        this.soundController.playVoidDrop();
-      }
-    }
-
-    this.shotResult = motionEvents.join(" / ");
-    return motionEvents;
-  }
-
-  private queuePostMotionResolution(delayMs: number): void {
-    const action = this.winningTeam() ? () => this.endRound() : () => this.advanceTurn();
-    this.roundEventScheduler.queue(delayMs, action);
-  }
-
-  private vehicleDamageSnapshot(): Map<string, VehicleDamageSnapshot> {
-    return new Map(
-      this.vehicles.map((vehicle) => [
-        vehicle.id,
-        {
-          hp: vehicle.hp,
-          alive: vehicle.alive,
-          defeatReason: vehicle.defeatReason,
-        },
-      ]),
-    );
-  }
-
-  private playProjectileResolutionSounds(hasImpact: boolean, damageBefore: Map<string, VehicleDamageSnapshot>): void {
-    if (hasImpact) {
-      this.soundController.playImpact();
-    }
-
-    let hit = false;
-    let damageKo = false;
-    for (const vehicle of this.vehicles) {
-      const previous = damageBefore.get(vehicle.id);
-      if (!previous || vehicle.hp >= previous.hp) {
-        continue;
-      }
-
-      if (previous.alive && !vehicle.alive && vehicle.defeatReason === "damage") {
-        damageKo = true;
-      } else {
-        hit = true;
-      }
-    }
-
-    if (hit) {
-      this.soundController.playHit();
-    }
-
-    if (damageKo) {
-      this.soundController.playDamageKo();
-    }
   }
 }
 
