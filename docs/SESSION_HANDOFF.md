@@ -120,7 +120,9 @@ For v1 scope discipline, use `docs/PRODUCTION_PLAN.md` as the authority before a
 
 For combat feel, keep tuning visible combat hulls and playable v1 map terrain only where they support v1 readability. Advanced wind bands and high-angle/plunge reward rules are future ideas unless the v1 contract is explicitly changed.
 
-For online v1, the next best build direction is to follow `docs/TECHNICAL_DESIGN.md`: extend the current host/seat lobby with the remaining real room settings, persistent match turn order, and server-owned combat results wired into the Phaser match scene.
+For online v1, the next saved path is to smoke-test the current playtest lobby, then build host-owned room settings before adding more gameplay polish. Add best-of-1/best-of-3 and map select/random to the lobby as server-enforced settings, lock them after match start, and keep forged client messages from mutating disabled or non-host actions. After that, use claimed seats, selected characters, mode, match length, and map choice to create the server-owned match setup that the Phaser scene can render.
+
+After room settings are in place, follow `docs/TECHNICAL_DESIGN.md` toward persistent match turn order and server-owned combat results wired into the Phaser match scene.
 
 For sprites, use the committed Vesper v9/v10 unit candidates as references for the next production pass. The next pass should simplify detail, preserve the light full gloves/tech shorts/chunky sneaker identity, remove the chroma key, split or size layers as needed, and only then promote runtime aliases.
 

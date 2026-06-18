@@ -87,7 +87,7 @@
   <main>
     <article>
       <div class="generated">
-        HTML reading copy generated from <a href="SESSION_HANDOFF.md">docs/SESSION_HANDOFF.md</a> on 2026-06-17.
+        HTML reading copy generated from <a href="SESSION_HANDOFF.md">docs/SESSION_HANDOFF.md</a> on 2026-06-18.
         Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Session Handoff</h1>
@@ -207,7 +207,8 @@
 <h2>Next Best Step</h2>
 <p>For v1 scope discipline, use <code>docs/PRODUCTION_PLAN.md</code> as the authority before accepting any new gameplay, roster, asset, UI, economy, social, or polish work as v1. If the request is not required for v1 acceptance, preserve it in the GDD parking lot/context notes instead of expanding v1.</p>
 <p>For combat feel, keep tuning visible combat hulls and playable v1 map terrain only where they support v1 readability. Advanced wind bands and high-angle/plunge reward rules are future ideas unless the v1 contract is explicitly changed.</p>
-<p>For online v1, the next best build direction is to follow <code>docs/TECHNICAL_DESIGN.md</code>: extend the current host/seat lobby with the remaining real room settings, persistent match turn order, and server-owned combat results wired into the Phaser match scene.</p>
+<p>For online v1, the next saved path is to smoke-test the current playtest lobby, then build host-owned room settings before adding more gameplay polish. Add best-of-1/best-of-3 and map select/random to the lobby as server-enforced settings, lock them after match start, and keep forged client messages from mutating disabled or non-host actions. After that, use claimed seats, selected characters, mode, match length, and map choice to create the server-owned match setup that the Phaser scene can render.</p>
+<p>After room settings are in place, follow <code>docs/TECHNICAL_DESIGN.md</code> toward persistent match turn order and server-owned combat results wired into the Phaser match scene.</p>
 <p>For sprites, use the committed Vesper v9/v10 unit candidates as references for the next production pass. The next pass should simplify detail, preserve the light full gloves/tech shorts/chunky sneaker identity, remove the chroma key, split or size layers as needed, and only then promote runtime aliases.</p>
 <p>Recommended Vesper direction:</p>
 <pre><code class="language-text">

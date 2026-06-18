@@ -22,6 +22,7 @@ Highlights:
 - Rebuilt the playtest lobby as a real host/seat flow: players claim Red/Blue seats, the host picks Duel or Doubles, each seat owner chooses a character from a visual Pilot/Ride menu, and ready checks start the shared server-owned gameplay preview.
 - Clarified the playtest lobby ownership UI with a visible Lobby Host label, friendly shared playtest room naming instead of the internal `auto-room` id, and host-only mode control affordances.
 - Added server-authority regression coverage for disabled playtest actions, including forged non-host mode changes, occupied/inactive seat claims, gameplay-phase ready changes, non-owner character edits, non-active preview shots, and non-host next-round requests.
+- Saved the next online v1 implementation path: smoke-test the current lobby, then build server-enforced host room settings for match length and map selection before wiring selected room setup into Phaser.
 - Replaced Nova's active KO runtime sprite with the selected prone v16 KO asset.
 - Added a sprite-variant folder convention and workflow doc for frequent sprite iteration.
 - Added a session handoff document with current repo state, active branch, sprite status, Vesper KO generation prompt, next steps, and verification notes.
