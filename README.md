@@ -251,7 +251,7 @@ Primary reading links:
 
 - This is the local feel prototype, not the multiplayer architecture yet.
 - The multiplayer architecture is now scaffolded, and online match start now uses the server-owned map, seats, character picks, and turn sequence.
-- Phaser projectile/terrain gameplay is still local-only after match start until server-authoritative movement, fire, terrain, damage, and round results are wired into the match scene.
+- Online projectile launch, flight, collision, and impact coordinates are server authoritative and replayed by Phaser; persistent terrain, damage, knockback, elimination, and round results still need server-owned state.
 - The online lobby settings are server-owned and locked once gameplay starts; match length and map choice feed the server setup that seeds the Phaser match.
 - Terrain uses a heightmap for speed. Pixel-mask terrain can replace it later if needed.
 - There is no predicted trajectory line. The muzzle arrow shows current direction, but shot landing is still based on angle, power, wind, and memory.

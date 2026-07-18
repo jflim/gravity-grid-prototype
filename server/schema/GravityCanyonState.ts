@@ -119,6 +119,7 @@ export class GravityCanyonState extends Schema {
   declare lastAcceptedTurnIntentType: string;
   declare lastAcceptedTurnIntentVehicleId: string;
   declare lastAcceptedTurnIntentSessionId: string;
+  declare lastAcceptedTurnInputSeq: number;
   declare lastShotId: string;
   declare lastShotShooterVehicleId: string;
   declare lastShotShooterSessionId: string;
@@ -176,6 +177,7 @@ export class GravityCanyonState extends Schema {
     this.lastAcceptedTurnIntentType = "";
     this.lastAcceptedTurnIntentVehicleId = "";
     this.lastAcceptedTurnIntentSessionId = "";
+    this.lastAcceptedTurnInputSeq = 0;
     this.lastShotId = "";
     this.lastShotShooterVehicleId = "";
     this.lastShotShooterSessionId = "";
@@ -273,6 +275,7 @@ defineTypes(GravityCanyonState, {
   lastAcceptedTurnIntentType: "string",
   lastAcceptedTurnIntentVehicleId: "string",
   lastAcceptedTurnIntentSessionId: "string",
+  lastAcceptedTurnInputSeq: "number",
   lastShotId: "string",
   lastShotShooterVehicleId: "string",
   lastShotShooterSessionId: "string",

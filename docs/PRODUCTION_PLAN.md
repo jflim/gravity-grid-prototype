@@ -1,7 +1,7 @@
 # Gravity Canyon Production Plan
 
 Status: current milestone authority  
-Last updated: 2026-06-18
+Last updated: 2026-07-18
 Design reference: [GDD.md](GDD.md)  
 Runbook: [../README.md](../README.md)
 
@@ -285,13 +285,14 @@ Done:
 - Server-owned preview match setup metadata from claimed seats, selected characters, match length, and selected map, including target score, chosen map id/name, turn sequence, and map-spawned preview vehicles.
 - Phaser match start from server-owned setup metadata, so online ready uses the selected map, claimed seats, selected characters, and turn sequence instead of local demo defaults.
 - Initial server-owned turn authority skeleton: preview turns publish a server clock, active vehicle, authority revision, and last accepted turn intent; forged turn intents from non-active owners are rejected server-side.
+- Server-authoritative online projectile launch, stepped flight, wind/gravity simulation, first terrain-or-vehicle-hull collision, and replicated shot/impact snapshots, with stale, duplicate, and malformed fire intents rejected.
 - One-terminal public playtest launcher.
 
 Not done:
 
 - Full online match scoring beyond the preview target-score metadata.
 - Phaser match driven by Colyseus room state.
-- Server-authoritative movement/projectile/terrain/damage beyond the current turn-clock and intent-validation skeleton.
+- Persistent server-authoritative terrain deformation, damage, knockback, KOs, and Void Dropped resolution beyond the current projectile-impact snapshot.
 - Full round/match scoring online.
 - Four-human 2v2 validation.
 
@@ -300,7 +301,7 @@ Not done:
 Recommended next sequence:
 
 1. Smoke-test playtest tunnel reliability and force Cloudflare Tunnel HTTP/2 if QUIC errors appear.
-2. Extend server turn authority from the current intent skeleton into movement, aim/fire payloads, projectile, terrain, damage, KO, and round result authority.
+2. Extend the server-authoritative projectile impact into persistent terrain changes, damage, knockback, KO, Void Dropped, and round-result authority.
 3. Add online match scoring beyond the current target-score setup metadata.
 4. Validate 1v1 online.
 5. Validate 2v2 format online.

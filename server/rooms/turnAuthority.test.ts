@@ -15,28 +15,42 @@ test("acceptTurnIntentForClient records only active-owner intent metadata", () =
   const accepted = acceptTurnIntentForClient(
     state,
     "red-session",
-    { intentId: "intent-that-is-long-enough-to-trim-at-the-server-boundary-1234567890", action: "aim" },
+    { intentId: "red-1-aim", action: "aim", inputSeq: 1, turnAuthorityVersion: 1 },
     { nowMs: 3_500 },
   );
 
   assert.equal(accepted, true);
-  assert.equal(state.lastAcceptedTurnIntentId.length, 64);
+  assert.equal(state.lastAcceptedTurnIntentId, "red-1-aim");
   assert.equal(state.lastAcceptedTurnIntentType, "aim");
   assert.equal(state.lastAcceptedTurnIntentVehicleId, "red-1");
   assert.equal(state.lastAcceptedTurnIntentSessionId, "red-session");
+  assert.equal(state.lastAcceptedTurnInputSeq, 1);
   assert.equal(state.turnSecondsRemaining, 18);
-  assert.equal(state.turnAuthorityVersion, 2);
+  assert.equal(state.turnAuthorityVersion, 1);
 });
 
 test("acceptTurnIntentForClient rejects wrong-owner and invalid actions", () => {
   const state = combatState();
   beginServerTurn(state, { nowMs: 1_000 });
 
-  assert.equal(acceptTurnIntentForClient(state, "blue-session", { intentId: "blue", action: "aim" }), false);
-  assert.equal(acceptTurnIntentForClient(state, "red-session", { intentId: "bad", action: "teleport" }), false);
+  assert.equal(acceptTurnIntentForClient(state, "blue-session", intent("blue", "aim", 1, 1)), false);
+  assert.equal(acceptTurnIntentForClient(state, "red-session", intent("bad", "teleport", 1, 1)), false);
 
   assert.equal(state.lastAcceptedTurnIntentId, "");
   assert.equal(state.turnAuthorityVersion, 1);
+});
+
+test("acceptTurnIntentForClient rejects stale, duplicate, and malformed metadata", () => {
+  const state = combatState();
+  beginServerTurn(state, { nowMs: 1_000 });
+
+  assert.equal(acceptTurnIntentForClient(state, "red-session", intent("first", "aim", 1, 1)), true);
+  assert.equal(acceptTurnIntentForClient(state, "red-session", intent("first", "aim", 1, 1)), false);
+  assert.equal(acceptTurnIntentForClient(state, "red-session", intent("older", "aim", 0, 1)), false);
+  assert.equal(acceptTurnIntentForClient(state, "red-session", intent("stale", "aim", 2, 0)), false);
+  assert.equal(acceptTurnIntentForClient(state, "red-session", intent("", "aim", 2, 1)), false);
+  assert.equal(state.lastAcceptedTurnIntentId, "first");
+  assert.equal(state.lastAcceptedTurnInputSeq, 1);
 });
 
 test("activeOwnedVehicleForClient requires combat preview, active ownership, and alive state", () => {
@@ -70,4 +84,8 @@ function vehicleState(vehicleId: string, ownerSessionId: string, displayName: st
   vehicle.team = vehicleId.startsWith("red-") ? "red" : "blue";
   vehicle.alive = true;
   return vehicle;
+}
+
+function intent(intentId: string, action: unknown, inputSeq: number, turnAuthorityVersion: number) {
+  return { intentId, action, inputSeq, turnAuthorityVersion };
 }

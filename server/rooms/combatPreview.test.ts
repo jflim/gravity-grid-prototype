@@ -177,7 +177,12 @@ test("previewMoveForClient applies movement from the server-owned vehicle positi
   assert.ok(active, "active vehicle exists");
   const startX = active.x;
 
-  const moved = previewMoveForClient(state, "red-session", { direction: 1, deltaSeconds: 0.5 }, { nowMs: 1_500 });
+  const moved = previewMoveForClient(
+    state,
+    "red-session",
+    { ...intentMeta(state, 1), direction: 1, deltaSeconds: 0.5 },
+    { nowMs: 1_500 },
+  );
 
   assert.equal(moved, true);
   assert.equal(active.facing, 1);
@@ -197,7 +202,12 @@ test("previewMoveForClient publishes facing changes even when x movement is unav
   active.moveUnits = 0;
   const startX = active.x;
 
-  const moved = previewMoveForClient(state, "red-session", { direction: -1, deltaSeconds: 0.05 }, { nowMs: 1_500 });
+  const moved = previewMoveForClient(
+    state,
+    "red-session",
+    { ...intentMeta(state, 1), direction: -1, deltaSeconds: 0.05 },
+    { nowMs: 1_500 },
+  );
 
   assert.equal(moved, true);
   assert.equal(active.x, startX);
@@ -215,7 +225,12 @@ test("previewAimForClient publishes active-owner aim changes", () => {
   const active = state.vehicles[0];
   assert.ok(active, "active vehicle exists");
 
-  const aimed = previewAimForClient(state, "red-session", { angle: 64, facing: 1 }, { nowMs: 1_500 });
+  const aimed = previewAimForClient(
+    state,
+    "red-session",
+    { ...intentMeta(state, 1), angle: 64, facing: 1 },
+    { nowMs: 1_500 },
+  );
 
   assert.equal(aimed, true);
   assert.equal(active.angle, 64);
@@ -277,6 +292,14 @@ function playerState(sessionId: string, displayName: string): PlayerState {
   player.inventory = new ArraySchema<string>("Canyon Rookie");
   player.equippedNameplate = "Canyon Rookie";
   return player;
+}
+
+function intentMeta(state: GravityCanyonState, inputSeq: number) {
+  return {
+    intentId: `test-${inputSeq}`,
+    inputSeq,
+    turnAuthorityVersion: state.turnAuthorityVersion,
+  };
 }
 
 function slotState(slotId: VehicleId, ownerSessionId: string, selectedCharacterId: CharacterId): LobbySlotState {
