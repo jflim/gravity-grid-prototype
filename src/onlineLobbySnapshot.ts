@@ -23,11 +23,19 @@ export type CombatVehicleSnapshot = {
   hp: number;
   maxHp: number;
   alive: boolean;
+  defeatReason: string;
   x: number;
   y: number;
   moveUnits: number;
   facing: number;
   angle: number;
+};
+
+export type TerrainCraterSnapshot = {
+  x: number;
+  y: number;
+  radius: number;
+  depthFactor: number;
 };
 
 type LastShotSnapshot = {
@@ -62,6 +70,8 @@ export type RoomSnapshot = LastShotSnapshot & {
   selectedMapName: string;
   mapSeed: number;
   targetScore: number;
+  terrainRevision: number;
+  terrainCraters: TerrainCraterSnapshot[];
   turnSequence: string[];
   turnDurationSeconds: number;
   turnStartedAtMs: number;
@@ -90,11 +100,12 @@ export type RoomSnapshot = LastShotSnapshot & {
 
 type RoomSnapshotScalars = Omit<
   RoomSnapshot,
-  "players" | "slots" | "vehicles" | "spectatorSessionIds" | "turnSequence"
+  "players" | "slots" | "vehicles" | "spectatorSessionIds" | "turnSequence" | "terrainCraters"
 >;
 
 type RoomStateSource = Partial<RoomSnapshotScalars> & {
   turnSequence?: string[] | Iterable<string>;
+  terrainCraters?: TerrainCraterSnapshot[] | Iterable<TerrainCraterSnapshot>;
   spectatorSessionIds?: string[] | Iterable<string>;
   players?: Map<string, unknown> | Record<string, unknown>;
   slots?: Map<string, unknown> | Record<string, unknown> | unknown[] | Iterable<unknown>;
@@ -111,6 +122,7 @@ const DEFAULT_ROOM_SCALARS: RoomSnapshotScalars = {
   selectedMapName: "",
   mapSeed: 0,
   targetScore: 1,
+  terrainRevision: 0,
   turnDurationSeconds: 20,
   turnStartedAtMs: 0,
   turnEndsAtMs: 0,
@@ -162,6 +174,7 @@ const DEFAULT_COMBAT_VEHICLE: CombatVehicleSnapshot = {
   hp: 0,
   maxHp: 100,
   alive: false,
+  defeatReason: "",
   x: 0,
   y: 0,
   moveUnits: 10,
@@ -178,6 +191,12 @@ export function getRoomSnapshot(state: unknown): RoomSnapshot {
     ...scalars,
     spectatorSessionIds: Array.from(source.spectatorSessionIds ?? []),
     turnSequence: Array.from(source.turnSequence ?? []),
+    terrainCraters: Array.from(source.terrainCraters ?? []).map((crater) => ({
+      x: crater.x,
+      y: crater.y,
+      radius: crater.radius,
+      depthFactor: crater.depthFactor,
+    })),
     players,
     slots: normalizeLobbySlots(source.slots, players),
     vehicles: getVehicles(source.vehicles),

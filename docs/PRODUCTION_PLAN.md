@@ -286,13 +286,13 @@ Done:
 - Phaser match start from server-owned setup metadata, so online ready uses the selected map, claimed seats, selected characters, and turn sequence instead of local demo defaults.
 - Initial server-owned turn authority skeleton: preview turns publish a server clock, active vehicle, authority revision, and last accepted turn intent; forged turn intents from non-active owners are rejected server-side.
 - Server-authoritative online projectile launch, stepped flight, wind/gravity simulation, first terrain-or-vehicle-hull collision, and replicated shot/impact snapshots, with stale, duplicate, and malformed fire intents rejected.
+- Server-authoritative crater persistence, shared damage/self-damage/friendly-fire rules, Nova knockback, vehicle settlement, HP KO and Void Dropped outcomes, replicated through compact terrain events and vehicle state.
 - One-terminal public playtest launcher.
 
 Not done:
 
 - Full online match scoring beyond the preview target-score metadata.
 - Phaser match driven by Colyseus room state.
-- Persistent server-authoritative terrain deformation, damage, knockback, KOs, and Void Dropped resolution beyond the current projectile-impact snapshot.
 - Full round/match scoring online.
 - Four-human 2v2 validation.
 
@@ -301,7 +301,7 @@ Not done:
 Recommended next sequence:
 
 1. Smoke-test playtest tunnel reliability and force Cloudflare Tunnel HTTP/2 if QUIC errors appear.
-2. Extend the server-authoritative projectile impact into persistent terrain changes, damage, knockback, KO, Void Dropped, and round-result authority.
+2. Complete server-owned turn advancement and round-result authority.
 3. Add online match scoring beyond the current target-score setup metadata.
 4. Validate 1v1 online.
 5. Validate 2v2 format online.

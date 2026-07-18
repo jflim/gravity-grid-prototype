@@ -24,7 +24,7 @@ export type OnlineShotReplay = {
   serverTimeMs: number;
 };
 
-type SyncedVehicleFields = Pick<VehicleState, "x" | "y" | "hp" | "alive" | "moveUnits" | "facing" | "angle">;
+type SyncedVehicleFields = Pick<VehicleState, "x" | "y" | "hp" | "alive" | "moveUnits" | "facing" | "angle" | "defeatReason">;
 
 const SYNCED_VEHICLE_FIELD_KEYS = [
   "x",
@@ -34,6 +34,7 @@ const SYNCED_VEHICLE_FIELD_KEYS = [
   "moveUnits",
   "facing",
   "angle",
+  "defeatReason",
 ] as const;
 
 export function applyOnlineMatchSnapshotToVehicles(
@@ -111,6 +112,9 @@ function syncedFieldsFromServer(
     moveUnits: finiteNumber(serverVehicle.moveUnits, vehicle.moveUnits),
     facing: serverFacing(serverVehicle.facing),
     angle: finiteNumber(serverVehicle.angle, vehicle.angle),
+    defeatReason: serverVehicle.defeatReason === "damage" || serverVehicle.defeatReason === "void"
+      ? serverVehicle.defeatReason
+      : undefined,
   };
 }
 

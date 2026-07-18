@@ -341,13 +341,13 @@ I am requesting a v1 contract change.
 <li>Phaser match start from server-owned setup metadata, so online ready uses the selected map, claimed seats, selected characters, and turn sequence instead of local demo defaults.</li>
 <li>Initial server-owned turn authority skeleton: preview turns publish a server clock, active vehicle, authority revision, and last accepted turn intent; forged turn intents from non-active owners are rejected server-side.</li>
 <li>Server-authoritative online projectile launch, stepped flight, wind/gravity simulation, first terrain-or-vehicle-hull collision, and replicated shot/impact snapshots, with stale, duplicate, and malformed fire intents rejected.</li>
+<li>Server-authoritative crater persistence, shared damage/self-damage/friendly-fire rules, Nova knockback, vehicle settlement, HP KO and Void Dropped outcomes, replicated through compact terrain events and vehicle state.</li>
 <li>One-terminal public playtest launcher.</li>
 </ul>
 <p>Not done:</p>
 <ul>
 <li>Full online match scoring beyond the preview target-score metadata.</li>
 <li>Phaser match driven by Colyseus room state.</li>
-<li>Persistent server-authoritative terrain deformation, damage, knockback, KOs, and Void Dropped resolution beyond the current projectile-impact snapshot.</li>
 <li>Full round/match scoring online.</li>
 <li>Four-human 2v2 validation.</li>
 </ul>
@@ -355,7 +355,7 @@ I am requesting a v1 contract change.
 <p>Recommended next sequence:</p>
 <ol>
 <li>Smoke-test playtest tunnel reliability and force Cloudflare Tunnel HTTP/2 if QUIC errors appear.</li>
-<li>Extend the server-authoritative projectile impact into persistent terrain changes, damage, knockback, KO, Void Dropped, and round-result authority.</li>
+<li>Complete server-owned turn advancement and round-result authority.</li>
 <li>Add online match scoring beyond the current target-score setup metadata.</li>
 <li>Validate 1v1 online.</li>
 <li>Validate 2v2 format online.</li>

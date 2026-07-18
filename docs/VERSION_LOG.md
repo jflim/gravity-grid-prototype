@@ -5,6 +5,7 @@ Use this as the human-readable checkpoint history. Every meaningful commit shoul
 ## Unreleased
 
 Highlights:
+- Issue #6 authoritative impact checkpoint: Colyseus now persists compact crater events, rebuilds projectile collision against changed terrain, applies shared direct/splash/self/friendly-fire/Nova knockback rules, settles vehicles, and replicates distinct HP KO and Void Dropped outcomes to Phaser clients.
 - Completed the server-authoritative projectile slice for online play: the server now rejects stale, duplicate, and malformed fire intents, keeps one stable authority version per turn with monotonic input sequencing, simulates launch/flight/collision from server truth, and publishes identical shot/impact snapshots to connected clients.
 - Added a repository-linked GitHub Project for the locked V1 Playtest Alpha contract, seeded it with eight acceptance-driven delivery issues and execution fields, and documented the agent workflow for keeping issue status and verification evidence current.
 - Adopted one dedicated `codex/issue-<number>-<short-slug>` branch per feature ticket so future agent work stays isolated and reviewable.

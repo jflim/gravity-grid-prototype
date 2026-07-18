@@ -68,6 +68,7 @@ export class CombatVehicleState extends Schema {
   declare hp: number;
   declare maxHp: number;
   declare alive: boolean;
+  declare defeatReason: string;
   declare x: number;
   declare y: number;
   declare moveUnits: number;
@@ -86,11 +87,27 @@ export class CombatVehicleState extends Schema {
     this.hp = 100;
     this.maxHp = 100;
     this.alive = true;
+    this.defeatReason = "";
     this.x = 0;
     this.y = 0;
     this.moveUnits = MAX_MOVE_UNITS;
     this.facing = 1;
     this.angle = 45;
+  }
+}
+
+export class TerrainCraterState extends Schema {
+  declare x: number;
+  declare y: number;
+  declare radius: number;
+  declare depthFactor: number;
+
+  constructor() {
+    super();
+    this.x = 0;
+    this.y = 0;
+    this.radius = 0;
+    this.depthFactor = 0;
   }
 }
 
@@ -108,6 +125,8 @@ export class GravityCanyonState extends Schema {
   declare selectedMapName: string;
   declare mapSeed: number;
   declare targetScore: number;
+  declare terrainRevision: number;
+  declare terrainCraters: ArraySchema<TerrainCraterState>;
   declare turnSequence: ArraySchema<string>;
   declare turnDurationSeconds: number;
   declare turnStartedAtMs: number;
@@ -166,6 +185,8 @@ export class GravityCanyonState extends Schema {
     this.selectedMapName = "";
     this.mapSeed = 0;
     this.targetScore = 1;
+    this.terrainRevision = 0;
+    this.terrainCraters = new ArraySchema<TerrainCraterState>();
     this.turnSequence = new ArraySchema<string>();
     this.turnDurationSeconds = TURN_SECONDS;
     this.turnStartedAtMs = 0;
@@ -243,11 +264,19 @@ defineTypes(CombatVehicleState, {
   hp: "number",
   maxHp: "number",
   alive: "boolean",
+  defeatReason: "string",
   x: "number",
   y: "number",
   moveUnits: "number",
   facing: "number",
   angle: "number",
+});
+
+defineTypes(TerrainCraterState, {
+  x: "number",
+  y: "number",
+  radius: "number",
+  depthFactor: "number",
 });
 
 defineTypes(GravityCanyonState, {
@@ -264,6 +293,8 @@ defineTypes(GravityCanyonState, {
   selectedMapName: "string",
   mapSeed: "number",
   targetScore: "number",
+  terrainRevision: "number",
+  terrainCraters: { array: TerrainCraterState },
   turnSequence: { array: "string" },
   turnDurationSeconds: "number",
   turnStartedAtMs: "number",

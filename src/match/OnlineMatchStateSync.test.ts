@@ -64,6 +64,21 @@ test("applyOnlineMatchSnapshotToVehicles mutates local vehicles from server stat
   });
 });
 
+test("applyOnlineMatchSnapshotToVehicles preserves server KO and Void Drop reasons", () => {
+  const vehicles = [vehicle("red-1"), vehicle("blue-1")];
+  const snapshot = previewRoomSnapshot({
+    vehicles: [
+      { ...previewRoomSnapshot().vehicles[0]!, alive: false, hp: 0, defeatReason: "damage" },
+      { ...previewRoomSnapshot().vehicles[1]!, alive: false, hp: 0, defeatReason: "void" },
+    ],
+  });
+
+  applyOnlineMatchSnapshotToVehicles(vehicles, snapshot);
+
+  assert.equal(vehicles[0]?.defeatReason, "damage");
+  assert.equal(vehicles[1]?.defeatReason, "void");
+});
+
 test("applyOnlineMatchSnapshotToVehicles matches server seat ids when vehicle ids are absent", () => {
   const vehicles = [vehicle("red-1")];
 
