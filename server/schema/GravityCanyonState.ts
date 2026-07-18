@@ -165,6 +165,7 @@ export class GravityCanyonState extends Schema {
   declare wind: number;
   declare activeVehicleId: string;
   declare winnerTeam: string;
+  declare roundEndReason: string;
   declare lastRewardLog: string;
   declare players: MapSchema<PlayerState>;
   declare slots: MapSchema<LobbySlotState>;
@@ -225,6 +226,7 @@ export class GravityCanyonState extends Schema {
     this.wind = 0;
     this.activeVehicleId = "";
     this.winnerTeam = "";
+    this.roundEndReason = "";
     this.lastRewardLog = "";
     this.players = new MapSchema<PlayerState>();
     this.slots = new MapSchema<LobbySlotState>();
@@ -333,6 +335,7 @@ defineTypes(GravityCanyonState, {
   wind: "number",
   activeVehicleId: "string",
   winnerTeam: "string",
+  roundEndReason: "string",
   lastRewardLog: "string",
   players: { map: PlayerState },
   slots: { map: LobbySlotState },

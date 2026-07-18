@@ -127,7 +127,8 @@ function vehicleHpPercent(vehicle: CombatVehicleSnapshot): number {
 }
 
 function vehicleStatus(vehicle: CombatVehicleSnapshot): string {
-  return vehicle.alive ? `${vehicle.hp}/${vehicle.maxHp}` : "KO";
+  if (vehicle.alive) return `${vehicle.hp}/${vehicle.maxHp}`;
+  return vehicle.defeatReason === "void" ? "Void Dropped" : "HP KO";
 }
 
 function capitalize(value: string): string {

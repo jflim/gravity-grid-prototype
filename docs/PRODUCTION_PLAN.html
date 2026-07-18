@@ -342,6 +342,7 @@ I am requesting a v1 contract change.
 <li>Initial server-owned turn authority skeleton: preview turns publish a server clock, active vehicle, authority revision, and last accepted turn intent; forged turn intents from non-active owners are rejected server-side.</li>
 <li>Server-authoritative online projectile launch, stepped flight, wind/gravity simulation, first terrain-or-vehicle-hull collision, and replicated shot/impact snapshots, with stale, duplicate, and malformed fire intents rejected.</li>
 <li>Server-authoritative crater persistence, shared damage/self-damage/friendly-fire rules, Nova knockback, vehicle settlement, HP KO and Void Dropped outcomes, replicated through compact terrain events and vehicle state.</li>
+<li>Complete server-owned turn and round flow: fire/timeout advance exactly once, defeated units are skipped in the published 1v1/2v2 order, and team elimination publishes the round winner and reason.</li>
 <li>One-terminal public playtest launcher.</li>
 </ul>
 <p>Not done:</p>
@@ -355,8 +356,8 @@ I am requesting a v1 contract change.
 <p>Recommended next sequence:</p>
 <ol>
 <li>Smoke-test playtest tunnel reliability and force Cloudflare Tunnel HTTP/2 if QUIC errors appear.</li>
-<li>Complete server-owned turn advancement and round-result authority.</li>
 <li>Add online match scoring beyond the current target-score setup metadata.</li>
+<li>Complete same-room Best-of-1/Best-of-3 reset and result flow.</li>
 <li>Validate 1v1 online.</li>
 <li>Validate 2v2 format online.</li>
 <li>Run four-human 2v2 gold validation.</li>

@@ -52,6 +52,7 @@ export function previewRoomSnapshot(overrides: Partial<RoomSnapshot> = {}): Room
     wind: 4,
     activeVehicleId: "red-1",
     winnerTeam: "",
+    roundEndReason: "",
     lastRewardLog: "",
     players: [
       {

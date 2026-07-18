@@ -170,6 +170,7 @@ function buildCombatPreviewSetup(state: GravityCanyonState): CombatPreviewSetup 
 function resetCombatPreviewRound(state: GravityCanyonState, setup: CombatPreviewSetup): void {
   state.phase = "combat-preview";
   state.winnerTeam = "";
+  state.roundEndReason = "";
   state.turnNumber = 1;
   state.wind = rollWind();
   state.selectedMapId = setup.selectedMap.id;
@@ -207,6 +208,7 @@ export function clearCombatPreview(state: GravityCanyonState): void {
   state.wind = 0;
   state.activeVehicleId = "";
   state.winnerTeam = "";
+  state.roundEndReason = "";
   state.selectedMapId = "";
   state.selectedMapName = "";
   state.mapSeed = 0;
@@ -872,6 +874,7 @@ function winningTeamForState(state: GravityCanyonState): TeamId | undefined {
 function finishRound(state: GravityCanyonState, winnerTeam: TeamId): void {
   state.phase = "round-over";
   state.winnerTeam = winnerTeam;
+  state.roundEndReason = "team-eliminated";
   state.activeVehicleId = "";
   clearServerTurnAuthority(state);
 
