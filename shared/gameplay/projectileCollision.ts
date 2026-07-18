@@ -37,6 +37,23 @@ export interface VehicleContact extends ProjectileContact {
   id: string;
 }
 
+export interface ProjectileCollisionContact {
+  x: number;
+  y: number;
+  directHitId?: string;
+}
+
+export function firstProjectileCollisionContact(
+  vehicleContact: VehicleContact | undefined,
+  terrainContact: ProjectileContact | undefined,
+): ProjectileCollisionContact | undefined {
+  const contact = earliestContact([
+    vehicleContact ? vehicleCollisionContact(vehicleContact) : undefined,
+    terrainContact ? terrainCollisionContact(terrainContact) : undefined,
+  ]);
+  return contact ? { x: contact.x, y: contact.y, directHitId: contact.directHitId } : undefined;
+}
+
 export function firstTerrainContact(input: TerrainContactInput): ProjectileContact | undefined {
   const distance = Math.hypot(input.endX - input.startX, input.endY - input.startY);
   const steps = Math.max(4, Math.ceil(distance / 6));
@@ -49,49 +66,14 @@ export function firstTerrainContact(input: TerrainContactInput): ProjectileConta
       continue;
     }
 
-    let low = previousTime;
-    let high = time;
-    for (let refine = 0; refine < 12; refine += 1) {
-      const mid = (low + high) / 2;
-      if (terrainOverlapsProjectileAt(input, mid)) {
-        high = mid;
-      } else {
-        low = mid;
-      }
-    }
-
-    const x = lerp(input.startX, input.endX, high);
-    return {
-      x,
-      y: input.surfaceAt(x),
-      time: high,
-    };
+    return terrainContactAt(input, refinedTerrainContactTime(input, previousTime, time));
   }
 
   return undefined;
 }
 
 export function firstVehicleContact(input: VehicleContactInput): VehicleContact | undefined {
-  let best: VehicleContact | undefined;
-
-  for (const zone of input.zones) {
-    const time = sweptAabbContactTime(input, zone);
-    if (time === undefined || (best && time >= best.time)) {
-      continue;
-    }
-
-    const centerX = lerp(input.startX, input.endX, time);
-    const centerY = lerp(input.startY, input.endY, time);
-    const contact = closestPointOnVehicleHitZone(centerX, centerY, zone);
-    best = {
-      id: zone.id,
-      x: contact.x,
-      y: contact.y,
-      time,
-    };
-  }
-
-  return best;
+  return earliestContact(input.zones.map((zone) => vehicleContactForZone(input, zone)));
 }
 
 function terrainOverlapsProjectileAt(input: TerrainContactInput, time: number): boolean {
@@ -104,6 +86,49 @@ function terrainOverlapsProjectileAt(input: TerrainContactInput, time: number): 
   return y + input.projectileRadius >= input.surfaceAt(x);
 }
 
+function refinedTerrainContactTime(input: TerrainContactInput, lowStart: number, highStart: number): number {
+  let low = lowStart;
+  let high = highStart;
+
+  for (let refine = 0; refine < 12; refine += 1) {
+    const mid = (low + high) / 2;
+    if (terrainOverlapsProjectileAt(input, mid)) {
+      high = mid;
+      continue;
+    }
+
+    low = mid;
+  }
+
+  return high;
+}
+
+function terrainContactAt(input: TerrainContactInput, time: number): ProjectileContact {
+  const x = lerp(input.startX, input.endX, time);
+  return {
+    x,
+    y: input.surfaceAt(x),
+    time,
+  };
+}
+
+function vehicleContactForZone(input: VehicleContactInput, zone: VehicleContactZone): VehicleContact | undefined {
+  const time = sweptAabbContactTime(input, zone);
+  if (time === undefined) {
+    return undefined;
+  }
+
+  const centerX = lerp(input.startX, input.endX, time);
+  const centerY = lerp(input.startY, input.endY, time);
+  const contact = closestPointOnVehicleHitZone(centerX, centerY, zone);
+  return {
+    id: zone.id,
+    x: contact.x,
+    y: contact.y,
+    time,
+  };
+}
+
 function sweptAabbContactTime(input: VehicleContactInput, zone: VehicleContactZone): number | undefined {
   const bounds = vehicleHitZoneBounds(zone);
   const expanded = {
@@ -114,24 +139,12 @@ function sweptAabbContactTime(input: VehicleContactInput, zone: VehicleContactZo
   };
   const dx = input.endX - input.startX;
   const dy = input.endY - input.startY;
-  let entry = 0;
-  let exit = 1;
 
   const xTimes = axisTimes(input.startX, dx, expanded.left, expanded.right);
-  if (!xTimes) {
-    return undefined;
-  }
-  entry = Math.max(entry, xTimes.entry);
-  exit = Math.min(exit, xTimes.exit);
-
   const yTimes = axisTimes(input.startY, dy, expanded.top, expanded.bottom);
-  if (!yTimes) {
-    return undefined;
-  }
-  entry = Math.max(entry, yTimes.entry);
-  exit = Math.min(exit, yTimes.exit);
+  const interval = intersectAxisTimes(xTimes, yTimes);
 
-  return entry <= exit && entry <= 1 && exit >= 0 ? Math.max(0, entry) : undefined;
+  return contactTimeFromInterval(interval);
 }
 
 function axisTimes(start: number, delta: number, min: number, max: number): { entry: number; exit: number } | undefined {
@@ -145,6 +158,51 @@ function axisTimes(start: number, delta: number, min: number, max: number): { en
     entry: Math.min(t1, t2),
     exit: Math.max(t1, t2),
   };
+}
+
+function intersectAxisTimes(
+  xTimes: { entry: number; exit: number } | undefined,
+  yTimes: { entry: number; exit: number } | undefined,
+): { entry: number; exit: number } | undefined {
+  if (!xTimes || !yTimes) {
+    return undefined;
+  }
+
+  return {
+    entry: Math.max(0, xTimes.entry, yTimes.entry),
+    exit: Math.min(1, xTimes.exit, yTimes.exit),
+  };
+}
+
+function contactTimeFromInterval(interval: { entry: number; exit: number } | undefined): number | undefined {
+  if (!interval || interval.entry > interval.exit) {
+    return undefined;
+  }
+
+  return interval.entry;
+}
+
+function vehicleCollisionContact(contact: VehicleContact): ProjectileCollisionContact & { time: number } {
+  return {
+    x: contact.x,
+    y: contact.y,
+    time: contact.time,
+    directHitId: contact.id,
+  };
+}
+
+function terrainCollisionContact(contact: ProjectileContact): ProjectileCollisionContact & { time: number } {
+  return {
+    x: contact.x,
+    y: contact.y,
+    time: contact.time,
+  };
+}
+
+function earliestContact<T extends { time: number }>(contacts: readonly (T | undefined)[]): T | undefined {
+  return contacts
+    .filter((contact): contact is T => contact !== undefined)
+    .sort((left, right) => left.time - right.time)[0];
 }
 
 function lerp(start: number, end: number, time: number): number {

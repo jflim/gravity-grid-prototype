@@ -2,12 +2,19 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   canLocalPlayerChangeMode,
+  canLocalPlayerChangeRoomSettings,
   canLocalPlayerUseLobbyControls,
   lobbyHostLabel,
   canLocalPlayerEditSlot,
   lobbyStatusText,
   localRoleLabel,
+  mapPickLabel,
+  mapPickSummaryLabel,
+  matchLengthLabel,
+  matchLengthRoundsToWinLabel,
+  matchLengthSubLabel,
   modeLabel,
+  modeSubLabel,
   normalizeLobbySlots,
   roomDisplayLabel,
   stageForRoomPhase,
@@ -41,6 +48,12 @@ test("canLocalPlayerChangeMode allows only the host before gameplay starts", () 
   assert.equal(canLocalPlayerChangeMode(true, "combat-preview"), false);
 });
 
+test("canLocalPlayerChangeRoomSettings allows only the host before gameplay starts", () => {
+  assert.equal(canLocalPlayerChangeRoomSettings(true, "ready"), true);
+  assert.equal(canLocalPlayerChangeRoomSettings(false, "ready"), false);
+  assert.equal(canLocalPlayerChangeRoomSettings(true, "round-over"), false);
+});
+
 test("stageForRoomPhase separates lobby and gameplay scenes", () => {
   assert.equal(stageForRoomPhase("lobby"), "lobby");
   assert.equal(stageForRoomPhase("ready"), "lobby");
@@ -51,6 +64,16 @@ test("stageForRoomPhase separates lobby and gameplay scenes", () => {
 test("modeLabel and slotLabel keep lobby wording short", () => {
   assert.equal(modeLabel("1v1"), "Duel");
   assert.equal(modeLabel("2v2"), "Doubles");
+  assert.equal(modeSubLabel("1v1"), "1 unit per side");
+  assert.equal(modeSubLabel("2v2"), "2 units per side");
+  assert.equal(matchLengthLabel("best-of-1"), "Best of 1");
+  assert.equal(matchLengthLabel("best-of-3"), "Best of 3");
+  assert.equal(matchLengthRoundsToWinLabel("best-of-1"), "1");
+  assert.equal(matchLengthRoundsToWinLabel("best-of-3"), "2");
+  assert.equal(matchLengthSubLabel("best-of-3"), "Best of 3");
+  assert.equal(mapPickLabel("random"), "Random Map");
+  assert.equal(mapPickLabel("ring-basin"), "Ringworks Basin");
+  assert.equal(mapPickSummaryLabel("bridgeworks"), "stacked natural bridges and broken spans over open canyon air");
   assert.equal(slotLabel("red-1"), "Red 1");
   assert.equal(slotLabel("blue-2"), "Blue 2");
 });
@@ -103,6 +126,7 @@ test("normalizeLobbySlots reads Colyseus map slot state and owner labels", () =>
         team: "red",
         ownerSessionId: "red-session",
         selectedCharacterId: "kaelii",
+        characterSelected: true,
         active: true,
       },
     ],
@@ -113,6 +137,7 @@ test("normalizeLobbySlots reads Colyseus map slot state and owner labels", () =>
         team: "blue",
         ownerSessionId: "blue-session",
         selectedCharacterId: "vesper",
+        characterSelected: false,
         active: true,
       },
     ],
@@ -129,6 +154,7 @@ test("normalizeLobbySlots reads Colyseus map slot state and owner labels", () =>
         team: "red",
         ownerSessionId: "red-session",
         characterId: "kaelii",
+        characterSelected: true,
         displayName: "RedTest",
         ready: true,
         active: true,
@@ -138,6 +164,7 @@ test("normalizeLobbySlots reads Colyseus map slot state and owner labels", () =>
         team: "blue",
         ownerSessionId: "blue-session",
         characterId: "vesper",
+        characterSelected: false,
         displayName: "BlueTest",
         ready: false,
         active: true,

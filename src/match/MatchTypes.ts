@@ -22,6 +22,9 @@ export interface ProjectileState extends ProjectileKinematics {
   shooterId: string;
   team: TeamId;
   trail: WorldPoint[];
+  serverReplay?: boolean;
+  serverReplayDirectHitId?: string;
+  serverReplayWind?: number;
 }
 
 export interface WorldPoint {

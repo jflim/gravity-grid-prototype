@@ -23,6 +23,7 @@ export interface DrawVehiclesInput {
   projectileActive: boolean;
   roundOver: boolean;
   turnCommitted: boolean;
+  localActiveTurn: boolean;
   showCombatHulls: boolean;
   charging: boolean;
   turnTime: number;
@@ -62,6 +63,7 @@ export class VehicleRenderer {
         projectileActive: input.projectileActive,
         roundOver: input.roundOver,
         turnCommitted: input.turnCommitted,
+        localActiveTurn: input.localActiveTurn,
         charging: input.charging,
         turnTime: input.turnTime,
         showCombatHulls: input.showCombatHulls,
@@ -99,6 +101,7 @@ export class VehicleRenderer {
         worldUiScale,
         model.motionOrDefeatLabel,
         model.active,
+        model.localActiveTurn,
         model.turnTime,
       );
     }

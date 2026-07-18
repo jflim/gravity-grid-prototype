@@ -39,6 +39,7 @@ function state(overrides: Partial<MatchViewState> = {}): MatchViewState {
     charging: false,
     charge: 0,
     turnTime: 20,
+    localActiveTurn: true,
     cameraZoom: 1,
     shotResult: "Ready.",
     roundComplete: false,
@@ -104,15 +105,24 @@ test("match view draws terrain, effects, vehicles, projectile, and hud from supp
     drawCalls.map((call) => call.name),
     ["terrain", "aim", "impact", "vehicles", "projectile", "hud"],
   );
-  const terrainCall = drawCalls.find((call) => call.name === "terrain");
-  assert.equal((terrainCall?.input as { worldWidth: number }).worldWidth, 2400);
-  assert.equal((terrainCall?.input as { terrainStep: number }).terrainStep, 6);
+  const terrainInput = inputForCall<{ worldWidth: number; terrainStep: number }>(drawCalls, "terrain");
+  assert.equal(terrainInput.worldWidth, 2400);
+  assert.equal(terrainInput.terrainStep, 6);
 
-  const aimCall = drawCalls.find((call) => call.name === "aim");
-  assert.equal((aimCall?.input as { canAct: boolean }).canAct, true);
+  assert.equal(inputForCall<{ canAct: boolean }>(drawCalls, "aim").canAct, true);
 
-  const hudCall = drawCalls.find((call) => call.name === "hud");
-  assert.equal((hudCall?.input as { active?: VehicleState }).active?.id, "red-1");
+  assert.equal(inputForCall<{ active?: VehicleState }>(drawCalls, "hud").active?.id, "red-1");
+});
+
+test("match view passes local active turn state to active vehicle rendering", () => {
+  const drawCalls: DrawCall[] = [];
+  const view = new MatchView(options(drawCalls));
+  drawCalls.length = 0;
+
+  view.draw(state({ localActiveTurn: true }));
+
+  const vehiclesCall = drawCalls.find((call) => call.name === "vehicles");
+  assert.equal((vehiclesCall?.input as { localActiveTurn?: boolean }).localActiveTurn, true);
 });
 
 test("match view forwards marker lifecycle and collision-zone visibility", () => {
@@ -152,3 +162,9 @@ test("match view delegates background creation to its collaborator", () => {
 
   assert.deepEqual(drawCalls, [{ name: "background:create", input: undefined }]);
 });
+
+function inputForCall<T>(drawCalls: readonly DrawCall[], name: string): T {
+  const call = drawCalls.find((candidate) => candidate.name === name);
+  assert.ok(call);
+  return call.input as T;
+}

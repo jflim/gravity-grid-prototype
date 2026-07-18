@@ -129,6 +129,18 @@ gh repo view jflim/gravity-grid-prototype
 gh pr status
 ```
 
+The live v1 delivery board is [Gravity Canyon — V1 Playtest Alpha](https://github.com/users/jflim/projects/1). Use linked repository issues as the unit of delivery so code, review, and verification evidence remain connected. The board is an execution view; `PRODUCTION_PLAN.md` remains the v1 scope authority.
+
+Agent workflow:
+
+1. Review the board and linked issue before substantial implementation.
+2. Checkpoint or preserve existing work, then create one dedicated branch per ticket using `codex/issue-<number>-<short-slug>` unless the user requests another name.
+3. Set the issue to `In Progress` when work starts.
+4. Comment only when scope, assumptions, blockers, or evidence materially change.
+5. Link the resulting commit or pull request.
+6. Record quality-gate and playtest evidence before setting the issue to `Done`.
+7. Keep human validation issues open until the named network session actually succeeds.
+
 ## Current Local Repo
 
 - Branch: `main`

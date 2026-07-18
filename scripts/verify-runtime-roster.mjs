@@ -145,7 +145,7 @@ if (!gameTypesSource.includes('export type ClassId = "bunger" | "glitch" | "boun
 
 if (
   !roundBuilderSource.includes("turnOrder: input.units.map((unit) => unit.id)") ||
-  !matchSceneSource.includes("units: DEMO_UNIT_DEFINITIONS") ||
+  !matchSceneSource.includes("this.initialRoundSetup ? this.initialRoundSetup.units : DEMO_UNIT_DEFINITIONS") ||
   !unitContentSource.includes('id: "red-2"') ||
   !unitContentSource.includes('id: "blue-2"')
 ) {

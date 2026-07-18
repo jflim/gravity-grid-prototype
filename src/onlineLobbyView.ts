@@ -1,3 +1,7 @@
+import {
+  onlineLobbyMapOptionFor,
+} from "./onlineLobbyMapOptions";
+
 export type ClientRole = "host" | "player" | "spectator" | string;
 export type ClientSlotId = "red-1" | "blue-1" | "red-2" | "blue-2" | string;
 
@@ -6,6 +10,7 @@ export type LobbySlotView = {
   team: string;
   ownerSessionId: string;
   characterId: string;
+  characterSelected: boolean;
   displayName: string;
   ready: boolean;
   active: boolean;
@@ -28,6 +33,7 @@ type LobbySlotSource = {
   ownerSessionId?: string;
   selectedCharacterId?: string;
   characterId?: string;
+  characterSelected?: boolean;
   active?: boolean;
 };
 
@@ -61,6 +67,10 @@ export function canLocalPlayerUseLobbyControls(hasOwnedActiveSeat: boolean, phas
 }
 
 export function canLocalPlayerChangeMode(isHost: boolean, phase: string): boolean {
+  return canLocalPlayerChangeRoomSettings(isHost, phase);
+}
+
+export function canLocalPlayerChangeRoomSettings(isHost: boolean, phase: string): boolean {
   return isHost && (phase === "lobby" || phase === "ready");
 }
 
@@ -73,7 +83,27 @@ export function modeLabel(mode: string): string {
 }
 
 export function modeSubLabel(mode: string): string {
-  return mode === "1v1" ? "1 fighter per side" : "2 fighters per side";
+  return mode === "1v1" ? "1 unit per side" : "2 units per side";
+}
+
+export function matchLengthLabel(matchLength: string): string {
+  return matchLength === "best-of-3" ? "Best of 3" : "Best of 1";
+}
+
+export function matchLengthRoundsToWinLabel(matchLength: string): string {
+  return matchLength === "best-of-3" ? "2" : "1";
+}
+
+export function matchLengthSubLabel(matchLength: string): string {
+  return matchLengthLabel(matchLength);
+}
+
+export function mapPickLabel(mapPick: string): string {
+  return onlineLobbyMapOptionFor(mapPick).name;
+}
+
+export function mapPickSummaryLabel(mapPick: string): string {
+  return onlineLobbyMapOptionFor(mapPick).summary;
 }
 
 export function slotLabel(slotId: ClientSlotId): string {
@@ -173,6 +203,7 @@ function lobbySlotViewFrom(
     team: teamForSlotSource(source, slotId, entry.key),
     ownerSessionId,
     characterId: characterIdFor(source),
+    characterSelected: source.characterSelected === true,
     displayName: displayNameForSlot(owner, ownerSessionId),
     ready: readyForOwner(owner),
     active: activeForSlot(source),

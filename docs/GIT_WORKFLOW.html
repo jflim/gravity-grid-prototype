@@ -87,7 +87,7 @@
   <main>
     <article>
       <div class="generated">
-        HTML reading copy generated from <a href="GIT_WORKFLOW.md">docs/GIT_WORKFLOW.md</a> on 2026-06-18.
+        HTML reading copy generated from <a href="GIT_WORKFLOW.md">docs/GIT_WORKFLOW.md</a> on 2026-07-18.
         Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Git Workflow</h1>
@@ -218,6 +218,17 @@ gh repo view jflim/gravity-grid-prototype
 gh pr status
 
 </code></pre>
+<p>The live v1 delivery board is <a href="https://github.com/users/jflim/projects/1">Gravity Canyon — V1 Playtest Alpha</a>. Use linked repository issues as the unit of delivery so code, review, and verification evidence remain connected. The board is an execution view; <code>PRODUCTION_PLAN.md</code> remains the v1 scope authority.</p>
+<p>Agent workflow:</p>
+<ol>
+<li>Review the board and linked issue before substantial implementation.</li>
+<li>Checkpoint or preserve existing work, then create one dedicated branch per ticket using <code>codex/issue-&lt;number&gt;-&lt;short-slug&gt;</code> unless the user requests another name.</li>
+<li>Set the issue to <code>In Progress</code> when work starts.</li>
+<li>Comment only when scope, assumptions, blockers, or evidence materially change.</li>
+<li>Link the resulting commit or pull request.</li>
+<li>Record quality-gate and playtest evidence before setting the issue to <code>Done</code>.</li>
+<li>Keep human validation issues open until the named network session actually succeeds.</li>
+</ol>
 <h2>Current Local Repo</h2>
 <ul>
 <li>Branch: <code>main</code></li>

@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lobby Seat Card Unit Summary Implementation Plan</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        HTML reading copy generated from <a href="2026-06-18-lobby-seat-card-unit-summary.md">docs/superpowers/plans/2026-06-18-lobby-seat-card-unit-summary.md</a> on 2026-07-18.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Lobby Seat Card Unit Summary Implementation Plan</h1>
+<blockquote>
+<p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (<code>- [ ]</code>) syntax for tracking.</p>
+</blockquote>
+<p><strong>Goal:</strong> Replace the playtest lobby's repeated Pilot/Vehicle panels with the approved compact unit-summary seat card.</p>
+<p><strong>Architecture:</strong> This is a client presentation change only. <code>src/onlineLobbyMarkup.ts</code> will keep rendering one combined unit image per seat, then render compact unit chips from the existing <code>LobbyCharacterCard</code> data. <code>src/styles.css</code> will tighten the seat card dimensions so team columns scan better in 1v1 and 2v2.</p>
+<p><strong>Tech Stack:</strong> TypeScript, HTML string rendering, CSS, Node built-in test runner via <code>tsx</code>.</p>
+<p>---</p>
+<h2>File Structure</h2>
+<ul>
+<li>Modify <code>src/onlineLobbyMarkup.test.ts</code>: assert the seat rows render compact unit chips and no longer render big Pilot/Vehicle loadout panels.</li>
+<li>Modify <code>src/onlineLobbyMarkup.ts</code>: replace <code>renderLoadoutPart(...)</code> usage with compact unit chip markup.</li>
+<li>Modify <code>src/styles.css</code>: replace slot loadout panel styles with compact chip styles and reduce seat card image/card heights.</li>
+<li>Modify <code>docs/VERSION_LOG.md</code>: add a short playable checkpoint note for the lobby presentation change.</li>
+</ul>
+<p>---</p>
+<h3>Task 1: Lock The Markup Contract With A Failing Test</h3>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>src/onlineLobbyMarkup.test.ts</code></li>
+<li>Test: <code>src/onlineLobbyMarkup.test.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Update the grouped-seat test expectations</strong></li>
+</ul>
+<p>In <code>renderSlotRows groups visible seats by team</code>, keep the existing team, host, action, and unit image assertions. Replace the old Vehicle-image assertion with compact unit chip assertions:</p>
+<pre><code class="language-ts">
+  assertIncludesAll(html, [
+
+    /online-team-column online-team-column--red/,
+
+    /online-team-column online-team-column--blue/,
+
+    /Red Team/,
+
+    /Blue Team/,
+
+    /Red is ready/,
+
+    /Open blue seat/,
+
+    /online-seat__host-badge/,
+
+    /HOST/,
+
+    /data-seat-action=&quot;pick&quot;/,
+
+    /data-seat-action=&quot;claim&quot;/,
+
+    /src=&quot;\/assets\/nova-unit-default.webp&quot;/,
+
+    /class=&quot;online-seat__unit-chips&quot;/,
+
+    /data-unit-chip=&quot;pilot&quot;[^&gt;]*&gt;Nova&lt;\/span&gt;/,
+
+    /data-unit-chip=&quot;vehicle&quot;[^&gt;]*&gt;Bunger Rig&lt;\/span&gt;/,
+
+  ]);
+
+  assertExcludesAll(html, [/online-seat__part/, /&gt;Pilot&lt;/, /&gt;Vehicle&lt;/, /src=&quot;\/assets\/nova-vehicle-sprite.webp&quot;/, /&lt;select/]);
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Run the focused test and verify it fails</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+node_modules\.bin\tsx.cmd --test src\onlineLobbyMarkup.test.ts
+
+</code></pre>
+<p>Expected: failure because <code>online-seat__unit-chips</code> and <code>data-unit-chip</code> do not exist yet, while <code>online-seat__part</code> still exists.</p>
+<p>---</p>
+<h3>Task 2: Render Compact Unit Chips</h3>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>src/onlineLobbyMarkup.ts</code></li>
+<li>Test: <code>src/onlineLobbyMarkup.test.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Replace the loadout block in <code>renderSlotRow</code></strong></li>
+</ul>
+<p>Change:</p>
+<pre><code class="language-ts">
+        &lt;div class=&quot;online-seat__loadout&quot;&gt;
+
+          ${renderLoadoutPart(&quot;Pilot&quot;, state.card.name, state.card.pilotImage, state.card.needsLobbyArt)}
+
+          ${renderLoadoutPart(&quot;Vehicle&quot;, state.card.vehicleName, state.card.vehicleImage, false)}
+
+        &lt;/div&gt;
+
+</code></pre>
+<p>To:</p>
+<pre><code class="language-ts">
+        ${renderUnitChips(state.card)}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Add <code>renderUnitChips</code> and remove <code>renderLoadoutPart</code></strong></li>
+</ul>
+<p>Add this helper near the old loadout helper location:</p>
+<pre><code class="language-ts">
+function renderUnitChips(card: LobbyCharacterCard): string {
+
+  return `
+
+    &lt;div class=&quot;online-seat__unit-chips&quot; aria-label=&quot;${escapeHtml(`${card.name} with ${card.vehicleName}`)}&quot;&gt;
+
+      &lt;span class=&quot;online-seat__unit-chip&quot; data-unit-chip=&quot;pilot&quot; title=&quot;${escapeHtml(`Pilot: ${card.name}`)}&quot;&gt;${escapeHtml(card.name)}&lt;/span&gt;
+
+      &lt;span class=&quot;online-seat__unit-chip&quot; data-unit-chip=&quot;vehicle&quot; title=&quot;${escapeHtml(`Vehicle: ${card.vehicleName}`)}&quot;&gt;${escapeHtml(card.vehicleName)}&lt;/span&gt;
+
+    &lt;/div&gt;
+
+  `;
+
+}
+
+</code></pre>
+<p>Remove the now-unused <code>renderLoadoutPart(...)</code> function entirely.</p>
+<ul>
+<li>[ ] <strong>Step 3: Run the focused test and verify it passes</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+node_modules\.bin\tsx.cmd --test src\onlineLobbyMarkup.test.ts
+
+</code></pre>
+<p>Expected: all <code>onlineLobbyMarkup</code> tests pass.</p>
+<p>---</p>
+<h3>Task 3: Match The Approved Compact Visual Direction</h3>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>src/styles.css</code></li>
+<li>Test: browser/manual visual review after build or live reload</li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Tighten the slot card layout</strong></li>
+</ul>
+<p>In the <code>.online-slot</code> block, change the grid and height values to match the mock's shorter unit summary:</p>
+<pre><code class="language-css">
+.online-slot {
+
+  display: grid;
+
+  grid-template-columns: minmax(96px, 116px) minmax(0, 1fr);
+
+  align-items: stretch;
+
+  gap: 10px;
+
+  min-height: 124px;
+
+  padding: 10px;
+
+  background: rgba(255, 255, 255, 0.07);
+
+  border-left: 4px solid #ff727e;
+
+  border-radius: 8px;
+
+}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Tighten the combined unit image box</strong></li>
+</ul>
+<p>Replace the <code>.online-seat__unit</code> and <code>.online-seat__unit img</code> dimensions:</p>
+<pre><code class="language-css">
+.online-seat__unit {
+
+  display: grid;
+
+  place-items: end center;
+
+  min-width: 0;
+
+  min-height: 112px;
+
+  overflow: hidden;
+
+}
+
+
+
+.online-seat__unit img {
+
+  display: block;
+
+  width: 100%;
+
+  height: 104px;
+
+  object-fit: contain;
+
+  object-position: center bottom;
+
+}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 3: Replace loadout panel styles with chip styles</strong></li>
+</ul>
+<p>Remove <code>.online-seat__loadout</code>, <code>.online-seat__part</code>, <code>.online-seat__part img</code>, and the <code>.online-seat__part figcaption...</code> rules. Add:</p>
+<pre><code class="language-css">
+.online-seat__unit-chips {
+
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 6px;
+
+  align-content: start;
+
+  min-width: 0;
+
+}
+
+
+
+.online-seat__unit-chip {
+
+  display: block;
+
+  max-width: 100%;
+
+  overflow: hidden;
+
+  padding: 5px 7px;
+
+  color: #ffffff;
+
+  background: rgba(255, 255, 255, 0.13);
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  border-radius: 999px;
+
+  font-size: 10px;
+
+  font-weight: 850;
+
+  line-height: 1.1;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+
+}
+
+
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 4: Keep mobile layout stable</strong></li>
+</ul>
+<p>In the <code>@media (max-width: 680px)</code> rule where <code>.online-slot</code> switches to one column, add a compact mobile override:</p>
+<pre><code class="language-css">
+  .online-seat__unit img {
+
+    height: 118px;
+
+  }
+
+</code></pre>
+<p>Expected: single-column mobile seats still show readable unit art without overlapping text or buttons.</p>
+<p>---</p>
+<h3>Task 4: Document The Playable Checkpoint</h3>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>docs/VERSION_LOG.md</code></li>
+<li>Generated by command: <code>docs/VERSION_LOG.html</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Add a concise version log bullet</strong></li>
+</ul>
+<p>Add a bullet to the latest unreleased/checkpoint section:</p>
+<pre><code class="language-md">
+- Tightened the playtest lobby seat cards around the combined unit identity: the main slot now shows the mounted unit once, with compact Pilot/Vehicle chips instead of repeated Pilot and Vehicle panels.
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Regenerate docs HTML</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+npm run docs:html
+
+</code></pre>
+<p>Expected: command exits 0 and regenerates HTML reading copies.</p>
+<p>---</p>
+<h3>Task 5: Verification</h3>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Test: <code>src/onlineLobbyMarkup.test.ts</code></li>
+<li>Test: full project gates</li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Run focused lobby tests</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+node_modules\.bin\tsx.cmd --test src\onlineLobbyMarkup.test.ts src\onlineLobbyView.test.ts
+
+</code></pre>
+<p>Expected: all tests pass.</p>
+<ul>
+<li>[ ] <strong>Step 2: Run the full test suite</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+npm test
+
+</code></pre>
+<p>Expected: all tests pass.</p>
+<ul>
+<li>[ ] <strong>Step 3: Run the production build</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+npm run build
+
+</code></pre>
+<p>Expected: build exits 0. Existing bundle-size warnings are acceptable if unchanged.</p>
+<ul>
+<li>[ ] <strong>Step 4: Run changed-code audit</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+npm run audit:fallow:changed
+
+</code></pre>
+<p>Expected: exits 0, or any introduced finding is fixed before completion.</p>
+<ul>
+<li>[ ] <strong>Step 5: Refresh the code graph</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+npm run graphify:update
+
+</code></pre>
+<p>Expected: exits 0.</p>
+<ul>
+<li>[ ] <strong>Step 6: Review the live lobby</strong></li>
+</ul>
+<p>Open or refresh:</p>
+<pre><code class="language-text">
+http://127.0.0.1:2567/?onlinePanel=1
+
+</code></pre>
+<p>Expected: each seat matches the approved B mock direction: one combined unit visual, compact Pilot/Vehicle chips, shorter card, host badge still visible, and existing actions still usable.</p>
+    </article>
+  </main>
+</body>
+</html>

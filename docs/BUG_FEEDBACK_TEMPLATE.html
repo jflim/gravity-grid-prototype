@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bug Feedback Template</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        HTML reading copy generated from <a href="BUG_FEEDBACK_TEMPLATE.md">docs/BUG_FEEDBACK_TEMPLATE.md</a> on 2026-07-18.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Bug Feedback Template</h1>
+<p>Use this file when reporting playtest bugs, confusing UI, or design feedback. The quick report is enough for simple issues. Use the full report when the bug involves multiplayer, lobby state, turn ownership, shots, movement, or anything hard to reproduce.</p>
+<h2>Quick Report</h2>
+<pre><code class="language-md">
+## Bug / Feedback
+
+
+
+Type: Bug / Confusing UI / Balance feel / Visual polish / Question
+
+Severity: Blocker / Major / Minor / Nice-to-have
+
+
+
+Setup:
+
+- Command:
+
+- URL:
+
+- Browser/device:
+
+
+
+Steps:
+
+1.
+
+2.
+
+3.
+
+
+
+Expected:
+
+
+
+Actual:
+
+
+
+Evidence:
+
+- Screenshot/video:
+
+- Approx time:
+
+
+
+Repro rate: Always / Sometimes / Once / Could not reproduce again
+
+Notes:
+
+</code></pre>
+<h2>Multiplayer Report</h2>
+<pre><code class="language-md">
+## Bug / Feedback Title
+
+
+
+Type: Bug / Confusing UI / Balance feel / Visual polish / Question
+
+Severity: Blocker / Major / Minor / Nice-to-have
+
+
+
+## Test Setup
+
+
+
+Command used: npm run playtest / npm run playtest:local / npm run dev
+
+URL:
+
+Browsers/devices:
+
+
+
+Room settings:
+
+- Match mode: Duel / Doubles
+
+- Rounds to win:
+
+- Map setting: Random / selected map name
+
+- Room access: Private Link / Public
+
+
+
+Players:
+
+- Player A:
+
+  - Display name:
+
+  - Browser/device:
+
+  - Role: Host / Player / Unsure
+
+  - Team/seat:
+
+  - Unit:
+
+- Player B:
+
+  - Display name:
+
+  - Browser/device:
+
+  - Role: Host / Player / Unsure
+
+  - Team/seat:
+
+  - Unit:
+
+
+
+Active turn when the issue happened:
+
+Problem was visible on: Player A screen / Player B screen / both / unsure
+
+
+
+## Steps To Reproduce
+
+
+
+1.
+
+2.
+
+3.
+
+
+
+## Expected
+
+
+
+
+
+## Actual
+
+
+
+
+
+## Evidence
+
+
+
+- Screenshot/video:
+
+- Approx time it happened:
+
+- Browser console message, if visible:
+
+- Server terminal message, if visible:
+
+
+
+## Repro Rate
+
+
+
+Always / Sometimes / Once / Could not reproduce again
+
+
+
+## Notes
+
+
+
+Anything that felt weird, even if you are not sure it is a bug.
+
+</code></pre>
+<h2>Feel Feedback</h2>
+<pre><code class="language-md">
+## Feel Feedback
+
+
+
+Screen/feature:
+
+What I was trying to do:
+
+What confused me:
+
+What I expected as a player:
+
+How strongly I care: 1-5
+
+Screenshot/video:
+
+Notes:
+
+</code></pre>
+<h2>Good Evidence To Include</h2>
+<ul>
+<li>A screenshot or short recording from the screen where the problem is visible.</li>
+<li>Which player was host, which player owned the active turn, and which screen showed the issue.</li>
+<li>Whether both browsers were in the same room and same match phase.</li>
+<li>The exact command used to launch the test.</li>
+<li>Whether the issue happened once or repeats reliably.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

@@ -4,6 +4,7 @@ import {
   stepProjectile,
 } from "../../shared/gameplay/projectile.js";
 import {
+  firstProjectileCollisionContact,
   firstTerrainContact,
   firstVehicleContact,
 } from "../../shared/gameplay/projectileCollision.js";
@@ -136,7 +137,7 @@ export class ProjectileController {
       zones: input.targets
         .filter(
           (target) =>
-            target.alive &&
+            this.targetCanCollideWithProjectile(target, input.projectile) &&
             target.id !== input.projectile.shooterId &&
             target.team !== input.projectile.team,
         )
@@ -155,10 +156,10 @@ export class ProjectileController {
       surfaceAt: input.surfaceAt,
     });
 
-    if (vehicleContact && (!terrainContact || vehicleContact.time <= terrainContact.time)) {
-      return { x: vehicleContact.x, y: vehicleContact.y, directHitId: vehicleContact.id };
-    }
+    return firstProjectileCollisionContact(vehicleContact, terrainContact);
+  }
 
-    return terrainContact ? { x: terrainContact.x, y: terrainContact.y } : undefined;
+  private targetCanCollideWithProjectile(target: ProjectileTarget, projectile: ProjectileState): boolean {
+    return target.alive || target.id === projectile.serverReplayDirectHitId;
   }
 }

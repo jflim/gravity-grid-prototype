@@ -8,6 +8,7 @@ export interface VehicleRenderModelInput {
   projectileActive: boolean;
   roundOver: boolean;
   turnCommitted: boolean;
+  localActiveTurn: boolean;
   charging: boolean;
   turnTime: number;
   showCombatHulls: boolean;
@@ -17,6 +18,7 @@ export interface VehicleRenderModelInput {
 
 export interface VehicleRenderModel {
   active: boolean;
+  localActiveTurn: boolean;
   charging: boolean;
   renderX: number;
   renderY: number;
@@ -32,11 +34,13 @@ export interface VehicleRenderModel {
 
 export function vehicleRenderModelFor(input: VehicleRenderModelInput): VehicleRenderModel {
   const { vehicle } = input;
+  const active = isActiveVehicle(input);
   const defeatPresentation = defeatPresentationForVehicle(vehicle);
   const voidDropPosition = voidDropPositionFor(vehicle, defeatPresentation);
 
   return {
-    active: isActiveVehicle(input),
+    active,
+    localActiveTurn: localActiveTurnFor(active, input.localActiveTurn),
     charging: input.charging,
     renderX: renderXFor(vehicle, voidDropPosition),
     renderY: renderYFor(vehicle, voidDropPosition, defeatPresentation),
@@ -123,6 +127,10 @@ function isActiveVehicle(input: VehicleRenderModelInput): boolean {
 
 function isTurnLocked(input: VehicleRenderModelInput): boolean {
   return input.projectileActive || input.roundOver || input.turnCommitted;
+}
+
+function localActiveTurnFor(active: boolean, localActiveTurn: boolean): boolean {
+  return active && localActiveTurn;
 }
 
 function motionLabelFor(vehicle: VehicleState): string | undefined {

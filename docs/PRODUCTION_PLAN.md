@@ -1,7 +1,7 @@
 # Gravity Canyon Production Plan
 
 Status: current milestone authority  
-Last updated: 2026-06-14  
+Last updated: 2026-06-18
 Design reference: [GDD.md](GDD.md)  
 Runbook: [../README.md](../README.md)
 
@@ -44,9 +44,9 @@ V1 must support:
 - Hosted URL play without local installation.
 - Private room creation.
 - Join by invite link or room code.
-- Editable guest display names.
+- Guest display name chosen before joining a room.
 - Seat selection.
-- Character selection for the four existing v1 characters.
+- Unit selection for the four existing v1 Pilot/Vehicle pairs.
 - 1v1 and 2v2 room modes.
 - Best-of-1 and best-of-3 match length settings.
 - Server-owned room, round, turn, movement, aim, firing, projectile, terrain, HP, KOs, Void Dropped eliminations, and round/match result.
@@ -72,10 +72,10 @@ No additional playable characters are v1 unless the v1 contract is explicitly ch
 Required room flow:
 
 1. Player opens hosted URL.
-2. Player enters or edits display name.
+2. Player enters display name before joining a room.
 3. Player creates or joins a private room.
 4. Player picks a seat.
-5. Player picks a character.
+5. Player picks a Unit.
 6. Player readies.
 7. Host starts match when ready conditions are met.
 8. Match completes.
@@ -276,19 +276,22 @@ Done:
 - Command deck and readable match HUD direction.
 - Optimized WebP runtime art delivery.
 - Colyseus room create/join.
-- Guest display names.
+- Pre-room guest display names.
 - Ready checks.
 - Placeholder reward/nameplate state.
 - Server-owned combat preview state.
-- Auto-room host/seat lobby with Duel/Doubles mode, visual character selection, ready checks, and a shared server-owned gameplay preview screen.
+- Auto-room host/seat lobby with Duel/Doubles mode, visual character selection, ready checks, and server-owned match setup handoff into Phaser.
+- Server-owned room settings for Duel/Doubles mode, Best of 1/Best of 3 match length, and map select/random, with host-only lobby/ready edits and gameplay-phase locking.
+- Server-owned preview match setup metadata from claimed seats, selected characters, match length, and selected map, including target score, chosen map id/name, turn sequence, and map-spawned preview vehicles.
+- Phaser match start from server-owned setup metadata, so online ready uses the selected map, claimed seats, selected characters, and turn sequence instead of local demo defaults.
+- Initial server-owned turn authority skeleton: preview turns publish a server clock, active vehicle, authority revision, and last accepted turn intent; forged turn intents from non-active owners are rejected server-side.
 - One-terminal public playtest launcher.
 
 Not done:
 
-- Full online room settings beyond Duel/Doubles, including best-of-1/best-of-3 and map select/random.
-- Online character selection wired into the real Phaser match start.
+- Full online match scoring beyond the preview target-score metadata.
 - Phaser match driven by Colyseus room state.
-- Server-authoritative movement/projectile/terrain/damage.
+- Server-authoritative movement/projectile/terrain/damage beyond the current turn-clock and intent-validation skeleton.
 - Full round/match scoring online.
 - Four-human 2v2 validation.
 
@@ -296,14 +299,12 @@ Not done:
 
 Recommended next sequence:
 
-1. Fix playtest tunnel reliability by forcing Cloudflare Tunnel HTTP/2.
-2. Build real room settings for 1v1/2v2, best-of-1/best-of-3, and map select/random.
-3. Add remaining room settings for best-of-1/best-of-3 and map select/random.
-4. Wire Phaser match start from host settings, claimed seats, and selected characters.
-5. Move turn order, movement, aim, fire, projectile, terrain, damage, KO, and round result to server authority.
-6. Validate 1v1 online.
-7. Validate 2v2 format online.
-8. Run four-human 2v2 gold validation.
+1. Smoke-test playtest tunnel reliability and force Cloudflare Tunnel HTTP/2 if QUIC errors appear.
+2. Extend server turn authority from the current intent skeleton into movement, aim/fire payloads, projectile, terrain, damage, KO, and round result authority.
+3. Add online match scoring beyond the current target-score setup metadata.
+4. Validate 1v1 online.
+5. Validate 2v2 format online.
+6. Run four-human 2v2 gold validation.
 
 ## 18. Quality Gates
 

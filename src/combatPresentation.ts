@@ -1,6 +1,12 @@
 import type { CombatHullShape, DefeatReason, SpriteDisplaySize } from "../shared/model/gameTypes.js";
+import {
+  BATTLEFIELD_UNIT_SCALE,
+  scaleBattlefieldCombatHull,
+  scaleBattlefieldOffset,
+} from "../shared/gameplay/combatHull.js";
 
 export type { CombatHullShape, DefeatReason, SpriteDisplaySize } from "../shared/model/gameTypes.js";
+export { BATTLEFIELD_UNIT_SCALE, scaleBattlefieldCombatHull, scaleBattlefieldOffset };
 
 export interface DefeatPresentation {
   label: "KO" | "VOID DROPPED";
@@ -9,7 +15,6 @@ export interface DefeatPresentation {
   y?: number;
 }
 
-export const BATTLEFIELD_UNIT_SCALE = 0.58;
 export const VOID_DROP_DISPLAY_Y = 828;
 
 export function scaleBattlefieldDisplay(display: SpriteDisplaySize): SpriteDisplaySize {
@@ -17,19 +22,6 @@ export function scaleBattlefieldDisplay(display: SpriteDisplaySize): SpriteDispl
     width: Math.round(display.width * BATTLEFIELD_UNIT_SCALE),
     height: Math.round(display.height * BATTLEFIELD_UNIT_SCALE),
   };
-}
-
-export function scaleBattlefieldCombatHull(hull: CombatHullShape): CombatHullShape {
-  return {
-    offsetX: scaleBattlefieldOffset(hull.offsetX),
-    offsetY: scaleBattlefieldOffset(hull.offsetY),
-    width: scaleBattlefieldOffset(hull.width),
-    height: scaleBattlefieldOffset(hull.height),
-  };
-}
-
-export function scaleBattlefieldOffset(value: number): number {
-  return Math.round(value * BATTLEFIELD_UNIT_SCALE);
 }
 
 export function defeatPresentationFor(reason: DefeatReason | undefined): DefeatPresentation {

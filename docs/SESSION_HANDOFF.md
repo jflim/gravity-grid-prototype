@@ -31,20 +31,26 @@ Use this as the quick restart note if all Codex/browser sessions are closed.
 - Server-owned online combat preview is implemented:
   - round number,
   - turn number,
+  - turn duration/start/end/remaining-time fields,
+  - turn authority revision,
   - wind,
   - active vehicle,
   - vehicle HP/alive state,
   - winner,
+  - last accepted active-player turn intent metadata,
   - validated active-player preview shots,
   - preview token reward on round end.
-- The online preview now starts as a centered shared playtest room host/seat lobby and swaps into a shared server-owned gameplay preview after all active claimed seats are ready. The lobby labels the current Lobby Host, hides the internal `auto-room` id from players, and keeps mode changes host-only. The default local demo hides that flow for map-review clarity unless `?onlinePanel=1` or playtest runtime config enables it.
-- The playtest lobby now presents Red Team and Blue Team in two visible columns. Players claim open active seats, the host controls Duel/Doubles mode, each seat owner picks their own character through a visual Pilot/Ride menu, and placeholder cosmetic controls are intentionally hidden from the lobby.
-- Disabled playtest controls are backend-enforced as room authority rules. Forged client messages cannot change mode as a non-host, claim occupied or inactive seats, ready without an active owned seat, mutate ready state after gameplay starts, edit another player's character pick, fire for a non-active vehicle, or start the next preview round as a non-host.
+- The online preview now starts with a Join Playtest entry screen for the player's locked room display name, then moves into the shared host/seat lobby and launches the Phaser match scene from server-owned setup after all active seats are filled, unit-selected, and ready. The lobby labels the current Lobby Host, hides the internal `auto-room` id from players, and keeps mode changes host-only. The default local demo hides that flow for map-review clarity unless `?onlinePanel=1` or playtest runtime config enables it.
+- The playtest lobby now presents Red Team and Blue Team in two visible columns. Joining players are auto-seated into balanced open active seats, unclaimed seats stay visually empty, the host controls Duel/Doubles mode, room display names stay locked after joining, each seat owner explicitly picks a Unit with a Pilot and Vehicle, and placeholder cosmetic controls are intentionally hidden from the lobby.
+- The playtest lobby now exposes server-owned room settings for Duel/Doubles mode, Best of 1/Best of 3 match length, and map select/random. Only the host can change these settings during lobby/ready phases; settings changes reset readiness, and gameplay-phase messages cannot mutate them.
+- When gameplay starts, the room publishes server-owned setup metadata derived from claimed seats, character picks, match length, and map choice: selected map id/name, map seed, target score, turn sequence, and vehicles placed at the chosen map spawns. The browser now converts that setup into Phaser round startup data so the real match scene opens on the server-selected map with the server-selected units and turn order.
+- The server now starts each preview turn with a server-owned turn clock and accepts a generic `submitTurnIntent` skeleton for `aim`, `move`, `charge`, and `fire` only from the owner of the active living vehicle. The browser snapshot and online preview can display the server remaining-time field, and the Phaser round-start status names the server's active vehicle/time from the initial setup.
+- Disabled playtest controls are backend-enforced as room authority rules. Forged client messages cannot change mode as a non-host, claim occupied or inactive seats, ready without an active owned seat and explicit unit selection, mutate ready state after gameplay starts, edit another player's character pick, fire for a non-active vehicle, or start the next preview round as a non-host.
 - `npm run playtest` now builds the project, serves the built client plus Colyseus from one localhost-bound port, starts a Cloudflare quick tunnel, and prints the public URL. `npm run playtest:local` starts the same playtest mode without a tunnel. Playtest launch mode, not the public URL hostname, controls the Online Alpha flow. Default and public-preview startup stay bound to `127.0.0.1`; direct all-interface binding requires explicitly setting `HOST=0.0.0.0`.
 - Hosted/default playtest mode uses stable runtime gameplay art through optimized WebP delivery files so Cloudflare quick-tunnel loads are lighter while the accepted game art remains part of the normal mode. Art-review concept sprites are opt-in with `?conceptAssets=1`, and the faint Style B backdrop is opt-in with `?styleReference=1`.
 - `npm run optimize:assets` regenerates the WebP delivery files from the PNG runtime and selected art-review sources; run it after promoting or editing runtime art, then run `npm run verify:runtime-roster`.
 - The Phaser scene shows loading progress before the match appears and leaves a failed asset key visible if image loading fails, so remote playtest blank-screen reports have a concrete next debugging clue.
-- Phaser projectile and terrain simulation are not yet synced to the server-owned combat model; online playtest mode uses the shared preview screen instead of dropping into unsynced local Phaser combat.
+- Phaser now starts from server setup, sends active-owner movement/fire intents to the room, and applies live room snapshots back into visible vehicle position, HP, alive state, movement units, facing, and aim on every browser. Rapid movement frames are batched into elapsed-time server move intents, and the room publishes server-owned countdown ticks plus `serverTimeMs` on a heartbeat so clients do not wait for player input to resync the visible timer. The online match has a first network-feel pilot: remote vehicles interpolate between server snapshots, the local predicted vehicle softly corrects toward server truth, and new server shot replays fast-forward to the event age seen in the latest snapshot. Projectile flight, terrain deformation, full turn advancement, KOs, scoring, and round results still need the next server-authority slices.
 - Local combat readability now has prototype combat hulls, floating combat markers, and playable v1 map terrain:
   - Direct-hit projectile collision uses one shared rectangular vehicle-only hit zone instead of the old small center-radius check or pilot-plus-vehicle silhouette collision.
   - Splash damage blooms from the impact point, then measures distance to the nearest edge of each vehicle hit zone.
@@ -120,9 +126,9 @@ For v1 scope discipline, use `docs/PRODUCTION_PLAN.md` as the authority before a
 
 For combat feel, keep tuning visible combat hulls and playable v1 map terrain only where they support v1 readability. Advanced wind bands and high-angle/plunge reward rules are future ideas unless the v1 contract is explicitly changed.
 
-For online v1, the next saved path is to smoke-test the current playtest lobby, then build host-owned room settings before adding more gameplay polish. Add best-of-1/best-of-3 and map select/random to the lobby as server-enforced settings, lock them after match start, and keep forged client messages from mutating disabled or non-host actions. After that, use claimed seats, selected characters, mode, match length, and map choice to create the server-owned match setup that the Phaser scene can render.
+For online v1, the next saved path is to extend the new server turn-authority skeleton into real combat authority: keep the setup handoff and active-player intent validation, then wire movement, aim/fire payloads, projectile resolution, terrain changes, damage, KOs, and round results through Colyseus state/events instead of local-only Phaser truth.
 
-After room settings are in place, follow `docs/TECHNICAL_DESIGN.md` toward persistent match turn order and server-owned combat results wired into the Phaser match scene.
+Keep forged client messages from mutating disabled, non-host, or gameplay-locked room actions while moving from setup handoff toward server-owned combat results wired into the Phaser match scene.
 
 For sprites, use the committed Vesper v9/v10 unit candidates as references for the next production pass. The next pass should simplify detail, preserve the light full gloves/tech shorts/chunky sneaker identity, remove the chroma key, split or size layers as needed, and only then promote runtime aliases.
 
@@ -153,9 +159,15 @@ After generation:
 ## Verification Already Run
 
 - `npm run build` passed after the online preview and Nova KO sprite changes.
+- Focused room-settings tests passed after adding host-owned match length and map selection: `npx tsx --test server/v1/rules.test.ts server/rooms/GravityCanyonRoom.integration.test.ts src/onlineLobbyMarkup.test.ts src/onlineLobbySnapshot.test.ts src/onlineLobbyView.test.ts`.
+- Focused server-owned match setup tests passed after adding selected map/target score/turn-sequence metadata and map-spawned preview vehicles: `npx tsx --test server/rooms/combatPreview.test.ts server/rooms/GravityCanyonRoom.integration.test.ts server/rooms/autoRoomLobby.test.ts src/onlineGameplayPreviewMarkup.test.ts src/onlineLobbySnapshot.test.ts`.
+- Focused Phaser setup handoff tests passed after wiring online room setup into match start: `npx tsx --test src/match/OnlineMatchSetup.test.ts src/match/architecture.test.ts`.
+- Focused turn-authority tests passed after adding the server turn clock, accepted-intent metadata, online snapshot fields, preview time display, and Phaser initial active-turn text: `npx tsx --test server/rooms/combatPreview.test.ts src/onlineLobbySnapshot.test.ts src/onlineGameplayPreviewMarkup.test.ts src/match/OnlineMatchSetup.test.ts` and `npx tsx --test --test-name-pattern "server accepts turn intents" server/rooms/GravityCanyonRoom.integration.test.ts`.
 - `npm run verify:runtime-roster` checks Kaelii/Perlah runtime aliases, preload keys, class IDs, and local turn order.
 - A two-client Colyseus smoke test reached `round-over`, set the losing vehicle to 0 HP, and granted the preview token reward.
 
 ## Known Environment Note
 
 Detached dev-server startup from Codex PowerShell hit a Windows `Path`/`PATH` `Start-Process` issue. Running `npm run dev` directly in a normal terminal is the reliable local path.
+
+Default Codex visual verification to `npm run verify:browser-visual -- <url>` after starting the relevant local server; it captures a headless Chrome/Edge screenshot under `work/browser-visual/`. The Codex in-app Browser helper has repeatedly failed in this managed Windows session with `CreateProcessAsUserW failed: 5`, so reserve it for explicit interactive-browser requests only.

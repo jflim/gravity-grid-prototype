@@ -66,7 +66,7 @@ Generated on ${generatedAt} for the current working tree.
 
 This report uses the requested tools:
 
-- **Graphify:** installed from \`safishamsi/graphify\` as the \`graphifyy\` Python package, then run with \`npm run audit:graphify\`.
+- **Graphify:** run through the repo-local \`work/graphify-venv\` via \`npm run graphify -- ...\` and \`npm run audit:graphify\`.
 - **Fallow:** installed from \`fallow-rs/fallow\` as the npm dev dependency \`fallow\`, then run with \`npm run audit:fallow\`.
 - **Fallow changed-files gate:** \`npm run audit:fallow:changed\` runs \`fallow audit --gate all\`, writes \`work/audits/fallow-audit.json\`, and exits nonzero when the current changes are not human-ready.
 - **Audit builder:** \`npm run audit:debt\` runs Graphify, runs Fallow, builds this markdown report, then regenerates the HTML docs.

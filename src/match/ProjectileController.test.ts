@@ -139,6 +139,44 @@ test("projectile controller reports enemy vehicle collisions before terrain", ()
   assert.equal(projectile.y, 500);
 });
 
+test("projectile controller keeps the server replay direct-hit target collidable after hp sync", () => {
+  const controller = createController();
+  const projectile = {
+    x: 100,
+    y: 500,
+    vx: 120,
+    vy: 0,
+    shooterId: "red-1",
+    team: "red" as const,
+    trail: [],
+    serverReplayDirectHitId: "blue-1",
+  };
+
+  const result = controller.advance({
+    projectile,
+    deltaSeconds: 1,
+    wind: 0,
+    surfaceAt: () => 800,
+    targets: [
+      {
+        id: "blue-1",
+        team: "blue",
+        alive: false,
+        hitZone: { centerX: 190, centerY: 500, width: 80, height: 60 },
+      },
+    ],
+  });
+
+  assert.deepEqual(result, {
+    kind: "collision",
+    collision: {
+      x: 150,
+      y: 500,
+      directHitId: "blue-1",
+    },
+  });
+});
+
 test("projectile controller reports terrain collisions", () => {
   const controller = createController({ projectileRadius: 11 });
   const projectile = {

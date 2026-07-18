@@ -87,15 +87,15 @@
   <main>
     <article>
       <div class="generated">
-        HTML reading copy generated from <a href="TECH_DEBT_AUDIT.md">docs/TECH_DEBT_AUDIT.md</a> on 2026-06-18.
+        HTML reading copy generated from <a href="TECH_DEBT_AUDIT.md">docs/TECH_DEBT_AUDIT.md</a> on 2026-07-18.
         Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Gravity Canyon Technical Debt Audit</h1>
-<p>Generated on 2026-06-16 for the current working tree.</p>
+<p>Generated on 2026-06-18 for the current working tree.</p>
 <h2>Tooling Note</h2>
 <p>This report uses the requested tools:</p>
 <ul>
-<li><strong>Graphify:</strong> installed from <code>safishamsi/graphify</code> as the <code>graphifyy</code> Python package, then run with <code>npm run audit:graphify</code>.</li>
+<li><strong>Graphify:</strong> run through the repo-local <code>work/graphify-venv</code> via <code>npm run graphify -- ...</code> and <code>npm run audit:graphify</code>.</li>
 <li><strong>Fallow:</strong> installed from <code>fallow-rs/fallow</code> as the npm dev dependency <code>fallow</code>, then run with <code>npm run audit:fallow</code>.</li>
 <li><strong>Fallow changed-files gate:</strong> <code>npm run audit:fallow:changed</code> runs <code>fallow audit --gate all</code>, writes <code>work/audits/fallow-audit.json</code>, and exits nonzero when the current changes are not human-ready.</li>
 <li><strong>Audit builder:</strong> <code>npm run audit:debt</code> runs Graphify, runs Fallow, builds this markdown report, then regenerates the HTML docs.</li>
@@ -114,19 +114,19 @@
 </tr>
 <tr>
 <td>Files scanned by local supplement</td>
-<td>134</td>
+<td>177</td>
 </tr>
 <tr>
 <td>Source files</td>
-<td>84</td>
+<td>112</td>
 </tr>
 <tr>
 <td>Test files</td>
-<td>50</td>
+<td>65</td>
 </tr>
 <tr>
 <td>Nonblank LOC scanned</td>
-<td>13920</td>
+<td>18512</td>
 </tr>
 <tr>
 <td>Dependency cycles found</td>
@@ -159,35 +159,35 @@
 </tr>
 <tr>
 <td>Graphify source command</td>
-<td><code>graphify update . --force --no-cluster</code></td>
+<td><code>npm run graphify -- update . --force --no-cluster</code></td>
 </tr>
 <tr>
 <td>Diagnose command</td>
-<td><code>graphify diagnose multigraph --json --graph graphify-out/graph.json</code></td>
+<td><code>npm run graphify -- diagnose multigraph --json --graph graphify-out/graph.json</code></td>
 </tr>
 <tr>
 <td>Raw node count</td>
-<td>1610</td>
+<td>2103</td>
 </tr>
 <tr>
 <td>Post-build node count</td>
-<td>1610</td>
+<td>2103</td>
 </tr>
 <tr>
 <td>Raw edge count</td>
-<td>2976</td>
+<td>4298</td>
 </tr>
 <tr>
 <td>Post-build edge count</td>
-<td>2634</td>
+<td>3900</td>
 </tr>
 <tr>
 <td>Directed unique endpoint pairs</td>
-<td>2636</td>
+<td>3903</td>
 </tr>
 <tr>
 <td>Undirected unique endpoint pairs</td>
-<td>2632</td>
+<td>3898</td>
 </tr>
 <tr>
 <td>Collapsed directed endpoint edges</td>
@@ -195,7 +195,7 @@
 </tr>
 <tr>
 <td>Dangling endpoint edges</td>
-<td>329</td>
+<td>384</td>
 </tr>
 </tbody></table>
 <h2>Fallow evidence</h2>
@@ -217,7 +217,7 @@
 </tr>
 <tr>
 <td>Repo hygiene issues</td>
-<td>1</td>
+<td>0</td>
 </tr>
 <tr>
 <td>Circular dependencies</td>
@@ -237,15 +237,15 @@
 </tr>
 <tr>
 <td>Test-only dependencies</td>
-<td>1</td>
+<td>0</td>
 </tr>
 <tr>
 <td>Health findings</td>
-<td>79</td>
+<td>62</td>
 </tr>
 <tr>
 <td>Remediation targets</td>
-<td>7</td>
+<td>4</td>
 </tr>
 </tbody></table>
 <h3>Fallow Dependency Findings</h3>
@@ -257,9 +257,9 @@
 </tr></thead>
 <tbody>
 <tr>
-<td><code>@colyseus/sdk</code></td>
-<td>package.json:30</td>
-<td>Move to devDependencies (only test files import this)</td>
+<td>n/a</td>
+<td>n/a</td>
+<td>No dependency hygiene findings.</td>
 </tr>
 </tbody></table>
 <h3>Fallow Health Hotspots</h3>
@@ -275,15 +275,6 @@
 </tr></thead>
 <tbody>
 <tr>
-<td><code>src/match/rendering/VehicleRenderer.ts</code></td>
-<td><code>draw</code></td>
-<td>50</td>
-<td>36</td>
-<td>32</td>
-<td>1332</td>
-<td>Refactor <code>draw</code> to reduce complexity (extract helper functions, simplify branching)</td>
-</tr>
-<tr>
 <td><code>scripts/verify-runtime-roster.mjs</code></td>
 <td><code>readPngAlphaBounds</code></td>
 <td>191</td>
@@ -291,15 +282,6 @@
 <td>38</td>
 <td>702</td>
 <td>Add test coverage for <code>readPngAlphaBounds</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
-</tr>
-<tr>
-<td><code>src/onlineLobby.ts</code></td>
-<td><code>render</code></td>
-<td>227</td>
-<td>26</td>
-<td>19</td>
-<td>702</td>
-<td>Add test coverage for <code>render</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
 </tr>
 <tr>
 <td><code>scripts/build-docs-html.mjs</code></td>
@@ -329,58 +311,76 @@
 <td>Add test coverage for <code>resolve</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
 </tr>
 <tr>
-<td><code>src/match/MatchScene.ts</code></td>
-<td><code>update</code></td>
-<td>322</td>
-<td>17</td>
-<td>16</td>
-<td>306</td>
-<td>Add test coverage for <code>update</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
-</tr>
-<tr>
 <td><code>src/match/rendering/TerrainRenderer.ts</code></td>
 <td><code>drawMapLandmarks</code></td>
 <td>81</td>
-<td>16</td>
-<td>30</td>
-<td>272</td>
+<td>15</td>
+<td>27</td>
+<td>240</td>
 <td>Add test coverage for <code>drawMapLandmarks</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
-</tr>
-<tr>
-<td><code>src/onlineLobbyView.ts</code></td>
-<td><code>readSlot</code></td>
-<td>109</td>
-<td>16</td>
-<td>11</td>
-<td>272</td>
-<td>Add test coverage for <code>readSlot</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
-</tr>
-<tr>
-<td><code>src/onlineLobby.ts</code></td>
-<td><code>getSnapshot</code></td>
-<td>360</td>
-<td>14</td>
-<td>13</td>
-<td>210</td>
-<td>Add test coverage for <code>getSnapshot</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
-</tr>
-<tr>
-<td><code>src/onlineLobby.ts</code></td>
-<td><code>getVehicles</code></td>
-<td>439</td>
-<td>14</td>
-<td>13</td>
-<td>210</td>
-<td>Add test coverage for <code>getVehicles</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
 </tr>
 <tr>
 <td><code>src/match/MatchInputController.ts</code></td>
 <td><code>readMatchInputSnapshot</code></td>
-<td>38</td>
-<td>14</td>
-<td>8</td>
-<td>210</td>
+<td>40</td>
+<td>15</td>
+<td>9</td>
+<td>240</td>
 <td>Add test coverage for <code>readMatchInputSnapshot</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
+</tr>
+<tr>
+<td><code>src/match/audio/MatchSoundController.ts</code></td>
+<td><code>play</code></td>
+<td>172</td>
+<td>13</td>
+<td>10</td>
+<td>182</td>
+<td>Add test coverage for <code>play</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
+</tr>
+<tr>
+<td><code>src/match/rendering/VehicleSpriteLayer.ts</code></td>
+<td><code>draw</code></td>
+<td>34</td>
+<td>12</td>
+<td>9</td>
+<td>156</td>
+<td>Add test coverage for <code>draw</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
+</tr>
+<tr>
+<td><code>src/match/audio/MatchSoundAssets.ts</code></td>
+<td><code>resolveMatchSoundAsset</code></td>
+<td>54</td>
+<td>12</td>
+<td>5</td>
+<td>156</td>
+<td>Add test coverage for <code>resolveMatchSoundAsset</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
+</tr>
+<tr>
+<td><code>server/playtestLauncher.ts</code></td>
+<td><code>parsePlaytestArgs</code></td>
+<td>24</td>
+<td>12</td>
+<td>12</td>
+<td>156</td>
+<td>Add test coverage for <code>parsePlaytestArgs</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
+</tr>
+<tr>
+<td><code>shared/gameplay/vehicleSettlement.ts</code></td>
+<td><code>settleVehicleOnTerrain</code></td>
+<td>66</td>
+<td>12</td>
+<td>15</td>
+<td>156</td>
+<td>Add test coverage for <code>settleVehicleOnTerrain</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
+</tr>
+<tr>
+<td><code>shared/content/tiledMapImporter.ts</code></td>
+<td><code>readSpawns</code></td>
+<td>91</td>
+<td>11</td>
+<td>14</td>
+<td>132</td>
+<td>Add test coverage for <code>readSpawns</code> to lower its CRAP score (coverage reduces risk even without refactoring)</td>
 </tr>
 </tbody></table>
 <h3>Fallow Remediation Targets</h3>
@@ -393,16 +393,10 @@
 </tr></thead>
 <tbody>
 <tr>
-<td><code>src/match/rendering/VehicleRenderer.ts</code></td>
-<td>23.4</td>
-<td>extract_complex_functions</td>
-<td>Extract draw (cognitive: 32) in 126-LOC file into smaller functions</td>
-</tr>
-<tr>
 <td><code>src/onlineLobbyView.ts</code></td>
-<td>18.9</td>
-<td>add_test_coverage</td>
-<td>3 complex functions lack test coverage path, add tests before modifying</td>
+<td>26.4</td>
+<td>split_high_impact</td>
+<td>Split high-impact file (262 LOC), 5 dependents amplify every change</td>
 </tr>
 <tr>
 <td><code>shared/gameplay/impact.ts</code></td>
@@ -411,20 +405,14 @@
 <td>Extract resolveProjectileImpact (cognitive: 35) in 196-LOC file into smaller functions</td>
 </tr>
 <tr>
-<td><code>src/match/rendering/TerrainRenderer.ts</code></td>
-<td>11.4</td>
-<td>extract_complex_functions</td>
-<td>Extract drawMapLandmarks (cognitive: 30) in 174-LOC file into smaller functions</td>
-</tr>
-<tr>
 <td><code>scripts/verify-runtime-roster.mjs</code></td>
-<td>4.9</td>
+<td>5.1</td>
 <td>extract_complex_functions</td>
 <td>Extract readPngAlphaBounds (cognitive: 38) in 356-LOC file into smaller functions</td>
 </tr>
 <tr>
 <td><code>scripts/build-docs-html.mjs</code></td>
-<td>5.8</td>
+<td>6</td>
 <td>extract_complex_functions</td>
 <td>Extract renderMarkdown (cognitive: 50) in 509-LOC file into smaller functions</td>
 </tr>
@@ -444,34 +432,34 @@
 </tr></thead>
 <tbody>
 <tr>
-<td><code>src/onlineLobby.ts</code></td>
-<td>421</td>
-<td>1180</td>
+<td><code>server/rooms/GravityCanyonRoom.ts</code></td>
+<td>425</td>
+<td>845</td>
+<td>0</td>
+<td>0</td>
+<td>78</td>
+<td>6</td>
+<td>colyseus, schema</td>
+</tr>
+<tr>
+<td><code>src/onlineLobbyDom.ts</code></td>
+<td>360</td>
+<td>735</td>
 <td>1</td>
-<td>2</td>
-<td>157</td>
-<td>8</td>
-<td>dom, colyseus</td>
+<td>3</td>
+<td>69</td>
+<td>4</td>
+<td>dom</td>
 </tr>
 <tr>
 <td><code>src/match/MatchScene.ts</code></td>
-<td>608</td>
-<td>1107</td>
+<td>347</td>
+<td>721</td>
 <td>1</td>
-<td>23</td>
-<td>58</td>
-<td>10</td>
+<td>20</td>
+<td>29</td>
+<td>12</td>
 <td>dom, phaser, process</td>
-</tr>
-<tr>
-<td><code>server/rooms/GravityCanyonRoom.ts</code></td>
-<td>358</td>
-<td>793</td>
-<td>0</td>
-<td>0</td>
-<td>84</td>
-<td>3</td>
-<td>colyseus, schema</td>
 </tr>
 <tr>
 <td><code>scripts/verify-runtime-roster.mjs</code></td>
@@ -491,6 +479,16 @@
 <td>0</td>
 <td>50</td>
 <td>15</td>
+<td>pure/data</td>
+</tr>
+<tr>
+<td><code>src/match/audio/MatchSoundController.ts</code></td>
+<td>351</td>
+<td>591</td>
+<td>3</td>
+<td>0</td>
+<td>54</td>
+<td>1</td>
 <td>pure/data</td>
 </tr>
 <tr>
@@ -514,54 +512,44 @@
 <td>filesystem</td>
 </tr>
 <tr>
-<td><code>src/match/rendering/VehicleRenderer.ts</code></td>
-<td>114</td>
-<td>396</td>
-<td>2</td>
-<td>6</td>
-<td>41</td>
-<td>3</td>
-<td>phaser</td>
-</tr>
-<tr>
-<td><code>src/onlineLobbyView.ts</code></td>
-<td>120</td>
-<td>382</td>
-<td>2</td>
-<td>0</td>
-<td>59</td>
-<td>4</td>
+<td><code>src/match/MatchSceneShotFlow.ts</code></td>
+<td>299</td>
+<td>527</td>
+<td>1</td>
+<td>10</td>
+<td>32</td>
+<td>1</td>
 <td>pure/data</td>
 </tr>
 <tr>
-<td><code>src/match/MatchViewFactory.ts</code></td>
-<td>207</td>
-<td>377</td>
+<td><code>shared/content/tiledMapImporter.ts</code></td>
+<td>185</td>
+<td>477</td>
+<td>0</td>
+<td>0</td>
+<td>66</td>
 <td>1</td>
-<td>10</td>
+<td>process</td>
+</tr>
+<tr>
+<td><code>src/onlineLobbyView.ts</code></td>
+<td>212</td>
+<td>477</td>
 <td>5</td>
-<td>1</td>
-<td>dom, phaser</td>
+<td>0</td>
+<td>53</td>
+<td>6</td>
+<td>pure/data</td>
 </tr>
 <tr>
-<td><code>src/match/rendering/TerrainRenderer.ts</code></td>
-<td>163</td>
-<td>362</td>
-<td>2</td>
+<td><code>src/onlineLobby.ts</code></td>
+<td>139</td>
+<td>431</td>
 <td>1</td>
-<td>28</td>
-<td>1</td>
-<td>phaser</td>
-</tr>
-<tr>
-<td><code>scripts/build-map-gameplay-review.ts</code></td>
-<td>273</td>
-<td>341</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>1</td>
-<td>filesystem</td>
+<td>5</td>
+<td>32</td>
+<td>14</td>
+<td>dom, colyseus</td>
 </tr>
 </tbody></table>
 <h2>Largest Files</h2>
@@ -578,16 +566,6 @@
 </tr></thead>
 <tbody>
 <tr>
-<td><code>src/match/MatchScene.ts</code></td>
-<td>608</td>
-<td>1107</td>
-<td>1</td>
-<td>23</td>
-<td>58</td>
-<td>10</td>
-<td>dom, phaser, process</td>
-</tr>
-<tr>
 <td><code>scripts/build-map-previews.ts</code></td>
 <td>471</td>
 <td>573</td>
@@ -608,24 +586,34 @@
 <td>filesystem</td>
 </tr>
 <tr>
-<td><code>src/onlineLobby.ts</code></td>
-<td>421</td>
-<td>1180</td>
-<td>1</td>
-<td>2</td>
-<td>157</td>
-<td>8</td>
-<td>dom, colyseus</td>
+<td><code>server/rooms/GravityCanyonRoom.ts</code></td>
+<td>425</td>
+<td>845</td>
+<td>0</td>
+<td>0</td>
+<td>78</td>
+<td>6</td>
+<td>colyseus, schema</td>
 </tr>
 <tr>
-<td><code>server/rooms/GravityCanyonRoom.ts</code></td>
-<td>358</td>
-<td>793</td>
-<td>0</td>
-<td>0</td>
-<td>84</td>
+<td><code>src/onlineLobbyDom.ts</code></td>
+<td>360</td>
+<td>735</td>
+<td>1</td>
 <td>3</td>
-<td>colyseus, schema</td>
+<td>69</td>
+<td>4</td>
+<td>dom</td>
+</tr>
+<tr>
+<td><code>src/match/audio/MatchSoundController.ts</code></td>
+<td>351</td>
+<td>591</td>
+<td>3</td>
+<td>0</td>
+<td>54</td>
+<td>1</td>
+<td>pure/data</td>
 </tr>
 <tr>
 <td><code>src/demoLayout.ts</code></td>
@@ -638,6 +626,26 @@
 <td>pure/data</td>
 </tr>
 <tr>
+<td><code>src/match/MatchScene.ts</code></td>
+<td>347</td>
+<td>721</td>
+<td>1</td>
+<td>20</td>
+<td>29</td>
+<td>12</td>
+<td>dom, phaser, process</td>
+</tr>
+<tr>
+<td><code>src/onlineLobbyMarkup.ts</code></td>
+<td>326</td>
+<td>382</td>
+<td>3</td>
+<td>3</td>
+<td>2</td>
+<td>4</td>
+<td>pure/data</td>
+</tr>
+<tr>
 <td><code>scripts/verify-runtime-roster.mjs</code></td>
 <td>320</td>
 <td>667</td>
@@ -646,6 +654,16 @@
 <td>59</td>
 <td>7</td>
 <td>filesystem, process</td>
+</tr>
+<tr>
+<td><code>src/match/MatchSceneShotFlow.ts</code></td>
+<td>299</td>
+<td>527</td>
+<td>1</td>
+<td>10</td>
+<td>32</td>
+<td>1</td>
+<td>pure/data</td>
 </tr>
 <tr>
 <td><code>scripts/build-map-gameplay-review.ts</code></td>
@@ -667,36 +685,6 @@
 <td>9</td>
 <td>process</td>
 </tr>
-<tr>
-<td><code>shared/content/v1Units.ts</code></td>
-<td>219</td>
-<td>248</td>
-<td>0</td>
-<td>0</td>
-<td>5</td>
-<td>3</td>
-<td>pure/data</td>
-</tr>
-<tr>
-<td><code>shared/gameplay/vehicleSettlement.ts</code></td>
-<td>218</td>
-<td>332</td>
-<td>0</td>
-<td>0</td>
-<td>27</td>
-<td>2</td>
-<td>pure/data</td>
-</tr>
-<tr>
-<td><code>server/v1/mapGameplayReview.ts</code></td>
-<td>207</td>
-<td>216</td>
-<td>0</td>
-<td>0</td>
-<td>0</td>
-<td>3</td>
-<td>pure/data</td>
-</tr>
 </tbody></table>
 <h2>Graphify-Style Centrality</h2>
 <p>These files sit on important dependency paths according to the local import graph supplement. Some are healthy shared contracts; others are risky orchestrators.</p>
@@ -715,41 +703,61 @@
 <tr>
 <td><code>src/match/MatchTypes.ts</code></td>
 <td>52</td>
-<td>324</td>
+<td>383</td>
+<td>37</td>
+<td>0</td>
+<td>5</td>
+<td>4</td>
+<td>pure/data</td>
+</tr>
+<tr>
+<td><code>src/match/MatchScene.ts</code></td>
+<td>347</td>
+<td>721</td>
+<td>1</td>
+<td>20</td>
 <td>29</td>
+<td>12</td>
+<td>dom, phaser, process</td>
+</tr>
+<tr>
+<td><code>src/match/MatchView.ts</code></td>
+<td>139</td>
+<td>278</td>
+<td>4</td>
+<td>9</td>
+<td>15</td>
+<td>2</td>
+<td>pure/data</td>
+</tr>
+<tr>
+<td><code>src/combatPresentation.ts</code></td>
+<td>41</td>
+<td>149</td>
+<td>12</td>
+<td>0</td>
+<td>3</td>
+<td>4</td>
+<td>pure/data</td>
+</tr>
+<tr>
+<td><code>src/playableMaps.ts</code></td>
+<td>45</td>
+<td>158</td>
+<td>12</td>
 <td>0</td>
 <td>5</td>
 <td>3</td>
 <td>pure/data</td>
 </tr>
 <tr>
-<td><code>src/match/MatchScene.ts</code></td>
-<td>608</td>
-<td>1107</td>
+<td><code>src/match/MatchSceneShotFlow.ts</code></td>
+<td>299</td>
+<td>527</td>
 <td>1</td>
-<td>23</td>
-<td>58</td>
 <td>10</td>
-<td>dom, phaser, process</td>
-</tr>
-<tr>
-<td><code>src/match/MatchView.ts</code></td>
-<td>139</td>
-<td>275</td>
-<td>4</td>
-<td>9</td>
-<td>15</td>
+<td>32</td>
 <td>1</td>
-<td>pure/data</td>
-</tr>
-<tr>
-<td><code>src/combatPresentation.ts</code></td>
-<td>41</td>
-<td>146</td>
-<td>12</td>
-<td>0</td>
-<td>3</td>
-<td>3</td>
 <td>pure/data</td>
 </tr>
 <tr>
@@ -763,6 +771,26 @@
 <td>dom, phaser</td>
 </tr>
 <tr>
+<td><code>src/onlineLobbySnapshot.ts</code></td>
+<td>194</td>
+<td>431</td>
+<td>10</td>
+<td>1</td>
+<td>39</td>
+<td>2</td>
+<td>pure/data</td>
+</tr>
+<tr>
+<td><code>src/match/MatchSceneShotControllers.ts</code></td>
+<td>145</td>
+<td>244</td>
+<td>1</td>
+<td>9</td>
+<td>1</td>
+<td>1</td>
+<td>pure/data</td>
+</tr>
+<tr>
 <td><code>src/demoLayout.ts</code></td>
 <td>349</td>
 <td>657</td>
@@ -773,62 +801,22 @@
 <td>pure/data</td>
 </tr>
 <tr>
-<td><code>src/playableMaps.ts</code></td>
-<td>34</td>
-<td>111</td>
-<td>9</td>
-<td>0</td>
-<td>2</td>
-<td>2</td>
-<td>pure/data</td>
-</tr>
-<tr>
 <td><code>src/match/rendering/VehicleRenderer.ts</code></td>
-<td>114</td>
-<td>396</td>
+<td>96</td>
+<td>236</td>
 <td>2</td>
 <td>6</td>
-<td>41</td>
-<td>3</td>
-<td>phaser</td>
-</tr>
-<tr>
-<td><code>src/match/ui/CommandDeck.ts</code></td>
-<td>172</td>
-<td>310</td>
-<td>2</td>
-<td>5</td>
-<td>7</td>
-<td>2</td>
-<td>phaser</td>
-</tr>
-<tr>
-<td><code>src/voidDropPresentation.ts</code></td>
-<td>104</td>
-<td>213</td>
-<td>6</td>
-<td>1</td>
-<td>14</td>
-<td>2</td>
-<td>pure/data</td>
-</tr>
-<tr>
-<td><code>src/match/VehicleGeometry.ts</code></td>
-<td>71</td>
-<td>116</td>
 <td>4</td>
-<td>2</td>
-<td>1</td>
-<td>1</td>
-<td>pure/data</td>
+<td>5</td>
+<td>phaser</td>
 </tr>
 <tr>
-<td><code>src/match/MatchViewStateBuilder.ts</code></td>
-<td>58</td>
-<td>126</td>
-<td>2</td>
+<td><code>src/match/ShotFlowController.ts</code></td>
+<td>120</td>
+<td>190</td>
+<td>4</td>
 <td>3</td>
-<td>9</td>
+<td>6</td>
 <td>1</td>
 <td>pure/data</td>
 </tr>
@@ -859,12 +847,12 @@
 </tr>
 <tr>
 <td><code>src/match/MatchScene.ts</code></td>
-<td>608</td>
-<td>1107</td>
+<td>347</td>
+<td>721</td>
 <td>1</td>
-<td>23</td>
-<td>58</td>
-<td>10</td>
+<td>20</td>
+<td>29</td>
+<td>12</td>
 <td>dom, phaser, process</td>
 </tr>
 <tr>
@@ -878,23 +866,13 @@
 <td>filesystem, process</td>
 </tr>
 <tr>
-<td><code>src/onlineLobby.ts</code></td>
-<td>421</td>
-<td>1180</td>
-<td>1</td>
-<td>2</td>
-<td>157</td>
-<td>8</td>
-<td>dom, colyseus</td>
-</tr>
-<tr>
 <td><code>server/rooms/GravityCanyonRoom.ts</code></td>
-<td>358</td>
-<td>793</td>
+<td>425</td>
+<td>845</td>
 <td>0</td>
 <td>0</td>
-<td>84</td>
-<td>3</td>
+<td>78</td>
+<td>6</td>
 <td>colyseus, schema</td>
 </tr>
 <tr>
@@ -919,51 +897,61 @@
 </tr>
 <tr>
 <td><code>server/schema/GravityCanyonState.ts</code></td>
-<td>163</td>
-<td>262</td>
+<td>198</td>
+<td>300</td>
 <td>0</td>
 <td>0</td>
 <td>0</td>
-<td>3</td>
+<td>4</td>
 <td>colyseus, schema</td>
 </tr>
 <tr>
-<td><code>src/main.ts</code></td>
-<td>99</td>
-<td>334</td>
+<td><code>scripts/browser-visual-smoke.mjs</code></td>
+<td>156</td>
+<td>349</td>
+<td>1</td>
 <td>0</td>
-<td>3</td>
-<td>10</td>
-<td>34</td>
+<td>24</td>
+<td>0</td>
+<td>filesystem, process</td>
+</tr>
+<tr>
+<td><code>src/onlineLobby.ts</code></td>
+<td>139</td>
+<td>431</td>
+<td>1</td>
+<td>5</td>
+<td>32</td>
+<td>14</td>
+<td>dom, colyseus</td>
+</tr>
+<tr>
+<td><code>src/main.ts</code></td>
+<td>112</td>
+<td>361</td>
+<td>0</td>
+<td>5</td>
+<td>11</td>
+<td>35</td>
 <td>dom, phaser</td>
 </tr>
 <tr>
-<td><code>scripts/run-graphify-audit.mjs</code></td>
-<td>49</td>
-<td>186</td>
+<td><code>scripts/graphifyCommand.mjs</code></td>
+<td>69</td>
+<td>232</td>
+<td>3</td>
 <td>0</td>
+<td>13</td>
 <td>0</td>
-<td>11</td>
-<td>1</td>
 <td>filesystem, process</td>
 </tr>
 <tr>
-<td><code>scripts/serve-dist.mjs</code></td>
-<td>36</td>
-<td>160</td>
+<td><code>scripts/sync-tiled-maps.ts</code></td>
+<td>40</td>
+<td>133</td>
 <td>0</td>
 <td>0</td>
-<td>7</td>
-<td>2</td>
-<td>filesystem, process</td>
-</tr>
-<tr>
-<td><code>scripts/run-graphify-hook-check.mjs</code></td>
-<td>25</td>
-<td>150</td>
-<td>0</td>
-<td>0</td>
-<td>8</td>
+<td>10</td>
 <td>1</td>
 <td>filesystem, process</td>
 </tr>

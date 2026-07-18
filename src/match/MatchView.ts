@@ -9,7 +9,7 @@ import type { VehicleRenderer } from "./rendering/VehicleRenderer";
 import type { CommandDeck } from "./ui/CommandDeck";
 import type { CollisionZonesToggle } from "./ui/CollisionZonesToggle";
 
-export interface MatchViewState {
+export interface MatchViewBaseState {
   vehicles: readonly VehicleState[];
   activeVehicle?: VehicleState;
   projectile?: ProjectileState;
@@ -25,8 +25,12 @@ export interface MatchViewState {
   charging: boolean;
   charge: number;
   turnTime: number;
+  localActiveTurn: boolean;
   cameraZoom: number;
   shotResult: string;
+}
+
+export interface MatchViewState extends MatchViewBaseState {
   roundComplete: boolean;
   windLabel: string;
 }
@@ -105,13 +109,7 @@ export class MatchView {
     const active = state.activeVehicle;
     this.options.collaborators.effectsRenderer.drawAim({
       active,
-      canAct: Boolean(
-        active &&
-          this.options.isMovable(active) &&
-          !state.projectile &&
-          !state.roundOver &&
-          !state.turnCommitted,
-      ),
+      canAct: canDrawAim(state, active, this.options.isMovable),
     });
   }
 
@@ -129,6 +127,7 @@ export class MatchView {
       showCombatHulls: state.showCombatHulls,
       charging: state.charging,
       turnTime: state.turnTime,
+      localActiveTurn: state.localActiveTurn,
       cameraZoom: state.cameraZoom,
       isMovable: (vehicle) => this.options.isMovable(vehicle),
     });
@@ -139,12 +138,8 @@ export class MatchView {
   }
 
   private drawHud(state: MatchViewState): void {
-    const active = state.activeVehicle ?? state.vehicles[0];
     this.options.collaborators.commandDeck.draw({
-      active:
-        active && this.options.isMovable(active) && !state.roundComplete && !state.turnCommitted
-          ? active
-          : undefined,
+      active: activeCommandDeckVehicle(state, this.options.isMovable),
       roundComplete: state.roundComplete,
       shotResult: state.shotResult,
       projectileInFlight: Boolean(state.projectile),
@@ -153,4 +148,55 @@ export class MatchView {
       windLabel: state.windLabel,
     });
   }
+}
+
+function canDrawAim(
+  state: MatchViewState,
+  active: VehicleState | undefined,
+  isMovable: (vehicle: VehicleState) => boolean,
+): boolean {
+  if (!active) {
+    return false;
+  }
+
+  return isVehicleActionOpen(state) && isMovable(active);
+}
+
+function activeCommandDeckVehicle(
+  state: MatchViewState,
+  isMovable: (vehicle: VehicleState) => boolean,
+): VehicleState | undefined {
+  const active = commandDeckCandidate(state);
+  if (!active) {
+    return undefined;
+  }
+
+  if (isCommandDeckLocked(state)) {
+    return undefined;
+  }
+
+  return movableCommandDeckVehicle(active, isMovable);
+}
+
+function isVehicleActionOpen(state: MatchViewState): boolean {
+  return !state.projectile && !state.roundOver && !state.turnCommitted;
+}
+
+function isCommandDeckLocked(state: MatchViewState): boolean {
+  return state.roundComplete || state.turnCommitted;
+}
+
+function commandDeckCandidate(state: MatchViewState): VehicleState | undefined {
+  return state.activeVehicle ?? state.vehicles[0];
+}
+
+function movableCommandDeckVehicle(
+  vehicle: VehicleState,
+  isMovable: (vehicle: VehicleState) => boolean,
+): VehicleState | undefined {
+  if (!isMovable(vehicle)) {
+    return undefined;
+  }
+
+  return vehicle;
 }

@@ -39,6 +39,16 @@ test("match sound controller uses urgent ticks for the final five displayed seco
   assert.deepEqual(engine.cues, [{ kind: "turn-tick", urgent: true }]);
 });
 
+test("match sound controller stays silent for countdown ticks when the local player cannot act", () => {
+  const engine = new FakeSoundEngine();
+  const sounds = new MatchSoundController({ engine });
+
+  sounds.beginTurn("vesper", 20);
+  sounds.updateTurnTick({ activeVehicleId: "vesper", turnTime: 18.9, canAct: false });
+
+  assert.deepEqual(engine.cues, []);
+});
+
 test("match sound controller resets second tracking when active turn changes", () => {
   const engine = new FakeSoundEngine();
   const sounds = new MatchSoundController({ engine });

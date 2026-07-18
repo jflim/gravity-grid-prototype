@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Authoritative Move And Fire Flow Implementation Plan</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        HTML reading copy generated from <a href="2026-06-18-authoritative-move-fire-flow.md">docs/superpowers/plans/2026-06-18-authoritative-move-fire-flow.md</a> on 2026-07-18.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Authoritative Move And Fire Flow Implementation Plan</h1>
+<blockquote>
+<p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (<code>- [ ]</code>) syntax for tracking.</p>
+</blockquote>
+<p><strong>Goal:</strong> Add the first server-authoritative movement/fire contract for online play: server-owned movement position, server fire origin, and published shot-result metadata.</p>
+<p><strong>Architecture:</strong> Extend the existing Colyseus room state and turn-intent gate instead of creating a parallel networking path. <code>server/rooms/turnAuthority.ts</code> continues to validate active-owner turn intents; <code>server/rooms/combatPreview.ts</code> applies the first authoritative movement/fire effects until the full Phaser online combat loop consumes the same contract.</p>
+<p><strong>Tech Stack:</strong> TypeScript, Colyseus schema, Node test runner, existing shared gameplay helpers in <code>shared/gameplay</code>.</p>
+<p>---</p>
+<h3>Task 1: Extend Server State Contract</h3>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>server/schema/GravityCanyonState.ts</code></li>
+<li>Test: <code>server/schema/GravityCanyonState.test.ts</code> if needed; otherwise existing room tests cover schema fields.</li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Add failing assertions</strong></li>
+</ul>
+<p>Add expectations in <code>server/rooms/combatPreview.test.ts</code> that a created preview vehicle has <code>moveUnits</code>, and that firing records <code>lastShotOriginX</code>, <code>lastShotOriginY</code>, <code>lastShotPower</code>, and <code>lastShotTargetVehicleId</code>.</p>
+<ul>
+<li>[ ] <strong>Step 2: Run focused tests to verify failure</strong></li>
+</ul>
+<p>Run: <code>node_modules\.bin\tsx.cmd --test server\rooms\combatPreview.test.ts</code></p>
+<p>Expected: failure because <code>moveUnits</code> and <code>lastShot*</code> fields do not exist or stay at defaults.</p>
+<ul>
+<li>[ ] <strong>Step 3: Add schema fields</strong></li>
+</ul>
+<p>Add <code>moveUnits</code> to <code>CombatVehicleState</code>.</p>
+<p>Add flat <code>lastShot*</code> fields to <code>GravityCanyonState</code>:</p>
+<pre><code class="language-ts">
+lastShotId: string;
+
+lastShotShooterVehicleId: string;
+
+lastShotShooterSessionId: string;
+
+lastShotOriginX: number;
+
+lastShotOriginY: number;
+
+lastShotAngle: number;
+
+lastShotPower: number;
+
+lastShotFacing: number;
+
+lastShotTargetVehicleId: string;
+
+lastShotDamage: number;
+
+lastShotTargetHpBefore: number;
+
+lastShotTargetHpAfter: number;
+
+lastShotTurnNumber: number;
+
+lastShotTurnAuthorityVersion: number;
+
+lastShotServerTimeMs: number;
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 4: Run focused tests</strong></li>
+</ul>
+<p>Run: <code>node_modules\.bin\tsx.cmd --test server\rooms\combatPreview.test.ts</code></p>
+<p>Expected: tests advance to implementation failures in combat preview logic.</p>
+<h3>Task 2: Validate And Apply Move/Fire Intents</h3>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>server/rooms/turnAuthority.ts</code></li>
+<li>Modify: <code>server/rooms/combatPreview.ts</code></li>
+<li>Modify: <code>server/rooms/GravityCanyonRoom.ts</code></li>
+<li>Test: <code>server/rooms/turnAuthority.test.ts</code></li>
+<li>Test: <code>server/rooms/combatPreview.test.ts</code></li>
+<li>Test: <code>server/rooms/GravityCanyonRoom.integration.test.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Write failing tests</strong></li>
+</ul>
+<p>Add tests for:</p>
+<ul>
+<li><code>submitTurnIntent(action=&quot;move&quot;)</code> only works for the active owner.</li>
+<li>Movement updates the active vehicle from server-owned <code>x/y</code> and reduces <code>moveUnits</code>.</li>
+<li><code>submitTurnIntent(action=&quot;fire&quot;)</code> records last-shot origin from server-owned vehicle coordinates, not any client-predicted coordinate payload.</li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 2: Run focused tests to verify failure</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+node_modules\.bin\tsx.cmd --test server\rooms\turnAuthority.test.ts server\rooms\combatPreview.test.ts server\rooms\GravityCanyonRoom.integration.test.ts
+
+</code></pre>
+<p>Expected: failures because movement and fire payloads are not parsed or applied.</p>
+<ul>
+<li>[ ] <strong>Step 3: Implement intent payload parsing</strong></li>
+</ul>
+<p>Extend <code>SubmitTurnIntentMessage</code> to accept optional <code>direction</code>, <code>deltaSeconds</code>, <code>angle</code>, <code>power</code>, and <code>facing</code>. Add an exported result function that returns the accepted action and active vehicle after validation, while preserving the existing boolean wrapper for older tests.</p>
+<ul>
+<li>[ ] <strong>Step 4: Implement movement application</strong></li>
+</ul>
+<p>Use <code>resolveMovementStep(...)</code> with server map terrain and v1 tuning constants. Apply:</p>
+<ul>
+<li><code>vehicle.x</code></li>
+<li><code>vehicle.y</code></li>
+<li><code>vehicle.facing</code></li>
+<li><code>vehicle.moveUnits</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 5: Implement fire result metadata</strong></li>
+</ul>
+<p>Clamp angle/power/facing. Record <code>lastShot*</code> fields from server-owned state before preview damage advances the turn.</p>
+<ul>
+<li>[ ] <strong>Step 6: Run focused tests</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+node_modules\.bin\tsx.cmd --test server\rooms\turnAuthority.test.ts server\rooms\combatPreview.test.ts server\rooms\GravityCanyonRoom.integration.test.ts
+
+</code></pre>
+<p>Expected: all focused tests pass.</p>
+<h3>Task 3: Expose Shot Contract To Client Snapshot And Preview Markup</h3>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>src/onlineLobbySnapshot.ts</code></li>
+<li>Modify: <code>src/onlineLobbySnapshot.test.ts</code></li>
+<li>Modify: <code>src/onlineGameplayPreviewMarkup.ts</code></li>
+<li>Modify: <code>src/onlineGameplayPreviewMarkup.test.ts</code></li>
+<li>Modify: <code>src/onlineGameplayPreviewTestData.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Write failing snapshot/markup tests</strong></li>
+</ul>
+<p>Add snapshot assertions for <code>lastShotOriginX</code>, <code>lastShotPower</code>, and <code>lastShotTargetVehicleId</code>.</p>
+<p>Add markup assertions that the shared gameplay preview displays the latest server shot origin and target when present.</p>
+<ul>
+<li>[ ] <strong>Step 2: Run focused tests to verify failure</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+node_modules\.bin\tsx.cmd --test src\onlineLobbySnapshot.test.ts src\onlineGameplayPreviewMarkup.test.ts
+
+</code></pre>
+<p>Expected: failure because snapshot and markup do not include last-shot metadata.</p>
+<ul>
+<li>[ ] <strong>Step 3: Update snapshot and markup</strong></li>
+</ul>
+<p>Add the last-shot fields to <code>RoomSnapshot</code>, defaults, and <code>RoomStateSource</code>. Render a compact <code>Server Shot</code> panel only when <code>lastShotId</code> is present.</p>
+<ul>
+<li>[ ] <strong>Step 4: Run focused tests</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+node_modules\.bin\tsx.cmd --test src\onlineLobbySnapshot.test.ts src\onlineGameplayPreviewMarkup.test.ts
+
+</code></pre>
+<p>Expected: all focused tests pass.</p>
+<h3>Task 4: Verification And Documentation</h3>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>docs/VERSION_LOG.md</code></li>
+<li>Generated: <code>docs/superpowers/specs/2026-06-18-authoritative-move-fire-flow-design.html</code></li>
+<li>Generated: <code>docs/superpowers/plans/2026-06-18-authoritative-move-fire-flow.html</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Update version log</strong></li>
+</ul>
+<p>Add an Unreleased bullet naming the server-owned movement/fire-origin contract and shot-result snapshot metadata.</p>
+<ul>
+<li>[ ] <strong>Step 2: Regenerate docs</strong></li>
+</ul>
+<p>Run: <code>npm run docs:html</code></p>
+<ul>
+<li>[ ] <strong>Step 3: Run required checks</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+npm test
+
+npm run build
+
+npm run audit:fallow:changed
+
+npm run graphify:update
+
+</code></pre>
+<p>Expected: all pass. Build may retain the existing Vite large chunk warning.</p>
+    </article>
+  </main>
+</body>
+</html>

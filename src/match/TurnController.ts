@@ -10,6 +10,12 @@ export interface SetChargeStateInput {
   charge: number;
 }
 
+export interface SyncServerTurnInput {
+  activeVehicleId: string;
+  turnSecondsRemaining: number;
+  wind: number;
+}
+
 export class TurnController {
   private order: string[] = [];
   private index = 0;
@@ -69,6 +75,19 @@ export class TurnController {
   advanceTo(turnIndex: number): void {
     this.index = turnIndex;
     this.beginTurn();
+  }
+
+  syncFromServer(input: SyncServerTurnInput): boolean {
+    const serverIndex = this.order.indexOf(input.activeVehicleId);
+    const activeChanged = serverIndex >= 0 && serverIndex !== this.activeTurnIndex;
+    if (activeChanged) {
+      this.index = serverIndex;
+      this.resetActionState();
+    }
+
+    this.time = Math.max(0, input.turnSecondsRemaining);
+    this.currentWind = input.wind;
+    return activeChanged;
   }
 
   tick(deltaSeconds: number): TurnTickResult {

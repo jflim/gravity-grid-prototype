@@ -87,7 +87,7 @@
   <main>
     <article>
       <div class="generated">
-        HTML reading copy generated from <a href="README.md">README.md</a> on 2026-06-18.
+        HTML reading copy generated from <a href="README.md">README.md</a> on 2026-07-18.
         Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Gravity Canyon Prototype</h1>
@@ -146,8 +146,10 @@
 <li>server-owned combat preview state with round, turn, wind, active vehicle, HP, winner, and validated preview shot actions.</li>
 <li>Browser client uses the vendored Colyseus browser SDK at <code>public/vendor/colyseus.js</code> to keep Vite dev mode stable on Windows.</li>
 <li>The local map-review demo hides the Online Alpha room panel by default; playtest launch mode shows it automatically.</li>
-<li>Playtest launch mode auto-joins one shared room lobby, then swaps into a shared server-owned gameplay preview after all claimed active seats are ready.</li>
-<li>The playtest lobby now presents Red Team and Blue Team side by side, lets players claim active seats, lets the host choose Duel or Doubles, and shows visual Pilot/Ride character picks before readying.</li>
+<li>Playtest launch mode opens a Join Playtest screen for the player's locked room display name, then joins one shared room lobby and launches the Phaser match scene from server-owned setup after all active seats are claimed, unit-selected, and ready.</li>
+<li>The playtest lobby now presents Red Team and Blue Team side by side, lets players claim active seats, keeps unclaimed seats visually empty, locks display names after joining the room, and treats choosing a Unit with a Pilot and Vehicle as a separate step before readying.</li>
+<li>Host-owned room settings now include Duel/Doubles mode, Best of 1/Best of 3 match length, and fixed-pool map select/random, with non-host and gameplay-phase changes rejected by the server.</li>
+<li>The online match start now consumes server-owned setup metadata from claimed seats, character picks, match length, and map choice, including target score, chosen map id/name, turn sequence, and map-spawned vehicles.</li>
 <li>The lobby labels the current Lobby Host, presents the generated playtest URL as a shared playtest room instead of exposing the internal <code>auto-room</code> id, and leaves mode changes host-only.</li>
 <li>Placeholder capsule/nameplate state remains server-side, but those controls are hidden from the focused playtest lobby until the cosmetic loop is ready.</li>
 <li>Public preview mode can serve the built client and Colyseus room server from one local port for internet sharing through a trusted tunnel, while staying localhost-only unless <code>HOST=0.0.0.0</code> is explicitly set.</li>
@@ -198,6 +200,12 @@ npm run dev:client -- --port 5173
 npm run build
 
 </code></pre>
+<p>Browser visual smoke check after a local server is running:</p>
+<pre><code class="language-powershell">
+npm run verify:browser-visual -- http://127.0.0.1:5173
+
+</code></pre>
+<p>The command uses installed Chrome/Edge in headless mode and writes a screenshot under <code>work/browser-visual/</code>. This is the default local visual verification path for Codex sessions; use the Codex in-app Browser only when interactive browser control is explicitly needed.</p>
 <p>Generate HTML reading copies for the human-facing markdown docs:</p>
 <pre><code class="language-powershell">
 npm run docs:html
@@ -382,8 +390,9 @@ dist/index.html
 <h2>Notes</h2>
 <ul>
 <li>This is the local feel prototype, not the multiplayer architecture yet.</li>
-<li>The multiplayer architecture is now scaffolded, but live combat is still local-only until server-authoritative gameplay is wired into the match scene.</li>
-<li>The online room now owns a lightweight shared combat preview screen after the ready lobby, but Phaser projectile/terrain gameplay is not synced to that model yet.</li>
+<li>The multiplayer architecture is now scaffolded, and online match start now uses the server-owned map, seats, character picks, and turn sequence.</li>
+<li>Phaser projectile/terrain gameplay is still local-only after match start until server-authoritative movement, fire, terrain, damage, and round results are wired into the match scene.</li>
+<li>The online lobby settings are server-owned and locked once gameplay starts; match length and map choice feed the server setup that seeds the Phaser match.</li>
 <li>Terrain uses a heightmap for speed. Pixel-mask terrain can replace it later if needed.</li>
 <li>There is no predicted trajectory line. The muzzle arrow shows current direction, but shot landing is still based on angle, power, wind, and memory.</li>
 <li>Movement treats playable downhill and intentional void falling as allowed traversal; steep uphill or steep non-void downhill faces are blocked by the climb-angle rule, and vehicles without enough supported footing fall instead of perching on cliff edges.</li>

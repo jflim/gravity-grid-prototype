@@ -1,26 +1,7 @@
 import type { TeamId } from "../../shared/model/gameTypes.js";
-import type { PlayableTerrain } from "../playableMaps";
-import type { MatchViewState } from "./MatchView";
-import type { ImpactPreview, ProjectileState, VehicleState } from "./MatchTypes";
+import type { MatchViewBaseState, MatchViewState } from "./MatchView";
 
-export interface BuildMatchViewStateInput {
-  vehicles: readonly VehicleState[];
-  activeVehicle?: VehicleState;
-  projectile?: ProjectileState;
-  impactPreview?: ImpactPreview;
-  currentMap?: PlayableTerrain;
-  visibleVoidTopY: number;
-  visibleVoidBottomY: number;
-  terrainPlatformBottomY: number;
-  terrainBreakthroughY: number;
-  showCombatHulls: boolean;
-  roundOver: boolean;
-  turnCommitted: boolean;
-  charging: boolean;
-  charge: number;
-  turnTime: number;
-  cameraZoom: number;
-  shotResult: string;
+export interface BuildMatchViewStateInput extends MatchViewBaseState {
   aliveTeamCount: number;
   winningTeam?: TeamId;
   wind: number;
@@ -44,6 +25,7 @@ export class MatchViewStateBuilder {
       charging: input.charging,
       charge: input.charge,
       turnTime: input.turnTime,
+      localActiveTurn: input.localActiveTurn,
       cameraZoom: input.cameraZoom,
       shotResult: input.shotResult,
       roundComplete: input.roundOver || input.aliveTeamCount <= 1 || Boolean(input.winningTeam),

@@ -7,6 +7,10 @@ description: "Use for any question about a codebase, its architecture, file rela
 
 Turn any folder of files into a navigable knowledge graph with community detection, an honest audit trail, and three outputs: interactive HTML, GraphRAG-ready JSON, and a plain-language GRAPH_REPORT.md.
 
+## Gravity Canyon wrapper
+
+In this repository, do not call bare `graphify` directly from agent workflows. Translate `graphify <args>` commands to `npm run graphify -- <args>` so the committed wrapper uses `work/graphify-venv` and refreshes `graphify-out/.graphify_python`; use `npm run graphify:update` for the standard forced `graphify update .` refresh after code changes.
+
 ## Usage
 
 ```

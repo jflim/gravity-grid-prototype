@@ -5,6 +5,8 @@ import {
   MAX_HP,
   MAX_POWER,
   MIN_ELEVATION_DEG,
+  MOVE_SPEED_PIXELS_PER_SECOND,
+  PROJECTILE_REPLAY_TIME_SCALE,
   SETTLEMENT_MAX_SLOPE_ITERATIONS,
   SETTLEMENT_SLIDE_START_ANGLE_DEG,
   SETTLEMENT_SLOPE_SAMPLE_DISTANCE,
@@ -45,4 +47,9 @@ test("v1 aiming tuning keeps a broad upper artillery arc", () => {
   assert.equal(MIN_ELEVATION_DEG, 5);
   assert.equal(MAX_ELEVATION_DEG, 90);
   assert.ok(MAX_ELEVATION_DEG > MIN_ELEVATION_DEG);
+});
+
+test("v1 action pacing keeps movement and projectile replay responsive", () => {
+  assert.equal(MOVE_SPEED_PIXELS_PER_SECOND, 150);
+  assert.equal(PROJECTILE_REPLAY_TIME_SCALE, 1.5);
 });

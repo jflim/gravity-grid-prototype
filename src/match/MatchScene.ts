@@ -28,13 +28,8 @@ import {
   V1_WORLD_HEIGHT as WORLD_HEIGHT,
   V1_WORLD_WIDTH as WORLD_WIDTH,
 } from "../../shared/v1/tuning.js";
-import {
-  scaleBattlefieldDisplay,
-} from "../combatPresentation";
-import {
-  DRAMATIC_VOID_DROP_FALL_SECONDS,
-  requiredVoidZoneHeight,
-} from "../voidDropPresentation";
+import { scaleBattlefieldDisplay } from "../combatPresentation";
+import { DRAMATIC_VOID_DROP_FALL_SECONDS, requiredVoidZoneHeight } from "../voidDropPresentation";
 import {
   getGameViewportSize,
   isSupportedGameViewport,
@@ -44,6 +39,8 @@ import {
 } from "../demoLayout";
 import { buildMatchAssetLoadPlan, MatchAssetLoader } from "./MatchAssetLoader";
 import { MatchCameraController } from "./MatchCameraController";
+import { MatchSceneOnlineVehicleSync } from "./MatchSceneOnlineVehicleSync";
+import type { MatchSceneRoundSetup } from "./OnlineMatchSetup";
 import { RoundBuilder } from "./RoundBuilder";
 import { RoundEventScheduler } from "./RoundEventScheduler";
 import { MatchSceneShotFlow } from "./MatchSceneShotFlow";
@@ -55,7 +52,9 @@ import { VoidZoneController } from "./VoidZoneController";
 import { MatchView } from "./MatchView";
 import { createMatchViewCollaborators } from "./MatchViewFactory";
 import { MatchViewStateBuilder } from "./MatchViewStateBuilder";
-import { MatchInputController, type MatchInputSnapshot } from "./MatchInputController";
+import { EMPTY_MATCH_INPUT, MatchInputController, type MatchInputSnapshot } from "./MatchInputController";
+import type { MatchTurnIntentPublisher } from "./MatchTurnIntents";
+import type { RoomSnapshot } from "../onlineLobbySnapshot";
 import type { VehicleState } from "./MatchTypes";
 import {
   buildPlayableTerrain,
@@ -91,15 +90,11 @@ const MATCH_ASSET_LOAD_PLAN = buildMatchAssetLoadPlan({
   includeStyleReferenceBackground: USE_STYLE_REFERENCE_BACKGROUND,
 });
 
-const EMPTY_MATCH_INPUT: MatchInputSnapshot = {
-  aimUp: false,
-  aimDown: false,
-  moveLeft: false,
-  moveRight: false,
-  chargeHeld: false,
-  resetPressed: false,
-  collisionZonesTogglePressed: false,
-  soundMuteTogglePressed: false,
+export type MatchSceneOptions = {
+  initialRoundSetup?: MatchSceneRoundSetup;
+  turnIntentPublisher?: MatchTurnIntentPublisher;
+  onlineLocalSessionId?: string;
+  onlineStateSubscriber?: (applySnapshot: (snapshot: RoomSnapshot) => void) => void;
 };
 
 export class MatchScene extends Phaser.Scene {
@@ -152,32 +147,43 @@ export class MatchScene extends Phaser.Scene {
   private inputController?: MatchInputController;
   private cameraController?: MatchCameraController;
   private matchView?: MatchView;
-  private readonly shotFlow = new MatchSceneShotFlow({
-    terrain: this.terrainAdapter,
-    vehicleSettlementController: this.vehicleSettlementController,
-    roundEventScheduler: this.roundEventScheduler,
-    windSource: () => Phaser.Math.FloatBetween(-1, 1),
-    vehicles: () => this.vehicles,
-    hitZoneFor: (vehicle) => this.vehicleGeometry.hitZoneFor(vehicle),
-    addCombatMarkerForVehicle: (vehicle, kind, label, slot) => {
-      this.matchView?.addCombatMarkerForVehicle(vehicle, kind, label, slot);
-    },
-    recenterForProjectileIfNeeded: (projectile) => {
-      this.cameraController?.recenterForProjectileIfNeeded(projectile);
-    },
-    frameBattlefield: (duration = 0) => this.frameBattlefield(duration),
-    stopCameraFollow: () => this.cameras.main.stopFollow(),
-    drawWorld: () => this.drawWorld(),
-    restartRound: () => this.startRound(),
-  });
+  private readonly shotFlow: MatchSceneShotFlow;
   private readonly matchViewStateBuilder = new MatchViewStateBuilder();
   private readonly assetLoader = new MatchAssetLoader({
     scene: this,
     plan: MATCH_ASSET_LOAD_PLAN,
   });
+  private readonly initialRoundSetup?: MatchSceneRoundSetup;
+  private readonly onlineVehicleSync: MatchSceneOnlineVehicleSync;
+  private readonly onlineStateSubscriber?: (applySnapshot: (snapshot: RoomSnapshot) => void) => void;
 
-  constructor() {
+  constructor(options: MatchSceneOptions = {}) {
     super("GravityGridScene");
+    this.initialRoundSetup = options.initialRoundSetup;
+    this.onlineVehicleSync = new MatchSceneOnlineVehicleSync({
+      localSessionId: options.onlineLocalSessionId,
+      clientTimeMs: () => (Number.isFinite(this.time.now) ? this.time.now : performance.now()),
+    });
+    this.onlineStateSubscriber = options.onlineStateSubscriber;
+    this.shotFlow = new MatchSceneShotFlow({
+      terrain: this.terrainAdapter,
+      vehicleSettlementController: this.vehicleSettlementController,
+      roundEventScheduler: this.roundEventScheduler,
+      windSource: () => Phaser.Math.FloatBetween(-1, 1),
+      vehicles: () => this.vehicles,
+      hitZoneFor: (vehicle) => this.vehicleGeometry.hitZoneFor(vehicle),
+      addCombatMarkerForVehicle: (vehicle, kind, label, slot) => {
+        this.matchView?.addCombatMarkerForVehicle(vehicle, kind, label, slot);
+      },
+      recenterForProjectileIfNeeded: (projectile) => {
+        this.cameraController?.recenterForProjectileIfNeeded(projectile);
+      },
+      frameBattlefield: (duration = 0) => this.frameBattlefield(duration),
+      stopCameraFollow: () => this.cameras.main.stopFollow(),
+      drawWorld: () => this.drawWorld(),
+      restartRound: () => this.startRound(),
+      turnIntentPublisher: options.turnIntentPublisher,
+    });
   }
 
   preload(): void {
@@ -222,6 +228,7 @@ export class MatchScene extends Phaser.Scene {
     });
     this.matchView.createBackground();
     this.startRound();
+    this.onlineStateSubscriber?.((snapshot) => this.applyOnlineSnapshot(snapshot));
     this.cameraController.updateViewport();
     this.scale.on("resize", () => {
       this.cameraController?.updateViewport();
@@ -231,15 +238,22 @@ export class MatchScene extends Phaser.Scene {
   }
 
   update(_: number, deltaMs: number): void {
-    if (!isSupportedGameViewport(getGameViewportSize(window, document.documentElement))) {
-      return;
-    }
+    if (!this.canUpdateFrame()) return;
 
     const dt = Math.min(deltaMs / 1000, 0.033);
+    this.updateSupportedFrame(dt);
+  }
+
+  private canUpdateFrame(): boolean { return isSupportedGameViewport(getGameViewportSize(window, document.documentElement)); }
+
+  private updateSupportedFrame(dt: number): void {
     const input = this.inputController?.sample() ?? EMPTY_MATCH_INPUT;
     this.shotFlow.updateImpactPreview(dt);
     this.matchView?.update(dt);
     this.voidZoneController.updatePresentations(this.vehicles, dt);
+    if (this.onlineVehicleSync.update(this.vehicles, dt)) {
+      this.drawWorld();
+    }
 
     if (this.handleSceneCommandInput(input)) {
       return;
@@ -288,23 +302,49 @@ export class MatchScene extends Phaser.Scene {
     this.drawWorld();
   }
 
+  private applyOnlineSnapshot(snapshot: RoomSnapshot): void {
+    const vehicleChanged = this.onlineVehicleSync.applySnapshot(this.vehicles, snapshot);
+    const shotChanged = this.shotFlow.syncOnlineSnapshot(snapshot);
+    if (vehicleChanged || shotChanged) this.drawWorld();
+  }
+
   private startRound(): void {
     this.roundEventScheduler.clear();
     this.matchView?.clearCombatMarkers();
-    const round = this.roundBuilder.build({
-      playableTerrain: this.buildDefaultDemoMap(),
-      units: DEMO_UNIT_DEFINITIONS,
-    });
+    const round = this.buildInitialRound();
     this.terrainController.startRound({
       playableTerrain: round.playableTerrain,
       terrain: round.terrain,
       visibleVoidTopY: round.visibleVoidTopY,
     });
     this.vehicles = round.vehicles;
-    this.shotFlow.startRound(round.turnOrder, round.shotResult);
+    this.shotFlow.startRound(round.turnOrder, this.roundStartText(round.shotResult));
     this.vehicleSettlementController.settleVehicles(this.vehicles);
     this.shotFlow.beginTurn();
     this.drawWorld();
+  }
+
+  private buildInitialRound() {
+    return this.roundBuilder.build({
+      playableTerrain: this.buildInitialPlayableTerrain(),
+      units: this.initialUnits(),
+    });
+  }
+
+  private initialUnits() {
+    return this.initialRoundSetup ? this.initialRoundSetup.units : DEMO_UNIT_DEFINITIONS;
+  }
+
+  private roundStartText(fallbackText: string): string {
+    return this.initialRoundSetup ? this.initialRoundSetup.roundStartText : fallbackText;
+  }
+
+  private buildInitialPlayableTerrain(): PlayableTerrain {
+    if (this.initialRoundSetup) {
+      return buildPlayableTerrain(playableMapById(this.initialRoundSetup.mapId), { voidSurfaceY: VOID_SURFACE_Y });
+    }
+
+    return this.buildDefaultDemoMap();
   }
 
   private buildDefaultDemoMap(): PlayableTerrain {
@@ -338,6 +378,7 @@ export class MatchScene extends Phaser.Scene {
       charging: shot.charging,
       charge: shot.charge,
       turnTime: shot.turnTime,
+      localActiveTurn: shot.localActiveTurn,
       cameraZoom: this.cameras.main.zoom,
       shotResult: shot.shotResult,
       aliveTeamCount: this.shotFlow.aliveTeams().size,

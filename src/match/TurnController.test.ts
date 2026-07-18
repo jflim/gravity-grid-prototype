@@ -62,6 +62,32 @@ test("turn controller advances to a chosen turn index and resets the turn", () =
   assert.equal(controller.isCommitted, false);
 });
 
+test("turn controller can sync active turn state from the server", () => {
+  const controller = new TurnController({
+    turnSeconds: 20,
+    windSource: () => 0,
+  });
+
+  controller.startRound(["red-1", "blue-1", "red-2"]);
+  controller.beginTurn();
+  controller.setChargeState({ isCharging: true, charge: 80 });
+  controller.commitTurn();
+
+  const changed = controller.syncFromServer({
+    activeVehicleId: "blue-1",
+    turnSecondsRemaining: 13,
+    wind: -0.4,
+  });
+
+  assert.equal(changed, true);
+  assert.equal(controller.activeTurnIndex, 1);
+  assert.equal(controller.turnTime, 13);
+  assert.equal(controller.wind, -0.4);
+  assert.equal(controller.isCharging, false);
+  assert.equal(controller.charge, 0);
+  assert.equal(controller.isCommitted, false);
+});
+
 test("turn controller can reset action state and lock the round over", () => {
   const controller = new TurnController({
     turnSeconds: 20,

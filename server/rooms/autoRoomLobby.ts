@@ -15,6 +15,7 @@ export type LobbySlotInput = {
   slotId: string;
   ownerSessionId: string;
   selectedCharacterId?: string;
+  characterSelected?: boolean;
   active?: boolean;
 };
 
@@ -77,21 +78,46 @@ export function isReadyToAutoStart(input: ReadyToStartInput): boolean {
   const playersBySessionId = new Map(input.players.map((player) => [player.sessionId, player]));
   const slotsById = new Map(input.slots.map((slot) => [slot.slotId, slot]));
   const seenOwners = new Set<string>();
+  const context = { playersBySessionId, slotsById, seenOwners };
 
-  return activeSlotIdsForMode(input.mode).every((slotId) => {
-    const slot = slotsById.get(slotId);
-    if (!slot || slot.active === false || !slot.ownerSessionId || seenOwners.has(slot.ownerSessionId)) {
-      return false;
-    }
+  return activeSlotIdsForMode(input.mode).every((slotId) => activeSlotReadyToStart(slotId, context));
+}
 
-    const owner = playersBySessionId.get(slot.ownerSessionId);
-    if (!owner?.ready) {
-      return false;
-    }
+type ReadyToStartContext = {
+  playersBySessionId: ReadonlyMap<string, LobbyPlayerInput>;
+  slotsById: ReadonlyMap<string, LobbySlotInput>;
+  seenOwners: Set<string>;
+};
 
-    seenOwners.add(slot.ownerSessionId);
-    return CHARACTER_ID_SET.has(slot.selectedCharacterId ?? "");
-  });
+function activeSlotReadyToStart(slotId: VehicleId, context: ReadyToStartContext): boolean {
+  const slot = context.slotsById.get(slotId);
+  const ownerSessionId = claimedActiveOwnerSessionId(slot);
+  if (!ownerSessionId || context.seenOwners.has(ownerSessionId)) {
+    return false;
+  }
+
+  context.seenOwners.add(ownerSessionId);
+  return ownerReady(ownerSessionId, context.playersBySessionId) && slotHasSelectedRosterCharacter(slot);
+}
+
+function claimedActiveOwnerSessionId(slot: LobbySlotInput | undefined): string {
+  if (!slot) {
+    return "";
+  }
+
+  return activeSlotOwnerSessionId(slot);
+}
+
+function activeSlotOwnerSessionId(slot: LobbySlotInput): string {
+  return slot.active === false ? "" : slot.ownerSessionId;
+}
+
+function ownerReady(ownerSessionId: string, playersBySessionId: ReadonlyMap<string, LobbyPlayerInput>): boolean {
+  return playersBySessionId.get(ownerSessionId)?.ready === true;
+}
+
+function slotHasSelectedRosterCharacter(slot: LobbySlotInput | undefined): boolean {
+  return slot?.characterSelected === true && CHARACTER_ID_SET.has(slot.selectedCharacterId ?? "");
 }
 
 export function buildPreviewSlots(input: BuildPreviewSlotsInput): PreviewSlot[] {
@@ -100,7 +126,7 @@ export function buildPreviewSlots(input: BuildPreviewSlotsInput): PreviewSlot[] 
   return activeSlotIdsForMode(input.mode)
     .map((slotId) => {
       const slot = slotsById.get(slotId);
-      return slot?.ownerSessionId
+      return slot?.ownerSessionId && slot.characterSelected === true
         ? {
             slotId,
             ownerSessionId: slot.ownerSessionId,

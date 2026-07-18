@@ -1,22 +1,9 @@
-import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { resolve } from "node:path";
+import { runGraphify } from "./graphifyCommand.mjs";
 
 const root = resolve(".");
-const localGraphify = join(
-  root,
-  "work",
-  "graphify-venv",
-  process.platform === "win32" ? "Scripts" : "bin",
-  process.platform === "win32" ? "graphify.exe" : "graphify",
-);
-const graphify = existsSync(localGraphify) ? localGraphify : "graphify";
 
-const result = spawnSync(graphify, ["hook-check"], {
-  cwd: root,
-  encoding: "utf8",
-  stdio: "inherit",
-});
+const result = runGraphify(["hook-check"], { root, throwOnError: false, throwOnFailure: false });
 
 if (result.error?.code === "ENOENT") {
   console.warn("Graphify hook skipped: Graphify CLI is not installed. Install graphifyy to enable hook checks.");

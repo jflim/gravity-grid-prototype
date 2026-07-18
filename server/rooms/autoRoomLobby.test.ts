@@ -9,6 +9,7 @@ import {
   isReadyToAutoStart,
   sanitizeCharacterPick,
 } from "./autoRoomLobby.js";
+import type { LobbyPlayerInput, LobbySlotInput, ReadyToStartInput } from "./autoRoomLobby.js";
 import { GravityCanyonState, LobbySlotState } from "../schema/GravityCanyonState.js";
 
 const players = [
@@ -16,6 +17,8 @@ const players = [
   { sessionId: "blue-session", joinOrder: 2, ready: false },
   { sessionId: "spectator-session", joinOrder: 3, ready: false },
 ];
+
+const readyPlayerIds = ["red-session", "blue-session", "kaelii-session", "perlah-session"] as const;
 
 test("assignLobbyRoles makes the first player host and keeps later joiners as players", () => {
   const roles = assignLobbyRoles(players);
@@ -67,86 +70,61 @@ test("sanitizeCharacterPick keeps valid roster picks and falls back per slot", (
   assert.equal(sanitizeCharacterPick(undefined, "blue-2"), "perlah");
 });
 
-test("isReadyToAutoStart requires every active seat to be claimed, ready, and valid", () => {
+test("isReadyToAutoStart requires every active seat to be claimed, unit-selected, ready, and valid", () => {
   assert.equal(
-    isReadyToAutoStart({
-      mode: "2v2",
-      players: [
-        { sessionId: "red-session", joinOrder: 1, ready: true },
-        { sessionId: "blue-session", joinOrder: 2, ready: true },
-      ],
-      slots: [
-        lobbySlot("red-1", "red-session", "nova"),
-        lobbySlot("blue-1", "blue-session", "vesper"),
-        lobbySlot("red-2", "", "kaelii"),
-        lobbySlot("blue-2", "perlah-session", "perlah"),
-      ],
-    }),
+    isReadyToAutoStart(
+      readyToStartInput({
+        slots: readySlots({
+          "red-2": { ownerSessionId: "" },
+        }),
+      }),
+    ),
     false,
   );
 
   assert.equal(
-    isReadyToAutoStart({
-      mode: "2v2",
-      players: [
-        { sessionId: "red-session", joinOrder: 1, ready: true },
-        { sessionId: "blue-session", joinOrder: 2, ready: false },
-        { sessionId: "kaelii-session", joinOrder: 3, ready: true },
-        { sessionId: "perlah-session", joinOrder: 4, ready: true },
-      ],
-      slots: [
-        lobbySlot("red-1", "red-session", "nova"),
-        lobbySlot("blue-1", "blue-session", "vesper"),
-        lobbySlot("red-2", "kaelii-session", "kaelii"),
-        lobbySlot("blue-2", "perlah-session", "perlah"),
-      ],
-    }),
+    isReadyToAutoStart(
+      readyToStartInput({
+        slots: readySlots({
+          "blue-1": { characterSelected: false },
+        }),
+      }),
+    ),
     false,
   );
 
   assert.equal(
-    isReadyToAutoStart({
-      mode: "2v2",
-      players: [
-        { sessionId: "red-session", joinOrder: 1, ready: true },
-        { sessionId: "blue-session", joinOrder: 2, ready: true },
-        { sessionId: "kaelii-session", joinOrder: 3, ready: true },
-        { sessionId: "perlah-session", joinOrder: 4, ready: true },
-      ],
-      slots: [
-        lobbySlot("red-1", "red-session", "nova"),
-        lobbySlot("blue-1", "blue-session", "vesper"),
-        lobbySlot("red-2", "kaelii-session", "kaelii"),
-        lobbySlot("blue-2", "perlah-session", "not-real"),
-      ],
-    }),
+    isReadyToAutoStart(
+      readyToStartInput({
+        players: readyPlayers({ "blue-session": false }),
+      }),
+    ),
     false,
   );
 
   assert.equal(
-    isReadyToAutoStart({
-      mode: "2v2",
-      players: [
-        { sessionId: "red-session", joinOrder: 1, ready: true },
-        { sessionId: "blue-session", joinOrder: 2, ready: true },
-        { sessionId: "kaelii-session", joinOrder: 3, ready: true },
-        { sessionId: "perlah-session", joinOrder: 4, ready: true },
-      ],
-      slots: [
-        lobbySlot("red-1", "red-session", "nova"),
-        lobbySlot("blue-1", "blue-session", "vesper"),
-        lobbySlot("red-2", "kaelii-session", "kaelii"),
-        lobbySlot("blue-2", "perlah-session", "perlah"),
-      ],
-    }),
-    true,
+    isReadyToAutoStart(
+      readyToStartInput({
+        slots: readySlots({
+          "blue-2": { selectedCharacterId: "not-real" },
+        }),
+      }),
+    ),
+    false,
   );
+
+  assert.equal(isReadyToAutoStart(readyToStartInput()), true);
 });
 
 test("GravityCanyonState exposes host lobby defaults", () => {
   const state = new GravityCanyonState();
 
   assert.equal(state.mode, "2v2");
+  assert.equal(state.selectedMapId, "");
+  assert.equal(state.selectedMapName, "");
+  assert.equal(state.mapSeed, 0);
+  assert.equal(state.targetScore, 1);
+  assert.equal(state.turnSequence.length, 0);
   assert.equal(state.hostSessionId, "");
   assert.equal(state.spectatorSessionIds.length, 0);
   assert.equal(state.slots.size, 0);
@@ -158,12 +136,14 @@ test("LobbySlotState carries active slot ownership and character selection", () 
   slot.team = "red";
   slot.ownerSessionId = "red-session";
   slot.selectedCharacterId = "nova";
+  slot.characterSelected = true;
   slot.active = true;
 
   assert.equal(slot.slotId, "red-1");
   assert.equal(slot.team, "red");
   assert.equal(slot.ownerSessionId, "red-session");
   assert.equal(slot.selectedCharacterId, "nova");
+  assert.equal(slot.characterSelected, true);
   assert.equal(slot.active, true);
 });
 
@@ -204,13 +184,47 @@ test("buildPreviewSlots uses one owner per claimed seat in 2v2", () => {
   );
 });
 
-function lobbySlot(slotId: string, ownerSessionId: string, selectedCharacterId: string) {
+function lobbySlot(
+  slotId: string,
+  ownerSessionId: string,
+  selectedCharacterId: string,
+  characterSelected = true,
+): LobbySlotInput {
   return {
     slotId,
     ownerSessionId,
     selectedCharacterId,
+    characterSelected,
     active: true,
   };
+}
+
+function readyToStartInput(input: Partial<ReadyToStartInput> = {}): ReadyToStartInput {
+  return {
+    mode: input.mode ?? "2v2",
+    players: input.players ?? readyPlayers(),
+    slots: input.slots ?? readySlots(),
+  };
+}
+
+function readyPlayers(readyOverrides: Partial<Record<string, boolean>> = {}): LobbyPlayerInput[] {
+  return readyPlayerIds.map((sessionId, index) => ({
+    sessionId,
+    joinOrder: index + 1,
+    ready: readyOverrides[sessionId] ?? true,
+  }));
+}
+
+function readySlots(slotOverrides: Partial<Record<string, Partial<LobbySlotInput>>> = {}): LobbySlotInput[] {
+  return [
+    lobbySlot("red-1", "red-session", "nova"),
+    lobbySlot("blue-1", "blue-session", "vesper"),
+    lobbySlot("red-2", "kaelii-session", "kaelii"),
+    lobbySlot("blue-2", "perlah-session", "perlah"),
+  ].map((slot) => ({
+    ...slot,
+    ...slotOverrides[slot.slotId],
+  }));
 }
 
 function assertDefaultLobbyRoles(roles: Map<string, string>): void {

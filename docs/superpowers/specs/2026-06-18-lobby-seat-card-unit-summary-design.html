@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lobby Seat Card Unit Summary Design</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        HTML reading copy generated from <a href="2026-06-18-lobby-seat-card-unit-summary-design.md">docs/superpowers/specs/2026-06-18-lobby-seat-card-unit-summary-design.md</a> on 2026-07-18.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Lobby Seat Card Unit Summary Design</h1>
+<h2>Context</h2>
+<p>The current playtest lobby seat card shows the combined playable unit art on the left, then repeats the same choice as separate Pilot and Vehicle panels on the right. This makes claimed seats feel tall and redundant, especially in the Red Team and Blue Team columns where players mainly need to scan who is seated, what unit they picked, and whether they are ready.</p>
+<p>The approved direction is Option B from the seat-card comparison mockup: a compact unit summary.</p>
+<h2>Goal</h2>
+<p>Make claimed and claimable lobby seats easier to scan while keeping the character-plus-vehicle fantasy visible. The card should treat the combined playable unit as the primary identity, then show Pilot and Vehicle names as compact metadata instead of large repeated panels.</p>
+<h2>UI Design</h2>
+<ul>
+<li>Each active seat keeps one main combined unit image.</li>
+<li>The seat card uses a shorter two-column layout: unit image on the left, player/seat state and unit metadata on the right.</li>
+<li>The right side shows display name, seat label, current state, and host badge if applicable.</li>
+<li>Pilot and Vehicle names become compact chips, for example <code>Nova</code> and <code>Bunger Rig</code>.</li>
+<li>This implementation uses only the existing Pilot and Vehicle names as chips. Role or fantasy chips are future content work because they could imply gameplay stats that are not implemented.</li>
+<li>The main action remains visible at the bottom of the right column: <code>Claim Seat</code>, <code>Change Unit</code>, <code>Ready</code>, or the existing locked-state label.</li>
+<li>Empty or inactive seats use the same compact structure where possible so team columns do not jump in height.</li>
+</ul>
+<h2>Component Boundaries</h2>
+<ul>
+<li><code>src/onlineLobbyMarkup.ts</code> owns the seat markup shape.</li>
+<li><code>src/styles.css</code> owns the compact seat layout and responsive behavior.</li>
+<li><code>src/onlineLobbyCharacters.ts</code> remains the source for Pilot, Vehicle, and Unit assets.</li>
+<li>No server state changes are required. This is a presentation change over existing lobby slot and character data.</li>
+</ul>
+<h2>Data Flow</h2>
+<p>The room snapshot still normalizes slots through <code>src/onlineLobbyView.ts</code>. Each slot chooses a <code>LobbyCharacterCard</code> from its selected character id. Rendering then uses:</p>
+<ul>
+<li><code>card.unitImage</code> for the primary visual.</li>
+<li><code>card.name</code> for the pilot chip.</li>
+<li><code>card.vehicleName</code> for the Vehicle chip.</li>
+<li>existing slot ownership, local player, ready, host, and phase fields for actions and badges.</li>
+</ul>
+<h2>Edge Cases</h2>
+<ul>
+<li>Long display names, Pilot names, and Vehicle names must truncate without resizing the card.</li>
+<li>Host badge and state text must fit on narrow lobby columns.</li>
+<li>2v2 mode should show four seats without the team area feeling dominated by repeated loadout panels.</li>
+<li>Mobile or narrow viewport behavior remains a single-column stack, with text and buttons constrained so they do not overlap.</li>
+</ul>
+<h2>Testing</h2>
+<ul>
+<li>Update lobby markup tests to assert that seat cards render compact unit metadata instead of two large Pilot/Vehicle panels.</li>
+<li>Keep host-badge, claim, ready, and locked action tests passing.</li>
+<li>Run focused lobby tests, then the normal build/test gates before calling the implementation complete.</li>
+</ul>
+<h2>Out Of Scope</h2>
+<ul>
+<li>Changing actual character selection rules.</li>
+<li>Splitting Pilot and Vehicle into independent gameplay choices.</li>
+<li>Adding new character stats, abilities, or balance labels.</li>
+<li>Changing server-owned lobby or combat setup data.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

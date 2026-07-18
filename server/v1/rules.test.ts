@@ -7,6 +7,7 @@ import {
   MODE_SEATS,
   PHRASE_COOLDOWN_MS,
   TURN_SECONDS,
+  mergeRoomSettings,
   sanitizeDisplayName,
   validateRoomSettings,
 } from "./rules.js";
@@ -42,6 +43,29 @@ test("room settings validation clamps to v1 values", () => {
       matchLength: "best-of-1",
       mapPick: "random",
       friendlyFire: true,
+    },
+  );
+});
+
+test("room settings patches preserve existing values when fields are omitted or invalid", () => {
+  assert.deepEqual(
+    mergeRoomSettings(
+      {
+        mode: "1v1",
+        matchLength: "best-of-1",
+        mapPick: "ring-basin",
+        friendlyFire: false,
+      },
+      {
+        matchLength: "best-of-3",
+        mapPick: "not-a-v1-map",
+      },
+    ),
+    {
+      mode: "1v1",
+      matchLength: "best-of-3",
+      mapPick: "ring-basin",
+      friendlyFire: false,
     },
   );
 });

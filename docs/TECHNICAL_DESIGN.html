@@ -87,12 +87,12 @@
   <main>
     <article>
       <div class="generated">
-        HTML reading copy generated from <a href="TECHNICAL_DESIGN.md">docs/TECHNICAL_DESIGN.md</a> on 2026-06-18.
+        HTML reading copy generated from <a href="TECHNICAL_DESIGN.md">docs/TECHNICAL_DESIGN.md</a> on 2026-07-18.
         Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Gravity Canyon Technical Design Document</h1>
 <p>Status: living technical design</p>
-<p>Last updated: 2026-06-14</p>
+<p>Last updated: 2026-06-25</p>
 <p>Design reference: <a href="GDD.html">GDD.md</a></p>
 <p>Current scope authority: <a href="PRODUCTION_PLAN.html">PRODUCTION_PLAN.md</a></p>
 <p>Runbook: <a href="../README.html">../README.md</a></p>
@@ -103,7 +103,7 @@
 <h2>2. Current Technical Baseline</h2>
 <p>Gravity Canyon currently has two partially separate systems:</p>
 <ul>
-<li>The local Phaser prototype in <a href="../src/main.ts">../src/main.ts</a> owns the full playable artillery loop.</li>
+<li>The Phaser prototype in <a href="../src/main.ts">../src/main.ts</a> owns the playable artillery loop and can now start from online server-owned setup.</li>
 <li>The Colyseus room in <a href="../server/rooms/GravityCanyonRoom.ts">../server/rooms/GravityCanyonRoom.ts</a> owns a lightweight online room and combat preview.</li>
 </ul>
 <p>Current local Phaser features include:</p>
@@ -118,10 +118,14 @@
 <ul>
 <li>Room create/join.</li>
 <li>Guest display names.</li>
-<li>Two-player placeholder room capacity.</li>
+<li>Host-owned room settings for 1v1/2v2 mode, Best of 1/Best of 3 match length, and map select/random.</li>
+<li>Four active lobby seats plus spectator capacity.</li>
 <li>Ready checks.</li>
 <li>Placeholder nameplate/capsule state.</li>
-<li>Combat preview state with HP, active vehicle, wind, turn number, and winner.</li>
+<li>Combat preview state with setup metadata, selected map id/name, target score, turn sequence, map-spawned preview vehicles, HP, active vehicle, wind, turn number, server turn clock, server heartbeat time, turn authority revision, last accepted turn intent metadata, and winner.</li>
+<li>A first server turn-authority skeleton in <code>server/rooms/turnAuthority.ts</code> that starts a turn clock and accepts generic <code>aim</code>/<code>move</code>/<code>charge</code>/<code>fire</code> intent messages only from the owner of the active living vehicle.</li>
+<li>A first server-time snapshot contract where <code>GravityCanyonState.serverTimeMs</code> is published on the combat heartbeat so clients can align timers and replay event age against the same clock.</li>
+<li>Browser handoff from server-owned setup into Phaser match start: the selected online map, claimed seats, selected characters, and turn sequence seed <code>MatchScene</code> instead of local demo defaults.</li>
 </ul>
 <p>Current shared extraction includes:</p>
 <ul>
@@ -139,8 +143,13 @@
 <li><code>shared/gameplay/vehicleSettlement.ts</code> for Phaser-free vehicle terrain placement, localized post-impact slope nudging, and Void Dropped truth resolution.</li>
 <li><code>shared/match/rounds.ts</code> for Phaser-free alive checks, alive-team calculation, winner calculation, and round-over decisions.</li>
 <li><code>shared/match/turns.ts</code> for Phaser-free next-turn selection that skips defeated vehicles while preserving the match turn order.</li>
-<li><code>src/main.ts</code> as browser bootstrap only: Phaser config, viewport guard, online lobby mount, and CSS import.</li>
-<li><code>src/match/MatchScene.ts</code> as the playable Phaser scene and local browser-authority orchestration surface.</li>
+<li><code>src/main.ts</code> as browser bootstrap only: Phaser config, viewport guard, online lobby mount, online setup handoff, and CSS import.</li>
+<li><code>src/match/OnlineMatchSetup.ts</code> as the pure adapter from online room snapshots to Phaser round startup data.</li>
+<li><code>src/match/OnlineMatchStateSync.ts</code> as the pure adapter from online room snapshots to live Phaser vehicle state and shot-replay metadata for the first visible server-state bridge.</li>
+<li><code>src/match/OnlineVehicleSmoother.ts</code> as the client-side network-feel layer for interpolating remote vehicles between server snapshots and softly correcting the local predicted vehicle toward server truth.</li>
+<li><code>src/match/MatchSceneOnlineVehicleSync.ts</code> as the scene-facing online vehicle sync controller that applies direct snapshot sync for non-online scenes and delegates online smoothing when a local session id exists.</li>
+<li><code>src/match/MatchSceneOnlineSync.ts</code> as the online shot/timer replay adapter: it syncs the local turn controller from server fields and fast-forwards a newly seen shot replay to the server event age in the current snapshot.</li>
+<li><code>src/match/MatchScene.ts</code> as the playable Phaser scene and local browser-authority orchestration surface, with optional initial round setup from the online room.</li>
 <li><code>src/match/MatchView.ts</code> as the match presentation facade for draw coordination, combat-marker lifecycle forwarding, collision-zone UI synchronization, and HUD/world render state handoff.</li>
 <li><code>src/match/MatchViewFactory.ts</code> for Phaser-specific graphics/text/image construction, renderer wiring, command deck wiring, collision-zone DOM control construction, and background creation collaborators.</li>
 <li><code>src/match/MatchTypes.ts</code> for match-scene runtime state shapes shared by UI/rendering modules.</li>
@@ -167,7 +176,7 @@
 <li><code>src/match/rendering/CombatMarkerRenderer.ts</code> for floating direct/splash/shove/KO/Void Dropped text markers.</li>
 <li><code>src/match/rendering/RenderingTypes.ts</code> for Phaser rendering-object state shapes that should not leak into match runtime types.</li>
 </ul>
-<p>The main technical gap is that online v1 must run the real match through server-owned state and deterministic combat resolution. The existing online preview is not the final combat system.</p>
+<p>The main technical gap is that online v1 must run the live match loop through server-owned state and deterministic combat resolution. Phaser now starts from server-owned setup, pushes active-owner movement/fire intents, applies live room snapshots for visible vehicle position, HP, alive state, move units, facing, and aim, smooths remote vehicle snapshots, softly reconciles local prediction, and aligns new shot replays to server event age. Projectile flight, terrain changes, full turn advancement, KOs, scoring, and round results are still local-authority or preview-only until the next online combat slices land.</p>
 <h3>Known Gameplay Correctness Bugs</h3>
 <ul>
 <li>Falling and Void Dropped are currently too tightly coupled in the local prototype. A vehicle that loses stable footing should first enter a gravity-affected falling presentation/state, and it should only become Void Dropped after its gameplay collision zone actually intersects the visible void/death zone. The fall decision should be based on vehicle-footing support, terrain surface normals/perpendicular angle, and whether the settled vehicle orientation is physically stable, not merely on the fact that the vehicle will eventually fall.</li>
@@ -327,12 +336,18 @@ http://127.0.0.1:2567
 </tr>
 <tr>
 <td>Turn timer</td>
-<td>Shared v1 rules constant</td>
-<td>Current implementation constant is 20 seconds.</td>
+<td>Server round state using shared v1 tuning and <code>serverTimeMs</code> heartbeat</td>
+<td>Current implementation constant is 20 seconds. Clients render from server snapshot time instead of relying on local-only countdown start moments.</td>
+</tr>
+<tr>
+<td>Turn intent acceptance</td>
+<td>Server room</td>
+<td>Current skeleton validates phase, active living vehicle, owner session, and generic action type before recording accepted intent metadata.</td>
 </tr>
 </tbody></table>
 <h2>7. Recommended Module Boundaries</h2>
 <p>The current codebase already has pure logic modules in <code>src</code> and contract modules in <code>server/v1</code>. For server-authoritative combat, gameplay logic should move into Phaser-free, Node-free shared modules, while match UI and rendering stay in the browser client.</p>
+<p>The current visual contract for client prediction, server movement truth, server fire origin, and shot-result publication is documented in <a href="superpowers/specs/2026-06-18-authoritative-move-fire-flow-design.html">Authoritative Move And Fire Flow Design</a>. The human-facing diagram page is <a href="ONLINE_COMBAT_FLOW.html">Online Combat Flow Visual Reference</a>.</p>
 <p>Recommended target shape:</p>
 <pre><code class="language-text">
 shared/
@@ -599,9 +614,9 @@ src/
 <td>Delayed Phaser timer ownership should stay testable and separate from match orchestration.</td>
 </tr>
 <tr>
-<td>Change browser bootstrap, game config, viewport guard, or online lobby mount</td>
-<td><code>src/main.ts</code></td>
-<td>Startup belongs outside the Phaser scene so the playable scene remains game-focused.</td>
+<td>Change browser bootstrap, game config, viewport guard, online lobby mount, or online-to-Phaser startup handoff</td>
+<td><code>src/main.ts</code> and <code>src/match/OnlineMatchSetup.ts</code></td>
+<td>Startup belongs outside the Phaser scene so the playable scene remains game-focused, while setup translation stays pure and tested.</td>
 </tr>
 <tr>
 <td>Change match preload status, normal runtime asset queueing, concept-preview asset opt-in, or style-reference asset opt-in</td>
@@ -699,8 +714,8 @@ src/
 <td>Renderer-only state can depend on Phaser; <code>src/match/MatchTypes.ts</code> should remain Phaser-free runtime state.</td>
 </tr>
 <tr>
-<td>Change private-room networking, server state, or online preview behavior</td>
-<td><code>server/rooms/GravityCanyonRoom.ts</code> and <code>server/schema/GravityCanyonState.ts</code></td>
+<td>Change private-room networking, server state, online setup metadata, preview combat behavior, or server turn-intent validation</td>
+<td><code>server/rooms/GravityCanyonRoom.ts</code>, <code>server/rooms/combatPreview.ts</code>, <code>server/rooms/turnAuthority.ts</code>, and <code>server/schema/GravityCanyonState.ts</code></td>
 <td>Server authority and Colyseus schema belong on the Node side.</td>
 </tr>
 </tbody></table>
@@ -745,7 +760,7 @@ src/
 <tr>
 <td><code>lobby</code></td>
 <td>Room exists, players can join and choose seats/settings.</td>
-<td>Set display name, claim/release seat, select character, set ready, host settings.</td>
+<td>Set display name, claim/release seat, select character, set ready after a unit is selected, host settings.</td>
 </tr>
 <tr>
 <td><code>starting</code></td>
@@ -837,9 +852,12 @@ type SeatState = {
 
   characterId?: &quot;nova&quot; | &quot;vesper&quot; | &quot;kaelii&quot; | &quot;perlah&quot;;
 
+  characterSelected: boolean;
+
 };
 
 </code></pre>
+<p><code>characterId</code> may carry a server fallback for deterministic setup, but <code>characterSelected</code> is the lobby truth for whether the seat owner has explicitly picked a visible unit and can ready.</p>
 <h3>Match</h3>
 <pre><code class="language-ts">
 type MatchState = {
@@ -1005,10 +1023,10 @@ type ShotResult = {
 <td>Sanitize, length-limit, safe render.</td>
 </tr>
 <tr>
-<td><code>updateRoomSettings</code></td>
+<td><code>setRoomSettings</code></td>
 <td>Host only</td>
-<td><code>{ mode, matchLength, mapPick }</code></td>
-<td>Only in lobby, validate values.</td>
+<td><code>{ mode?, matchLength?, mapPick? }</code></td>
+<td>Only in lobby/ready, validate values, reset readiness, lock after gameplay starts.</td>
 </tr>
 <tr>
 <td><code>claimSeat</code></td>
@@ -1032,13 +1050,13 @@ type ShotResult = {
 <td><code>setReady</code></td>
 <td>Any joined client</td>
 <td><code>{ ready }</code></td>
-<td>Seated player only for match start readiness.</td>
+<td>Seated player only, with an explicit selected unit, for match start readiness.</td>
 </tr>
 <tr>
 <td><code>startMatch</code></td>
 <td>Host only</td>
 <td>none</td>
-<td>Required seats filled, seated players ready, settings valid.</td>
+<td>Required seats filled, units selected, seated players ready, settings valid.</td>
 </tr>
 </tbody></table>
 <h3>Turn Messages</h3>
@@ -1103,6 +1121,13 @@ type JoinOptions = {
 <li>Server tracks movement used during the turn.</li>
 <li>Client may predict active movement locally but must snap/reconcile to server state.</li>
 </ul>
+<p>Current pilot behavior:</p>
+<ul>
+<li>The active client pushes elapsed-time movement intents rather than waiting for a server poll.</li>
+<li>The server applies accepted movement to room state and publishes updated vehicle fields in snapshots.</li>
+<li>Remote clients interpolate between recent server-timed vehicle samples through <code>OnlineVehicleSmoother</code>.</li>
+<li>The owning client keeps responsive local movement and softly corrects toward server truth unless the drift is large enough to snap.</li>
+</ul>
 <p>Movement validation:</p>
 <ul>
 <li>Active vehicle only.</li>
@@ -1135,6 +1160,13 @@ type JoinOptions = {
 <li>Server broadcasts the shot path, impact, terrain diffs, damage diffs, combat markers, KO/Void Dropped events, and next turn or round result.</li>
 </ul>
 <p>V1 does not need full charge anti-cheat. Server validation should reject impossible values and invalid turn ownership.</p>
+<p>Current pilot behavior:</p>
+<ul>
+<li>The accepted server shot snapshot includes shot origin, angle, power, facing, wind, shooter, and server event time.</li>
+<li>Clients replay that server shot visually.</li>
+<li>If a client receives the snapshot after the event time, the replay advances by the elapsed server-time age so late clients do not start the projectile from frame zero.</li>
+<li>Damage, terrain deformation, KOs, scoring, and final turn advancement remain future server-authority work.</li>
+</ul>
 <h3>Projectile</h3>
 <p>Projectile gameplay should be pure deterministic TypeScript.</p>
 <p>Inputs:</p>
@@ -1504,16 +1536,14 @@ type WeaponDefinition = {
 <p>Recommended technical sequence:</p>
 <ol>
 <li>Force Cloudflare Tunnel HTTP/2 in <code>npm run playtest</code> if needed for reliability.</li>
-<li>Add room settings to Colyseus state and UI.</li>
-<li>Add seat state and character selection.</li>
-<li>Add ready/start validation using selected seats.</li>
+<li>Add seat state, character selection, room settings, and ready/start validation. Done for the current shared gameplay preview.</li>
 <li>Extract pure map/terrain/vehicle state builders.</li>
+<li>Add server round creation from room settings.</li>
 <li>Extract pure movement validation from <code>src/main.ts</code>.</li>
 <li>Extract pure projectile collision and combat-resolution gameplay.</li>
-<li>Add server round creation from room settings.</li>
-<li>Add server turn loop and movement input messages.</li>
+<li>Extend the current server turn clock and generic intent gate into server movement input messages.</li>
 <li>Add server fire resolution and shot result events.</li>
-<li>Make Phaser scene render from server state.</li>
+<li>Make the live Phaser turn loop render and advance from server state/events.</li>
 <li>Add 1v1 online match scoring.</li>
 <li>Add 2v2 online match scoring.</li>
 <li>Add reconnect grace.</li>

@@ -40,9 +40,11 @@ export function mountOnlineLobby(options: OnlineLobbyOptions = {}) {
   let gameplayStarted = false;
 
   const dom = createOnlineLobbyDom(document, {
-    reconnect: () => void connectAutoRoom(),
-    displayNameChanged: (value) => room?.send("setDisplayName", value),
-    modeChanged: (mode) => room?.send("setMode", { mode }),
+    reconnect: () => void connectAutoRoom(dom.displayName()),
+    joinPlaytest: (displayName) => void connectAutoRoom(displayName),
+    modeChanged: (mode) => room?.send("setRoomSettings", { mode }),
+    matchLengthChanged: (matchLength) => room?.send("setRoomSettings", { matchLength }),
+    mapPickChanged: (mapPick) => room?.send("setRoomSettings", { mapPick }),
     seatClaimed: (slotId) => room?.send("claimSeat", { slotId }),
     characterSelected: (slotId, characterId) => room?.send("selectCharacter", { slotId, characterId }),
     readyClicked: () => {
@@ -54,10 +56,8 @@ export function mountOnlineLobby(options: OnlineLobbyOptions = {}) {
 
   document.body.appendChild(dom.stage);
 
-  void connectAutoRoom();
-
-  function connectAutoRoom() {
-    return connect(() => client.joinOrCreate("gravity_canyon", { displayName: dom.displayName() }));
+  function connectAutoRoom(displayName: string) {
+    return connect(() => client.joinOrCreate("gravity_canyon", { displayName }));
   }
 
   async function connect(join: () => Promise<OnlineRoom>) {

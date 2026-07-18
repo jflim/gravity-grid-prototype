@@ -31,8 +31,11 @@ export function renderGameplayPreview(snapshot: RoomSnapshot, localSessionId: st
     <div class="online-gameplay-summary">
       <span>Room <strong>${escapeHtml(snapshot.roomCode)}</strong></span>
       <span>${escapeHtml(snapshot.mode)}</span>
+      <span>${escapeHtml(selectedMapLabel(snapshot))}</span>
+      <span>First to ${snapshot.targetScore}</span>
       <span>Round ${snapshot.roundNumber}</span>
       <span>Turn ${snapshot.turnNumber}</span>
+      <span>Time ${snapshot.turnSecondsRemaining}s</span>
       <span>Wind ${snapshot.wind}</span>
     </div>
     <section class="online-gameplay-active">
@@ -40,6 +43,7 @@ export function renderGameplayPreview(snapshot: RoomSnapshot, localSessionId: st
       <strong>${escapeHtml(activeDisplayName(activeVehicle?.displayName, snapshot.winnerTeam))}</strong>
       <em>${escapeHtml(snapshot.status)}</em>
     </section>
+    ${renderLastShot(snapshot)}
     <div class="online-gameplay-vehicles" data-preview-vehicles>
       ${renderVehicleRows(snapshot.vehicles, snapshot.activeVehicleId)}
     </div>
@@ -47,6 +51,24 @@ export function renderGameplayPreview(snapshot: RoomSnapshot, localSessionId: st
       <button type="button" data-preview-fire${disabledUnless(canFireActiveVehicle(snapshot, localSessionId))}>Fire Test Shot</button>
       <button type="button" data-next-preview-round${disabledUnless(canStartNextPreviewRound(snapshot, localSessionId))}>Next Round</button>
     </div>
+  `;
+}
+
+function renderLastShot(snapshot: RoomSnapshot): string {
+  if (!snapshot.lastShotId) {
+    return "";
+  }
+
+  const shooter = vehicleDisplayName(snapshot.vehicles, snapshot.lastShotShooterVehicleId);
+  const target = vehicleDisplayName(snapshot.vehicles, snapshot.lastShotTargetVehicleId);
+  return `
+    <section class="online-gameplay-shot" data-last-shot-id="${escapeHtml(snapshot.lastShotId)}">
+      <span>Server Shot</span>
+      <strong>${escapeHtml(shooter)} -> ${escapeHtml(target)}</strong>
+      <em>Origin ${Math.round(snapshot.lastShotOriginX)}, ${Math.round(snapshot.lastShotOriginY)}</em>
+      <em>Angle ${Math.round(snapshot.lastShotAngle)} | Power ${Math.round(snapshot.lastShotPower)}</em>
+      <em>${escapeHtml(target)} HP ${snapshot.lastShotTargetHpBefore} -> ${snapshot.lastShotTargetHpAfter}</em>
+    </section>
   `;
 }
 
@@ -81,6 +103,14 @@ function playerDisplayName(displayName: string | undefined): string {
 
 function disabledUnless(enabled: boolean): string {
   return enabled ? "" : " disabled";
+}
+
+function selectedMapLabel(snapshot: RoomSnapshot): string {
+  return snapshot.selectedMapName || snapshot.mapPick;
+}
+
+function vehicleDisplayName(vehicles: readonly CombatVehicleSnapshot[], vehicleId: string): string {
+  return vehicles.find((vehicle) => vehicle.vehicleId === vehicleId)?.displayName || vehicleId || "Unknown";
 }
 
 function vehicleRowClass(vehicle: CombatVehicleSnapshot, active: boolean): string {

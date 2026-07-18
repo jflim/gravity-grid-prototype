@@ -87,7 +87,7 @@
   <main>
     <article>
       <div class="generated">
-        HTML reading copy generated from <a href="GDD.md">docs/GDD.md</a> on 2026-06-18.
+        HTML reading copy generated from <a href="GDD.md">docs/GDD.md</a> on 2026-07-18.
         Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Gravity Canyon Game Design Document</h1>
@@ -494,6 +494,10 @@
 <li>Client should render and predict only where safe.</li>
 <li>Server owns room state, turn order, legal movement, projectile result, terrain changes, damage, KOs, void drops, and round/match result.</li>
 <li>Static assets should be optimized for remote playtest delivery.</li>
+</ul>
+<p>Visual design reference:</p>
+<ul>
+<li><a href="ONLINE_COMBAT_FLOW.html">Online Combat Flow Visual Reference</a> shows the intended movement-sync-before-fire sequence. The player can feel immediate firing, but the projectile should not visibly change path mid-air; damage, terrain, KOs, and round results remain server facts.</li>
 </ul>
 <h2>24. Accessibility And Readability</h2>
 <p>V1 accessibility target is practical readability:</p>

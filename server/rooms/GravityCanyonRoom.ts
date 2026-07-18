@@ -16,13 +16,25 @@ import {
   type PlayerRole,
   type TeamId,
 } from "../schema/GravityCanyonState.js";
-import { sanitizeDisplayName, type GameMode } from "../v1/rules.js";
 import {
+  mergeRoomSettings,
+  sanitizeDisplayName,
+  type GameMode,
+  type RoomSettings,
+} from "../v1/rules.js";
+import {
+  advanceTimedOutPreviewTurn,
   clearCombatPreview,
+  previewAimForClient,
   previewFireForClient,
+  previewMoveForClient,
   startCombatPreview,
   teamForSlot,
 } from "./combatPreview.js";
+import {
+  acceptTurnIntentForClient,
+  type SubmitTurnIntentMessage,
+} from "./turnAuthority.js";
 
 type JoinOptions = {
   displayName?: string;
@@ -39,6 +51,8 @@ type EquipMessage = {
 type ModeMessage = {
   mode?: GameMode;
 };
+
+type RoomSettingsMessage = Partial<Record<keyof RoomSettings, unknown>>;
 
 type SelectCharacterMessage = {
   slotId?: VehicleId;
@@ -61,6 +75,12 @@ type LobbySlotSyncContext = {
   seenOwners: Set<string>;
 };
 
+type TurnIntentHandler = (
+  state: GravityCanyonState,
+  sessionId: string,
+  message: SubmitTurnIntentMessage,
+) => void;
+
 const cosmeticPool = [
   "Canyon Rookie",
   "Archshot Ace",
@@ -69,6 +89,24 @@ const cosmeticPool = [
   "Cloudline Champ",
 ];
 const LOBBY_SLOT_IDS: readonly VehicleId[] = ["red-1", "blue-1", "red-2", "blue-2"];
+const DEFAULT_TURN_INTENT_HANDLER: TurnIntentHandler = (state, sessionId, message) => {
+  acceptTurnIntentForClient(state, sessionId, message);
+};
+const SERVER_STATE_PATCH_INTERVAL_MS = 1000 / 60;
+const SERVER_TURN_CLOCK_INTERVAL_MS = 250;
+const TURN_INTENT_HANDLERS: Record<string, TurnIntentHandler> = {
+  aim: (state, sessionId, message) => {
+    previewAimForClient(state, sessionId, message);
+  },
+  move: (state, sessionId, message) => {
+    previewMoveForClient(state, sessionId, message);
+  },
+  fire: (state, sessionId, message) => {
+    if (acceptTurnIntentForClient(state, sessionId, message)) {
+      previewFireForClient(state, sessionId, {}, message);
+    }
+  },
+};
 
 export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
   maxClients = 8;
@@ -78,18 +116,26 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
     this.setState(new GravityCanyonState());
     this.state.roomCode = "auto-room";
     this.ensureLobbySlots();
+    this.setPatchRate(SERVER_STATE_PATCH_INTERVAL_MS);
+    this.setSimulationInterval(() => this.tickServerTurnClock(), SERVER_TURN_CLOCK_INTERVAL_MS);
 
     this.onMessage("setDisplayName", (client, displayName: string) =>
       this.handleDisplayName(client, displayName),
     );
     this.onMessage("setReady", (client, message: ReadyMessage) => this.handleReady(client, message));
     this.onMessage("setMode", (client, message: ModeMessage) => this.handleMode(client, message));
+    this.onMessage("setRoomSettings", (client, message: RoomSettingsMessage) =>
+      this.handleRoomSettings(client, message),
+    );
     this.onMessage("claimSeat", (client, message: ClaimSeatMessage) => this.handleClaimSeat(client, message));
     this.onMessage("selectCharacter", (client, message: SelectCharacterMessage) =>
       this.handleSelectCharacter(client, message),
     );
     this.onMessage("claimTestCapsule", (client) => this.handleClaimTestCapsule(client));
     this.onMessage("equipNameplate", (client, message: EquipMessage) => this.handleEquipNameplate(client, message));
+    this.onMessage("submitTurnIntent", (client, message: SubmitTurnIntentMessage) =>
+      this.handleTurnIntent(client, message),
+    );
     this.onMessage("previewFire", (client) => previewFireForClient(this.state, client.sessionId));
     this.onMessage("startNextRound", (client) => this.handleStartNextRound(client));
 
@@ -144,14 +190,11 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
   }
 
   private handleMode(client: Client, message: ModeMessage): void {
-    if (!this.canChangeLobby(client.sessionId) || (message.mode !== "1v1" && message.mode !== "2v2")) {
-      return;
-    }
+    this.applyRoomSettings(client.sessionId, { mode: message?.mode });
+  }
 
-    this.state.mode = message.mode;
-    this.resetReadiness();
-    this.syncLobbySlots();
-    this.refreshStatus();
+  private handleRoomSettings(client: Client, message: RoomSettingsMessage | null | undefined): void {
+    this.applyRoomSettings(client.sessionId, message ?? {});
   }
 
   private handleClaimSeat(client: Client, message: ClaimSeatMessage): void {
@@ -163,6 +206,7 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
     this.releaseSeatsForSession(client.sessionId, context.slotId);
     context.slot.ownerSessionId = client.sessionId;
     context.slot.selectedCharacterId = sanitizeCharacterPick(context.slot.selectedCharacterId, context.slotId);
+    context.slot.characterSelected = false;
     context.player.ready = false;
     this.refreshStatus();
   }
@@ -174,6 +218,7 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
     }
 
     context.slot.selectedCharacterId = sanitizeCharacterPick(message.characterId, context.slotId);
+    context.slot.characterSelected = true;
     context.player.ready = false;
     this.refreshStatus();
   }
@@ -215,6 +260,18 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
 
     this.state.roundNumber += 1;
     startCombatPreview(this.state);
+  }
+
+  private handleTurnIntent(client: Client, message: SubmitTurnIntentMessage): void {
+    turnIntentHandlerFor(message?.action)(this.state, client.sessionId, message);
+  }
+
+  private tickServerTurnClock(): void {
+    if (this.state.phase !== "combat-preview") {
+      return;
+    }
+
+    advanceTimedOutPreviewTurn(this.state);
   }
 
   private syncRoles() {
@@ -280,11 +337,42 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
 
   private playerHasValidActiveSelection(sessionId: string): boolean {
     const slot = this.getActiveSlots().find((activeSlot) => activeSlot.ownerSessionId === sessionId);
-    return slot ? sanitizeCharacterPick(slot.selectedCharacterId, slot.slotId) === slot.selectedCharacterId : false;
+    return slot
+      ? slot.characterSelected && sanitizeCharacterPick(slot.selectedCharacterId, slot.slotId) === slot.selectedCharacterId
+      : false;
   }
 
   private canChangeLobby(sessionId: string): boolean {
     return (this.state.phase === "lobby" || this.state.phase === "ready") && sessionId === this.state.hostSessionId;
+  }
+
+  private applyRoomSettings(sessionId: string, message: RoomSettingsMessage): void {
+    if (!this.canChangeLobby(sessionId)) {
+      return;
+    }
+
+    const current = this.currentRoomSettings();
+    const next = mergeRoomSettings(current, message);
+    if (roomSettingsEqual(current, next)) {
+      return;
+    }
+
+    this.state.mode = next.mode;
+    this.state.matchLength = next.matchLength;
+    this.state.mapPick = next.mapPick;
+    this.state.friendlyFire = next.friendlyFire;
+    this.resetReadiness();
+    this.syncLobbySlots();
+    this.refreshStatus();
+  }
+
+  private currentRoomSettings(): RoomSettings {
+    return {
+      mode: this.state.mode,
+      matchLength: this.state.matchLength,
+      mapPick: this.state.mapPick,
+      friendlyFire: this.state.friendlyFire,
+    };
   }
 
   private canChangeReadiness(sessionId: string): boolean {
@@ -313,6 +401,8 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
     for (const [slotId, slot] of this.state.slots.entries() as Iterable<[VehicleId, LobbySlotState]>) {
       if (slot.ownerSessionId === sessionId && slotId !== exceptSlotId) {
         slot.ownerSessionId = "";
+        slot.characterSelected = false;
+        slot.selectedCharacterId = defaultCharacterForSlot(slotId);
       }
     }
   }
@@ -371,6 +461,8 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
     slot.active = context.activeSlotIds.has(slotId);
     if (this.shouldReleaseSlotOwner(slot, context)) {
       slot.ownerSessionId = "";
+      slot.characterSelected = false;
+      slot.selectedCharacterId = defaultCharacterForSlot(slotId);
     }
     this.rememberSlotOwner(slot, context.seenOwners);
     slot.selectedCharacterId = sanitizeCharacterPick(slot.selectedCharacterId, slotId);
@@ -390,7 +482,48 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
     this.ensureLobbySlots();
     this.syncLobbySlots();
     this.syncRoles();
+    this.autoSeatUnseatedPlayers();
     this.syncPlayerTeams();
+  }
+
+  private autoSeatUnseatedPlayers(): void {
+    if (!this.canAutoSeatPlayers()) {
+      return;
+    }
+
+    for (const player of this.getPlayersByJoinOrder()) {
+      if (!this.playerOwnsActiveSlot(player.sessionId)) {
+        this.autoSeatPlayer(player);
+      }
+    }
+  }
+
+  private canAutoSeatPlayers(): boolean {
+    return this.state.phase === "lobby" || this.state.phase === "ready";
+  }
+
+  private getPlayersByJoinOrder(): PlayerState[] {
+    return this.getPlayers().sort((left, right) => left.joinOrder - right.joinOrder);
+  }
+
+  private autoSeatPlayer(player: PlayerState): void {
+    const slot = this.balancedOpenSlot();
+    if (!slot) {
+      return;
+    }
+
+    slot.ownerSessionId = player.sessionId;
+    slot.selectedCharacterId = sanitizeCharacterPick(slot.selectedCharacterId, slot.slotId);
+    slot.characterSelected = false;
+    player.ready = false;
+  }
+
+  private balancedOpenSlot(): LobbySlotState | undefined {
+    const activeSlots = this.getActiveSlots();
+    const openSlots = activeSlots.filter((slot) => !slot.ownerSessionId);
+    const teamCounts = activeTeamSeatCounts(activeSlots);
+
+    return openSlots.find((slot) => teamCounts.get(slot.team) === lowestOpenTeamCount(openSlots, teamCounts));
   }
 
   private isGameplayPhase(): boolean {
@@ -401,8 +534,8 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
     return [
       () => this.applyNoHostStatus(),
       () => this.applyOpenSeatStatus(),
-      () => this.applyUnreadyStatus(),
       () => this.applyInvalidSelectionStatus(),
+      () => this.applyUnreadyStatus(),
     ].some((applyStatus) => applyStatus());
   }
 
@@ -420,7 +553,7 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
       return false;
     }
 
-    this.setLobbyStatus(`Waiting for players to claim ${this.modeSeatName()} seats.`, "lobby");
+    this.setLobbyStatus(`Waiting for players to fill ${this.modeSeatName()} seats.`, "lobby");
     return true;
   }
 
@@ -439,7 +572,7 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
       return false;
     }
 
-    this.setLobbyStatus("Waiting for valid character picks.", "ready");
+    this.setLobbyStatus("Waiting for players to choose units.", "ready");
     return true;
   }
 
@@ -466,4 +599,36 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
   private defaultTeamForRole(role: PlayerRole): TeamId {
     return role === "host" ? "red" : "blue";
   }
+}
+
+function roomSettingsEqual(left: RoomSettings, right: RoomSettings): boolean {
+  return (
+    left.mode === right.mode &&
+    left.matchLength === right.matchLength &&
+    left.mapPick === right.mapPick &&
+    left.friendlyFire === right.friendlyFire
+  );
+}
+
+function turnIntentHandlerFor(action: unknown): TurnIntentHandler {
+  return typeof action === "string" ? TURN_INTENT_HANDLERS[action] ?? DEFAULT_TURN_INTENT_HANDLER : DEFAULT_TURN_INTENT_HANDLER;
+}
+
+function activeTeamSeatCounts(slots: readonly LobbySlotState[]): Map<TeamId, number> {
+  const teamCounts = new Map<TeamId, number>([
+    ["red", 0],
+    ["blue", 0],
+  ]);
+
+  for (const slot of slots) {
+    if (slot.ownerSessionId) {
+      teamCounts.set(slot.team, (teamCounts.get(slot.team) ?? 0) + 1);
+    }
+  }
+
+  return teamCounts;
+}
+
+function lowestOpenTeamCount(openSlots: readonly LobbySlotState[], teamCounts: ReadonlyMap<TeamId, number>): number {
+  return Math.min(...openSlots.map((slot) => teamCounts.get(slot.team) ?? 0));
 }

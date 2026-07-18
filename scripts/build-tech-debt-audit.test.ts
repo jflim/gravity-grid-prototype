@@ -3,23 +3,42 @@ import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 
 test("technical debt audit is a committed local docs command", () => {
-  const packageJson = JSON.parse(readFileSync("package.json", "utf8")) as {
-    devDependencies?: Record<string, string>;
-    scripts?: Record<string, string>;
-  };
+  const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
+  const scripts = packageJson.scripts;
 
-  assert.equal(packageJson.scripts?.["audit:graphify"], "node scripts/run-graphify-audit.mjs");
-  assert.equal(packageJson.scripts?.["audit:fallow"], "node scripts/run-fallow-audit.mjs");
-  assert.equal(packageJson.scripts?.["audit:fallow:changed"], "node scripts/run-fallow-changed-audit.mjs");
+  assert.equal(scripts["audit:graphify"], "node scripts/run-graphify-audit.mjs");
+  assert.equal(scripts["audit:fallow"], "node scripts/run-fallow-audit.mjs");
+  assert.equal(scripts["audit:fallow:changed"], "node scripts/run-fallow-changed-audit.mjs");
+  assert.equal(scripts["verify:browser-visual"], "node scripts/browser-visual-smoke.mjs");
   assert.equal(
-    packageJson.scripts?.["audit:debt"],
+    scripts["audit:debt"],
     "npm run audit:graphify && npm run audit:fallow && node scripts/build-tech-debt-audit.mjs && npm run docs:html",
   );
-  assert.ok(packageJson.devDependencies?.fallow, "Fallow is installed as a repo dev dependency");
+  assert.ok(packageJson.devDependencies.fallow, "Fallow is installed as a repo dev dependency");
+});
+
+test("Graphify commands are committed npm wrappers", () => {
+  const scripts = JSON.parse(readFileSync("package.json", "utf8")).scripts;
+
+  assert.equal(scripts.graphify, "node scripts/run-graphify.mjs");
+  assert.equal(scripts["graphify:update"], "node scripts/run-graphify.mjs update . --force");
   assert.ok(existsSync("scripts/build-tech-debt-audit.mjs"), "technical debt audit generator exists locally");
+  assert.ok(existsSync("scripts/graphifyCommand.mjs"), "Graphify command resolver exists locally");
+  assert.ok(existsSync("scripts/run-graphify.mjs"), "Graphify CLI wrapper exists locally");
   assert.ok(existsSync("scripts/run-graphify-audit.mjs"), "Graphify audit runner exists locally");
   assert.ok(existsSync("scripts/run-fallow-audit.mjs"), "Fallow audit runner exists locally");
   assert.ok(existsSync("scripts/run-fallow-changed-audit.mjs"), "Fallow changed-files gate exists locally");
+});
+
+test("Graphify runners prefer the repo-local venv", () => {
+  const helper = readFileSync("scripts/graphifyCommand.mjs", "utf8");
+  const auditRunner = readFileSync("scripts/run-graphify-audit.mjs", "utf8");
+  const hookRunner = readFileSync("scripts/run-graphify-hook-check.mjs", "utf8");
+
+  assert.match(helper, /work", "graphify-venv"/);
+  assert.match(helper, /writeGraphifyPythonHint/);
+  assert.match(auditRunner, /runGraphify/);
+  assert.match(hookRunner, /runGraphify/);
 });
 
 test("technical debt audit records Graphify and Fallow evidence", () => {

@@ -28,6 +28,8 @@ test("match scene refactor exposes planned module boundaries", () => {
     "src/match/MatchSceneShotFlow.ts",
     "src/match/MatchSceneShotControllers.ts",
     "src/match/MatchSceneShotFlowTypes.ts",
+    "src/match/MatchSceneOnlineSync.ts",
+    "src/match/MatchSceneOnlineVehicleSync.ts",
     "src/match/MatchSceneProjectileFlow.ts",
     "src/match/MatchSceneShotResolution.ts",
     "src/match/MatchSceneVehicleMotionFlow.ts",
@@ -75,6 +77,8 @@ test("planned match modules export their concrete boundaries", () => {
     ["src/match/MatchSceneShotFlow.ts", "export class MatchSceneShotFlow"],
     ["src/match/MatchSceneShotControllers.ts", "export function createSceneShotFlowController"],
     ["src/match/MatchSceneShotFlowTypes.ts", "export interface MatchSceneShotFlowOptions"],
+    ["src/match/MatchSceneOnlineSync.ts", "export function updateOnlineReplayProjectile"],
+    ["src/match/MatchSceneOnlineVehicleSync.ts", "export class MatchSceneOnlineVehicleSync"],
     ["src/match/MatchSceneProjectileFlow.ts", "export function updateSceneProjectile"],
     ["src/match/MatchSceneShotResolution.ts", "export function vehicleDamageSnapshot"],
     ["src/match/MatchSceneVehicleMotionFlow.ts", "export function updateVehicleMotionsForScene"],
@@ -150,30 +154,41 @@ test("match scene adapters stay human-sized", () => {
     lineCountFor("src/match/MatchSceneVehicleMotionFlow.ts") <= 80,
     "MatchSceneVehicleMotionFlow.ts should stay under 80 nonblank lines",
   );
+  assert.ok(
+    lineCountFor("src/match/MatchSceneOnlineSync.ts") <= 140,
+    "MatchSceneOnlineSync.ts should stay under 140 nonblank lines",
+  );
+  assert.ok(
+    lineCountFor("src/match/MatchSceneOnlineVehicleSync.ts") <= 80,
+    "MatchSceneOnlineVehicleSync.ts should stay under 80 nonblank lines",
+  );
 });
 
 test("main.ts stays a bootstrap instead of owning the Phaser scene", () => {
   const main = readFileSync("src/main.ts", "utf8");
   assert.match(main, /new Phaser\.Game/);
-  assert.match(main, /scene:\s*MatchScene/);
+  assert.match(main, /scene:\s*new MatchScene/);
   assert.doesNotMatch(main, /class GravityGridScene/);
 });
 
-test("online playtest swaps from lobby stage into shared gameplay preview", () => {
+test("online playtest starts Phaser from server-owned match setup", () => {
   const main = readFileSync("src/main.ts", "utf8");
   const lobby = readFileSync("src/onlineLobby.ts", "utf8");
   const dom = readFileSync("src/onlineLobbyDom.ts", "utf8");
   const markup = readFileSync("src/onlineLobbyMarkup.ts", "utf8");
-  const preview = readFileSync("src/onlineGameplayPreview.ts", "utf8");
-  const previewMarkup = readFileSync("src/onlineGameplayPreviewMarkup.ts", "utf8");
 
-  assert.match(main, /mountOnlineLobby\(\{\s*onGameplayStart:\s*mountOnlineGameplayPreview\s*\}\)/);
-  assert.match(main, /function mountGameplay\(\): void/);
+  assert.match(main, /matchSceneRoundSetupFromSnapshot/);
+  assert.match(main, /getRoomSnapshot/);
+  assert.match(main, /onGameplayStart:\s*mountOnlineGameplay/);
+  assert.match(main, /new MatchScene\(\{\s*initialRoundSetup:/);
+  assert.match(main, /onlineStateSubscriber:/);
+  assert.match(main, /onlineLocalSessionId:\s*session\.room\.sessionId/);
+  assert.match(main, /function mountGameplay\(options: MountGameplayOptions = {}\): void/);
+  assert.match(readFileSync("src/match/MatchScene.ts", "utf8"), /new MatchSceneOnlineVehicleSync/);
+  assert.match(readFileSync("src/match/MatchSceneOnlineVehicleSync.ts", "utf8"), /new OnlineVehicleSmoother/);
   assert.match(lobby, /createOnlineLobbyDom/);
   assert.match(dom, /renderLobbyShell\(\)/);
   assert.match(markup, /class="online-stage"/);
-  assert.match(preview, /renderGameplayPreview\(/);
-  assert.match(previewMarkup, /data-preview-fire/);
   assert.match(lobby, /stageForRoomPhase\(snapshot\.phase\) === "gameplay"/);
   assert.match(lobby, /dom\.remove\(\)/);
   assert.doesNotMatch(lobby, /data-combat-block|data-preview-fire|data-next-round/);

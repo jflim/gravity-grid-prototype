@@ -25,6 +25,7 @@ test("vehicleRenderModelFor marks an active movable vehicle", () => {
     projectileActive: false,
     roundOver: false,
     turnCommitted: false,
+    localActiveTurn: true,
     charging: true,
     turnTime: 18,
     showCombatHulls: true,
@@ -33,6 +34,7 @@ test("vehicleRenderModelFor marks an active movable vehicle", () => {
   });
 
   assert.equal(model.active, true);
+  assert.equal(model.localActiveTurn, true);
   assert.equal(model.renderX, 100);
   assert.equal(model.renderY, 200);
   assert.equal(model.showHpBar, true);
@@ -64,6 +66,7 @@ test("vehicleRenderModelFor keeps falling void drops level", () => {
     projectileActive: false,
     roundOver: false,
     turnCommitted: false,
+    localActiveTurn: false,
     charging: false,
     turnTime: 0,
     showCombatHulls: true,

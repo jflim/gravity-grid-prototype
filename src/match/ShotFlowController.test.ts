@@ -52,6 +52,17 @@ function createHarness(overrides: Partial<ShotFlowControllerOptions> = {}) {
         },
         shotResult: "Vesper -34",
       }),
+      preview: () => ({
+        impactPreview: {
+          x: 120,
+          y: 340,
+          craterRadius: 50,
+          damageRadius: 75,
+          isBungerShot: false,
+          timeLeft: 0.75,
+        },
+        shotResult: "Server shot replay impacted.",
+      }),
     },
     surfaceAt: () => 500,
     hitZoneFor: (target) => ({ centerX: target.x, centerY: target.y, width: 80, height: 40 }),
@@ -148,4 +159,57 @@ test("shot flow resolves projectile impacts and selects round-end when a team ha
   assert.equal(result.impactPreview?.y, 340);
   assert.equal(result.shotResult, "Vesper -34");
   assert.deepEqual(result.nextEvent, { kind: "end-round", delayMs: 900 });
+});
+
+test("shot flow shows visual server replay impacts without resolving damage locally", () => {
+  let impactResolved = false;
+  const { controller, events } = createHarness({
+    projectileController: {
+      createProjectile: () => projectile(),
+      advance: () => ({
+        kind: "collision",
+        collision: { x: 120, y: 340, directHitId: "blue-1" },
+      }),
+    },
+    impactController: {
+      resolve: () => {
+        impactResolved = true;
+        throw new Error("Visual replay should not resolve impact locally");
+      },
+      preview: () => ({
+        impactPreview: {
+          x: 120,
+          y: 340,
+          craterRadius: 50,
+          damageRadius: 75,
+          isBungerShot: false,
+          timeLeft: 0.75,
+        },
+        shotResult: "Server shot replay impacted.",
+      }),
+    },
+  });
+
+  const result = controller.advanceVisualProjectile({
+    projectile: projectile(),
+    vehicles: [vehicle()],
+    wind: 0,
+    deltaSeconds: 0.1,
+  });
+
+  assert.equal(result.kind, "resolved");
+  if (result.kind !== "resolved") {
+    return;
+  }
+  assert.equal(impactResolved, false);
+  assert.deepEqual(result.impactPreview, {
+    x: 120,
+    y: 340,
+    craterRadius: 50,
+    damageRadius: 75,
+    isBungerShot: false,
+    timeLeft: 0.75,
+  });
+  assert.equal(result.shotResult, "Server shot replay impacted.");
+  assert.deepEqual(events, ["recenter:100"]);
 });

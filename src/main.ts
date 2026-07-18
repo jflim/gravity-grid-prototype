@@ -7,8 +7,15 @@ import {
   shouldMountOnlineLobby,
 } from "./demoLayout";
 import { MatchScene } from "./match/MatchScene";
-import { mountOnlineGameplayPreview } from "./onlineGameplayPreview";
+import {
+  matchSceneRoundSetupFromSnapshot,
+  type MatchSceneRoundSetup,
+} from "./match/OnlineMatchSetup";
+import { createOnlineMatchIntentPublisher } from "./match/OnlineMatchIntentPublisher";
+import type { MatchTurnIntentPublisher } from "./match/MatchTurnIntents";
 import { mountOnlineLobby } from "./onlineLobby";
+import { getRoomSnapshot, type RoomSnapshot } from "./onlineLobbySnapshot";
+import type { OnlineGameplaySession } from "./onlineRoomTypes";
 import "./styles.css";
 
 declare global {
@@ -25,12 +32,33 @@ let viewportGuard: HTMLDivElement | undefined;
 let gameplayMounted = false;
 
 if (shouldMountOnlineLobby(window.location.search, window.__GRAVITY_CANYON_CONFIG__)) {
-  mountOnlineLobby({ onGameplayStart: mountOnlineGameplayPreview });
+  mountOnlineLobby({ onGameplayStart: mountOnlineGameplay });
 } else {
   mountGameplay();
 }
 
-function mountGameplay(): void {
+type MountGameplayOptions = {
+  initialRoundSetup?: MatchSceneRoundSetup;
+  turnIntentPublisher?: MatchTurnIntentPublisher;
+  onlineLocalSessionId?: string;
+  onlineStateSubscriber?: OnlineStateSubscriber;
+};
+
+type OnlineStateSubscriber = (applySnapshot: (snapshot: RoomSnapshot) => void) => void;
+
+function mountOnlineGameplay(session: OnlineGameplaySession): void {
+  mountGameplay({
+    initialRoundSetup: matchSceneRoundSetupFromSnapshot(session.initialSnapshot),
+    turnIntentPublisher: createOnlineMatchIntentPublisher(session.room),
+    onlineLocalSessionId: session.room.sessionId,
+    onlineStateSubscriber: (applySnapshot) => {
+      applySnapshot(getRoomSnapshot(session.room.state));
+      session.room.onStateChange((state) => applySnapshot(getRoomSnapshot(state)));
+    },
+  });
+}
+
+function mountGameplay(options: MountGameplayOptions = {}): void {
   if (gameplayMounted) {
     return;
   }
@@ -56,7 +84,12 @@ function mountGameplay(): void {
         debug: false,
       },
     },
-    scene: MatchScene,
+    scene: new MatchScene({
+      initialRoundSetup: options.initialRoundSetup,
+      turnIntentPublisher: options.turnIntentPublisher,
+      onlineLocalSessionId: options.onlineLocalSessionId,
+      onlineStateSubscriber: options.onlineStateSubscriber,
+    }),
   };
 
   game = new Phaser.Game(config);

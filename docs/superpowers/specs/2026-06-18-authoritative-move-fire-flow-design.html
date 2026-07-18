@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Authoritative Move And Fire Flow Design</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        HTML reading copy generated from <a href="2026-06-18-authoritative-move-fire-flow-design.md">docs/superpowers/specs/2026-06-18-authoritative-move-fire-flow-design.md</a> on 2026-07-18.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Authoritative Move And Fire Flow Design</h1>
+<h2>Goal</h2>
+<p>Build the first server-authoritative combat contract after the online lobby setup handoff. The slice makes movement intent, fire origin, and shot-result publication explicit before moving the full projectile, terrain, damage, and replay animation pipeline into Phaser online play.</p>
+<h2>Player Feel</h2>
+<p>The active player should feel immediate control:</p>
+<ul>
+<li>Movement can appear instantly on the active player's client as prediction.</li>
+<li>The server owns the accepted vehicle position.</li>
+<li>Releasing fire should feel instant locally, and the projectile should not visibly change path in mid-air.</li>
+<li>The way to avoid mid-air correction is to keep movement reconciled before fire release, then run deterministic projectile math from the same firing state.</li>
+<li>Other clients animate only from server-published shot data.</li>
+</ul>
+<p>The rule of thumb is: clients may predict presentation, but the server owns combat truth.</p>
+<h2>Architecture</h2>
+<pre><code class="language-mermaid">
+flowchart LR
+
+  Input[&quot;Active player input&quot;] --&gt; ClientPrediction[&quot;Client prediction and local feedback&quot;]
+
+  Input --&gt; Intent[&quot;Colyseus intent message&quot;]
+
+  Intent --&gt; ServerGate[&quot;Server validates active owner, alive vehicle, turn version&quot;]
+
+  ServerGate --&gt; ServerState[&quot;Server-owned vehicle state&quot;]
+
+  ServerState --&gt; FiringState[&quot;Synced firing state&quot;]
+
+  FiringState --&gt; ShotResult[&quot;Server-owned shot result&quot;]
+
+  ShotResult --&gt; Clients[&quot;All clients render/reconcile&quot;]
+
+  ClientPrediction -. &quot;never decides damage, terrain, or KOs&quot; .-&gt; Clients
+
+</code></pre>
+<h2>Movement Flow</h2>
+<p>Movement is the only turn action that benefits from repeated server updates. This slice starts with discrete movement intents and a server movement step. A later slice can run the same logic on a fixed server tick.</p>
+<pre><code class="language-mermaid">
+sequenceDiagram
+
+  participant P as Active Player Client
+
+  participant S as Colyseus Server
+
+  participant O as Other Clients
+
+
+
+  P-&gt;&gt;P: Predict vehicle moving for responsiveness
+
+  P-&gt;&gt;S: submitTurnIntent(action=&quot;move&quot;, direction, deltaSeconds, inputSeq)
+
+  S-&gt;&gt;S: Validate active owner and legal phase
+
+  S-&gt;&gt;S: Resolve movement from server x/y and terrain
+
+  S--&gt;&gt;P: Publish authoritative vehicle x/y and moveUnits
+
+  S--&gt;&gt;O: Publish authoritative vehicle x/y and moveUnits
+
+  P-&gt;&gt;P: Reconcile predicted position to server position
+
+</code></pre>
+<h2>Fire Flow</h2>
+<p>When the player releases fire, the client can launch the projectile immediately from its current aligned local state. The server still uses its own vehicle coordinates as the muzzle origin and owns the combat result. The intended feel is not &quot;shot, correction, reshot&quot;; it is &quot;movement stayed synced, release fired immediately, server confirmed the result.&quot;</p>
+<pre><code class="language-mermaid">
+sequenceDiagram
+
+  participant P as Shooter Client
+
+  participant S as Colyseus Server
+
+  participant O as Other Clients
+
+
+
+  P-&gt;&gt;P: Release power and launch local projectile immediately
+
+  P-&gt;&gt;S: submitTurnIntent(action=&quot;fire&quot;, angle, power, facing, turnAuthorityVersion)
+
+  S-&gt;&gt;S: Validate active owner, clamp angle/power/facing
+
+  S-&gt;&gt;S: Read authoritative shooter x/y
+
+  S-&gt;&gt;S: Create shot result with origin, angle, power, target/damage preview
+
+  S--&gt;&gt;P: Publish server shot result
+
+  S--&gt;&gt;O: Publish server shot result
+
+  P-&gt;&gt;P: Confirm result; do not apply local damage/terrain/KO before server
+
+  O-&gt;&gt;O: Animate server-approved shot replay
+
+</code></pre>
+<h2>Data Contract For This Slice</h2>
+<p>Add server state that can be snapshotted by clients:</p>
+<ul>
+<li><code>moveUnits</code> on each combat vehicle.</li>
+<li><code>lastShotId</code>.</li>
+<li><code>lastShotShooterVehicleId</code>.</li>
+<li><code>lastShotShooterSessionId</code>.</li>
+<li><code>lastShotOriginX</code> and <code>lastShotOriginY</code>.</li>
+<li><code>lastShotAngle</code>, <code>lastShotPower</code>, and <code>lastShotFacing</code>.</li>
+<li><code>lastShotTargetVehicleId</code>.</li>
+<li><code>lastShotDamage</code>.</li>
+<li><code>lastShotTargetHpBefore</code> and <code>lastShotTargetHpAfter</code>.</li>
+<li><code>lastShotTurnNumber</code>.</li>
+<li><code>lastShotTurnAuthorityVersion</code>.</li>
+<li><code>lastShotServerTimeMs</code>.</li>
+</ul>
+<p>This is intentionally a shot-result contract, not the final projectile replay contract. The next slice can replace the fixed preview damage with deterministic projectile path, impact, terrain diff, combat markers, KOs, and round result while preserving the same ownership model.</p>
+<h2>Scope</h2>
+<p>Included:</p>
+<ul>
+<li>Server accepts active-player <code>move</code> and <code>fire</code> turn intents.</li>
+<li>Server applies a movement step from authoritative vehicle position.</li>
+<li>Server clamps fire power/angle/facing.</li>
+<li>Server records the fire origin from authoritative vehicle coordinates.</li>
+<li>Server publishes last-shot metadata through the Colyseus schema and client snapshot.</li>
+<li>Shared gameplay preview markup can display the last server shot.</li>
+<li>The live Phaser match pushes movement and fire intents through an online intent bridge.</li>
+<li>Non-owning clients strip turn controls before local movement/charge/fire logic.</li>
+</ul>
+<p>Deferred:</p>
+<ul>
+<li>Continuous 20 Hz movement loop.</li>
+<li>Full projectile path generation on the server.</li>
+<li>Terrain diffs.</li>
+<li>Damage/knockback from real impact resolution.</li>
+<li>Phaser online replay animation.</li>
+<li>Full Phaser reconciliation from server vehicle snapshots after each movement patch.</li>
+<li>Server-approved projectile replay events inside <code>MatchScene</code>.</li>
+</ul>
+<h2>Testing</h2>
+<ul>
+<li>Unit tests prove server movement updates vehicle position from authoritative state.</li>
+<li>Unit tests prove fire records server origin instead of trusting client-predicted coordinates.</li>
+<li>Integration tests prove forged non-owner movement/fire intents do not mutate combat state.</li>
+<li>Snapshot/markup tests prove last-shot metadata reaches the client presentation boundary.</li>
+<li>Client tests prove the online match bridge pushes <code>submitTurnIntent</code> movement/fire messages and gates non-owner turn input.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

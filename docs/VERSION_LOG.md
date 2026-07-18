@@ -5,6 +5,30 @@ Use this as the human-readable checkpoint history. Every meaningful commit shoul
 ## Unreleased
 
 Highlights:
+- Added a repository-linked GitHub Project for the locked V1 Playtest Alpha contract, seeded it with eight acceptance-driven delivery issues and execution fields, and documented the agent workflow for keeping issue status and verification evidence current.
+- Adopted one dedicated `codex/issue-<number>-<short-slug>` branch per feature ticket so future agent work stays isolated and reviewable.
+- Checkpoint audit note: `npm run audit:fallow:changed` reports no introduced dead-code, complexity, or duplication findings, but its all-findings verdict still flags inherited complexity and a seven-line alpha-bounds clone in `scripts/verify-runtime-roster.mjs`; that unrelated verifier refactor is intentionally deferred from the online-foundation checkpoint.
+- Added a network-feel pilot for the online Phaser match: room snapshots now carry server time, remote vehicles interpolate between server snapshots, the local predicted vehicle softly corrects toward server truth, and new shot replays fast-forward to the server event age instead of starting late from frame zero.
+- Smoothed Duel playtest movement replication by batching rapid client movement frames into elapsed-time move intents, and made the server publish turn countdown ticks without waiting for player input so connected clients stay roughly in sync after shots.
+- Auto-seated joining playtest players into balanced open lobby seats, so the first player lands on Red, the next on Blue, and players can focus on choosing Units instead of pressing Claim Seat.
+- Replaced the online preview shot placeholder with shared projectile collision/impact resolution, so multiplayer shots no longer auto-damage the first enemy and clients can replay the shot with a visible impact/crater using the recorded shot wind.
+- Fixed Duel lobby Unit visibility so a server-ready seat still shows its selected Unit, Pilot, Vehicle chips, and Ready badge to other clients even if the selected flag arrives stale.
+- Renamed the lobby ready strip to Ready Status and hides it until the local player owns an active seat, so unseated players no longer see a disabled Ready button.
+- Added a Join Playtest entry screen in the Canyon Dusk lobby style, so players choose a locked room display name before connecting and the seat cards stay focused on seats, Units, readiness, and status.
+- Standardized playtest lobby terminology around Unit, Pilot, and Vehicle: visible Choose/Change copy, ready helper text, picker vehicle labels, and living docs now use the combined playable identity consistently.
+- Removed the redundant top-bar Map Pool counter from the playtest lobby so selected-map information lives in the larger visual map preview and rail.
+- Made lobby unit selection server-confirmed instead of local-only, and fixed lobby/picker unit art facing so picker cards normalize left while red seats face right and blue seats face left.
+- Replaced the lobby seat's plain Host/Ready text with compact color-coded status chips so other players can immediately see who is host and which claimed seats are ready.
+- Made lobby unit art face inward with a subtle divider between team columns.
+- Renamed the lobby Host Console to Room Settings, moved the Ready control into the player-facing lobby area, and fixed desktop seat cards to reserve matching rows for selected and open seats.
+- Cleaned up the online lobby seat affordances: open seats no longer render a disabled Open Seat action for already-seated players, and picked units now show immediately on the owning player's seat while waiting for server confirmation.
+- Quieted the online lobby empty-seat state: unclaimed seats no longer show unit-missing text, already-seated players no longer see extra Claim Seat buttons, and choosing a unit remains available while Ready stays locked until a unit is selected.
+- Split online lobby seat ownership from unit selection: unclaimed seats no longer show default characters, claiming a seat no longer opens the picker automatically, and ready/start validation now requires an explicit unit choice.
+- Fixed host-console hover states so Duel, Doubles, round, ready, and map-rail controls keep readable text instead of inheriting the generic pale button hover.
+- Changed the seat HOST badge from a light gold pill to a dark readable tag so the label stays legible in compact lobby cards.
+- Lifted the lobby palette from Canyon Night toward Canyon Dusk so the readable map-selector and lobby controls keep contrast without making the whole playtest UI feel too dark.
+- Softened the Canyon Night lobby text palette and fixed map-selector cards so their button styling stays dark and readable instead of reverting to pale blue with harsh white/gray labels.
+- Added a first Gravity Canyon UI color kit and rethemed the online playtest lobby toward a darker Canyon Night palette, replacing the bright orange/cyan lobby language with readable dark panels, mineral selections, copper accents, and muted team markers.
 - Added an asset-backed sound manifest and workflow doc so v1 non-voice SFX can be swapped through `src/match/audio/MatchSoundAssets.ts` and files under `public/assets/sfx/`, while future voice experiments stay organized under `public/assets/voice/` outside default v1 scope.
 - Added minimal procedural non-voice match SFX for turn ticks, movement, class-flavored weapon fire, impacts, hits, damage KOs, and Void Dropped cues, with `M` to mute/unmute prototype sound.
 - Made terrain sliding less eager by treating slopes up to 45 degrees as stable footing, so vehicles only slide when the sampled ground is steeper than that cutoff.
@@ -19,10 +43,24 @@ Highlights:
 - Added server-owned online combat preview state for round number, turn number, wind, active vehicle, HP, winner, and validated preview shots.
 - Added an online panel combat snapshot with active turn, wind, vehicle HP rows, server-shot action, and next-round action.
 - Replaced the online ready handoff with a shared server-owned gameplay preview screen so remote testers see the same selected characters, active turn, HP, wind, and round result instead of entering separate local Phaser matches.
-- Rebuilt the playtest lobby as a real host/seat flow: players claim Red/Blue seats, the host picks Duel or Doubles, each seat owner chooses a character from a visual Pilot/Ride menu, and ready checks start the shared server-owned gameplay preview.
+- Rebuilt the playtest lobby as a real host/seat flow: players claim Red/Blue seats, the host picks Duel or Doubles, each seat owner chooses a Unit with a Pilot and Vehicle, and ready checks start the shared server-owned gameplay preview.
 - Clarified the playtest lobby ownership UI with a visible Lobby Host label, friendly shared playtest room naming instead of the internal `auto-room` id, and host-only mode control affordances.
+- Added server-owned playtest room settings for Best of 1/Best of 3 and map select/random, exposed them as host-only lobby controls, reset readiness when settings change, and locked forged settings messages after gameplay starts.
+- Added server-owned preview match setup metadata from claimed seats, selected characters, match length, and map choice, including target score, chosen map id/name, turn sequence, and preview vehicles placed at the selected map spawns.
+- Wired online ready into the Phaser match start from server-owned setup metadata, so the real match scene opens on the selected map with claimed seats, selected characters, and server turn order instead of local demo defaults.
+- Added the first server turn-authority skeleton: preview turns now publish a server-owned clock/revision, accept generic active-player turn intents, reject non-active intent forgery, expose remaining time through the online snapshot/preview, and include the server active turn in the Phaser round-start status.
+- Added the first server-owned movement/fire-origin contract: active-player move intents now update server vehicle position/move units, fire intents record a server-owned shot origin/result snapshot, and the visual design doc explains how client prediction reconciles with server truth.
+- Wired the Phaser online match to push movement/fire `submitTurnIntent` messages through an intent bridge, gate non-owner turn controls, and added `ONLINE_COMBAT_FLOW.html` as a visual game-design reference for movement sync before instant-feel firing.
+- Added the first live Colyseus-to-Phaser state bridge: online room snapshots now update visible match vehicle position, HP, alive state, movement units, facing, and aim on every browser instead of stopping at the lobby handoff.
+- Added online Phaser shot replay from server snapshots, owner-only turn countdown ticks, and a local `YOUR TURN` arrow/label so remote playtest clients see movement and shots while only the active player hears urgency cues.
+- Added a bug feedback template for quick reports, multiplayer reproduction details, and subjective feel feedback during playtests.
+- Implemented the approved map-first online lobby direction: host seats now show a HOST badge, the blue lobby side emphasizes team slots plus a selected-map preview and scrollable map rail, and the orange Host Console groups Match Mode, Rounds To Win, private room access, and ready/start state.
+- Tightened the playtest lobby seat cards around the combined unit identity: the main slot now shows the mounted unit once, with compact Pilot/Vehicle chips instead of repeated Pilot and Vehicle panels.
+- Added unit-context cards to the Choose Unit picker, showing each unit's role, playstyle summary, strengths, and implementation status without implying unimplemented numeric stats.
+- Added a headless Chrome/Edge browser visual smoke command as the default Codex visual verification path, reserving the Codex in-app Browser for explicit interactive-browser requests.
+- Hardened the browser visual smoke command for managed Windows shells by launching Chrome/Edge with an isolated profile, `--no-sandbox`, and in-process GPU handling.
 - Added server-authority regression coverage for disabled playtest actions, including forged non-host mode changes, occupied/inactive seat claims, gameplay-phase ready changes, non-owner character edits, non-active preview shots, and non-host next-round requests.
-- Saved the next online v1 implementation path: smoke-test the current lobby, then build server-enforced host room settings for match length and map selection before wiring selected room setup into Phaser.
+- Saved the next online v1 implementation path: keep the server-owned setup handoff, then move turn order, movement, aim/fire intent, projectile resolution, terrain changes, damage, KOs, and round results to server authority.
 - Replaced Nova's active KO runtime sprite with the selected prone v16 KO asset.
 - Added a sprite-variant folder convention and workflow doc for frequent sprite iteration.
 - Added a session handoff document with current repo state, active branch, sprite status, Vesper KO generation prompt, next steps, and verification notes.

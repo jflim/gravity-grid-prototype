@@ -528,6 +528,10 @@ Technical direction:
 - Server owns room state, turn order, legal movement, projectile result, terrain changes, damage, KOs, void drops, and round/match result.
 - Static assets should be optimized for remote playtest delivery.
 
+Visual design reference:
+
+- [Online Combat Flow Visual Reference](ONLINE_COMBAT_FLOW.html) shows the intended movement-sync-before-fire sequence. The player can feel immediate firing, but the projectile should not visibly change path mid-air; damage, terrain, KOs, and round results remain server facts.
+
 ## 24. Accessibility And Readability
 
 V1 accessibility target is practical readability:

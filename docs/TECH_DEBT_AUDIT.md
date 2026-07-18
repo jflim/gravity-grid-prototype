@@ -1,12 +1,12 @@
 # Gravity Canyon Technical Debt Audit
 
-Generated on 2026-06-16 for the current working tree.
+Generated on 2026-06-18 for the current working tree.
 
 ## Tooling Note
 
 This report uses the requested tools:
 
-- **Graphify:** installed from `safishamsi/graphify` as the `graphifyy` Python package, then run with `npm run audit:graphify`.
+- **Graphify:** run through the repo-local `work/graphify-venv` via `npm run graphify -- ...` and `npm run audit:graphify`.
 - **Fallow:** installed from `fallow-rs/fallow` as the npm dev dependency `fallow`, then run with `npm run audit:fallow`.
 - **Fallow changed-files gate:** `npm run audit:fallow:changed` runs `fallow audit --gate all`, writes `work/audits/fallow-audit.json`, and exits nonzero when the current changes are not human-ready.
 - **Audit builder:** `npm run audit:debt` runs Graphify, runs Fallow, builds this markdown report, then regenerates the HTML docs.
@@ -18,10 +18,10 @@ The old local size/coupling score remains in the report as supplemental context,
 | Metric | Value |
 | --- | --- |
 | App | Gravity Canyon |
-| Files scanned by local supplement | 134 |
-| Source files | 84 |
-| Test files | 50 |
-| Nonblank LOC scanned | 13920 |
+| Files scanned by local supplement | 177 |
+| Source files | 112 |
+| Test files | 65 |
+| Nonblank LOC scanned | 18512 |
 | Dependency cycles found | 0 |
 | Default source-file target | 250 nonblank LOC or less |
 | Temporary orchestrator target | 300 nonblank LOC or less |
@@ -34,16 +34,16 @@ Graphify builds the project graph and records structural graph health in `work/a
 | --- | --- |
 | Evidence file | `work/audits/graphify-diagnose.json` |
 | Graph file | `graphify-out/graph.json` |
-| Graphify source command | `graphify update . --force --no-cluster` |
-| Diagnose command | `graphify diagnose multigraph --json --graph graphify-out/graph.json` |
-| Raw node count | 1610 |
-| Post-build node count | 1610 |
-| Raw edge count | 2976 |
-| Post-build edge count | 2634 |
-| Directed unique endpoint pairs | 2636 |
-| Undirected unique endpoint pairs | 2632 |
+| Graphify source command | `npm run graphify -- update . --force --no-cluster` |
+| Diagnose command | `npm run graphify -- diagnose multigraph --json --graph graphify-out/graph.json` |
+| Raw node count | 2103 |
+| Post-build node count | 2103 |
+| Raw edge count | 4298 |
+| Post-build edge count | 3900 |
+| Directed unique endpoint pairs | 3903 |
+| Undirected unique endpoint pairs | 3898 |
 | Collapsed directed endpoint edges | 11 |
-| Dangling endpoint edges | 329 |
+| Dangling endpoint edges | 384 |
 
 ## Fallow evidence
 
@@ -55,48 +55,46 @@ The raw Fallow JSON keeps all findings. The hotspot and remediation tables below
 | --- | --- |
 | Evidence files | `work/audits/fallow-full.json`, `work/audits/fallow-health.json` |
 | Fallow version | 2.97.0 |
-| Repo hygiene issues | 1 |
+| Repo hygiene issues | 0 |
 | Circular dependencies | 0 |
 | Boundary violations | 0 |
 | Unresolved imports | 0 |
 | Unused files | 0 |
-| Test-only dependencies | 1 |
-| Health findings | 79 |
-| Remediation targets | 7 |
+| Test-only dependencies | 0 |
+| Health findings | 62 |
+| Remediation targets | 4 |
 
 ### Fallow Dependency Findings
 
 | Package | Location | Action |
 | --- | --- | --- |
-| `@colyseus/sdk` | package.json:30 | Move to devDependencies (only test files import this) |
+| n/a | n/a | No dependency hygiene findings. |
 
 ### Fallow Health Hotspots
 
 | File | Function | Line | Cyclomatic | Cognitive | CRAP | Recommendation |
 | --- | --- | --- | --- | --- | --- | --- |
-| `src/match/rendering/VehicleRenderer.ts` | `draw` | 50 | 36 | 32 | 1332 | Refactor `draw` to reduce complexity (extract helper functions, simplify branching) |
 | `scripts/verify-runtime-roster.mjs` | `readPngAlphaBounds` | 191 | 26 | 38 | 702 | Add test coverage for `readPngAlphaBounds` to lower its CRAP score (coverage reduces risk even without refactoring) |
-| `src/onlineLobby.ts` | `render` | 227 | 26 | 19 | 702 | Add test coverage for `render` to lower its CRAP score (coverage reduces risk even without refactoring) |
 | `scripts/build-docs-html.mjs` | `renderMarkdown` | 124 | 24 | 50 | 600 | Add test coverage for `renderMarkdown` to lower its CRAP score (coverage reduces risk even without refactoring) |
 | `shared/gameplay/impact.ts` | `resolveProjectileImpact` | 80 | 22 | 35 | 506 | Add test coverage for `resolveProjectileImpact` to lower its CRAP score (coverage reduces risk even without refactoring) |
 | `src/match/ImpactController.ts` | `resolve` | 30 | 18 | 23 | 342 | Add test coverage for `resolve` to lower its CRAP score (coverage reduces risk even without refactoring) |
-| `src/match/MatchScene.ts` | `update` | 322 | 17 | 16 | 306 | Add test coverage for `update` to lower its CRAP score (coverage reduces risk even without refactoring) |
-| `src/match/rendering/TerrainRenderer.ts` | `drawMapLandmarks` | 81 | 16 | 30 | 272 | Add test coverage for `drawMapLandmarks` to lower its CRAP score (coverage reduces risk even without refactoring) |
-| `src/onlineLobbyView.ts` | `readSlot` | 109 | 16 | 11 | 272 | Add test coverage for `readSlot` to lower its CRAP score (coverage reduces risk even without refactoring) |
-| `src/onlineLobby.ts` | `getSnapshot` | 360 | 14 | 13 | 210 | Add test coverage for `getSnapshot` to lower its CRAP score (coverage reduces risk even without refactoring) |
-| `src/onlineLobby.ts` | `getVehicles` | 439 | 14 | 13 | 210 | Add test coverage for `getVehicles` to lower its CRAP score (coverage reduces risk even without refactoring) |
-| `src/match/MatchInputController.ts` | `readMatchInputSnapshot` | 38 | 14 | 8 | 210 | Add test coverage for `readMatchInputSnapshot` to lower its CRAP score (coverage reduces risk even without refactoring) |
+| `src/match/rendering/TerrainRenderer.ts` | `drawMapLandmarks` | 81 | 15 | 27 | 240 | Add test coverage for `drawMapLandmarks` to lower its CRAP score (coverage reduces risk even without refactoring) |
+| `src/match/MatchInputController.ts` | `readMatchInputSnapshot` | 40 | 15 | 9 | 240 | Add test coverage for `readMatchInputSnapshot` to lower its CRAP score (coverage reduces risk even without refactoring) |
+| `src/match/audio/MatchSoundController.ts` | `play` | 172 | 13 | 10 | 182 | Add test coverage for `play` to lower its CRAP score (coverage reduces risk even without refactoring) |
+| `src/match/rendering/VehicleSpriteLayer.ts` | `draw` | 34 | 12 | 9 | 156 | Add test coverage for `draw` to lower its CRAP score (coverage reduces risk even without refactoring) |
+| `src/match/audio/MatchSoundAssets.ts` | `resolveMatchSoundAsset` | 54 | 12 | 5 | 156 | Add test coverage for `resolveMatchSoundAsset` to lower its CRAP score (coverage reduces risk even without refactoring) |
+| `server/playtestLauncher.ts` | `parsePlaytestArgs` | 24 | 12 | 12 | 156 | Add test coverage for `parsePlaytestArgs` to lower its CRAP score (coverage reduces risk even without refactoring) |
+| `shared/gameplay/vehicleSettlement.ts` | `settleVehicleOnTerrain` | 66 | 12 | 15 | 156 | Add test coverage for `settleVehicleOnTerrain` to lower its CRAP score (coverage reduces risk even without refactoring) |
+| `shared/content/tiledMapImporter.ts` | `readSpawns` | 91 | 11 | 14 | 132 | Add test coverage for `readSpawns` to lower its CRAP score (coverage reduces risk even without refactoring) |
 
 ### Fallow Remediation Targets
 
 | File | Priority | Category | Recommendation |
 | --- | --- | --- | --- |
-| `src/match/rendering/VehicleRenderer.ts` | 23.4 | extract_complex_functions | Extract draw (cognitive: 32) in 126-LOC file into smaller functions |
-| `src/onlineLobbyView.ts` | 18.9 | add_test_coverage | 3 complex functions lack test coverage path, add tests before modifying |
+| `src/onlineLobbyView.ts` | 26.4 | split_high_impact | Split high-impact file (262 LOC), 5 dependents amplify every change |
 | `shared/gameplay/impact.ts` | 11.7 | extract_complex_functions | Extract resolveProjectileImpact (cognitive: 35) in 196-LOC file into smaller functions |
-| `src/match/rendering/TerrainRenderer.ts` | 11.4 | extract_complex_functions | Extract drawMapLandmarks (cognitive: 30) in 174-LOC file into smaller functions |
-| `scripts/verify-runtime-roster.mjs` | 4.9 | extract_complex_functions | Extract readPngAlphaBounds (cognitive: 38) in 356-LOC file into smaller functions |
-| `scripts/build-docs-html.mjs` | 5.8 | extract_complex_functions | Extract renderMarkdown (cognitive: 50) in 509-LOC file into smaller functions |
+| `scripts/verify-runtime-roster.mjs` | 5.1 | extract_complex_functions | Extract readPngAlphaBounds (cognitive: 38) in 356-LOC file into smaller functions |
+| `scripts/build-docs-html.mjs` | 6 | extract_complex_functions | Extract renderMarkdown (cognitive: 50) in 509-LOC file into smaller functions |
 
 ## Highest Risk Godfile Candidates
 
@@ -104,35 +102,35 @@ This supplemental score combines nonblank LOC, branch proxy, import fan-in/fan-o
 
 | File | LOC | Score | Incoming | Outgoing | Branches | Churn | Concerns |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `src/onlineLobby.ts` | 421 | 1180 | 1 | 2 | 157 | 8 | dom, colyseus |
-| `src/match/MatchScene.ts` | 608 | 1107 | 1 | 23 | 58 | 10 | dom, phaser, process |
-| `server/rooms/GravityCanyonRoom.ts` | 358 | 793 | 0 | 0 | 84 | 3 | colyseus, schema |
+| `server/rooms/GravityCanyonRoom.ts` | 425 | 845 | 0 | 0 | 78 | 6 | colyseus, schema |
+| `src/onlineLobbyDom.ts` | 360 | 735 | 1 | 3 | 69 | 4 | dom |
+| `src/match/MatchScene.ts` | 347 | 721 | 1 | 20 | 29 | 12 | dom, phaser, process |
 | `scripts/verify-runtime-roster.mjs` | 320 | 667 | 0 | 0 | 59 | 7 | filesystem, process |
 | `src/demoLayout.ts` | 349 | 657 | 9 | 0 | 50 | 15 | pure/data |
+| `src/match/audio/MatchSoundController.ts` | 351 | 591 | 3 | 0 | 54 | 1 | pure/data |
 | `scripts/build-map-previews.ts` | 471 | 573 | 0 | 0 | 0 | 4 | filesystem, process |
 | `scripts/build-docs-html.mjs` | 461 | 571 | 0 | 0 | 6 | 7 | filesystem |
-| `src/match/rendering/VehicleRenderer.ts` | 114 | 396 | 2 | 6 | 41 | 3 | phaser |
-| `src/onlineLobbyView.ts` | 120 | 382 | 2 | 0 | 59 | 4 | pure/data |
-| `src/match/MatchViewFactory.ts` | 207 | 377 | 1 | 10 | 5 | 1 | dom, phaser |
-| `src/match/rendering/TerrainRenderer.ts` | 163 | 362 | 2 | 1 | 28 | 1 | phaser |
-| `scripts/build-map-gameplay-review.ts` | 273 | 341 | 0 | 0 | 0 | 1 | filesystem |
+| `src/match/MatchSceneShotFlow.ts` | 299 | 527 | 1 | 10 | 32 | 1 | pure/data |
+| `shared/content/tiledMapImporter.ts` | 185 | 477 | 0 | 0 | 66 | 1 | process |
+| `src/onlineLobbyView.ts` | 212 | 477 | 5 | 0 | 53 | 6 | pure/data |
+| `src/onlineLobby.ts` | 139 | 431 | 1 | 5 | 32 | 14 | dom, colyseus |
 
 ## Largest Files
 
 | File | LOC | Score | Incoming | Outgoing | Branches | Churn | Concerns |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `src/match/MatchScene.ts` | 608 | 1107 | 1 | 23 | 58 | 10 | dom, phaser, process |
 | `scripts/build-map-previews.ts` | 471 | 573 | 0 | 0 | 0 | 4 | filesystem, process |
 | `scripts/build-docs-html.mjs` | 461 | 571 | 0 | 0 | 6 | 7 | filesystem |
-| `src/onlineLobby.ts` | 421 | 1180 | 1 | 2 | 157 | 8 | dom, colyseus |
-| `server/rooms/GravityCanyonRoom.ts` | 358 | 793 | 0 | 0 | 84 | 3 | colyseus, schema |
+| `server/rooms/GravityCanyonRoom.ts` | 425 | 845 | 0 | 0 | 78 | 6 | colyseus, schema |
+| `src/onlineLobbyDom.ts` | 360 | 735 | 1 | 3 | 69 | 4 | dom |
+| `src/match/audio/MatchSoundController.ts` | 351 | 591 | 3 | 0 | 54 | 1 | pure/data |
 | `src/demoLayout.ts` | 349 | 657 | 9 | 0 | 50 | 15 | pure/data |
+| `src/match/MatchScene.ts` | 347 | 721 | 1 | 20 | 29 | 12 | dom, phaser, process |
+| `src/onlineLobbyMarkup.ts` | 326 | 382 | 3 | 3 | 2 | 4 | pure/data |
 | `scripts/verify-runtime-roster.mjs` | 320 | 667 | 0 | 0 | 59 | 7 | filesystem, process |
+| `src/match/MatchSceneShotFlow.ts` | 299 | 527 | 1 | 10 | 32 | 1 | pure/data |
 | `scripts/build-map-gameplay-review.ts` | 273 | 341 | 0 | 0 | 0 | 1 | filesystem |
 | `server/v1/maps.ts` | 253 | 321 | 0 | 0 | 4 | 9 | process |
-| `shared/content/v1Units.ts` | 219 | 248 | 0 | 0 | 5 | 3 | pure/data |
-| `shared/gameplay/vehicleSettlement.ts` | 218 | 332 | 0 | 0 | 27 | 2 | pure/data |
-| `server/v1/mapGameplayReview.ts` | 207 | 216 | 0 | 0 | 0 | 3 | pure/data |
 
 ## Graphify-Style Centrality
 
@@ -140,18 +138,18 @@ These files sit on important dependency paths according to the local import grap
 
 | File | LOC | Score | Incoming | Outgoing | Branches | Churn | Concerns |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `src/match/MatchTypes.ts` | 52 | 324 | 29 | 0 | 5 | 3 | pure/data |
-| `src/match/MatchScene.ts` | 608 | 1107 | 1 | 23 | 58 | 10 | dom, phaser, process |
-| `src/match/MatchView.ts` | 139 | 275 | 4 | 9 | 15 | 1 | pure/data |
-| `src/combatPresentation.ts` | 41 | 146 | 12 | 0 | 3 | 3 | pure/data |
+| `src/match/MatchTypes.ts` | 52 | 383 | 37 | 0 | 5 | 4 | pure/data |
+| `src/match/MatchScene.ts` | 347 | 721 | 1 | 20 | 29 | 12 | dom, phaser, process |
+| `src/match/MatchView.ts` | 139 | 278 | 4 | 9 | 15 | 2 | pure/data |
+| `src/combatPresentation.ts` | 41 | 149 | 12 | 0 | 3 | 4 | pure/data |
+| `src/playableMaps.ts` | 45 | 158 | 12 | 0 | 5 | 3 | pure/data |
+| `src/match/MatchSceneShotFlow.ts` | 299 | 527 | 1 | 10 | 32 | 1 | pure/data |
 | `src/match/MatchViewFactory.ts` | 207 | 377 | 1 | 10 | 5 | 1 | dom, phaser |
+| `src/onlineLobbySnapshot.ts` | 194 | 431 | 10 | 1 | 39 | 2 | pure/data |
+| `src/match/MatchSceneShotControllers.ts` | 145 | 244 | 1 | 9 | 1 | 1 | pure/data |
 | `src/demoLayout.ts` | 349 | 657 | 9 | 0 | 50 | 15 | pure/data |
-| `src/playableMaps.ts` | 34 | 111 | 9 | 0 | 2 | 2 | pure/data |
-| `src/match/rendering/VehicleRenderer.ts` | 114 | 396 | 2 | 6 | 41 | 3 | phaser |
-| `src/match/ui/CommandDeck.ts` | 172 | 310 | 2 | 5 | 7 | 2 | phaser |
-| `src/voidDropPresentation.ts` | 104 | 213 | 6 | 1 | 14 | 2 | pure/data |
-| `src/match/VehicleGeometry.ts` | 71 | 116 | 4 | 2 | 1 | 1 | pure/data |
-| `src/match/MatchViewStateBuilder.ts` | 58 | 126 | 2 | 3 | 9 | 1 | pure/data |
+| `src/match/rendering/VehicleRenderer.ts` | 96 | 236 | 2 | 6 | 4 | 5 | phaser |
+| `src/match/ShotFlowController.ts` | 120 | 190 | 4 | 3 | 6 | 1 | pure/data |
 
 ## Fallow-Style Mixed Concerns
 
@@ -160,17 +158,17 @@ These files combine multiple operational concerns in one file. They are candidat
 | File | LOC | Score | Incoming | Outgoing | Branches | Churn | Concerns |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `server/index.ts` | 58 | 226 | 0 | 0 | 4 | 4 | colyseus, schema, filesystem, process |
-| `src/match/MatchScene.ts` | 608 | 1107 | 1 | 23 | 58 | 10 | dom, phaser, process |
+| `src/match/MatchScene.ts` | 347 | 721 | 1 | 20 | 29 | 12 | dom, phaser, process |
 | `scripts/build-map-previews.ts` | 471 | 573 | 0 | 0 | 0 | 4 | filesystem, process |
-| `src/onlineLobby.ts` | 421 | 1180 | 1 | 2 | 157 | 8 | dom, colyseus |
-| `server/rooms/GravityCanyonRoom.ts` | 358 | 793 | 0 | 0 | 84 | 3 | colyseus, schema |
+| `server/rooms/GravityCanyonRoom.ts` | 425 | 845 | 0 | 0 | 78 | 6 | colyseus, schema |
 | `scripts/verify-runtime-roster.mjs` | 320 | 667 | 0 | 0 | 59 | 7 | filesystem, process |
 | `src/match/MatchViewFactory.ts` | 207 | 377 | 1 | 10 | 5 | 1 | dom, phaser |
-| `server/schema/GravityCanyonState.ts` | 163 | 262 | 0 | 0 | 0 | 3 | colyseus, schema |
-| `src/main.ts` | 99 | 334 | 0 | 3 | 10 | 34 | dom, phaser |
-| `scripts/run-graphify-audit.mjs` | 49 | 186 | 0 | 0 | 11 | 1 | filesystem, process |
-| `scripts/serve-dist.mjs` | 36 | 160 | 0 | 0 | 7 | 2 | filesystem, process |
-| `scripts/run-graphify-hook-check.mjs` | 25 | 150 | 0 | 0 | 8 | 1 | filesystem, process |
+| `server/schema/GravityCanyonState.ts` | 198 | 300 | 0 | 0 | 0 | 4 | colyseus, schema |
+| `scripts/browser-visual-smoke.mjs` | 156 | 349 | 1 | 0 | 24 | 0 | filesystem, process |
+| `src/onlineLobby.ts` | 139 | 431 | 1 | 5 | 32 | 14 | dom, colyseus |
+| `src/main.ts` | 112 | 361 | 0 | 5 | 11 | 35 | dom, phaser |
+| `scripts/graphifyCommand.mjs` | 69 | 232 | 3 | 0 | 13 | 0 | filesystem, process |
+| `scripts/sync-tiled-maps.ts` | 40 | 133 | 0 | 0 | 10 | 1 | filesystem, process |
 
 ## Cycle Check
 

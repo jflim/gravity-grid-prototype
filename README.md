@@ -56,8 +56,10 @@ First playable local artillery prototype for Gravity Canyon.
   - server-owned combat preview state with round, turn, wind, active vehicle, HP, winner, and validated preview shot actions.
 - Browser client uses the vendored Colyseus browser SDK at `public/vendor/colyseus.js` to keep Vite dev mode stable on Windows.
 - The local map-review demo hides the Online Alpha room panel by default; playtest launch mode shows it automatically.
-- Playtest launch mode auto-joins one shared room lobby, then swaps into a shared server-owned gameplay preview after all claimed active seats are ready.
-- The playtest lobby now presents Red Team and Blue Team side by side, lets players claim active seats, lets the host choose Duel or Doubles, and shows visual Pilot/Ride character picks before readying.
+- Playtest launch mode opens a Join Playtest screen for the player's locked room display name, then joins one shared room lobby and launches the Phaser match scene from server-owned setup after all active seats are claimed, unit-selected, and ready.
+- The playtest lobby now presents Red Team and Blue Team side by side, lets players claim active seats, keeps unclaimed seats visually empty, locks display names after joining the room, and treats choosing a Unit with a Pilot and Vehicle as a separate step before readying.
+- Host-owned room settings now include Duel/Doubles mode, Best of 1/Best of 3 match length, and fixed-pool map select/random, with non-host and gameplay-phase changes rejected by the server.
+- The online match start now consumes server-owned setup metadata from claimed seats, character picks, match length, and map choice, including target score, chosen map id/name, turn sequence, and map-spawned vehicles.
 - The lobby labels the current Lobby Host, presents the generated playtest URL as a shared playtest room instead of exposing the internal `auto-room` id, and leaves mode changes host-only.
 - Placeholder capsule/nameplate state remains server-side, but those controls are hidden from the focused playtest lobby until the cosmetic loop is ready.
 - Public preview mode can serve the built client and Colyseus room server from one local port for internet sharing through a trusted tunnel, while staying localhost-only unless `HOST=0.0.0.0` is explicitly set.
@@ -117,6 +119,14 @@ Production build:
 ```powershell
 npm run build
 ```
+
+Browser visual smoke check after a local server is running:
+
+```powershell
+npm run verify:browser-visual -- http://127.0.0.1:5173
+```
+
+The command uses installed Chrome/Edge in headless mode and writes a screenshot under `work/browser-visual/`. This is the default local visual verification path for Codex sessions; use the Codex in-app Browser only when interactive browser control is explicitly needed.
 
 Generate HTML reading copies for the human-facing markdown docs:
 
@@ -240,8 +250,9 @@ Primary reading links:
 ## Notes
 
 - This is the local feel prototype, not the multiplayer architecture yet.
-- The multiplayer architecture is now scaffolded, but live combat is still local-only until server-authoritative gameplay is wired into the match scene.
-- The online room now owns a lightweight shared combat preview screen after the ready lobby, but Phaser projectile/terrain gameplay is not synced to that model yet.
+- The multiplayer architecture is now scaffolded, and online match start now uses the server-owned map, seats, character picks, and turn sequence.
+- Phaser projectile/terrain gameplay is still local-only after match start until server-authoritative movement, fire, terrain, damage, and round results are wired into the match scene.
+- The online lobby settings are server-owned and locked once gameplay starts; match length and map choice feed the server setup that seeds the Phaser match.
 - Terrain uses a heightmap for speed. Pixel-mask terrain can replace it later if needed.
 - There is no predicted trajectory line. The muzzle arrow shows current direction, but shot landing is still based on angle, power, wind, and memory.
 - Movement treats playable downhill and intentional void falling as allowed traversal; steep uphill or steep non-void downhill faces are blocked by the climb-angle rule, and vehicles without enough supported footing fall instead of perching on cliff edges.

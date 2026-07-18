@@ -1,12 +1,12 @@
-import type { VehicleHitZone } from "../../shared/gameplay/vehicleHitZone.js";
-import type { CombatMarkerKind, TeamId } from "../../shared/model/gameTypes.js";
+import type { TeamId } from "../../shared/model/gameTypes.js";
 import type {
   AdvanceProjectileInput,
   ProjectileAdvanceResult,
   ProjectileShooter,
 } from "./ProjectileController";
 import type { ImpactControllerResult, ResolveImpactInput } from "./ImpactController";
-import type { ImpactPreview, ProjectileState, SettleOptions, VehicleState } from "./MatchTypes";
+import type { ImpactPreview, ProjectileState, VehicleState } from "./MatchTypes";
+import type { ImpactResolutionCallbacks } from "./ImpactResolutionCallbacks";
 
 export interface ShotFlowProjectileController {
   createProjectile: (shooter: ProjectileShooter, power: number) => ProjectileState;
@@ -15,16 +15,13 @@ export interface ShotFlowProjectileController {
 
 export interface ShotFlowImpactController {
   resolve: (input: ResolveImpactInput) => ImpactControllerResult;
+  preview: (input: ResolveImpactInput) => ImpactControllerResult;
 }
 
-export interface ShotFlowControllerOptions {
+export interface ShotFlowControllerOptions extends ImpactResolutionCallbacks {
   projectileController: ShotFlowProjectileController;
   impactController: ShotFlowImpactController;
   surfaceAt: (x: number) => number;
-  hitZoneFor: (vehicle: VehicleState) => VehicleHitZone;
-  makeCrater: (x: number, y: number, radius: number, depthFactor: number) => void;
-  settleVehicles: (options: SettleOptions) => string[];
-  addCombatMarker: (vehicle: VehicleState, kind: CombatMarkerKind, label: string, slot?: number) => void;
   recenterForProjectileIfNeeded: (projectile: ProjectileState) => void;
   winningTeam: () => TeamId | undefined;
 }
@@ -48,6 +45,15 @@ export type ShotFlowAdvanceResult =
       nextEvent: ShotFlowNextEvent;
     };
 
+export type VisualShotAdvanceResult =
+  | { kind: "in-flight" }
+  | {
+      kind: "resolved";
+      projectile: undefined;
+      impactPreview?: ImpactPreview;
+      shotResult: string;
+    };
+
 export interface AdvanceShotInput {
   projectile: ProjectileState;
   vehicles: VehicleState[];
@@ -66,20 +72,7 @@ export class ShotFlowController {
   }
 
   advanceProjectile(input: AdvanceShotInput): ShotFlowAdvanceResult {
-    const result = this.options.projectileController.advance({
-      projectile: input.projectile,
-      deltaSeconds: input.deltaSeconds,
-      wind: input.wind,
-      targets: input.vehicles.map((vehicle) => ({
-        id: vehicle.id,
-        team: vehicle.team,
-        alive: vehicle.alive,
-        hitZone: this.options.hitZoneFor(vehicle),
-      })),
-      surfaceAt: this.options.surfaceAt,
-    });
-
-    this.options.recenterForProjectileIfNeeded(input.projectile);
+    const result = this.advanceProjectileMotion(input);
 
     if (result.kind === "collision") {
       return this.resolveImpact({
@@ -102,6 +95,59 @@ export class ShotFlowController {
     }
 
     return { kind: "in-flight" };
+  }
+
+  advanceVisualProjectile(input: AdvanceShotInput): VisualShotAdvanceResult {
+    const result = this.advanceProjectileMotion(input);
+
+    if (result.kind === "in-flight") {
+      return { kind: "in-flight" };
+    }
+
+    if (result.kind === "collision") {
+      const impact = this.options.impactController.preview({
+        x: result.collision.x,
+        y: result.collision.y,
+        directHitId: result.collision.directHitId,
+        projectile: input.projectile,
+        vehicles: input.vehicles,
+        hitZoneFor: this.options.hitZoneFor,
+        makeCrater: this.options.makeCrater,
+        settleVehicles: this.options.settleVehicles,
+        addCombatMarker: this.options.addCombatMarker,
+      });
+
+      return {
+        kind: "resolved",
+        projectile: undefined,
+        impactPreview: impact.impactPreview,
+        shotResult: impact.shotResult,
+      };
+    }
+
+    return {
+      kind: "resolved",
+      projectile: undefined,
+      impactPreview: undefined,
+      shotResult: "Server shot flew out of bounds.",
+    };
+  }
+
+  private advanceProjectileMotion(input: AdvanceShotInput): ProjectileAdvanceResult {
+    const result = this.options.projectileController.advance({
+      projectile: input.projectile,
+      deltaSeconds: input.deltaSeconds,
+      wind: input.wind,
+      targets: input.vehicles.map((vehicle) => ({
+        id: vehicle.id,
+        team: vehicle.team,
+        alive: vehicle.alive,
+        hitZone: this.options.hitZoneFor(vehicle),
+      })),
+      surfaceAt: this.options.surfaceAt,
+    });
+    this.options.recenterForProjectileIfNeeded(input.projectile);
+    return result;
   }
 
   private resolveImpact(input: {

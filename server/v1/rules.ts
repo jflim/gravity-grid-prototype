@@ -66,16 +66,42 @@ const MAP_PICKS = new Set<MapPick>([
 
 export function validateRoomSettings(input: Partial<Record<keyof RoomSettings, unknown>>): RoomSettings {
   return {
-    mode: GAME_MODES.has(input.mode as GameMode) ? (input.mode as GameMode) : DEFAULT_ROOM_SETTINGS.mode,
-    matchLength: MATCH_LENGTHS.has(input.matchLength as MatchLength)
-      ? (input.matchLength as MatchLength)
-      : DEFAULT_ROOM_SETTINGS.matchLength,
-    mapPick: MAP_PICKS.has(input.mapPick as MapPick) ? (input.mapPick as MapPick) : DEFAULT_ROOM_SETTINGS.mapPick,
+    mode: gameModeOr(input.mode, DEFAULT_ROOM_SETTINGS.mode),
+    matchLength: matchLengthOr(input.matchLength, DEFAULT_ROOM_SETTINGS.matchLength),
+    mapPick: mapPickOr(input.mapPick, DEFAULT_ROOM_SETTINGS.mapPick),
     friendlyFire: Boolean(input.friendlyFire),
+  };
+}
+
+export function mergeRoomSettings(
+  current: RoomSettings,
+  input: Partial<Record<keyof RoomSettings, unknown>>,
+): RoomSettings {
+  return {
+    mode: gameModeOr(input.mode, current.mode),
+    matchLength: matchLengthOr(input.matchLength, current.matchLength),
+    mapPick: mapPickOr(input.mapPick, current.mapPick),
+    friendlyFire: booleanOr(input.friendlyFire, current.friendlyFire),
   };
 }
 
 export function sanitizeDisplayName(displayName = "Guest") {
   const clean = displayName.replace(/[^\w .-]/g, "").replace(/\s+/g, " ").trim();
   return clean.slice(0, MAX_DISPLAY_NAME_LENGTH) || "Guest";
+}
+
+function gameModeOr(value: unknown, fallback: GameMode): GameMode {
+  return GAME_MODES.has(value as GameMode) ? (value as GameMode) : fallback;
+}
+
+function matchLengthOr(value: unknown, fallback: MatchLength): MatchLength {
+  return MATCH_LENGTHS.has(value as MatchLength) ? (value as MatchLength) : fallback;
+}
+
+function mapPickOr(value: unknown, fallback: MapPick): MapPick {
+  return MAP_PICKS.has(value as MapPick) ? (value as MapPick) : fallback;
+}
+
+function booleanOr(value: unknown, fallback: boolean): boolean {
+  return typeof value === "boolean" ? value : fallback;
 }

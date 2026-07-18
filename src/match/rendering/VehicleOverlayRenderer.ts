@@ -91,6 +91,7 @@ export class VehicleOverlayRenderer {
     worldUiScale: number,
     defeatLabel: string | undefined,
     active: boolean,
+    localActiveTurn: boolean,
     turnTime: number,
   ): void {
     const labelY = renderY - overlayLayout.nameOffsetY;
@@ -108,12 +109,12 @@ export class VehicleOverlayRenderer {
       .setDepth(16);
     this.vehicleLabels.push(label);
 
-    const stateLabel = defeatLabel ?? vehicle.className;
+    const stateLabel = stateLabelFor(vehicle, defeatLabel);
     const classLabel = this.options.scene.add
       .text(renderX, renderY - overlayLayout.classOffsetY, stateLabel, {
         fontFamily: "Consolas, 'SFMono-Regular', monospace",
         fontSize: "12px",
-        color: vehicle.defeatReason === "void" ? "#8be9ff" : vehicle.team === "red" ? "#ffd166" : "#8be9ff",
+        color: classLabelColor(vehicle),
         stroke: "#10131b",
         strokeThickness: 4,
       })
@@ -130,6 +131,7 @@ export class VehicleOverlayRenderer {
     const timerWidth = overlayLayout.timerBadgeWidth;
     const timerHeight = overlayLayout.timerBadgeHeight;
     const timerRadius = overlayLayout.timerBadgeRadius;
+    this.drawLocalTurnArrow(localActiveTurn, renderX, timerY, timerHeight, worldUiScale);
     this.options.gfx.fillStyle(0x0b1020, 0.88);
     this.options.gfx.fillRoundedRect(
       renderX - timerWidth / 2,
@@ -162,9 +164,9 @@ export class VehicleOverlayRenderer {
     this.vehicleLabels.push(timerTag);
 
     const turnTag = this.options.scene.add
-      .text(renderX, timerY + overlayLayout.turnTagGapY, "TURN", {
+      .text(renderX, timerY + overlayLayout.turnTagGapY, turnTagText(localActiveTurn), {
         fontFamily: "Inter, Arial, sans-serif",
-        fontSize: "11px",
+        fontSize: turnTagFontSize(localActiveTurn),
         fontStyle: "700",
         color: "#ffd166",
         stroke: "#10131b",
@@ -175,6 +177,50 @@ export class VehicleOverlayRenderer {
       .setDepth(16);
     this.vehicleLabels.push(turnTag);
   }
+
+  private drawLocalTurnArrow(
+    localActiveTurn: boolean,
+    renderX: number,
+    timerY: number,
+    timerHeight: number,
+    worldUiScale: number,
+  ): void {
+    if (!localActiveTurn) {
+      return;
+    }
+
+    const arrowY = timerY - timerHeight * 0.45 - 18 * worldUiScale;
+    const arrowHalfWidth = 13 * worldUiScale;
+    this.options.gfx.fillStyle(0xffd166, 0.94);
+    this.options.gfx.fillTriangle(
+      renderX,
+      arrowY + 14 * worldUiScale,
+      renderX - arrowHalfWidth,
+      arrowY - 6 * worldUiScale,
+      renderX + arrowHalfWidth,
+      arrowY - 6 * worldUiScale,
+    );
+  }
+}
+
+function classLabelColor(vehicle: VehicleState): string {
+  if (vehicle.defeatReason === "void") {
+    return "#8be9ff";
+  }
+
+  return vehicle.team === "red" ? "#ffd166" : "#8be9ff";
+}
+
+function stateLabelFor(vehicle: VehicleState, defeatLabel: string | undefined): string {
+  return defeatLabel ?? vehicle.className;
+}
+
+function turnTagText(localActiveTurn: boolean): string {
+  return localActiveTurn ? "YOUR TURN" : "TURN";
+}
+
+function turnTagFontSize(localActiveTurn: boolean): string {
+  return localActiveTurn ? "13px" : "11px";
 }
 
 function midpoint(a: { x: number; y: number }, b: { x: number; y: number }): { x: number; y: number } {

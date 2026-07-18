@@ -16,6 +16,15 @@ Use this document to keep names, silhouettes, personality, lore, vehicle class, 
 - Approved gameplay candidates should be transparent PNGs. Green chroma-key images are raw workshop sources, not game-ready assets.
 - Portrait and gacha art can later be more detailed, glamorous, and adult fantasy-forward than match sprites.
 
+## Player-Facing Terms
+
+- Unit: the selectable pilot-plus-vehicle combat identity, shown as one combined match sprite.
+- Pilot: the character identity players recognize by face, name, outfit, pose, voice, lore, and KO style.
+- Vehicle: the signature vehicle family that supplies the combat footprint, terrain contact, and class mechanics.
+- Role: a short playstyle label for what the unit tends to create in a match, such as terrain breaking, gravity control, trick shots, or pressure.
+- Strength: a compact, non-numeric hint about the unit's current or intended tactical identity.
+- Implementation status: a lobby picker label that separates currently implemented prototype mechanics from future design direction. Do not present planned roles as final balance or numeric stats.
+
 ## Transparent PNG Workflow
 
 Gravity Canyon's real sprite format is transparent PNG.

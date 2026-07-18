@@ -29,6 +29,18 @@ export interface MatchInputSnapshotInput {
   justDown?: (key: KeyboardKeyLike) => boolean;
 }
 
+export const EMPTY_MATCH_INPUT: MatchInputSnapshot = {
+  aimUp: false,
+  aimDown: false,
+  moveLeft: false,
+  moveRight: false,
+  chargeHeld: false,
+  resetPressed: false,
+  collisionZonesTogglePressed: false,
+  soundMuteTogglePressed: false,
+};
+const EMPTY_CURSOR_KEYS: CursorKeysLike = {};
+
 export class MatchInputController {
   constructor(private readonly input: MatchInputSnapshotInput) {}
 
@@ -38,16 +50,48 @@ export class MatchInputController {
 }
 
 export function readMatchInputSnapshot(input: MatchInputSnapshotInput): MatchInputSnapshot {
-  const justDown = input.justDown ?? (() => false);
-
+  const cursors = input.cursors ?? EMPTY_CURSOR_KEYS;
   return {
-    aimUp: input.cursors?.up?.isDown ?? false,
-    aimDown: input.cursors?.down?.isDown ?? false,
-    moveLeft: input.cursors?.left?.isDown ?? false,
-    moveRight: input.cursors?.right?.isDown ?? false,
-    chargeHeld: input.spaceKey?.isDown ?? false,
-    resetPressed: input.resetKey ? justDown(input.resetKey) : false,
-    collisionZonesTogglePressed: input.hullToggleKey ? justDown(input.hullToggleKey) : false,
-    soundMuteTogglePressed: input.soundMuteKey ? justDown(input.soundMuteKey) : false,
+    ...readAimInput(cursors),
+    ...readMoveInput(cursors),
+    chargeHeld: keyIsDown(input.spaceKey),
+    ...readCommandInput(input),
   };
+}
+
+function readAimInput(cursors: CursorKeysLike): Pick<MatchInputSnapshot, "aimUp" | "aimDown"> {
+  return {
+    aimUp: keyIsDown(cursors.up),
+    aimDown: keyIsDown(cursors.down),
+  };
+}
+
+function readMoveInput(cursors: CursorKeysLike): Pick<MatchInputSnapshot, "moveLeft" | "moveRight"> {
+  return {
+    moveLeft: keyIsDown(cursors.left),
+    moveRight: keyIsDown(cursors.right),
+  };
+}
+
+function readCommandInput(input: MatchInputSnapshotInput): Pick<
+  MatchInputSnapshot,
+  "resetPressed" | "collisionZonesTogglePressed" | "soundMuteTogglePressed"
+> {
+  const justDown = input.justDown ?? (() => false);
+  return {
+    resetPressed: keyWasPressed(input.resetKey, justDown),
+    collisionZonesTogglePressed: keyWasPressed(input.hullToggleKey, justDown),
+    soundMuteTogglePressed: keyWasPressed(input.soundMuteKey, justDown),
+  };
+}
+
+function keyIsDown(key?: KeyboardKeyLike): boolean {
+  return key?.isDown ?? false;
+}
+
+function keyWasPressed(
+  key: KeyboardKeyLike | undefined,
+  justDown: (key: KeyboardKeyLike) => boolean,
+): boolean {
+  return key ? justDown(key) : false;
 }

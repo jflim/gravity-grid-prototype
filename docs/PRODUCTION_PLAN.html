@@ -87,12 +87,12 @@
   <main>
     <article>
       <div class="generated">
-        HTML reading copy generated from <a href="PRODUCTION_PLAN.md">docs/PRODUCTION_PLAN.md</a> on 2026-06-18.
+        HTML reading copy generated from <a href="PRODUCTION_PLAN.md">docs/PRODUCTION_PLAN.md</a> on 2026-07-18.
         Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
       </div>
 <h1>Gravity Canyon Production Plan</h1>
 <p>Status: current milestone authority</p>
-<p>Last updated: 2026-06-14</p>
+<p>Last updated: 2026-06-18</p>
 <p>Design reference: <a href="GDD.html">GDD.md</a></p>
 <p>Runbook: <a href="../README.html">../README.md</a></p>
 <h2>1. Document Purpose</h2>
@@ -123,9 +123,9 @@
 <li>Hosted URL play without local installation.</li>
 <li>Private room creation.</li>
 <li>Join by invite link or room code.</li>
-<li>Editable guest display names.</li>
+<li>Guest display name chosen before joining a room.</li>
 <li>Seat selection.</li>
-<li>Character selection for the four existing v1 characters.</li>
+<li>Unit selection for the four existing v1 Pilot/Vehicle pairs.</li>
 <li>1v1 and 2v2 room modes.</li>
 <li>Best-of-1 and best-of-3 match length settings.</li>
 <li>Server-owned room, round, turn, movement, aim, firing, projectile, terrain, HP, KOs, Void Dropped eliminations, and round/match result.</li>
@@ -146,10 +146,10 @@
 <p>Required room flow:</p>
 <ol>
 <li>Player opens hosted URL.</li>
-<li>Player enters or edits display name.</li>
+<li>Player enters display name before joining a room.</li>
 <li>Player creates or joins a private room.</li>
 <li>Player picks a seat.</li>
-<li>Player picks a character.</li>
+<li>Player picks a Unit.</li>
 <li>Player readies.</li>
 <li>Host starts match when ready conditions are met.</li>
 <li>Match completes.</li>
@@ -331,30 +331,31 @@ I am requesting a v1 contract change.
 <li>Command deck and readable match HUD direction.</li>
 <li>Optimized WebP runtime art delivery.</li>
 <li>Colyseus room create/join.</li>
-<li>Guest display names.</li>
+<li>Pre-room guest display names.</li>
 <li>Ready checks.</li>
 <li>Placeholder reward/nameplate state.</li>
 <li>Server-owned combat preview state.</li>
-<li>Auto-room host/seat lobby with Duel/Doubles mode, visual character selection, ready checks, and a shared server-owned gameplay preview screen.</li>
+<li>Auto-room host/seat lobby with Duel/Doubles mode, visual character selection, ready checks, and server-owned match setup handoff into Phaser.</li>
+<li>Server-owned room settings for Duel/Doubles mode, Best of 1/Best of 3 match length, and map select/random, with host-only lobby/ready edits and gameplay-phase locking.</li>
+<li>Server-owned preview match setup metadata from claimed seats, selected characters, match length, and selected map, including target score, chosen map id/name, turn sequence, and map-spawned preview vehicles.</li>
+<li>Phaser match start from server-owned setup metadata, so online ready uses the selected map, claimed seats, selected characters, and turn sequence instead of local demo defaults.</li>
+<li>Initial server-owned turn authority skeleton: preview turns publish a server clock, active vehicle, authority revision, and last accepted turn intent; forged turn intents from non-active owners are rejected server-side.</li>
 <li>One-terminal public playtest launcher.</li>
 </ul>
 <p>Not done:</p>
 <ul>
-<li>Full online room settings beyond Duel/Doubles, including best-of-1/best-of-3 and map select/random.</li>
-<li>Online character selection wired into the real Phaser match start.</li>
+<li>Full online match scoring beyond the preview target-score metadata.</li>
 <li>Phaser match driven by Colyseus room state.</li>
-<li>Server-authoritative movement/projectile/terrain/damage.</li>
+<li>Server-authoritative movement/projectile/terrain/damage beyond the current turn-clock and intent-validation skeleton.</li>
 <li>Full round/match scoring online.</li>
 <li>Four-human 2v2 validation.</li>
 </ul>
 <h2>17. Next Build Order</h2>
 <p>Recommended next sequence:</p>
 <ol>
-<li>Fix playtest tunnel reliability by forcing Cloudflare Tunnel HTTP/2.</li>
-<li>Build real room settings for 1v1/2v2, best-of-1/best-of-3, and map select/random.</li>
-<li>Add remaining room settings for best-of-1/best-of-3 and map select/random.</li>
-<li>Wire Phaser match start from host settings, claimed seats, and selected characters.</li>
-<li>Move turn order, movement, aim, fire, projectile, terrain, damage, KO, and round result to server authority.</li>
+<li>Smoke-test playtest tunnel reliability and force Cloudflare Tunnel HTTP/2 if QUIC errors appear.</li>
+<li>Extend server turn authority from the current intent skeleton into movement, aim/fire payloads, projectile, terrain, damage, KO, and round result authority.</li>
+<li>Add online match scoring beyond the current target-score setup metadata.</li>
 <li>Validate 1v1 online.</li>
 <li>Validate 2v2 format online.</li>
 <li>Run four-human 2v2 gold validation.</li>
