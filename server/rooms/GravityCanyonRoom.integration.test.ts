@@ -122,13 +122,24 @@ test("server rejects forged gameplay actions that are disabled in the UI", async
 test("server accepts turn intents only from the active vehicle owner", async () => {
   await withTwoClientRooms(async ({ firstRoom, secondRoom }) => {
     await startDuelPreview(firstRoom, secondRoom);
+    const turnAuthorityVersion = firstRoom.state.turnAuthorityVersion;
 
-    firstRoom.send("submitTurnIntent", { intentId: "aim-red", action: "aim" });
+    firstRoom.send("submitTurnIntent", {
+      intentId: "aim-red",
+      action: "aim",
+      inputSeq: 1,
+      turnAuthorityVersion,
+    });
     await settleMessages();
     assert.equal(firstRoom.state.lastAcceptedTurnIntentId, "aim-red");
 
     const acceptedVersion = firstRoom.state.turnAuthorityVersion;
-    secondRoom.send("submitTurnIntent", { intentId: "aim-blue", action: "aim" });
+    secondRoom.send("submitTurnIntent", {
+      intentId: "aim-blue",
+      action: "aim",
+      inputSeq: 1,
+      turnAuthorityVersion,
+    });
     await settleMessages();
 
     assert.equal(firstRoom.state.lastAcceptedTurnIntentId, "aim-red");
@@ -143,13 +154,9 @@ test("server applies active-owner aim, move, and fire intents through submitTurn
   await withTwoClientRooms(async ({ firstRoom, secondRoom }) => {
     await startDuelPreview(firstRoom, secondRoom);
     const startX = vehicleX(firstRoom, "red-1");
+    const turnAuthorityVersion = firstRoom.state.turnAuthorityVersion;
 
-    firstRoom.send("submitTurnIntent", {
-      intentId: "aim-red",
-      action: "aim",
-      angle: 64,
-      facing: 1,
-    });
+    sendAimIntent(firstRoom, turnAuthorityVersion, 64);
     await waitFor(
       () => vehicleAngle(firstRoom, "red-1") === 64 && vehicleAngle(secondRoom, "red-1") === 64,
       "server-owned aim intent",
@@ -159,6 +166,8 @@ test("server applies active-owner aim, move, and fire intents through submitTurn
     firstRoom.send("submitTurnIntent", {
       intentId: "move-red",
       action: "move",
+      inputSeq: 2,
+      turnAuthorityVersion,
       direction: 1,
       deltaSeconds: 0.5,
     });
@@ -169,6 +178,8 @@ test("server applies active-owner aim, move, and fire intents through submitTurn
     firstRoom.send("submitTurnIntent", {
       intentId: "fire-red",
       action: "fire",
+      inputSeq: 3,
+      turnAuthorityVersion,
       angle: 42,
       power: 74,
       facing: 1,
@@ -180,7 +191,47 @@ test("server applies active-owner aim, move, and fire intents through submitTurn
     assert.equal(firstRoom.state.lastShotPower, 74);
     assert.ok(firstRoom.state.lastShotImpactX > 0, "server should record the authoritative impact x");
     assert.ok(firstRoom.state.lastShotImpactY > 0, "server should record the authoritative impact y");
+    assert.equal(secondRoom.state.lastShotId, firstRoom.state.lastShotId);
+    assert.equal(secondRoom.state.lastShotImpactX, firstRoom.state.lastShotImpactX);
+    assert.equal(secondRoom.state.lastShotImpactY, firstRoom.state.lastShotImpactY);
+    assert.equal(secondRoom.state.lastShotDirectHitVehicleId, firstRoom.state.lastShotDirectHitVehicleId);
     assert.equal(firstRoom.state.activeVehicleId, "blue-1");
+  });
+});
+
+test("server rejects stale, duplicate, and malformed fire intents", async () => {
+  await withTwoClientRooms(async ({ firstRoom, secondRoom }) => {
+    await startDuelPreview(firstRoom, secondRoom);
+    const turnAuthorityVersion = firstRoom.state.turnAuthorityVersion;
+
+    sendAimIntent(firstRoom, turnAuthorityVersion, 42);
+    await waitFor(() => firstRoom.state.lastAcceptedTurnIntentId === "aim-red", "accepted aim intent");
+
+    const rejectedFirePayloads = [
+      { intentId: "duplicate", inputSeq: 1, turnAuthorityVersion, angle: 42, power: 74, facing: 1 },
+      { intentId: "stale", inputSeq: 2, turnAuthorityVersion: turnAuthorityVersion - 1, angle: 42, power: 74, facing: 1 },
+      { intentId: "missing-power", inputSeq: 2, turnAuthorityVersion, angle: 42, facing: 1 },
+      { intentId: "bad-facing", inputSeq: 2, turnAuthorityVersion, angle: 42, power: 74, facing: 0 },
+    ];
+    for (const payload of rejectedFirePayloads) {
+      firstRoom.send("submitTurnIntent", { action: "fire", ...payload });
+      await settleMessages();
+      assert.equal(firstRoom.state.lastShotId, "");
+      assert.equal(secondRoom.state.lastShotId, "");
+      assert.equal(firstRoom.state.lastAcceptedTurnIntentId, "aim-red");
+    }
+
+    firstRoom.send("submitTurnIntent", {
+      intentId: "valid-fire",
+      action: "fire",
+      inputSeq: 2,
+      turnAuthorityVersion,
+      angle: 42,
+      power: 74,
+      facing: 1,
+    });
+    await waitFor(() => firstRoom.state.lastShotId.includes("red-1"), "valid authoritative fire intent");
+    assert.equal(secondRoom.state.lastShotId, firstRoom.state.lastShotId);
   });
 });
 
@@ -460,4 +511,15 @@ function vehicleX(room: GravityCanyonClientRoom, vehicleId: string): number {
 
 function vehicleAngle(room: GravityCanyonClientRoom, vehicleId: string): number {
   return room.state.vehicles.find((vehicle) => vehicle.vehicleId === vehicleId)?.angle ?? 0;
+}
+
+function sendAimIntent(room: GravityCanyonClientRoom, turnAuthorityVersion: number, angle: number): void {
+  room.send("submitTurnIntent", {
+    intentId: "aim-red",
+    action: "aim",
+    inputSeq: 1,
+    turnAuthorityVersion,
+    angle,
+    facing: 1,
+  });
 }

@@ -95,6 +95,7 @@
 <h2>Unreleased</h2>
 <p>Highlights:</p>
 <ul>
+<li>Completed the server-authoritative projectile slice for online play: the server now rejects stale, duplicate, and malformed fire intents, keeps one stable authority version per turn with monotonic input sequencing, simulates launch/flight/collision from server truth, and publishes identical shot/impact snapshots to connected clients.</li>
 <li>Added a repository-linked GitHub Project for the locked V1 Playtest Alpha contract, seeded it with eight acceptance-driven delivery issues and execution fields, and documented the agent workflow for keeping issue status and verification evidence current.</li>
 <li>Adopted one dedicated <code>codex/issue-&lt;number&gt;-&lt;short-slug&gt;</code> branch per feature ticket so future agent work stays isolated and reviewable.</li>
 <li>Checkpoint audit note: <code>npm run audit:fallow:changed</code> reports no introduced dead-code, complexity, or duplication findings, but its all-findings verdict still flags inherited complexity and a seven-line alpha-bounds clone in <code>scripts/verify-runtime-roster.mjs</code>; that unrelated verifier refactor is intentionally deferred from the online-foundation checkpoint.</li>

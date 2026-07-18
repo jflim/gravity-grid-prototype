@@ -33,6 +33,7 @@ import {
 } from "./combatPreview.js";
 import {
   acceptTurnIntentForClient,
+  isValidFireIntentPayload,
   type SubmitTurnIntentMessage,
 } from "./turnAuthority.js";
 
@@ -102,7 +103,7 @@ const TURN_INTENT_HANDLERS: Record<string, TurnIntentHandler> = {
     previewMoveForClient(state, sessionId, message);
   },
   fire: (state, sessionId, message) => {
-    if (acceptTurnIntentForClient(state, sessionId, message)) {
+    if (isValidFireIntentPayload(message) && acceptTurnIntentForClient(state, sessionId, message)) {
       previewFireForClient(state, sessionId, {}, message);
     }
   },
