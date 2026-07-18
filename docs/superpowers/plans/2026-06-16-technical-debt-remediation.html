@@ -1,0 +1,947 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Technical Debt Remediation Implementation Plan</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        HTML reading copy generated from <a href="2026-06-16-technical-debt-remediation.md">docs/superpowers/plans/2026-06-16-technical-debt-remediation.md</a> on 2026-07-18.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Technical Debt Remediation Implementation Plan</h1>
+<blockquote>
+<p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (<code>- [ ]</code>) syntax for tracking.</p>
+</blockquote>
+<p><strong>Goal:</strong> Deconstruct Gravity Canyon's highest-risk godfiles so future human and AI contributors can change one responsibility without breaking another.</p>
+<p><strong>Architecture:</strong> Use SADD as one bounded extraction per task: add a characterization test, move one responsibility behind a named module boundary, run focused tests, then run the full gate before committing. Runtime files target 250 nonblank LOC or less; temporary orchestration files may stay up to 300 nonblank LOC while active migration is in progress. Graphify supplies structural graph evidence; Fallow supplies dependency hygiene and function-level complexity evidence.</p>
+<p><strong>Tech Stack:</strong> TypeScript, Phaser, Colyseus, Node test runner, Vite, Graphify, Fallow, local docs HTML generator.</p>
+<p>---</p>
+<h2>File Structure</h2>
+<p>Create or modify these ownership boundaries:</p>
+<table>
+<thead><tr>
+<th>File</th>
+<th>Responsibility</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>src/onlineLobby.ts</code></td>
+<td>Thin online lobby controller: connect to room, route state to renderer, start gameplay. Target: under 180 nonblank LOC.</td>
+</tr>
+<tr>
+<td><code>src/onlineLobbySnapshot.ts</code></td>
+<td>Convert Colyseus room state into plain <code>RoomSnapshot</code> data. No DOM, no Colyseus client construction. Target: under 180 LOC.</td>
+</tr>
+<tr>
+<td><code>src/onlineLobbyMarkup.ts</code></td>
+<td>Pure HTML string helpers for lobby shell, player rows, slot rows, and option rows. Target: under 220 LOC.</td>
+</tr>
+<tr>
+<td><code>src/onlineLobbyDom.ts</code></td>
+<td>DOM ownership for the lobby stage: create elements, wire browser events, update visible text/markup. Target: under 220 LOC.</td>
+</tr>
+<tr>
+<td><code>server/rooms/combatPreview.ts</code></td>
+<td>Preview combat setup, preview fire resolution, turn selection, winner rewards. Target: under 220 LOC.</td>
+</tr>
+<tr>
+<td><code>server/rooms/GravityCanyonRoom.ts</code></td>
+<td>Colyseus room lifecycle and message routing only. Target: under 280 LOC.</td>
+</tr>
+<tr>
+<td><code>src/match/rendering/VehicleRenderModel.ts</code></td>
+<td>Pure per-vehicle render decisions: defeat presentation, motion label, render position, active state, slope angle, KO tilt, and HP visibility. Target: under 180 LOC.</td>
+</tr>
+<tr>
+<td><code>src/match/rendering/VehicleRenderModel.test.ts</code></td>
+<td>Characterization coverage for the extracted vehicle render model.</td>
+</tr>
+<tr>
+<td><code>src/match/rendering/VehicleRenderer.ts</code></td>
+<td>Imperative drawing loop that clears overlays and delegates to sprite/overlay renderers. Target: under 100 LOC.</td>
+</tr>
+<tr>
+<td><code>src/match/MatchSceneTerrainAdapter.ts</code></td>
+<td>Terrain surface, angle, platform, and void-position adapter methods currently inside <code>MatchScene</code>. Target: under 160 LOC.</td>
+</tr>
+<tr>
+<td><code>src/match/MatchSceneShotFlow.ts</code></td>
+<td>Scene-specific projectile/shot update orchestration that coordinates existing controllers. Target: under 220 LOC.</td>
+</tr>
+<tr>
+<td><code>src/match/MatchScene.ts</code></td>
+<td>Phaser scene lifecycle and collaborator wiring only. Target: under 300 LOC.</td>
+</tr>
+<tr>
+<td><code>scripts/docsHtmlMarkdown.mjs</code></td>
+<td>Markdown parsing/rendering helpers from <code>build-docs-html.mjs</code>. Target: under 220 LOC.</td>
+</tr>
+<tr>
+<td><code>scripts/docsHtmlIndex.mjs</code></td>
+<td>Docs index page writer from <code>build-docs-html.mjs</code>. Target: under 220 LOC.</td>
+</tr>
+<tr>
+<td><code>scripts/build-docs-html.mjs</code></td>
+<td>Thin docs generation entry point. Target: under 120 LOC.</td>
+</tr>
+</tbody></table>
+<h2>Tool-Backed Audit Inputs</h2>
+<p>Run these commands before starting the remediation queue and after each completed task:</p>
+<pre><code class="language-powershell">
+npm run audit:graphify
+
+npm run audit:fallow
+
+npm run audit:debt
+
+</code></pre>
+<p>Expected evidence:</p>
+<ul>
+<li><code>work/audits/graphify-diagnose.json</code> exists and reports a valid graph from <code>graphify-out/graph.json</code>.</li>
+<li><code>work/audits/fallow-full.json</code> exists and reports dependency hygiene.</li>
+<li><code>work/audits/fallow-health.json</code> exists and reports function-level complexity and remediation targets.</li>
+<li><code>docs/TECH_DEBT_AUDIT.html</code> reflects the latest generated markdown.</li>
+</ul>
+<h2>Global Verification</h2>
+<p>Run after every task:</p>
+<pre><code class="language-powershell">
+npm run build
+
+npm test
+
+npm run audit:debt
+
+</code></pre>
+<p>Expected result: build exits 0, all tests pass, and <code>docs/TECH_DEBT_AUDIT.html</code> regenerates.</p>
+<h2>Task 1: Extract Online Lobby Snapshots</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/onlineLobbySnapshot.ts</code></li>
+<li>Create: <code>src/onlineLobbySnapshot.test.ts</code></li>
+<li>Modify: <code>src/onlineLobby.ts</code></li>
+<li>Modify: <code>src/onlineLobbyView.ts</code> only if shared types need to move</li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Write the failing snapshot test</strong></li>
+</ul>
+<p>Create <code>src/onlineLobbySnapshot.test.ts</code> with a Colyseus-like Map state and assert that <code>getRoomSnapshot()</code> returns plain data:</p>
+<pre><code class="language-ts">
+import assert from &quot;node:assert/strict&quot;;
+
+import test from &quot;node:test&quot;;
+
+import { getRoomSnapshot } from &quot;./onlineLobbySnapshot&quot;;
+
+
+
+test(&quot;getRoomSnapshot converts room state into plain lobby data&quot;, () =&gt; {
+
+  const players = new Map&lt;string, unknown&gt;([
+
+    [&quot;red-session&quot;, { sessionId: &quot;red-session&quot;, displayName: &quot;Red&quot;, role: &quot;red-captain&quot;, ready: true }],
+
+    [&quot;blue-session&quot;, { sessionId: &quot;blue-session&quot;, displayName: &quot;Blue&quot;, role: &quot;blue-captain&quot;, ready: false }],
+
+  ]);
+
+  const slots = new Map&lt;string, unknown&gt;([
+
+    [&quot;red-1&quot;, { slotId: &quot;red-1&quot;, team: &quot;red&quot;, ownerSessionId: &quot;red-session&quot;, selectedCharacterId: &quot;kaelii&quot;, active: true }],
+
+  ]);
+
+
+
+  const snapshot = getRoomSnapshot({
+
+    roomCode: &quot;auto-room&quot;,
+
+    mode: &quot;1v1&quot;,
+
+    phase: &quot;ready&quot;,
+
+    players,
+
+    slots,
+
+  });
+
+
+
+  assert.equal(snapshot.roomCode, &quot;auto-room&quot;);
+
+  assert.equal(snapshot.players[0].displayName, &quot;Red&quot;);
+
+  assert.equal(snapshot.slots[0].characterId, &quot;kaelii&quot;);
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Run the focused test and confirm it fails</strong></li>
+</ul>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test src/onlineLobbySnapshot.test.ts
+
+</code></pre>
+<p>Expected: fail because <code>src/onlineLobbySnapshot.ts</code> does not exist.</p>
+<ul>
+<li>[ ] <strong>Step 3: Move snapshot code out of <code>src/onlineLobby.ts</code></strong></li>
+</ul>
+<p>Create <code>src/onlineLobbySnapshot.ts</code> exporting:</p>
+<pre><code class="language-ts">
+export type PlayerSnapshot = { sessionId: string; displayName: string; team: string; role: string; joinOrder: number; ready: boolean; tokens: number; equippedNameplate: string; inventory: string[] };
+
+export type CombatVehicleSnapshot = { vehicleId: string; ownerSessionId: string; displayName: string; team: string; className: string; hp: number; maxHp: number; alive: boolean; x: number; y: number; angle: number };
+
+export type RoomSnapshot = { roomCode: string; mode: string; redCaptainSessionId: string; blueCaptainSessionId: string; spectatorSessionIds: string[]; phase: string; status: string; roundNumber: number; turnNumber: number; wind: number; activeVehicleId: string; winnerTeam: string; lastRewardLog: string; players: PlayerSnapshot[]; slots: LobbySlotView[]; vehicles: CombatVehicleSnapshot[] };
+
+export function getRoomSnapshot(state: unknown): RoomSnapshot;
+
+</code></pre>
+<p>Move the existing <code>getSnapshot</code>, <code>getPlayers</code>, and <code>getVehicles</code> implementations from <code>src/onlineLobby.ts</code> into that file. Keep <code>normalizeLobbySlots</code> in <code>src/onlineLobbyView.ts</code>.</p>
+<ul>
+<li>[ ] <strong>Step 4: Update imports</strong></li>
+</ul>
+<p>In <code>src/onlineLobby.ts</code>, import <code>getRoomSnapshot</code> and <code>type RoomSnapshot</code> from <code>src/onlineLobbySnapshot.ts</code>. Replace the old <code>getSnapshot(state)</code> call with <code>getRoomSnapshot(state)</code>.</p>
+<ul>
+<li>[ ] <strong>Step 5: Verify and commit</strong></li>
+</ul>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test src/onlineLobbySnapshot.test.ts src/onlineLobbyView.test.ts
+
+npm run build
+
+npm test
+
+git add -- src/onlineLobby.ts src/onlineLobbySnapshot.ts src/onlineLobbySnapshot.test.ts
+
+git commit -m &quot;refactor: extract online lobby snapshots&quot;
+
+</code></pre>
+<h2>Task 2: Extract Pure Online Lobby Markup</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/onlineLobbyMarkup.ts</code></li>
+<li>Create: <code>src/onlineLobbyMarkup.test.ts</code></li>
+<li>Modify: <code>src/onlineLobby.ts</code></li>
+<li>Modify: <code>src/onlineLobbyView.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Write markup helper tests</strong></li>
+</ul>
+<p>Create tests that assert escaped player names, slot labels, and selected character options are rendered without needing a browser DOM.</p>
+<pre><code class="language-ts">
+import assert from &quot;node:assert/strict&quot;;
+
+import test from &quot;node:test&quot;;
+
+import { renderLobbyShell, renderPlayerRows, renderSlotRows } from &quot;./onlineLobbyMarkup&quot;;
+
+
+
+test(&quot;renderLobbyShell owns the centered online stage shell&quot;, () =&gt; {
+
+  assert.match(renderLobbyShell(), /class=&quot;online-stage&quot;/);
+
+  assert.match(renderLobbyShell(), /data-ready-toggle/);
+
+});
+
+
+
+test(&quot;renderPlayerRows escapes display names&quot;, () =&gt; {
+
+  const html = renderPlayerRows([{ sessionId: &quot;a&quot;, displayName: &quot;&lt;Red&gt;&quot;, team: &quot;red&quot;, role: &quot;red-captain&quot;, joinOrder: 1, ready: true, tokens: 0, equippedNameplate: &quot;Canyon Rookie&quot;, inventory: [] }], &quot;a&quot;);
+
+  assert.match(html, /&amp;lt;Red&amp;gt;/);
+
+  assert.doesNotMatch(html, /&lt;Red&gt;/);
+
+});
+
+
+
+test(&quot;renderSlotRows disables uneditable slots&quot;, () =&gt; {
+
+  const html = renderSlotRows([{ slotId: &quot;blue-1&quot;, team: &quot;blue&quot;, ownerSessionId: &quot;b&quot;, characterId: &quot;vesper&quot;, displayName: &quot;Blue&quot;, ready: false, active: true }], &quot;red-captain&quot;, true);
+
+  assert.match(html, /disabled/);
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Run the focused test and confirm it fails</strong></li>
+</ul>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test src/onlineLobbyMarkup.test.ts
+
+</code></pre>
+<p>Expected: fail because the module does not exist.</p>
+<ul>
+<li>[ ] <strong>Step 3: Move markup-only functions</strong></li>
+</ul>
+<p>Create <code>src/onlineLobbyMarkup.ts</code> with these exports:</p>
+<pre><code class="language-ts">
+export function renderLobbyShell(): string;
+
+export function renderPlayerRows(players: readonly PlayerSnapshot[], localSessionId: string): string;
+
+export function renderSlotRows(slots: readonly LobbySlotView[], localRole: string, canUseLobbyControls: boolean): string;
+
+export function escapeHtml(value: string): string;
+
+</code></pre>
+<p>Move the lobby shell template, <code>renderPlayers</code> row HTML, <code>renderSlots</code> row HTML, <code>capitalize</code>, <code>slotSortValue</code>, and <code>escapeHtml</code> out of <code>src/onlineLobby.ts</code>. Keep lobby decision rules in <code>src/onlineLobbyView.ts</code>.</p>
+<ul>
+<li>[ ] <strong>Step 4: Replace inline template usage</strong></li>
+</ul>
+<p>In <code>src/onlineLobby.ts</code>, set <code>stage.outerHTML</code> by creating a wrapper from <code>renderLobbyShell()</code> or assign <code>container.innerHTML = renderLobbyShell()</code> and select the returned stage. Keep event wiring in the controller for this task.</p>
+<ul>
+<li>[ ] <strong>Step 5: Verify and commit</strong></li>
+</ul>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test src/onlineLobbyMarkup.test.ts src/onlineLobbySnapshot.test.ts src/onlineLobbyView.test.ts
+
+npm run build
+
+npm test
+
+git add -- src/onlineLobby.ts src/onlineLobbyMarkup.ts src/onlineLobbyMarkup.test.ts src/onlineLobbyView.ts
+
+git commit -m &quot;refactor: extract online lobby markup&quot;
+
+</code></pre>
+<h2>Task 3: Extract Online Lobby DOM Ownership</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/onlineLobbyDom.ts</code></li>
+<li>Modify: <code>src/onlineLobby.ts</code></li>
+<li>Modify: <code>src/match/architecture.test.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Add architecture guard</strong></li>
+</ul>
+<p>Extend <code>src/match/architecture.test.ts</code> with:</p>
+<pre><code class="language-ts">
+test(&quot;online lobby controller delegates DOM rendering&quot;, () =&gt; {
+
+  const controller = readFileSync(&quot;src/onlineLobby.ts&quot;, &quot;utf8&quot;);
+
+  assert.match(controller, /createOnlineLobbyDom/);
+
+  assert.doesNotMatch(controller, /innerHTML\\s*=|querySelector&lt;|document\\.createElement\\(&quot;section&quot;\\)/);
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Run the focused test and confirm it fails</strong></li>
+</ul>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test src/match/architecture.test.ts
+
+</code></pre>
+<p>Expected: fail because <code>src/onlineLobby.ts</code> still owns DOM details.</p>
+<ul>
+<li>[ ] <strong>Step 3: Create DOM boundary</strong></li>
+</ul>
+<p>Create <code>src/onlineLobbyDom.ts</code> exporting:</p>
+<pre><code class="language-ts">
+export type OnlineLobbyDomHandlers = {
+
+  reconnect: () =&gt; void;
+
+  displayNameChanged: (value: string) =&gt; void;
+
+  modeChanged: (mode: string) =&gt; void;
+
+  slotChanged: (slotId: string, characterId: string) =&gt; void;
+
+  readyClicked: () =&gt; void;
+
+  capsuleClicked: () =&gt; void;
+
+  nameplateChanged: (nameplate: string) =&gt; void;
+
+};
+
+
+
+export type OnlineLobbyDom = {
+
+  stage: HTMLElement;
+
+  displayName: () =&gt; string;
+
+  setBadge: (text: string, tone: &quot;neutral&quot; | &quot;ok&quot; | &quot;warn&quot; | &quot;error&quot;) =&gt; void;
+
+  renderLobby: (snapshot: RoomSnapshot, localSessionId: string, localReady: boolean) =&gt; void;
+
+  remove: () =&gt; void;
+
+};
+
+
+
+export function createOnlineLobbyDom(documentRef: Document, handlers: OnlineLobbyDomHandlers): OnlineLobbyDom;
+
+</code></pre>
+<p>Move all <code>querySelector</code>, event listener, button text, select update, player list, slot list, and reward log DOM work into this module.</p>
+<ul>
+<li>[ ] <strong>Step 4: Shrink controller</strong></li>
+</ul>
+<p>In <code>src/onlineLobby.ts</code>, keep only <code>createOnlineClient</code>, <code>connectAutoRoom</code>, room callbacks, ready state tracking, <code>stageForRoomPhase</code>, and <code>onGameplayStart</code>.</p>
+<ul>
+<li>[ ] <strong>Step 5: Verify line target</strong></li>
+</ul>
+<pre><code class="language-powershell">
+(Get-Content src\onlineLobby.ts | Where-Object { $_.Trim() }).Count
+
+</code></pre>
+<p>Expected: 180 or less.</p>
+<ul>
+<li>[ ] <strong>Step 6: Verify and commit</strong></li>
+</ul>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test src/match/architecture.test.ts src/onlineLobbyMarkup.test.ts src/onlineLobbySnapshot.test.ts src/onlineLobbyView.test.ts
+
+npm run build
+
+npm test
+
+git add -- src/onlineLobby.ts src/onlineLobbyDom.ts src/match/architecture.test.ts
+
+git commit -m &quot;refactor: isolate online lobby dom&quot;
+
+</code></pre>
+<h2>Task 4: Extract Server Preview Combat</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>server/rooms/combatPreview.ts</code></li>
+<li>Create: <code>server/rooms/combatPreview.test.ts</code></li>
+<li>Modify: <code>server/rooms/GravityCanyonRoom.ts</code></li>
+<li>Modify: <code>server/rooms/GravityCanyonRoom.integration.test.ts</code> only if message timing changes</li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Add pure preview-combat tests</strong></li>
+</ul>
+<p>Create <code>server/rooms/combatPreview.test.ts</code> with tests for preview vehicle creation and preview fire turn advancement. Use <code>GravityCanyonState</code>, <code>PlayerState</code>, and <code>LobbySlotState</code> so the test matches runtime schema types.</p>
+<ul>
+<li>[ ] <strong>Step 2: Run the focused test and confirm it fails</strong></li>
+</ul>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test server/rooms/combatPreview.test.ts
+
+</code></pre>
+<p>Expected: fail because <code>server/rooms/combatPreview.ts</code> does not exist.</p>
+<ul>
+<li>[ ] <strong>Step 3: Move preview combat operations</strong></li>
+</ul>
+<p>Create exports:</p>
+<pre><code class="language-ts">
+export function startCombatPreview(state: GravityCanyonState): void;
+
+export function clearCombatPreview(state: GravityCanyonState): void;
+
+export function previewFireForClient(state: GravityCanyonState, sessionId: string): void;
+
+export function createPreviewVehicle(slotId: VehicleId, characterId: CharacterId, player: PlayerState): CombatVehicleState;
+
+</code></pre>
+<p>Move <code>startCombatPreview</code>, <code>clearCombatPreview</code>, <code>previewFire</code>, <code>nextAliveVehicle</code>, <code>hasAliveTeam</code>, <code>finishRound</code>, <code>createPreviewVehicle</code>, <code>teamForSlot</code>, <code>rollWind</code>, and <code>capitalize</code> out of <code>GravityCanyonRoom.ts</code>.</p>
+<ul>
+<li>[ ] <strong>Step 4: Keep room as message router</strong></li>
+</ul>
+<p><code>GravityCanyonRoom.ts</code> should call <code>startCombatPreview(this.state)</code>, <code>clearCombatPreview(this.state)</code>, and <code>previewFireForClient(this.state, client.sessionId)</code>.</p>
+<ul>
+<li>[ ] <strong>Step 5: Verify line target</strong></li>
+</ul>
+<pre><code class="language-powershell">
+(Get-Content server\rooms\GravityCanyonRoom.ts | Where-Object { $_.Trim() }).Count
+
+</code></pre>
+<p>Expected: 280 or less.</p>
+<ul>
+<li>[ ] <strong>Step 6: Verify and commit</strong></li>
+</ul>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test server/rooms/combatPreview.test.ts server/rooms/GravityCanyonRoom.integration.test.ts server/rooms/autoRoomLobby.test.ts
+
+npm run build
+
+npm test
+
+git add -- server/rooms/GravityCanyonRoom.ts server/rooms/combatPreview.ts server/rooms/combatPreview.test.ts
+
+git commit -m &quot;refactor: extract room preview combat&quot;
+
+</code></pre>
+<h2>Task 5: Split VehicleRenderer Render Decisions</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/match/rendering/VehicleRenderModel.ts</code></li>
+<li>Create: <code>src/match/rendering/VehicleRenderModel.test.ts</code></li>
+<li>Modify: <code>src/match/rendering/VehicleRenderer.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Write the failing render-model test</strong></li>
+</ul>
+<p>Create <code>src/match/rendering/VehicleRenderModel.test.ts</code>:</p>
+<pre><code class="language-ts">
+import assert from &quot;node:assert/strict&quot;;
+
+import test from &quot;node:test&quot;;
+
+import { DEMO_UNIT_DEFINITIONS } from &quot;../../../shared/content/v1Units.js&quot;;
+
+import { vehicleRenderModelFor } from &quot;./VehicleRenderModel&quot;;
+
+import type { VehicleState } from &quot;../MatchTypes&quot;;
+
+
+
+function makeVehicle(overrides: Partial&lt;VehicleState&gt; = {}): VehicleState {
+
+  return {
+
+    ...DEMO_UNIT_DEFINITIONS[0]!,
+
+    x: 100,
+
+    y: 200,
+
+    hp: 100,
+
+    angle: 0,
+
+    facing: 1,
+
+    moveUnits: 10,
+
+    alive: true,
+
+    ...overrides,
+
+  };
+
+}
+
+
+
+test(&quot;vehicleRenderModelFor marks an active movable vehicle&quot;, () =&gt; {
+
+  const model = vehicleRenderModelFor({
+
+    vehicle: makeVehicle(),
+
+    activeVehicleId: &quot;red-1&quot;,
+
+    projectileActive: false,
+
+    roundOver: false,
+
+    turnCommitted: false,
+
+    charging: true,
+
+    turnTime: 18,
+
+    showCombatHulls: true,
+
+    surfaceAt: (x) =&gt; (x &lt; 100 ? 190 : 210),
+
+    isMovable: () =&gt; true,
+
+  });
+
+
+
+  assert.equal(model.active, true);
+
+  assert.equal(model.renderX, 100);
+
+  assert.equal(model.renderY, 200);
+
+  assert.equal(model.showHpBar, true);
+
+  assert.equal(model.showCombatHull, true);
+
+});
+
+
+
+test(&quot;vehicleRenderModelFor keeps falling void drops level&quot;, () =&gt; {
+
+  const vehicle: VehicleState = {
+
+    ...makeVehicle(),
+
+    alive: false,
+
+    defeatReason: &quot;void&quot;,
+
+    motion: { kind: &quot;falling&quot;, velocityY: 40 },
+
+    voidDropPresentation: { fromX: 100, fromY: 200, targetX: 100, targetY: 500, age: 250, duration: 900 },
+
+  };
+
+
+
+  const model = vehicleRenderModelFor({
+
+    vehicle,
+
+    activeVehicleId: &quot;red-1&quot;,
+
+    projectileActive: false,
+
+    roundOver: false,
+
+    turnCommitted: false,
+
+    charging: false,
+
+    turnTime: 0,
+
+    showCombatHulls: true,
+
+    surfaceAt: () =&gt; 300,
+
+    isMovable: () =&gt; true,
+
+  });
+
+
+
+  assert.equal(model.active, false);
+
+  assert.equal(model.slopeAngle, 0);
+
+  assert.equal(model.motionOrDefeatLabel, &quot;FALLING&quot;);
+
+  assert.equal(model.showCombatHull, false);
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Run the focused test and confirm it fails</strong></li>
+</ul>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test src/match/rendering/VehicleRenderModel.test.ts
+
+</code></pre>
+<p>Expected: fail because <code>src/match/rendering/VehicleRenderModel.ts</code> does not exist.</p>
+<ul>
+<li>[ ] <strong>Step 3: Extract the pure model</strong></li>
+</ul>
+<p>Create <code>src/match/rendering/VehicleRenderModel.ts</code> exporting:</p>
+<pre><code class="language-ts">
+export type VehicleRenderModelInput = {
+
+  vehicle: VehicleState;
+
+  activeVehicleId?: string;
+
+  projectileActive: boolean;
+
+  roundOver: boolean;
+
+  turnCommitted: boolean;
+
+  charging: boolean;
+
+  turnTime: number;
+
+  showCombatHulls: boolean;
+
+  surfaceAt: (x: number) =&gt; number;
+
+  isMovable: (vehicle: VehicleState) =&gt; boolean;
+
+};
+
+
+
+export type VehicleRenderModel = {
+
+  active: boolean;
+
+  charging: boolean;
+
+  renderX: number;
+
+  renderY: number;
+
+  alpha: number;
+
+  slopeAngle: number;
+
+  koTilt: number;
+
+  tint?: number;
+
+  motionOrDefeatLabel?: string;
+
+  showCombatHull: boolean;
+
+  showHpBar: boolean;
+
+  turnTime: number;
+
+};
+
+
+
+export function vehicleRenderModelFor(input: VehicleRenderModelInput): VehicleRenderModel;
+
+</code></pre>
+<p>Move the <code>defeatPresentation</code>, <code>motionLabel</code>, <code>alpha</code>, <code>voidDropPosition</code>, <code>active</code>, <code>slopeAngle</code>, <code>koTilt</code>, HP visibility, and combat-hull visibility decisions out of <code>VehicleRenderer.draw</code>.</p>
+<ul>
+<li>[ ] <strong>Step 4: Keep <code>VehicleRenderer</code> imperative only</strong></li>
+</ul>
+<p>In <code>VehicleRenderer.draw</code>, keep <code>worldUiScale</code>, <code>overlayLayout</code>, <code>this.overlays.clear()</code>, the vehicle loop, and the calls to <code>drawFootingMarker</code>, <code>sprites.draw</code>, <code>drawCombatHull</code>, <code>drawHpBar</code>, and <code>drawLabels</code>. All branching inside the loop should use fields from <code>vehicleRenderModelFor</code>.</p>
+<ul>
+<li>[ ] <strong>Step 5: Verify line and complexity targets</strong></li>
+</ul>
+<pre><code class="language-powershell">
+(Get-Content src\match\rendering\VehicleRenderer.ts | Where-Object { $_.Trim() }).Count
+
+npm run audit:fallow
+
+</code></pre>
+<p>Expected: <code>VehicleRenderer.ts</code> is under 100 nonblank LOC and <code>VehicleRenderer.draw</code> is no longer the top Fallow CRAP finding.</p>
+<ul>
+<li>[ ] <strong>Step 6: Verify and commit</strong></li>
+</ul>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test src/match/rendering/VehicleRenderModel.test.ts src/match/rendering/VehicleSpriteLayer.test.ts
+
+npm run build
+
+npm test
+
+git add -- src/match/rendering/VehicleRenderer.ts src/match/rendering/VehicleRenderModel.ts src/match/rendering/VehicleRenderModel.test.ts
+
+git commit -m &quot;refactor: extract vehicle render model&quot;
+
+</code></pre>
+<h2>Task 6: Reduce MatchScene Without Changing Gameplay</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/match/MatchSceneTerrainAdapter.ts</code></li>
+<li>Create: <code>src/match/MatchSceneShotFlow.ts</code></li>
+<li>Create tests beside each new file if pure behavior can be tested without Phaser</li>
+<li>Modify: <code>src/match/MatchScene.ts</code></li>
+<li>Modify: <code>src/match/architecture.test.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Add architecture guard</strong></li>
+</ul>
+<p>In <code>src/match/architecture.test.ts</code>, add a test that counts nonblank <code>MatchScene.ts</code> lines and asserts <code>&lt;= 360</code> for the first pass.</p>
+<ul>
+<li>[ ] <strong>Step 2: Extract terrain adapter</strong></li>
+</ul>
+<p>Move <code>surfaceAt</code>, <code>terrainBreakthroughY</code>, <code>terrainPlatformBottomY</code>, <code>visibleVoidBottomY</code>, <code>voidDropTargetY</code>, and <code>terrainAngleAt</code> into <code>MatchSceneTerrainAdapter</code>. The new class should depend on <code>TerrainController</code> and expose the same method names.</p>
+<ul>
+<li>[ ] <strong>Step 3: Extract shot flow adapter</strong></li>
+</ul>
+<p>Move <code>fire</code>, <code>updateProjectile</code>, <code>makeCrater</code>, <code>advanceTurn</code>, and <code>queuePostMotionResolution</code> into <code>MatchSceneShotFlow</code> only after adding tests around <code>ShotFlowController</code> or characterization assertions in <code>architecture.test.ts</code>.</p>
+<ul>
+<li>[ ] <strong>Step 4: Verify first line target</strong></li>
+</ul>
+<pre><code class="language-powershell">
+(Get-Content src\match\MatchScene.ts | Where-Object { $_.Trim() }).Count
+
+</code></pre>
+<p>Expected: 360 or less for this pass. A later pass should lower the target to 300.</p>
+<ul>
+<li>[ ] <strong>Step 5: Verify and commit</strong></li>
+</ul>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test src/match/architecture.test.ts src/match/ShotFlowController.test.ts src/match/TerrainController.test.ts
+
+npm run build
+
+npm test
+
+git add -- src/match/MatchScene.ts src/match/MatchSceneTerrainAdapter.ts src/match/MatchSceneShotFlow.ts src/match/architecture.test.ts
+
+git commit -m &quot;refactor: reduce match scene orchestration&quot;
+
+</code></pre>
+<h2>Task 7: Split Docs HTML Generator</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>scripts/docsHtmlMarkdown.mjs</code></li>
+<li>Create: <code>scripts/docsHtmlIndex.mjs</code></li>
+<li>Modify: <code>scripts/build-docs-html.mjs</code></li>
+<li>Modify: <code>scripts/build-docs-html.test.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Add script boundary assertions</strong></li>
+</ul>
+<p>Update <code>scripts/build-docs-html.test.ts</code> to require <code>scripts/docsHtmlMarkdown.mjs</code> and <code>scripts/docsHtmlIndex.mjs</code>.</p>
+<ul>
+<li>[ ] <strong>Step 2: Extract markdown rendering</strong></li>
+</ul>
+<p>Move <code>escapeHtml</code>, <code>linkHref</code>, <code>inlineMarkdown</code>, <code>isTableDelimiter</code>, <code>splitTableRow</code>, <code>closeOpenBlocks</code>, <code>renderMarkdown</code>, <code>titleFromMarkdown</code>, and <code>pageTemplate</code> into <code>scripts/docsHtmlMarkdown.mjs</code>.</p>
+<ul>
+<li>[ ] <strong>Step 3: Extract index writing</strong></li>
+</ul>
+<p>Move <code>standaloneHtmlFiles</code>, <code>indexPathFor</code>, and <code>writeDocsIndex</code> into <code>scripts/docsHtmlIndex.mjs</code>.</p>
+<ul>
+<li>[ ] <strong>Step 4: Keep generator entry thin</strong></li>
+</ul>
+<p><code>scripts/build-docs-html.mjs</code> should own root path setup, markdown discovery, calls to write pages, calls to write the index, and the final console message.</p>
+<ul>
+<li>[ ] <strong>Step 5: Verify line targets</strong></li>
+</ul>
+<pre><code class="language-powershell">
+(Get-Content scripts\build-docs-html.mjs | Where-Object { $_.Trim() }).Count
+
+(Get-Content scripts\docsHtmlMarkdown.mjs | Where-Object { $_.Trim() }).Count
+
+(Get-Content scripts\docsHtmlIndex.mjs | Where-Object { $_.Trim() }).Count
+
+</code></pre>
+<p>Expected: entry under 120, helper files under 220.</p>
+<ul>
+<li>[ ] <strong>Step 6: Verify and commit</strong></li>
+</ul>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test scripts/build-docs-html.test.ts
+
+npm run docs:html
+
+npm test
+
+git add -- scripts/build-docs-html.mjs scripts/docsHtmlMarkdown.mjs scripts/docsHtmlIndex.mjs scripts/build-docs-html.test.ts docs/index.html
+
+git commit -m &quot;refactor: split docs html generator&quot;
+
+</code></pre>
+<h2>Task 8: Re-run Debt Audit and Lower Targets</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>docs/TECH_DEBT_AUDIT.md</code></li>
+<li>Modify: <code>docs/TECH_DEBT_AUDIT.html</code></li>
+<li>Modify: <code>docs/index.html</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Regenerate audit</strong></li>
+</ul>
+<pre><code class="language-powershell">
+npm run audit:debt
+
+</code></pre>
+<p>Expected: <code>docs/TECH_DEBT_AUDIT.md</code>, <code>docs/TECH_DEBT_AUDIT.html</code>, and <code>docs/index.html</code> update.</p>
+<ul>
+<li>[ ] <strong>Step 2: Confirm priority files moved down the list</strong></li>
+</ul>
+<p>Open <code>docs/TECH_DEBT_AUDIT.md</code> and confirm <code>src/onlineLobby.ts</code>, <code>server/rooms/GravityCanyonRoom.ts</code>, <code>src/match/MatchScene.ts</code>, and <code>scripts/build-docs-html.mjs</code> are below their task targets.</p>
+<ul>
+<li>[ ] <strong>Step 3: Commit the refreshed audit</strong></li>
+</ul>
+<pre><code class="language-powershell">
+git add -- docs/TECH_DEBT_AUDIT.md docs/TECH_DEBT_AUDIT.html docs/index.html
+
+git commit -m &quot;docs: refresh technical debt audit&quot;
+
+</code></pre>
+<h2>Self-Review</h2>
+<ul>
+<li>This plan targets the measured godfiles from <code>docs/TECH_DEBT_AUDIT.md</code>.</li>
+<li>Each task has a bounded file set and a verification command.</li>
+<li>Runtime godfiles are split before script monoliths because playtest work is the active product surface.</li>
+<li>Line targets are explicit: 250 LOC default, 300 LOC temporary orchestrator ceiling, with stricter per-file targets where practical.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

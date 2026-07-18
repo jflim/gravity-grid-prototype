@@ -1,0 +1,2548 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Auto-Room Captain Lobby Implementation Plan</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        HTML reading copy generated from <a href="2026-06-16-auto-room-captain-lobby.md">docs/superpowers/plans/2026-06-16-auto-room-captain-lobby.md</a> on 2026-07-18.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Auto-Room Captain Lobby Implementation Plan</h1>
+<blockquote>
+<p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (<code>- [ ]</code>) syntax for tracking.</p>
+</blockquote>
+<p><strong>Goal:</strong> Make <code>npm run playtest</code> behave like one shared auto-room lobby where two human captains can test 1v1 and 2v2 by controlling one or two units per team.</p>
+<p><strong>Architecture:</strong> Add a small pure server lobby-rules module first, then use it from the Colyseus room so captain assignment, active slots, ready gates, and ownership rules are tested without socket setup. Expand the Colyseus schema to expose mode, captain roles, spectators, and selected characters, then replace the browser create/join panel with auto-join lobby controls that render the shared room state. Keep the large Phaser match local for now and use the existing server-owned combat preview as the shared online proof.</p>
+<p><strong>Tech Stack:</strong> TypeScript, Node test runner, Colyseus Schema/Room, browser DOM UI in <code>src/onlineLobby.ts</code>, generated docs via <code>npm run docs:html</code>.</p>
+<p>---</p>
+<h2>File Structure</h2>
+<ul>
+<li>Create <code>server/rooms/autoRoomLobby.ts</code>: pure lobby state helpers for captain roles, active slots, slot ownership, default character picks, and ready-to-start checks.</li>
+<li>Create <code>server/rooms/autoRoomLobby.test.ts</code>: Node tests for the pure helper module.</li>
+<li>Modify <code>server/schema/GravityCanyonState.ts</code>: add lobby role, game mode, active slot, selected character, captain ids, and spectator ids to the synchronized Colyseus state.</li>
+<li>Modify <code>server/rooms/GravityCanyonRoom.ts</code>: switch from manual create/join room semantics to auto-room captain semantics, increase room capacity for passive spectators, add <code>setMode</code> and <code>selectCharacter</code>, and start the shared preview from selected slots.</li>
+<li>Create <code>src/onlineLobbyView.ts</code>: pure client helpers for role labels, slot edit permissions, and lobby status text.</li>
+<li>Create <code>src/onlineLobbyView.test.ts</code>: Node tests for the pure client view helpers.</li>
+<li>Modify <code>src/onlineLobby.ts</code>: auto-join the shared room with <code>joinOrCreate</code>, remove create/join/room-code UI, show captain roles, mode toggle, slot character controls, ready button, and shared preview.</li>
+<li>Modify <code>README.md</code>: explain that <code>npm run playtest</code> now creates one auto-room playtest URL.</li>
+<li>Modify <code>docs/SESSION_HANDOFF.md</code>: record the new auto-room playtest state and next online bridge step.</li>
+<li>Modify <code>docs/PRODUCTION_PLAN.md</code>: move auto-room captain lobby from next direction into current implementation state while keeping full private-room creation out of this slice.</li>
+<li>Modify <code>docs/VERSION_LOG.md</code>: add the playable/checkpoint note.</li>
+<li>Generated by <code>npm run docs:html</code>: update HTML reading copies and <code>docs/index.html</code>.</li>
+</ul>
+<p>---</p>
+<h2>Task 1: Add Pure Auto-Room Lobby Rules</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>server/rooms/autoRoomLobby.ts</code></li>
+<li>Create: <code>server/rooms/autoRoomLobby.test.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Write the failing helper tests</strong></li>
+</ul>
+<p>Create <code>server/rooms/autoRoomLobby.test.ts</code>:</p>
+<pre><code class="language-ts">
+import assert from &quot;node:assert/strict&quot;;
+
+import test from &quot;node:test&quot;;
+
+import {
+
+  activeSlotIdsForMode,
+
+  assignCaptainRoles,
+
+  canEditSlot,
+
+  defaultCharacterForSlot,
+
+  isReadyToAutoStart,
+
+  ownerSessionIdForSlot,
+
+  sanitizeCharacterPick,
+
+} from &quot;./autoRoomLobby.js&quot;;
+
+
+
+const players = [
+
+  { sessionId: &quot;red-session&quot;, joinOrder: 1, ready: false },
+
+  { sessionId: &quot;blue-session&quot;, joinOrder: 2, ready: false },
+
+  { sessionId: &quot;spectator-session&quot;, joinOrder: 3, ready: false },
+
+];
+
+
+
+test(&quot;assignCaptainRoles makes the first player red, second blue, and extras spectators&quot;, () =&gt; {
+
+  const roles = assignCaptainRoles(players);
+
+
+
+  assert.equal(roles.get(&quot;red-session&quot;), &quot;red-captain&quot;);
+
+  assert.equal(roles.get(&quot;blue-session&quot;), &quot;blue-captain&quot;);
+
+  assert.equal(roles.get(&quot;spectator-session&quot;), &quot;spectator&quot;);
+
+});
+
+
+
+test(&quot;assignCaptainRoles promotes the earliest remaining spectator when a captain leaves&quot;, () =&gt; {
+
+  const roles = assignCaptainRoles([
+
+    { sessionId: &quot;blue-session&quot;, joinOrder: 2, ready: false },
+
+    { sessionId: &quot;spectator-session&quot;, joinOrder: 3, ready: false },
+
+  ]);
+
+
+
+  assert.equal(roles.get(&quot;blue-session&quot;), &quot;red-captain&quot;);
+
+  assert.equal(roles.get(&quot;spectator-session&quot;), &quot;blue-captain&quot;);
+
+});
+
+
+
+test(&quot;activeSlotIdsForMode exposes one unit per team in 1v1 and two per team in 2v2&quot;, () =&gt; {
+
+  assert.deepEqual(activeSlotIdsForMode(&quot;1v1&quot;), [&quot;red-1&quot;, &quot;blue-1&quot;]);
+
+  assert.deepEqual(activeSlotIdsForMode(&quot;2v2&quot;), [&quot;red-1&quot;, &quot;blue-1&quot;, &quot;red-2&quot;, &quot;blue-2&quot;]);
+
+});
+
+
+
+test(&quot;captains can edit only their own team slots&quot;, () =&gt; {
+
+  assert.equal(canEditSlot(&quot;red-captain&quot;, &quot;red-1&quot;), true);
+
+  assert.equal(canEditSlot(&quot;red-captain&quot;, &quot;blue-1&quot;), false);
+
+  assert.equal(canEditSlot(&quot;blue-captain&quot;, &quot;blue-2&quot;), true);
+
+  assert.equal(canEditSlot(&quot;blue-captain&quot;, &quot;red-2&quot;), false);
+
+  assert.equal(canEditSlot(&quot;spectator&quot;, &quot;red-1&quot;), false);
+
+});
+
+
+
+test(&quot;ownerSessionIdForSlot maps every active slot to its team captain&quot;, () =&gt; {
+
+  assert.equal(ownerSessionIdForSlot(&quot;red-1&quot;, &quot;red-session&quot;, &quot;blue-session&quot;), &quot;red-session&quot;);
+
+  assert.equal(ownerSessionIdForSlot(&quot;red-2&quot;, &quot;red-session&quot;, &quot;blue-session&quot;), &quot;red-session&quot;);
+
+  assert.equal(ownerSessionIdForSlot(&quot;blue-1&quot;, &quot;red-session&quot;, &quot;blue-session&quot;), &quot;blue-session&quot;);
+
+  assert.equal(ownerSessionIdForSlot(&quot;blue-2&quot;, &quot;red-session&quot;, &quot;blue-session&quot;), &quot;blue-session&quot;);
+
+});
+
+
+
+test(&quot;defaultCharacterForSlot preserves the two-captain 2v2 test roster&quot;, () =&gt; {
+
+  assert.equal(defaultCharacterForSlot(&quot;red-1&quot;), &quot;nova&quot;);
+
+  assert.equal(defaultCharacterForSlot(&quot;red-2&quot;), &quot;kaelii&quot;);
+
+  assert.equal(defaultCharacterForSlot(&quot;blue-1&quot;), &quot;vesper&quot;);
+
+  assert.equal(defaultCharacterForSlot(&quot;blue-2&quot;), &quot;perlah&quot;);
+
+});
+
+
+
+test(&quot;sanitizeCharacterPick keeps valid roster picks and falls back per slot&quot;, () =&gt; {
+
+  assert.equal(sanitizeCharacterPick(&quot;vesper&quot;, &quot;red-1&quot;), &quot;vesper&quot;);
+
+  assert.equal(sanitizeCharacterPick(&quot;not-real&quot;, &quot;red-1&quot;), &quot;nova&quot;);
+
+  assert.equal(sanitizeCharacterPick(undefined, &quot;blue-2&quot;), &quot;perlah&quot;);
+
+});
+
+
+
+test(&quot;isReadyToAutoStart requires both captains ready and valid active slot picks&quot;, () =&gt; {
+
+  assert.equal(
+
+    isReadyToAutoStart({
+
+      mode: &quot;2v2&quot;,
+
+      redCaptainSessionId: &quot;red-session&quot;,
+
+      blueCaptainSessionId: &quot;blue-session&quot;,
+
+      redReady: true,
+
+      blueReady: false,
+
+      selectedCharacters: {
+
+        &quot;red-1&quot;: &quot;nova&quot;,
+
+        &quot;blue-1&quot;: &quot;vesper&quot;,
+
+        &quot;red-2&quot;: &quot;kaelii&quot;,
+
+        &quot;blue-2&quot;: &quot;perlah&quot;,
+
+      },
+
+    }),
+
+    false,
+
+  );
+
+
+
+  assert.equal(
+
+    isReadyToAutoStart({
+
+      mode: &quot;2v2&quot;,
+
+      redCaptainSessionId: &quot;red-session&quot;,
+
+      blueCaptainSessionId: &quot;blue-session&quot;,
+
+      redReady: true,
+
+      blueReady: true,
+
+      selectedCharacters: {
+
+        &quot;red-1&quot;: &quot;nova&quot;,
+
+        &quot;blue-1&quot;: &quot;vesper&quot;,
+
+        &quot;red-2&quot;: &quot;kaelii&quot;,
+
+        &quot;blue-2&quot;: &quot;perlah&quot;,
+
+      },
+
+    }),
+
+    true,
+
+  );
+
+
+
+  assert.equal(
+
+    isReadyToAutoStart({
+
+      mode: &quot;2v2&quot;,
+
+      redCaptainSessionId: &quot;red-session&quot;,
+
+      blueCaptainSessionId: &quot;blue-session&quot;,
+
+      redReady: true,
+
+      blueReady: true,
+
+      selectedCharacters: {
+
+        &quot;red-1&quot;: &quot;nova&quot;,
+
+        &quot;blue-1&quot;: &quot;vesper&quot;,
+
+        &quot;red-2&quot;: &quot;not-real&quot;,
+
+        &quot;blue-2&quot;: &quot;perlah&quot;,
+
+      },
+
+    }),
+
+    false,
+
+  );
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Run the failing helper tests</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test server/rooms/autoRoomLobby.test.ts
+
+</code></pre>
+<p>Expected: FAIL with a module-not-found error for <code>./autoRoomLobby.js</code>.</p>
+<ul>
+<li>[ ] <strong>Step 3: Implement the helper module</strong></li>
+</ul>
+<p>Create <code>server/rooms/autoRoomLobby.ts</code>:</p>
+<pre><code class="language-ts">
+import type { CharacterId, VehicleId } from &quot;../../shared/model/gameTypes.js&quot;;
+
+import { CHARACTER_IDS } from &quot;../../shared/model/gameTypes.js&quot;;
+
+import type { GameMode } from &quot;../v1/rules.js&quot;;
+
+import { MODE_SEATS } from &quot;../v1/rules.js&quot;;
+
+
+
+export type CaptainRole = &quot;red-captain&quot; | &quot;blue-captain&quot; | &quot;spectator&quot;;
+
+
+
+export type LobbyPlayerInput = {
+
+  sessionId: string;
+
+  joinOrder: number;
+
+  ready: boolean;
+
+};
+
+
+
+export type ReadyToStartInput = {
+
+  mode: GameMode;
+
+  redCaptainSessionId: string;
+
+  blueCaptainSessionId: string;
+
+  redReady: boolean;
+
+  blueReady: boolean;
+
+  selectedCharacters: Partial&lt;Record&lt;VehicleId, string&gt;&gt;;
+
+};
+
+
+
+const CHARACTER_ID_SET = new Set&lt;string&gt;(CHARACTER_IDS);
+
+
+
+const DEFAULT_CHARACTERS: Record&lt;VehicleId, CharacterId&gt; = {
+
+  &quot;red-1&quot;: &quot;nova&quot;,
+
+  &quot;blue-1&quot;: &quot;vesper&quot;,
+
+  &quot;red-2&quot;: &quot;kaelii&quot;,
+
+  &quot;blue-2&quot;: &quot;perlah&quot;,
+
+};
+
+
+
+export function assignCaptainRoles(players: readonly LobbyPlayerInput[]): Map&lt;string, CaptainRole&gt; {
+
+  const sorted = [...players].sort((a, b) =&gt; a.joinOrder - b.joinOrder);
+
+  const roles = new Map&lt;string, CaptainRole&gt;();
+
+
+
+  sorted.forEach((player, index) =&gt; {
+
+    if (index === 0) {
+
+      roles.set(player.sessionId, &quot;red-captain&quot;);
+
+    } else if (index === 1) {
+
+      roles.set(player.sessionId, &quot;blue-captain&quot;);
+
+    } else {
+
+      roles.set(player.sessionId, &quot;spectator&quot;);
+
+    }
+
+  });
+
+
+
+  return roles;
+
+}
+
+
+
+export function activeSlotIdsForMode(mode: GameMode): VehicleId[] {
+
+  return MODE_SEATS[mode].map((seat) =&gt; seat.seatId as VehicleId);
+
+}
+
+
+
+export function canEditSlot(role: CaptainRole, slotId: VehicleId): boolean {
+
+  if (role === &quot;red-captain&quot;) {
+
+    return slotId.startsWith(&quot;red-&quot;);
+
+  }
+
+
+
+  if (role === &quot;blue-captain&quot;) {
+
+    return slotId.startsWith(&quot;blue-&quot;);
+
+  }
+
+
+
+  return false;
+
+}
+
+
+
+export function ownerSessionIdForSlot(
+
+  slotId: VehicleId,
+
+  redCaptainSessionId: string,
+
+  blueCaptainSessionId: string,
+
+): string {
+
+  return slotId.startsWith(&quot;red-&quot;) ? redCaptainSessionId : blueCaptainSessionId;
+
+}
+
+
+
+export function defaultCharacterForSlot(slotId: VehicleId): CharacterId {
+
+  return DEFAULT_CHARACTERS[slotId];
+
+}
+
+
+
+export function sanitizeCharacterPick(value: unknown, slotId: VehicleId): CharacterId {
+
+  return typeof value === &quot;string&quot; &amp;&amp; CHARACTER_ID_SET.has(value)
+
+    ? (value as CharacterId)
+
+    : defaultCharacterForSlot(slotId);
+
+}
+
+
+
+export function isReadyToAutoStart(input: ReadyToStartInput): boolean {
+
+  if (!input.redCaptainSessionId || !input.blueCaptainSessionId || !input.redReady || !input.blueReady) {
+
+    return false;
+
+  }
+
+
+
+  return activeSlotIdsForMode(input.mode).every((slotId) =&gt; CHARACTER_ID_SET.has(input.selectedCharacters[slotId] ?? &quot;&quot;));
+
+}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 4: Run the helper tests</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test server/rooms/autoRoomLobby.test.ts
+
+</code></pre>
+<p>Expected: PASS for all tests in <code>autoRoomLobby.test.ts</code>.</p>
+<ul>
+<li>[ ] <strong>Step 5: Commit the helper slice</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+git add server/rooms/autoRoomLobby.ts server/rooms/autoRoomLobby.test.ts
+
+git commit -m &quot;feat: add auto-room lobby rules&quot;
+
+</code></pre>
+<p>---</p>
+<h2>Task 2: Expand The Colyseus Schema For Captain Lobby State</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>server/schema/GravityCanyonState.ts</code></li>
+<li>Test: <code>server/rooms/autoRoomLobby.test.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Add schema-focused tests for slot defaults</strong></li>
+</ul>
+<p>Append to <code>server/rooms/autoRoomLobby.test.ts</code>:</p>
+<pre><code class="language-ts">
+import { GravityCanyonState, LobbySlotState } from &quot;../schema/GravityCanyonState.js&quot;;
+
+
+
+test(&quot;GravityCanyonState exposes captain lobby defaults&quot;, () =&gt; {
+
+  const state = new GravityCanyonState();
+
+
+
+  assert.equal(state.mode, &quot;2v2&quot;);
+
+  assert.equal(state.redCaptainSessionId, &quot;&quot;);
+
+  assert.equal(state.blueCaptainSessionId, &quot;&quot;);
+
+  assert.equal(state.spectatorSessionIds.length, 0);
+
+  assert.equal(state.slots.size, 0);
+
+});
+
+
+
+test(&quot;LobbySlotState carries active slot ownership and character selection&quot;, () =&gt; {
+
+  const slot = new LobbySlotState();
+
+  slot.slotId = &quot;red-1&quot;;
+
+  slot.team = &quot;red&quot;;
+
+  slot.ownerSessionId = &quot;red-session&quot;;
+
+  slot.selectedCharacterId = &quot;nova&quot;;
+
+  slot.active = true;
+
+
+
+  assert.equal(slot.slotId, &quot;red-1&quot;);
+
+  assert.equal(slot.team, &quot;red&quot;);
+
+  assert.equal(slot.ownerSessionId, &quot;red-session&quot;);
+
+  assert.equal(slot.selectedCharacterId, &quot;nova&quot;);
+
+  assert.equal(slot.active, true);
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Run the schema tests to verify they fail</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test server/rooms/autoRoomLobby.test.ts
+
+</code></pre>
+<p>Expected: FAIL because <code>LobbySlotState</code>, <code>mode</code>, captain ids, spectator ids, and slots are not defined yet.</p>
+<ul>
+<li>[ ] <strong>Step 3: Extend <code>GravityCanyonState.ts</code></strong></li>
+</ul>
+<p>Modify <code>server/schema/GravityCanyonState.ts</code> so the new exports and state fields match this shape:</p>
+<pre><code class="language-ts">
+import { ArraySchema, defineTypes, MapSchema, Schema } from &quot;@colyseus/schema&quot;;
+
+import type { CharacterId, VehicleId } from &quot;../../shared/model/gameTypes.js&quot;;
+
+import type { GameMode } from &quot;../v1/rules.js&quot;;
+
+
+
+export type RoomPhase = &quot;lobby&quot; | &quot;ready&quot; | &quot;combat-preview&quot; | &quot;round-over&quot;;
+
+export type TeamId = &quot;red&quot; | &quot;blue&quot;;
+
+export type PlayerRole = &quot;red-captain&quot; | &quot;blue-captain&quot; | &quot;spectator&quot;;
+
+</code></pre>
+<p>Add fields to <code>PlayerState</code>:</p>
+<pre><code class="language-ts">
+declare role: PlayerRole;
+
+declare joinOrder: number;
+
+</code></pre>
+<p>Set constructor defaults:</p>
+<pre><code class="language-ts">
+this.role = &quot;spectator&quot;;
+
+this.joinOrder = 0;
+
+</code></pre>
+<p>Add this new schema class before <code>CombatVehicleState</code>:</p>
+<pre><code class="language-ts">
+export class LobbySlotState extends Schema {
+
+  declare slotId: VehicleId;
+
+  declare team: TeamId;
+
+  declare ownerSessionId: string;
+
+  declare selectedCharacterId: CharacterId;
+
+  declare active: boolean;
+
+
+
+  constructor() {
+
+    super();
+
+    this.slotId = &quot;red-1&quot;;
+
+    this.team = &quot;red&quot;;
+
+    this.ownerSessionId = &quot;&quot;;
+
+    this.selectedCharacterId = &quot;nova&quot;;
+
+    this.active = false;
+
+  }
+
+}
+
+</code></pre>
+<p>Add fields to <code>GravityCanyonState</code>:</p>
+<pre><code class="language-ts">
+declare mode: GameMode;
+
+declare redCaptainSessionId: string;
+
+declare blueCaptainSessionId: string;
+
+declare spectatorSessionIds: ArraySchema&lt;string&gt;;
+
+declare slots: MapSchema&lt;LobbySlotState&gt;;
+
+</code></pre>
+<p>Set constructor defaults:</p>
+<pre><code class="language-ts">
+this.mode = &quot;2v2&quot;;
+
+this.redCaptainSessionId = &quot;&quot;;
+
+this.blueCaptainSessionId = &quot;&quot;;
+
+this.spectatorSessionIds = new ArraySchema&lt;string&gt;();
+
+this.slots = new MapSchema&lt;LobbySlotState&gt;();
+
+</code></pre>
+<p>Update <code>defineTypes</code>:</p>
+<pre><code class="language-ts">
+defineTypes(PlayerState, {
+
+  sessionId: &quot;string&quot;,
+
+  displayName: &quot;string&quot;,
+
+  team: &quot;string&quot;,
+
+  role: &quot;string&quot;,
+
+  joinOrder: &quot;number&quot;,
+
+  ready: &quot;boolean&quot;,
+
+  tokens: &quot;number&quot;,
+
+  equippedNameplate: &quot;string&quot;,
+
+  inventory: { array: &quot;string&quot; },
+
+});
+
+
+
+defineTypes(LobbySlotState, {
+
+  slotId: &quot;string&quot;,
+
+  team: &quot;string&quot;,
+
+  ownerSessionId: &quot;string&quot;,
+
+  selectedCharacterId: &quot;string&quot;,
+
+  active: &quot;boolean&quot;,
+
+});
+
+
+
+defineTypes(GravityCanyonState, {
+
+  workingTitle: &quot;string&quot;,
+
+  roomCode: &quot;string&quot;,
+
+  phase: &quot;string&quot;,
+
+  status: &quot;string&quot;,
+
+  maxPlayers: &quot;number&quot;,
+
+  mode: &quot;string&quot;,
+
+  redCaptainSessionId: &quot;string&quot;,
+
+  blueCaptainSessionId: &quot;string&quot;,
+
+  spectatorSessionIds: { array: &quot;string&quot; },
+
+  roundNumber: &quot;number&quot;,
+
+  turnNumber: &quot;number&quot;,
+
+  wind: &quot;number&quot;,
+
+  activeVehicleId: &quot;string&quot;,
+
+  winnerTeam: &quot;string&quot;,
+
+  lastRewardLog: &quot;string&quot;,
+
+  players: { map: PlayerState },
+
+  slots: { map: LobbySlotState },
+
+  vehicles: { array: CombatVehicleState },
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 4: Run the schema/helper tests</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test server/rooms/autoRoomLobby.test.ts
+
+</code></pre>
+<p>Expected: PASS.</p>
+<ul>
+<li>[ ] <strong>Step 5: Commit the schema slice</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+git add server/schema/GravityCanyonState.ts server/rooms/autoRoomLobby.test.ts
+
+git commit -m &quot;feat: expose captain lobby state&quot;
+
+</code></pre>
+<p>---</p>
+<h2>Task 3: Wire The Colyseus Room To Auto-Assign Captains And Start Preview</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>server/rooms/GravityCanyonRoom.ts</code></li>
+<li>Modify: <code>server/rooms/autoRoomLobby.test.ts</code></li>
+<li>Test: <code>server/rooms/autoRoomLobby.test.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Add tests for preview slot ordering and ownership</strong></li>
+</ul>
+<p>Append these tests to <code>server/rooms/autoRoomLobby.test.ts</code>:</p>
+<pre><code class="language-ts">
+import { buildPreviewSlots } from &quot;./autoRoomLobby.js&quot;;
+
+
+
+test(&quot;buildPreviewSlots assigns one owner per team in 1v1&quot;, () =&gt; {
+
+  assert.deepEqual(
+
+    buildPreviewSlots({
+
+      mode: &quot;1v1&quot;,
+
+      redCaptainSessionId: &quot;red-session&quot;,
+
+      blueCaptainSessionId: &quot;blue-session&quot;,
+
+      selectedCharacters: {
+
+        &quot;red-1&quot;: &quot;nova&quot;,
+
+        &quot;blue-1&quot;: &quot;vesper&quot;,
+
+        &quot;red-2&quot;: &quot;kaelii&quot;,
+
+        &quot;blue-2&quot;: &quot;perlah&quot;,
+
+      },
+
+    }),
+
+    [
+
+      { slotId: &quot;red-1&quot;, ownerSessionId: &quot;red-session&quot;, selectedCharacterId: &quot;nova&quot; },
+
+      { slotId: &quot;blue-1&quot;, ownerSessionId: &quot;blue-session&quot;, selectedCharacterId: &quot;vesper&quot; },
+
+    ],
+
+  );
+
+});
+
+
+
+test(&quot;buildPreviewSlots assigns both same-team slots to the same captain in 2v2&quot;, () =&gt; {
+
+  assert.deepEqual(
+
+    buildPreviewSlots({
+
+      mode: &quot;2v2&quot;,
+
+      redCaptainSessionId: &quot;red-session&quot;,
+
+      blueCaptainSessionId: &quot;blue-session&quot;,
+
+      selectedCharacters: {
+
+        &quot;red-1&quot;: &quot;nova&quot;,
+
+        &quot;blue-1&quot;: &quot;vesper&quot;,
+
+        &quot;red-2&quot;: &quot;kaelii&quot;,
+
+        &quot;blue-2&quot;: &quot;perlah&quot;,
+
+      },
+
+    }),
+
+    [
+
+      { slotId: &quot;red-1&quot;, ownerSessionId: &quot;red-session&quot;, selectedCharacterId: &quot;nova&quot; },
+
+      { slotId: &quot;blue-1&quot;, ownerSessionId: &quot;blue-session&quot;, selectedCharacterId: &quot;vesper&quot; },
+
+      { slotId: &quot;red-2&quot;, ownerSessionId: &quot;red-session&quot;, selectedCharacterId: &quot;kaelii&quot; },
+
+      { slotId: &quot;blue-2&quot;, ownerSessionId: &quot;blue-session&quot;, selectedCharacterId: &quot;perlah&quot; },
+
+    ],
+
+  );
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Run tests to verify the new helper is missing</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test server/rooms/autoRoomLobby.test.ts
+
+</code></pre>
+<p>Expected: FAIL because <code>buildPreviewSlots</code> is not exported.</p>
+<ul>
+<li>[ ] <strong>Step 3: Add <code>buildPreviewSlots</code> to the helper module</strong></li>
+</ul>
+<p>Add this to <code>server/rooms/autoRoomLobby.ts</code>:</p>
+<pre><code class="language-ts">
+export type PreviewSlot = {
+
+  slotId: VehicleId;
+
+  ownerSessionId: string;
+
+  selectedCharacterId: CharacterId;
+
+};
+
+
+
+export type BuildPreviewSlotsInput = {
+
+  mode: GameMode;
+
+  redCaptainSessionId: string;
+
+  blueCaptainSessionId: string;
+
+  selectedCharacters: Partial&lt;Record&lt;VehicleId, string&gt;&gt;;
+
+};
+
+
+
+export function buildPreviewSlots(input: BuildPreviewSlotsInput): PreviewSlot[] {
+
+  return activeSlotIdsForMode(input.mode).map((slotId) =&gt; ({
+
+    slotId,
+
+    ownerSessionId: ownerSessionIdForSlot(slotId, input.redCaptainSessionId, input.blueCaptainSessionId),
+
+    selectedCharacterId: sanitizeCharacterPick(input.selectedCharacters[slotId], slotId),
+
+  }));
+
+}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 4: Run helper tests</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test server/rooms/autoRoomLobby.test.ts
+
+</code></pre>
+<p>Expected: PASS.</p>
+<ul>
+<li>[ ] <strong>Step 5: Replace the room internals with captain-lobby wiring</strong></li>
+</ul>
+<p>Modify imports at the top of <code>server/rooms/GravityCanyonRoom.ts</code>:</p>
+<pre><code class="language-ts">
+import { ArraySchema } from &quot;@colyseus/schema&quot;;
+
+import { Client, Room } from &quot;colyseus&quot;;
+
+import type { CharacterId, VehicleId } from &quot;../../shared/model/gameTypes.js&quot;;
+
+import { unitDefinitionForCharacter } from &quot;../../shared/content/v1Units.js&quot;;
+
+import {
+
+  activeSlotIdsForMode,
+
+  assignCaptainRoles,
+
+  buildPreviewSlots,
+
+  canEditSlot,
+
+  defaultCharacterForSlot,
+
+  isReadyToAutoStart,
+
+  ownerSessionIdForSlot,
+
+  sanitizeCharacterPick,
+
+  type CaptainRole,
+
+} from &quot;./autoRoomLobby.js&quot;;
+
+import {
+
+  CombatVehicleState,
+
+  GravityCanyonState,
+
+  LobbySlotState,
+
+  PlayerState,
+
+  TeamId,
+
+} from &quot;../schema/GravityCanyonState.js&quot;;
+
+import { sanitizeDisplayName, type GameMode } from &quot;../v1/rules.js&quot;;
+
+</code></pre>
+<p>Add message types:</p>
+<pre><code class="language-ts">
+type ModeMessage = {
+
+  mode?: GameMode;
+
+};
+
+
+
+type SelectCharacterMessage = {
+
+  slotId?: VehicleId;
+
+  characterId?: CharacterId;
+
+};
+
+</code></pre>
+<p>Change the room capacity:</p>
+<pre><code class="language-ts">
+export class GravityCanyonRoom extends Room&lt;{ state: GravityCanyonState }&gt; {
+
+  maxClients = 8;
+
+  private nextJoinOrder = 1;
+
+</code></pre>
+<p>In <code>onCreate</code>, initialize the slots and add two new handlers:</p>
+<pre><code class="language-ts">
+this.setState(new GravityCanyonState());
+
+this.state.roomCode = &quot;auto-room&quot;;
+
+this.ensureLobbySlots();
+
+
+
+this.onMessage(&quot;setMode&quot;, (client, message: ModeMessage) =&gt; {
+
+  if (this.state.phase !== &quot;lobby&quot; &amp;&amp; this.state.phase !== &quot;ready&quot;) {
+
+    return;
+
+  }
+
+
+
+  if (client.sessionId !== this.state.redCaptainSessionId) {
+
+    return;
+
+  }
+
+
+
+  if (message.mode !== &quot;1v1&quot; &amp;&amp; message.mode !== &quot;2v2&quot;) {
+
+    return;
+
+  }
+
+
+
+  this.state.mode = message.mode;
+
+  this.syncLobbySlots();
+
+  this.refreshStatus();
+
+});
+
+
+
+this.onMessage(&quot;selectCharacter&quot;, (client, message: SelectCharacterMessage) =&gt; {
+
+  if (!message.slotId) {
+
+    return;
+
+  }
+
+
+
+  const player = this.state.players.get(client.sessionId);
+
+  if (!player || !canEditSlot(player.role as CaptainRole, message.slotId)) {
+
+    return;
+
+  }
+
+
+
+  const slot = this.state.slots.get(message.slotId);
+
+  if (!slot || !slot.active) {
+
+    return;
+
+  }
+
+
+
+  slot.selectedCharacterId = sanitizeCharacterPick(message.characterId, message.slotId);
+
+  this.refreshStatus();
+
+});
+
+</code></pre>
+<p>Change <code>onJoin</code>:</p>
+<pre><code class="language-ts">
+onJoin(client: Client, options: JoinOptions) {
+
+  const player = new PlayerState();
+
+  player.sessionId = client.sessionId;
+
+  player.displayName = sanitizeDisplayName(options.displayName);
+
+  player.joinOrder = this.nextJoinOrder;
+
+  this.nextJoinOrder += 1;
+
+  player.inventory = new ArraySchema&lt;string&gt;(&quot;Canyon Rookie&quot;);
+
+  player.equippedNameplate = &quot;Canyon Rookie&quot;;
+
+
+
+  this.state.players.set(client.sessionId, player);
+
+  this.refreshStatus();
+
+}
+
+</code></pre>
+<p>Change <code>onLeave</code>:</p>
+<pre><code class="language-ts">
+onLeave(client: Client) {
+
+  this.state.players.delete(client.sessionId);
+
+
+
+  if (this.state.phase === &quot;combat-preview&quot; || this.state.phase === &quot;round-over&quot;) {
+
+    this.state.phase = &quot;lobby&quot;;
+
+  }
+
+
+
+  this.clearCombatPreview();
+
+  this.refreshStatus();
+
+}
+
+</code></pre>
+<p>Replace <code>nextTeam()</code> with these helpers:</p>
+<pre><code class="language-ts">
+private syncRoles() {
+
+  const players = this.getPlayers();
+
+  const roles = assignCaptainRoles(players);
+
+  this.state.redCaptainSessionId = &quot;&quot;;
+
+  this.state.blueCaptainSessionId = &quot;&quot;;
+
+  this.state.spectatorSessionIds.splice(0, this.state.spectatorSessionIds.length);
+
+
+
+  for (const player of players) {
+
+    const role = roles.get(player.sessionId) ?? &quot;spectator&quot;;
+
+    player.role = role;
+
+    player.team = role === &quot;blue-captain&quot; ? &quot;blue&quot; : &quot;red&quot;;
+
+
+
+    if (role === &quot;red-captain&quot;) {
+
+      this.state.redCaptainSessionId = player.sessionId;
+
+    } else if (role === &quot;blue-captain&quot;) {
+
+      this.state.blueCaptainSessionId = player.sessionId;
+
+    } else {
+
+      player.ready = false;
+
+      this.state.spectatorSessionIds.push(player.sessionId);
+
+    }
+
+  }
+
+}
+
+
+
+private ensureLobbySlots() {
+
+  const slotIds: VehicleId[] = [&quot;red-1&quot;, &quot;blue-1&quot;, &quot;red-2&quot;, &quot;blue-2&quot;];
+
+  for (const slotId of slotIds) {
+
+    if (!this.state.slots.has(slotId)) {
+
+      const slot = new LobbySlotState();
+
+      slot.slotId = slotId;
+
+      slot.team = slotId.startsWith(&quot;red-&quot;) ? &quot;red&quot; : &quot;blue&quot;;
+
+      slot.selectedCharacterId = defaultCharacterForSlot(slotId);
+
+      this.state.slots.set(slotId, slot);
+
+    }
+
+  }
+
+}
+
+
+
+private syncLobbySlots() {
+
+  this.ensureLobbySlots();
+
+  const activeSlotIds = new Set(activeSlotIdsForMode(this.state.mode));
+
+
+
+  for (const [slotId, slot] of this.state.slots.entries() as Iterable&lt;[VehicleId, LobbySlotState]&gt;) {
+
+    slot.active = activeSlotIds.has(slotId);
+
+    slot.ownerSessionId = slot.active
+
+      ? ownerSessionIdForSlot(slotId, this.state.redCaptainSessionId, this.state.blueCaptainSessionId)
+
+      : &quot;&quot;;
+
+    slot.selectedCharacterId = sanitizeCharacterPick(slot.selectedCharacterId, slotId);
+
+  }
+
+}
+
+</code></pre>
+<p>Replace <code>refreshStatus()</code>:</p>
+<pre><code class="language-ts">
+private refreshStatus() {
+
+  this.syncRoles();
+
+  this.syncLobbySlots();
+
+
+
+  const red = this.state.players.get(this.state.redCaptainSessionId);
+
+  const blue = this.state.players.get(this.state.blueCaptainSessionId);
+
+  const redReady = red?.ready ?? false;
+
+  const blueReady = blue?.ready ?? false;
+
+  const selectedCharacters = Object.fromEntries(
+
+    Array.from(this.state.slots.entries()).map(([slotId, slot]) =&gt; [slotId, slot.selectedCharacterId]),
+
+  ) as Partial&lt;Record&lt;VehicleId, string&gt;&gt;;
+
+
+
+  if (!red || !blue) {
+
+    this.state.phase = &quot;lobby&quot;;
+
+    this.state.status = red ? &quot;Waiting for blue captain.&quot; : &quot;Waiting for red captain.&quot;;
+
+    this.clearCombatPreview();
+
+    return;
+
+  }
+
+
+
+  if (
+
+    !isReadyToAutoStart({
+
+      mode: this.state.mode,
+
+      redCaptainSessionId: this.state.redCaptainSessionId,
+
+      blueCaptainSessionId: this.state.blueCaptainSessionId,
+
+      redReady,
+
+      blueReady,
+
+      selectedCharacters,
+
+    })
+
+  ) {
+
+    this.state.phase = &quot;ready&quot;;
+
+    this.state.status = !redReady ? &quot;Waiting for red ready.&quot; : &quot;Waiting for blue ready.&quot;;
+
+    this.clearCombatPreview();
+
+    return;
+
+  }
+
+
+
+  if (this.state.phase !== &quot;combat-preview&quot; &amp;&amp; this.state.phase !== &quot;round-over&quot;) {
+
+    this.startCombatPreview();
+
+  }
+
+}
+
+</code></pre>
+<p>Update <code>setReady</code> handler so spectators cannot ready:</p>
+<pre><code class="language-ts">
+player.ready = player.role === &quot;red-captain&quot; || player.role === &quot;blue-captain&quot; ? Boolean(message.ready) : false;
+
+</code></pre>
+<p>Replace <code>startCombatPreview()</code>:</p>
+<pre><code class="language-ts">
+private startCombatPreview() {
+
+  this.state.phase = &quot;combat-preview&quot;;
+
+  this.state.winnerTeam = &quot;&quot;;
+
+  this.state.turnNumber = 1;
+
+  this.state.wind = rollWind();
+
+  this.state.vehicles.splice(0, this.state.vehicles.length);
+
+
+
+  const selectedCharacters = Object.fromEntries(
+
+    Array.from(this.state.slots.entries()).map(([slotId, slot]) =&gt; [slotId, slot.selectedCharacterId]),
+
+  ) as Partial&lt;Record&lt;VehicleId, string&gt;&gt;;
+
+  const previewSlots = buildPreviewSlots({
+
+    mode: this.state.mode,
+
+    redCaptainSessionId: this.state.redCaptainSessionId,
+
+    blueCaptainSessionId: this.state.blueCaptainSessionId,
+
+    selectedCharacters,
+
+  });
+
+
+
+  for (const slot of previewSlots) {
+
+    const owner = this.state.players.get(slot.ownerSessionId);
+
+    if (owner) {
+
+      this.state.vehicles.push(createPreviewVehicle(slot.slotId, slot.selectedCharacterId, owner));
+
+    }
+
+  }
+
+
+
+  const activeVehicle = this.state.vehicles[0];
+
+  this.state.activeVehicleId = activeVehicle?.vehicleId ?? &quot;&quot;;
+
+  this.state.status = activeVehicle
+
+    ? `Round ${this.state.roundNumber} started. ${activeVehicle.displayName} has the first shot.`
+
+    : &quot;Round started.&quot;;
+
+}
+
+</code></pre>
+<p>Replace <code>nextAliveVehicle(previousTeam: TeamId)</code> with turn-order cycling:</p>
+<pre><code class="language-ts">
+private nextAliveVehicle(currentVehicleId: string) {
+
+  const vehicles = Array.from(this.state.vehicles);
+
+  const currentIndex = vehicles.findIndex((vehicle) =&gt; vehicle.vehicleId === currentVehicleId);
+
+
+
+  for (let offset = 1; offset &lt;= vehicles.length; offset += 1) {
+
+    const candidate = vehicles[(currentIndex + offset + vehicles.length) % vehicles.length];
+
+    if (candidate?.alive) {
+
+      return candidate;
+
+    }
+
+  }
+
+
+
+  return undefined;
+
+}
+
+</code></pre>
+<p>Update <code>previewFire()</code> so the next turn uses the current vehicle id:</p>
+<pre><code class="language-ts">
+const nextVehicle = this.nextAliveVehicle(activeVehicle.vehicleId);
+
+</code></pre>
+<p>Replace <code>createPreviewVehicle(player)</code> with:</p>
+<pre><code class="language-ts">
+function createPreviewVehicle(slotId: VehicleId, characterId: CharacterId, player: PlayerState) {
+
+  const unit = unitDefinitionForCharacter(characterId);
+
+  const vehicle = new CombatVehicleState();
+
+  vehicle.vehicleId = slotId;
+
+  vehicle.ownerSessionId = player.sessionId;
+
+  vehicle.displayName = `${player.displayName} / ${unit.username}`;
+
+  vehicle.team = unit.team;
+
+  vehicle.className = unit.className;
+
+  vehicle.hp = VEHICLE_MAX_HP;
+
+  vehicle.maxHp = VEHICLE_MAX_HP;
+
+  vehicle.alive = true;
+
+  vehicle.x = unit.team === &quot;red&quot; ? (slotId === &quot;red-1&quot; ? 385 : 710) : slotId === &quot;blue-1&quot; ? 1995 : 1690;
+
+  vehicle.y = 0;
+
+  vehicle.angle = unit.team === &quot;red&quot; ? 47 : 133;
+
+  return vehicle;
+
+}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 6: Run targeted server tests</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test server/rooms/autoRoomLobby.test.ts server/serverConfig.test.ts
+
+</code></pre>
+<p>Expected: PASS.</p>
+<ul>
+<li>[ ] <strong>Step 7: Commit the room wiring slice</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+git add server/rooms/GravityCanyonRoom.ts server/rooms/autoRoomLobby.ts server/rooms/autoRoomLobby.test.ts
+
+git commit -m &quot;feat: auto-assign playtest captains&quot;
+
+</code></pre>
+<p>---</p>
+<h2>Task 4: Add Pure Client Lobby View Helpers</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/onlineLobbyView.ts</code></li>
+<li>Create: <code>src/onlineLobbyView.test.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Write failing client helper tests</strong></li>
+</ul>
+<p>Create <code>src/onlineLobbyView.test.ts</code>:</p>
+<pre><code class="language-ts">
+import assert from &quot;node:assert/strict&quot;;
+
+import test from &quot;node:test&quot;;
+
+import {
+
+  canLocalPlayerEditSlot,
+
+  lobbyStatusText,
+
+  localRoleLabel,
+
+  modeLabel,
+
+  slotLabel,
+
+} from &quot;./onlineLobbyView&quot;;
+
+
+
+test(&quot;localRoleLabel names the local captain role&quot;, () =&gt; {
+
+  assert.equal(localRoleLabel(&quot;red-captain&quot;), &quot;Red captain&quot;);
+
+  assert.equal(localRoleLabel(&quot;blue-captain&quot;), &quot;Blue captain&quot;);
+
+  assert.equal(localRoleLabel(&quot;spectator&quot;), &quot;Spectator&quot;);
+
+  assert.equal(localRoleLabel(&quot;unknown&quot;), &quot;Waiting&quot;);
+
+});
+
+
+
+test(&quot;canLocalPlayerEditSlot follows captain team ownership&quot;, () =&gt; {
+
+  assert.equal(canLocalPlayerEditSlot(&quot;red-captain&quot;, &quot;red-1&quot;), true);
+
+  assert.equal(canLocalPlayerEditSlot(&quot;red-captain&quot;, &quot;blue-1&quot;), false);
+
+  assert.equal(canLocalPlayerEditSlot(&quot;blue-captain&quot;, &quot;blue-2&quot;), true);
+
+  assert.equal(canLocalPlayerEditSlot(&quot;spectator&quot;, &quot;red-1&quot;), false);
+
+});
+
+
+
+test(&quot;modeLabel and slotLabel keep lobby wording short&quot;, () =&gt; {
+
+  assert.equal(modeLabel(&quot;1v1&quot;), &quot;1v1&quot;);
+
+  assert.equal(modeLabel(&quot;2v2&quot;), &quot;2v2&quot;);
+
+  assert.equal(slotLabel(&quot;red-1&quot;), &quot;Red 1&quot;);
+
+  assert.equal(slotLabel(&quot;blue-2&quot;), &quot;Blue 2&quot;);
+
+});
+
+
+
+test(&quot;lobbyStatusText explains the blocked start state&quot;, () =&gt; {
+
+  assert.equal(
+
+    lobbyStatusText({
+
+      status: &quot;Waiting for blue captain.&quot;,
+
+      redCaptainName: &quot;NovaHost&quot;,
+
+      blueCaptainName: &quot;&quot;,
+
+      redReady: true,
+
+      blueReady: false,
+
+    }),
+
+    &quot;Waiting for blue captain.&quot;,
+
+  );
+
+
+
+  assert.equal(
+
+    lobbyStatusText({
+
+      status: &quot;&quot;,
+
+      redCaptainName: &quot;NovaHost&quot;,
+
+      blueCaptainName: &quot;VesperFriend&quot;,
+
+      redReady: true,
+
+      blueReady: false,
+
+    }),
+
+    &quot;Waiting for VesperFriend to ready.&quot;,
+
+  );
+
+});
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Run the failing client helper tests</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test src/onlineLobbyView.test.ts
+
+</code></pre>
+<p>Expected: FAIL with a module-not-found error for <code>./onlineLobbyView</code>.</p>
+<ul>
+<li>[ ] <strong>Step 3: Implement <code>onlineLobbyView.ts</code></strong></li>
+</ul>
+<p>Create <code>src/onlineLobbyView.ts</code>:</p>
+<pre><code class="language-ts">
+export type ClientRole = &quot;red-captain&quot; | &quot;blue-captain&quot; | &quot;spectator&quot; | string;
+
+export type ClientSlotId = &quot;red-1&quot; | &quot;blue-1&quot; | &quot;red-2&quot; | &quot;blue-2&quot; | string;
+
+
+
+export function localRoleLabel(role: ClientRole): string {
+
+  if (role === &quot;red-captain&quot;) {
+
+    return &quot;Red captain&quot;;
+
+  }
+
+
+
+  if (role === &quot;blue-captain&quot;) {
+
+    return &quot;Blue captain&quot;;
+
+  }
+
+
+
+  if (role === &quot;spectator&quot;) {
+
+    return &quot;Spectator&quot;;
+
+  }
+
+
+
+  return &quot;Waiting&quot;;
+
+}
+
+
+
+export function canLocalPlayerEditSlot(role: ClientRole, slotId: ClientSlotId): boolean {
+
+  if (role === &quot;red-captain&quot;) {
+
+    return slotId.startsWith(&quot;red-&quot;);
+
+  }
+
+
+
+  if (role === &quot;blue-captain&quot;) {
+
+    return slotId.startsWith(&quot;blue-&quot;);
+
+  }
+
+
+
+  return false;
+
+}
+
+
+
+export function modeLabel(mode: string): string {
+
+  return mode === &quot;1v1&quot; ? &quot;1v1&quot; : &quot;2v2&quot;;
+
+}
+
+
+
+export function slotLabel(slotId: ClientSlotId): string {
+
+  const [team, slot] = String(slotId).split(&quot;-&quot;);
+
+  const teamLabel = team === &quot;blue&quot; ? &quot;Blue&quot; : &quot;Red&quot;;
+
+  return `${teamLabel} ${slot ?? &quot;1&quot;}`;
+
+}
+
+
+
+export function lobbyStatusText(input: {
+
+  status: string;
+
+  redCaptainName: string;
+
+  blueCaptainName: string;
+
+  redReady: boolean;
+
+  blueReady: boolean;
+
+}): string {
+
+  if (input.status) {
+
+    return input.status;
+
+  }
+
+
+
+  if (!input.redCaptainName) {
+
+    return &quot;Waiting for red captain.&quot;;
+
+  }
+
+
+
+  if (!input.blueCaptainName) {
+
+    return &quot;Waiting for blue captain.&quot;;
+
+  }
+
+
+
+  if (!input.redReady) {
+
+    return `Waiting for ${input.redCaptainName} to ready.`;
+
+  }
+
+
+
+  if (!input.blueReady) {
+
+    return `Waiting for ${input.blueCaptainName} to ready.`;
+
+  }
+
+
+
+  return &quot;Starting match.&quot;;
+
+}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 4: Run client helper tests</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test src/onlineLobbyView.test.ts
+
+</code></pre>
+<p>Expected: PASS.</p>
+<ul>
+<li>[ ] <strong>Step 5: Commit the client helper slice</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+git add src/onlineLobbyView.ts src/onlineLobbyView.test.ts
+
+git commit -m &quot;feat: add online lobby view helpers&quot;
+
+</code></pre>
+<p>---</p>
+<h2>Task 5: Replace Browser Create/Join Panel With Auto-Room Lobby</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>src/onlineLobby.ts</code></li>
+<li>Test: <code>src/onlineLobbyView.test.ts</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Update the client room types and snapshot shape</strong></li>
+</ul>
+<p>In <code>src/onlineLobby.ts</code>, import the view helpers:</p>
+<pre><code class="language-ts">
+import {
+
+  canLocalPlayerEditSlot,
+
+  lobbyStatusText,
+
+  localRoleLabel,
+
+  slotLabel,
+
+} from &quot;./onlineLobbyView&quot;;
+
+</code></pre>
+<p>Extend <code>PlayerSnapshot</code>:</p>
+<pre><code class="language-ts">
+type PlayerSnapshot = {
+
+  sessionId: string;
+
+  displayName: string;
+
+  team: string;
+
+  role: string;
+
+  joinOrder: number;
+
+  ready: boolean;
+
+  tokens: number;
+
+  equippedNameplate: string;
+
+  inventory: string[];
+
+};
+
+</code></pre>
+<p>Add <code>LobbySlotSnapshot</code>:</p>
+<pre><code class="language-ts">
+type LobbySlotSnapshot = {
+
+  slotId: string;
+
+  team: string;
+
+  ownerSessionId: string;
+
+  selectedCharacterId: string;
+
+  active: boolean;
+
+};
+
+</code></pre>
+<p>Extend <code>RoomSnapshot</code>:</p>
+<pre><code class="language-ts">
+type RoomSnapshot = {
+
+  roomCode: string;
+
+  phase: string;
+
+  status: string;
+
+  mode: &quot;1v1&quot; | &quot;2v2&quot;;
+
+  redCaptainSessionId: string;
+
+  blueCaptainSessionId: string;
+
+  spectatorSessionIds: string[];
+
+  roundNumber: number;
+
+  turnNumber: number;
+
+  wind: number;
+
+  activeVehicleId: string;
+
+  winnerTeam: string;
+
+  lastRewardLog: string;
+
+  players: PlayerSnapshot[];
+
+  slots: LobbySlotSnapshot[];
+
+  vehicles: CombatVehicleSnapshot[];
+
+};
+
+</code></pre>
+<p>Add <code>joinOrCreate</code> to <code>OnlineClient</code>:</p>
+<pre><code class="language-ts">
+type OnlineClient = {
+
+  create: (roomName: string, options?: Record&lt;string, unknown&gt;) =&gt; Promise&lt;OnlineRoom&gt;;
+
+  joinById: (roomId: string, options?: Record&lt;string, unknown&gt;) =&gt; Promise&lt;OnlineRoom&gt;;
+
+  joinOrCreate: (roomName: string, options?: Record&lt;string, unknown&gt;) =&gt; Promise&lt;OnlineRoom&gt;;
+
+};
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Replace the panel template</strong></li>
+</ul>
+<p>Replace the current <code>panel.innerHTML</code> in <code>mountOnlineLobby()</code> with:</p>
+<pre><code class="language-ts">
+panel.innerHTML = `
+
+  &lt;div class=&quot;online-panel__header&quot;&gt;
+
+    &lt;div&gt;
+
+      &lt;p class=&quot;online-panel__eyebrow&quot;&gt;Playtest Room&lt;/p&gt;
+
+      &lt;h1&gt;Gravity Canyon&lt;/h1&gt;
+
+    &lt;/div&gt;
+
+    &lt;span class=&quot;online-panel__badge&quot; data-status-badge&gt;Offline&lt;/span&gt;
+
+  &lt;/div&gt;
+
+  &lt;div class=&quot;online-panel__field&quot;&gt;
+
+    &lt;label for=&quot;display-name&quot;&gt;Display Name&lt;/label&gt;
+
+    &lt;input id=&quot;display-name&quot; maxlength=&quot;18&quot; value=&quot;Guest&quot; autocomplete=&quot;off&quot; /&gt;
+
+  &lt;/div&gt;
+
+  &lt;div class=&quot;online-panel__room&quot; data-room-block hidden&gt;
+
+    &lt;div class=&quot;online-panel__room-code&quot;&gt;
+
+      &lt;span&gt;Role&lt;/span&gt;
+
+      &lt;strong data-local-role&gt;Waiting&lt;/strong&gt;
+
+    &lt;/div&gt;
+
+    &lt;p class=&quot;online-panel__status&quot; data-room-status&gt;&lt;/p&gt;
+
+    &lt;div class=&quot;online-panel__field&quot;&gt;
+
+      &lt;label for=&quot;mode-select&quot;&gt;Mode&lt;/label&gt;
+
+      &lt;select id=&quot;mode-select&quot; data-mode-select&gt;
+
+        &lt;option value=&quot;1v1&quot;&gt;1v1&lt;/option&gt;
+
+        &lt;option value=&quot;2v2&quot;&gt;2v2&lt;/option&gt;
+
+      &lt;/select&gt;
+
+    &lt;/div&gt;
+
+    &lt;div class=&quot;online-panel__players&quot; data-player-list&gt;&lt;/div&gt;
+
+    &lt;div class=&quot;online-slots&quot; data-slot-list&gt;&lt;/div&gt;
+
+    &lt;div class=&quot;online-combat&quot; data-combat-block hidden&gt;
+
+      &lt;div class=&quot;online-combat__meta&quot; data-combat-meta&gt;&lt;/div&gt;
+
+      &lt;div class=&quot;online-combat__vehicles&quot; data-vehicle-list&gt;&lt;/div&gt;
+
+      &lt;div class=&quot;online-panel__actions&quot;&gt;
+
+        &lt;button type=&quot;button&quot; data-preview-fire&gt;Server Shot&lt;/button&gt;
+
+        &lt;button type=&quot;button&quot; data-next-round&gt;Next Round&lt;/button&gt;
+
+      &lt;/div&gt;
+
+    &lt;/div&gt;
+
+    &lt;div class=&quot;online-panel__actions&quot;&gt;
+
+      &lt;button type=&quot;button&quot; data-ready-toggle&gt;Ready&lt;/button&gt;
+
+      &lt;button type=&quot;button&quot; data-test-capsule&gt;Capsule&lt;/button&gt;
+
+    &lt;/div&gt;
+
+    &lt;div class=&quot;online-panel__field&quot;&gt;
+
+      &lt;label for=&quot;nameplate-select&quot;&gt;Nameplate&lt;/label&gt;
+
+      &lt;select id=&quot;nameplate-select&quot; data-nameplate-select&gt;&lt;/select&gt;
+
+    &lt;/div&gt;
+
+    &lt;p class=&quot;online-panel__reward&quot; data-reward-log&gt;&lt;/p&gt;
+
+  &lt;/div&gt;
+
+`;
+
+</code></pre>
+<p>Remove the <code>Create</code>, <code>Join</code>, and <code>Room Code</code> input query selectors and event listeners. Add selectors:</p>
+<pre><code class="language-ts">
+const modeSelect = panel.querySelector&lt;HTMLSelectElement&gt;(&quot;[data-mode-select]&quot;);
+
+const localRoleLabelElement = panel.querySelector&lt;HTMLElement&gt;(&quot;[data-local-role]&quot;);
+
+const slotList = panel.querySelector&lt;HTMLElement&gt;(&quot;[data-slot-list]&quot;);
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 3: Auto-join the shared room on mount</strong></li>
+</ul>
+<p>Replace the create/join button handlers with:</p>
+<pre><code class="language-ts">
+void connect(() =&gt; client.joinOrCreate(&quot;gravity_canyon&quot;, { displayName: displayNameInput?.value }));
+
+</code></pre>
+<p>Add the mode handler:</p>
+<pre><code class="language-ts">
+modeSelect?.addEventListener(&quot;change&quot;, () =&gt; {
+
+  room?.send(&quot;setMode&quot;, { mode: modeSelect.value });
+
+});
+
+</code></pre>
+<p>Keep display-name, ready, capsule, nameplate, preview-fire, and next-round handlers. The ready handler remains:</p>
+<pre><code class="language-ts">
+readyButton?.addEventListener(&quot;click&quot;, () =&gt; {
+
+  localReady = !localReady;
+
+  room?.send(&quot;setReady&quot;, { ready: localReady });
+
+  render(latestSnapshot);
+
+});
+
+</code></pre>
+<p>In <code>connect</code>, remove the room-code assignment:</p>
+<pre><code class="language-ts">
+room = await join();
+
+localReady = false;
+
+setBadge(&quot;Online&quot;, &quot;ok&quot;);
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 4: Render role, mode, captains, and slots</strong></li>
+</ul>
+<p>In <code>render(snapshot)</code>, after resolving <code>localPlayer</code>, add:</p>
+<pre><code class="language-ts">
+const localRole = localPlayer?.role ?? &quot;waiting&quot;;
+
+localRoleLabelElement!.textContent = localRoleLabel(localRole);
+
+modeSelect!.value = snapshot.mode;
+
+modeSelect!.disabled = localRole !== &quot;red-captain&quot; || snapshot.phase === &quot;combat-preview&quot; || snapshot.phase === &quot;round-over&quot;;
+
+
+
+const redCaptain = snapshot.players.find((player) =&gt; player.sessionId === snapshot.redCaptainSessionId);
+
+const blueCaptain = snapshot.players.find((player) =&gt; player.sessionId === snapshot.blueCaptainSessionId);
+
+roomStatus!.textContent = lobbyStatusText({
+
+  status: snapshot.status,
+
+  redCaptainName: redCaptain?.displayName ?? &quot;&quot;,
+
+  blueCaptainName: blueCaptain?.displayName ?? &quot;&quot;,
+
+  redReady: redCaptain?.ready ?? false,
+
+  blueReady: blueCaptain?.ready ?? false,
+
+});
+
+</code></pre>
+<p>Replace the player list render with:</p>
+<pre><code class="language-ts">
+playerList!.innerHTML = snapshot.players
+
+  .map((player) =&gt; {
+
+    const ready = player.ready ? &quot;Ready&quot; : &quot;Waiting&quot;;
+
+    return `
+
+      &lt;div class=&quot;online-player online-player--${player.team}&quot;&gt;
+
+        &lt;div&gt;
+
+          &lt;strong&gt;${escapeHtml(player.displayName)}&lt;/strong&gt;
+
+          &lt;span&gt;${escapeHtml(localRoleLabel(player.role))} - ${escapeHtml(player.equippedNameplate)}&lt;/span&gt;
+
+        &lt;/div&gt;
+
+        &lt;em&gt;${player.role === &quot;spectator&quot; ? &quot;Spectating&quot; : ready}&lt;/em&gt;
+
+      &lt;/div&gt;
+
+    `;
+
+  })
+
+  .join(&quot;&quot;);
+
+</code></pre>
+<p>Add slot rendering:</p>
+<pre><code class="language-ts">
+slotList!.innerHTML = snapshot.slots
+
+  .filter((slot) =&gt; slot.active)
+
+  .map((slot) =&gt; {
+
+    const owner = snapshot.players.find((player) =&gt; player.sessionId === slot.ownerSessionId);
+
+    const editable = canLocalPlayerEditSlot(localRole, slot.slotId);
+
+    const options = [&quot;nova&quot;, &quot;vesper&quot;, &quot;kaelii&quot;, &quot;perlah&quot;]
+
+      .map(
+
+        (characterId) =&gt;
+
+          `&lt;option value=&quot;${characterId}&quot;${characterId === slot.selectedCharacterId ? &quot; selected&quot; : &quot;&quot;}&gt;${capitalize(characterId)}&lt;/option&gt;`,
+
+      )
+
+      .join(&quot;&quot;);
+
+    return `
+
+      &lt;label class=&quot;online-slot online-slot--${slot.team}&quot;&gt;
+
+        &lt;span&gt;
+
+          &lt;strong&gt;${escapeHtml(slotLabel(slot.slotId))}&lt;/strong&gt;
+
+          &lt;em&gt;${escapeHtml(owner?.displayName ?? &quot;Unassigned&quot;)}&lt;/em&gt;
+
+        &lt;/span&gt;
+
+        &lt;select data-slot-character=&quot;${escapeHtml(slot.slotId)}&quot;${editable ? &quot;&quot; : &quot; disabled&quot;}&gt;
+
+          ${options}
+
+        &lt;/select&gt;
+
+      &lt;/label&gt;
+
+    `;
+
+  })
+
+  .join(&quot;&quot;);
+
+
+
+slotList!.querySelectorAll&lt;HTMLSelectElement&gt;(&quot;[data-slot-character]&quot;).forEach((select) =&gt; {
+
+  select.addEventListener(&quot;change&quot;, () =&gt; {
+
+    room?.send(&quot;selectCharacter&quot;, {
+
+      slotId: select.dataset.slotCharacter,
+
+      characterId: select.value,
+
+    });
+
+  });
+
+});
+
+</code></pre>
+<p>Disable ready for spectators:</p>
+<pre><code class="language-ts">
+readyButton!.disabled = localRole !== &quot;red-captain&quot; &amp;&amp; localRole !== &quot;blue-captain&quot;;
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 5: Extend snapshot parsing</strong></li>
+</ul>
+<p>In <code>getSnapshot</code>, read new fields:</p>
+<pre><code class="language-ts">
+const source = state as {
+
+  roomCode?: string;
+
+  phase?: string;
+
+  status?: string;
+
+  mode?: &quot;1v1&quot; | &quot;2v2&quot;;
+
+  redCaptainSessionId?: string;
+
+  blueCaptainSessionId?: string;
+
+  spectatorSessionIds?: string[] | Iterable&lt;string&gt;;
+
+  lastRewardLog?: string;
+
+  roundNumber?: number;
+
+  turnNumber?: number;
+
+  wind?: number;
+
+  activeVehicleId?: string;
+
+  winnerTeam?: string;
+
+  players?: Map&lt;string, unknown&gt; | Record&lt;string, unknown&gt;;
+
+  slots?: Map&lt;string, unknown&gt; | Record&lt;string, unknown&gt;;
+
+  vehicles?: unknown[] | Iterable&lt;unknown&gt;;
+
+};
+
+</code></pre>
+<p>Return:</p>
+<pre><code class="language-ts">
+mode: source.mode === &quot;1v1&quot; ? &quot;1v1&quot; : &quot;2v2&quot;,
+
+redCaptainSessionId: source.redCaptainSessionId ?? &quot;&quot;,
+
+blueCaptainSessionId: source.blueCaptainSessionId ?? &quot;&quot;,
+
+spectatorSessionIds: Array.from(source.spectatorSessionIds ?? []),
+
+slots: getSlots(source.slots),
+
+</code></pre>
+<p>Update <code>getPlayers</code> to include role and join order:</p>
+<pre><code class="language-ts">
+role: source.role ?? &quot;spectator&quot;,
+
+joinOrder: source.joinOrder ?? 0,
+
+</code></pre>
+<p>Add <code>getSlots</code>:</p>
+<pre><code class="language-ts">
+function getSlots(slots: Map&lt;string, unknown&gt; | Record&lt;string, unknown&gt; | undefined) {
+
+  const snapshots: LobbySlotSnapshot[] = [];
+
+  const readSlot = (slot: unknown, key: string) =&gt; {
+
+    const source = slot as Partial&lt;LobbySlotSnapshot&gt;;
+
+    snapshots.push({
+
+      slotId: source.slotId ?? key,
+
+      team: source.team ?? (String(source.slotId ?? key).startsWith(&quot;blue-&quot;) ? &quot;blue&quot; : &quot;red&quot;),
+
+      ownerSessionId: source.ownerSessionId ?? &quot;&quot;,
+
+      selectedCharacterId: source.selectedCharacterId ?? &quot;nova&quot;,
+
+      active: Boolean(source.active),
+
+    });
+
+  };
+
+
+
+  if (slots instanceof Map || typeof slots?.forEach === &quot;function&quot;) {
+
+    const iterableSlots = slots as { forEach: (slot: unknown, key: string) =&gt; void };
+
+    iterableSlots.forEach(readSlot);
+
+  } else if (slots) {
+
+    Object.entries(slots).forEach(([key, slot]) =&gt; readSlot(slot, key));
+
+  }
+
+
+
+  return snapshots.sort((a, b) =&gt; slotSortValue(a.slotId) - slotSortValue(b.slotId));
+
+}
+
+
+
+function slotSortValue(slotId: string): number {
+
+  return [&quot;red-1&quot;, &quot;blue-1&quot;, &quot;red-2&quot;, &quot;blue-2&quot;].indexOf(slotId);
+
+}
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 6: Run client and server targeted tests</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+node node_modules/tsx/dist/cli.mjs --test src/onlineLobbyView.test.ts server/rooms/autoRoomLobby.test.ts src/onlineServerUrl.test.ts
+
+</code></pre>
+<p>Expected: PASS.</p>
+<ul>
+<li>[ ] <strong>Step 7: Commit the browser lobby slice</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+git add src/onlineLobby.ts src/onlineLobbyView.ts src/onlineLobbyView.test.ts
+
+git commit -m &quot;feat: auto-join playtest lobby&quot;
+
+</code></pre>
+<p>---</p>
+<h2>Task 6: Documentation, Verification, And Manual Playtest</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>README.md</code></li>
+<li>Modify: <code>docs/SESSION_HANDOFF.md</code></li>
+<li>Modify: <code>docs/PRODUCTION_PLAN.md</code></li>
+<li>Modify: <code>docs/VERSION_LOG.md</code></li>
+<li>Generated: <code>README.html</code></li>
+<li>Generated: <code>docs/SESSION_HANDOFF.html</code></li>
+<li>Generated: <code>docs/PRODUCTION_PLAN.html</code></li>
+<li>Generated: <code>docs/VERSION_LOG.html</code></li>
+<li>Generated: <code>docs/index.html</code></li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 1: Update README playtest wording</strong></li>
+</ul>
+<p>In <code>README.md</code>, replace the public playtest paragraph with:</p>
+<pre><code class="language-`md">
+Public internet playtest from this computer:
+
+
+
+</code></pre>
+<p>npm run playtest</p>
+<pre><code>
+
+
+This builds the project, serves the built game and Colyseus server locally, starts a Cloudflare quick tunnel, and prints the public URL to share. In playtest mode, that URL auto-joins the shared playtest room. The first connected browser becomes red captain, the second becomes blue captain, and each captain can test 1v1 or 2v2 by controlling one or two units on their team.
+
+</code></pre>
+<p>In the Notes section, replace the two online-preview caveat bullets with:</p>
+<pre><code class="language-md">
+- The playtest URL now auto-joins one shared captain lobby for simpler friend testing.
+
+- The online lobby owns shared captain roles, 1v1/2v2 mode, character selections, ready state, and a server-owned combat preview.
+
+- Phaser projectile and terrain gameplay are still local-only until server-authoritative gameplay is wired into the match scene.
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 2: Update handoff and production plan</strong></li>
+</ul>
+<p>In <code>docs/SESSION_HANDOFF.md</code>, add under Current Implementation State:</p>
+<pre><code class="language-md">
+- `npm run playtest` now opens a single auto-room captain lobby: first browser is red captain, second browser is blue captain, and each captain can test 1v1 or 2v2 by controlling one or two same-team units.
+
+</code></pre>
+<p>Replace the online next-best-step sentence with:</p>
+<pre><code class="language-md">
+For online v1, the next best build direction is to bridge the auto-room captain lobby into the Phaser match scene: selected slots should create the online match roster, and then movement, aim, fire, projectile, terrain, damage, and round results should move to server authority one system at a time.
+
+</code></pre>
+<p>In <code>docs/PRODUCTION_PLAN.md</code>, add to Done:</p>
+<pre><code class="language-md">
+- Auto-room playtest lobby with two human captains for simple 1v1 and 2v2 testing.
+
+</code></pre>
+<p>Update Not done so it still includes:</p>
+<pre><code class="language-md">
+- General private-room invite links and room-code flow.
+
+- True four-human 2v2 seat ownership.
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 3: Update version log</strong></li>
+</ul>
+<p>Add this under <code>## Unreleased</code> highlights in <code>docs/VERSION_LOG.md</code>:</p>
+<pre><code class="language-md">
+- Added the auto-room playtest lobby: the generated playtest URL now acts as one shared room, assigns red and blue captains automatically, supports 1v1/2v2 captain-controlled slots, and starts a shared server-owned preview after both captains ready.
+
+</code></pre>
+<ul>
+<li>[ ] <strong>Step 4: Run full verification</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+npm test
+
+npm run build
+
+npm run verify:runtime-roster
+
+npm run docs:html
+
+</code></pre>
+<p>Expected:</p>
+<ul>
+<li><code>npm test</code> passes.</li>
+<li><code>npm run build</code> passes.</li>
+<li><code>npm run verify:runtime-roster</code> passes.</li>
+<li><code>npm run docs:html</code> regenerates HTML docs without errors.</li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 5: Manual local playtest without tunnel</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+npm run playtest:local
+
+</code></pre>
+<p>Manual checks:</p>
+<ul>
+<li>Open <code>http://127.0.0.1:2567</code> in one browser context.</li>
+<li>Confirm it auto-joins as Red captain.</li>
+<li>Open <code>http://127.0.0.1:2567</code> in a second browser context.</li>
+<li>Confirm it auto-joins as Blue captain.</li>
+<li>Set mode to <code>1v1</code>, choose one character per side, ready both captains, and confirm the shared preview starts.</li>
+<li>Restart the playtest server.</li>
+<li>Repeat with mode <code>2v2</code>, choose two characters per side, ready both captains, and confirm four preview vehicles appear with red captain owning both red units and blue captain owning both blue units.</li>
+</ul>
+<ul>
+<li>[ ] <strong>Step 6: Commit docs and verification results</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+git add README.md README.html docs/SESSION_HANDOFF.md docs/SESSION_HANDOFF.html docs/PRODUCTION_PLAN.md docs/PRODUCTION_PLAN.html docs/VERSION_LOG.md docs/VERSION_LOG.html docs/index.html
+
+git commit -m &quot;docs: update auto-room playtest runbook&quot;
+
+</code></pre>
+<p>---</p>
+<h2>Final Quality Gate</h2>
+<p>Before calling the implementation complete, run:</p>
+<pre><code class="language-powershell">
+git status --short
+
+npm test
+
+npm run build
+
+npm run verify:runtime-roster
+
+</code></pre>
+<p>Expected:</p>
+<ul>
+<li>Only unrelated pre-existing worktree changes remain unstaged.</li>
+<li>All tests pass.</li>
+<li>Build passes.</li>
+<li>Runtime roster verification passes.</li>
+</ul>
+<p>If any command fails, stop and fix the failing slice before continuing.</p>
+    </article>
+  </main>
+</body>
+</html>

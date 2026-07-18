@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gravity Canyon UI Color Kit</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        HTML reading copy generated from <a href="UI_COLOR_KIT.md">docs/UI_COLOR_KIT.md</a> on 2026-07-18.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Gravity Canyon UI Color Kit</h1>
+<p>This is the v0 playtest UI palette for Gravity Canyon. It is a working color kit, not a final brand lock.</p>
+<h2>Palette Direction</h2>
+<p>The current lobby direction is called Canyon Dusk. It should feel like a readable mineral control panel in late canyon light: canyon rock, worn metal, muted teal, copper edges, and restrained team markers. It should not lean on the bright orange and cyan pairing that makes the lobby feel too close to GunBound, and it should not collapse into a mostly black night-mode UI.</p>
+<h2>Core Tokens</h2>
+<table>
+<thead><tr>
+<th>Token</th>
+<th>Value</th>
+<th>Use</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>--gc-ui-bg</code></td>
+<td><code>#17222a</code></td>
+<td>Lobby and modal base</td>
+</tr>
+<tr>
+<td><code>--gc-ui-surface</code></td>
+<td><code>#21313a</code></td>
+<td>Primary control surfaces</td>
+</tr>
+<tr>
+<td><code>--gc-ui-surface-raised</code></td>
+<td><code>#2b3c45</code></td>
+<td>Cards, picker rows, seat bodies</td>
+</tr>
+<tr>
+<td><code>--gc-ui-surface-soft</code></td>
+<td><code>#354a52</code></td>
+<td>Hover and active-but-not-critical states</td>
+</tr>
+<tr>
+<td><code>--gc-ui-text-strong</code></td>
+<td><code>#d6c4a8</code></td>
+<td>Primary labels on dark surfaces</td>
+</tr>
+<tr>
+<td><code>--gc-ui-text-body</code></td>
+<td><code>#b9aa92</code></td>
+<td>Normal readable body text</td>
+</tr>
+<tr>
+<td><code>--gc-ui-text-muted</code></td>
+<td><code>#938575</code></td>
+<td>Secondary text that still needs to be readable</td>
+</tr>
+<tr>
+<td><code>--gc-ui-accent-mineral</code></td>
+<td><code>#427579</code></td>
+<td>Selected controls, ownership, confirmation</td>
+</tr>
+<tr>
+<td><code>--gc-ui-accent-copper</code></td>
+<td><code>#a66f3f</code></td>
+<td>Borders, highlights, host-console edge</td>
+</tr>
+<tr>
+<td><code>--gc-team-red</code></td>
+<td><code>#b85f5f</code></td>
+<td>Red-team borders and spawn markers</td>
+</tr>
+<tr>
+<td><code>--gc-team-blue</code></td>
+<td><code>#5f8fb8</code></td>
+<td>Blue-team borders and spawn markers</td>
+</tr>
+</tbody></table>
+<h2>Readability Rules</h2>
+<ul>
+<li>Put dense labels and player-facing text on dark surfaces.</li>
+<li>Prefer lifted charcoal and mineral surfaces over black panels for the lobby shell.</li>
+<li>Do not place white or gray text directly on light blue, cyan, or busy map art.</li>
+<li>Use muted sand for important labels and softer clay-sand for secondary labels. Avoid pure white for routine lobby text.</li>
+<li>Map-selector cards are buttons, but they must keep dark card styling instead of inheriting the generic pale action-button surface.</li>
+<li>Hover states must preserve the same text contrast as rest states. Do not let generic pale action-button hover styling override dark option cards.</li>
+<li>Small status badges should avoid light text on light yellow or gold fills. Prefer dark badge surfaces with sand text, or dark text on a larger warm surface with tested contrast.</li>
+<li>Use team red and team blue as borders, badges, and spawn markers instead of whole-panel fills.</li>
+<li>Use copper as a restrained accent. It should not become the main console fill.</li>
+<li>Let map thumbnails and preview art carry local color, but keep map names and descriptions on dark overlays.</li>
+</ul>
+<h2>Current UI Contract</h2>
+<p>The lobby CSS contract test in <code>src/onlineLobbyStyles.test.ts</code> guards the first version of this kit. When changing lobby colors, update the tokens and the test together so contrast regressions are intentional and reviewable.</p>
+    </article>
+  </main>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mounted Gameplay Asset Design</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        HTML reading copy generated from <a href="2026-06-07-mounted-gameplay-asset-design.md">docs/superpowers/specs/2026-06-07-mounted-gameplay-asset-design.md</a> on 2026-07-18.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Mounted Gameplay Asset Design</h1>
+<p>Date: 2026-06-07</p>
+<p>Project: Gravity Canyon</p>
+<h2>Goal</h2>
+<p>Define the next gameplay sprite direction without replacing the current runtime assets by accident.</p>
+<p>The current assets remain the <code>v0</code> runtime baseline. Future mounted character and vehicle probes should be generated separately, reviewed, and promoted only after explicit approval.</p>
+<h2>Non-Destructive Migration Rule</h2>
+<p>Do not overwrite stable runtime aliases in <code>public/assets</code> during art-direction exploration.</p>
+<p>Use this flow:</p>
+<ol>
+<li>Keep current Nova/Vesper character and vehicle sprites as the playable baseline.</li>
+<li>Save new probes under <code>work/</code> or versioned <code>public/assets/sprite-variants/...</code>.</li>
+<li>Compare probes against the current baseline.</li>
+<li>Promote a winner to <code>public/assets</code> only after the user explicitly chooses it.</li>
+<li>Preserve replaced assets in <code>sprite-variants</code>, git history, or both.</li>
+</ol>
+<p>Existing assets can continue to serve as:</p>
+<ul>
+<li>runtime fallback,</li>
+<li>style reference,</li>
+<li>source identity reference,</li>
+<li>Defeated KO pose/expression reference,</li>
+<li>collection-art reference,</li>
+<li>comparison baseline.</li>
+</ul>
+<h2>Signature Unit Model</h2>
+<p>The playable unit should read as a signature character-plus-vehicle pair.</p>
+<p>Each pilot has a vehicle family that feels authored for them. Nova rides her red arcade artillery rig, Vesper rides her blue tech/glitch rig, and future pilots should have similarly coherent pair identities. This prevents the roster from feeling like separate characters and unrelated vehicles loosely composited together.</p>
+<p>Render order:</p>
+<ol>
+<li>Vehicle gameplay sprite.</li>
+<li>Character gameplay sprite layered in front of, on top of, or partly overlapping the vehicle.</li>
+<li>Combat labels, HP, aim UI, and turn indicators above both as needed.</li>
+</ol>
+<p>The vehicle remains the gameplay anchor. Hitboxes, movement, cannon behavior, and combat stats belong to the vehicle/unit rules, not the character art silhouette.</p>
+<p>Do not bake the pilot into the vehicle sprite for the default pipeline. Keeping vehicle and character art separate preserves outfit and vehicle-skin customization, even when the art direction treats the pair as one authored unit.</p>
+<h2>Active-State Pose Direction</h2>
+<p>Default and intense shooting sprites should be purpose-built mounted poses, not full-body collection art scaled down.</p>
+<p>Allowed pose families:</p>
+<ul>
+<li>seated in or on the vehicle,</li>
+<li>kneeling or crouching on the chassis,</li>
+<li>leaning on the large cannon,</li>
+<li>bracing behind the weapon,</li>
+<li>perched on the vehicle with legs compactly visible,</li>
+<li>otherwise riding or using the vehicle in a clear combat pose.</li>
+</ul>
+<p>Pose constraints:</p>
+<ul>
+<li>The character should feel attached to the vehicle, not standing separately beside it.</li>
+<li>Legs may be visible when they are compact and clearly mounted on the vehicle.</li>
+<li>Full standing poses beside the vehicle are not the default-state target.</li>
+<li>Face, hair, and upper body must remain readable at match scale.</li>
+<li>Adult anime proportions are the target for Nova and Vesper production probes. Avoid semi-chibi or super-deformed face/body proportions unless a later cosmetic set explicitly asks for that style.</li>
+<li>The pose must not obscure aim feedback, HP labels, the cannon direction, or important terrain contact.</li>
+<li>The character art may be attractive and stylish, but match readability comes first.</li>
+</ul>
+<h2>Character And Vehicle Cosmetics</h2>
+<p>Cosmetic sets may define compatible mounted poses, outfits, and vehicle skins inside a pilot's signature vehicle family.</p>
+<p>Example:</p>
+<ul>
+<li>A racer set might use a confident kneeling-on-vehicle pose.</li>
+<li>A tech set might use a crouched side-panel or cannon-brace pose.</li>
+<li>A heavy/tactical set might use a seated braced pose.</li>
+</ul>
+<p>Loadout slots remain separate:</p>
+<ul>
+<li>character outfit,</li>
+<li>vehicle skin,</li>
+<li>nameplate/banner,</li>
+<li>optional later effects.</li>
+</ul>
+<p>Mix-and-match is allowed when readable inside the signature family. If a specific pose only works with a specific vehicle skin, mark that pairing as a set-specific exception later.</p>
+<h2>Defeated KO-State Direction</h2>
+<p>Defeated KO is the preferred asset/state term. &quot;KO&quot; remains the facial readability language: crossed or rolled-up pupils, sleepy compressed white eyes, and tongue blep details where appropriate.</p>
+<p>Defeated KO states can break the active mounted pose when it improves readability, but the signature unit relationship should remain visible whenever possible.</p>
+<p>Allowed Defeated KO staging:</p>
+<ul>
+<li>pilot collapsed over the damaged vehicle,</li>
+<li>pilot slumped in front of the vehicle,</li>
+<li>pilot partly draped on or against the vehicle,</li>
+<li>pilot collapsed near the damaged vehicle when over/on staging does not read at gameplay scale,</li>
+<li>destroyed vehicle sprite behind or under the Defeated KO character.</li>
+</ul>
+<p>Defeated KO constraints:</p>
+<ul>
+<li>Nova's current prone KO sample remains an important face/eye reference and should not be discarded casually.</li>
+<li>Nova's next Defeated KO direction should explore her collapsed over her damaged red signature vehicle.</li>
+<li>Vesper's Defeated KO should avoid the rejected goofy/dumb glitch-collapse direction and should fit her blue tech/glitch rig.</li>
+<li>Defeated KO faces should preserve readable crossed or rolled-up pupils, sleepy compressed white eyes, and a small tongue blep where appropriate.</li>
+<li>Defeated KO art must not change hitboxes or combat outcomes.</li>
+</ul>
+<h2>First Production Probe Recommendation</h2>
+<p>The next art probe should be purpose-built around mounted compositions, not around cropping existing full-body art.</p>
+<p>Create disposable probes for:</p>
+<ul>
+<li>Nova default mounted pose: confident, readable, vehicle-interaction pose.</li>
+<li>Nova intense mounted pose: same mounted anchor, more aiming/firing energy.</li>
+<li>Vesper default mounted pose: cooler tech-pilot vehicle interaction, not goofy.</li>
+<li>Nova Defeated KO over-vehicle pose: adult anime proportions, defeated face readability, collapsed over her damaged red rig.</li>
+<li>Vesper Defeated KO v2: adult anime defeated pose closer in quality to Nova's sample, staged with or near/on her blue tech rig.</li>
+</ul>
+<p>Review should happen through direct image inspection or simple static mockups, not the Superpowers visual companion, because the browser companion proved too hard to read and click in the Codex app.</p>
+    </article>
+  </main>
+</body>
+</html>

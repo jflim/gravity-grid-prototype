@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gravity Canyon Prototype</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        HTML reading copy generated from <a href="README.md">README.md</a> on 2026-07-18.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Gravity Canyon Prototype</h1>
+<p>First playable local artillery prototype for Gravity Canyon.</p>
+<h2>What Is Built</h2>
+<ul>
+<li>Browser-based Phaser prototype.</li>
+<li>Working title updated to Gravity Canyon.</li>
+<li>Four local test units in a 2v2-style roster: Nova and Kaelii on red, Vesper and Perlah on blue.</li>
+<li>Ringworks Basin is the local demo default, converted from the fixed v1 map contract into destructible heightmap terrain under the stable <code>ring-basin</code> map id.</li>
+<li>Keyboard movement, 5-90 degree elevation aiming, and hold/release shot power.</li>
+<li>Left/Right input turns the vehicle, character, and aim direction before moving.</li>
+<li>Facing-aware aim controls so each side's Up/Down input feels consistent.</li>
+<li>Terrain movement allows playable downhill travel and intentional void falls, while terrain faces steeper than the climb-angle limit are not driveable and vehicles need enough grounded footing to stay settled.</li>
+<li>Unsupported vehicles now enter explicit sliding or falling motion before any Void Dropped result is applied.</li>
+<li>Top-safe wind badge visible to everyone; active turn timing lives above the active vehicle only.</li>
+<li>Manifest-backed non-voice SFX for turn ticks, movement, weapon fire, impact, hit, damage KO, and Void Dropped feedback, with procedural fallback when no file is assigned.</li>
+<li>Fixed screen-space command deck with active vehicle portrait, aim dial, movement range meter, and a prominent launch-power meter.</li>
+<li>The command deck keeps a larger bottom safety gutter so control content is not clipped by the browser edge.</li>
+<li>The playable map renders only above the command deck so terrain and void visuals do not intersect the controls.</li>
+<li>Desktop viewport contract: the game is designed around 1600 x 900, can present up to 2400 x 1350 for readability on larger displays, centers in larger browser windows, and blocks below a 1366 x 768 visible viewport.</li>
+<li>Raised turn timer, team/HP bar, name, and class labels above playable unit art.</li>
+<li>Vehicle sprites tilt with terrain slope for clearer ground contact.</li>
+<li>Battlefield unit art is scaled as readable game pieces, with face-first default runtime sprites for Vesper, Kaelii, and Perlah while high-detail art remains available in HUD/presentation surfaces.</li>
+<li>World-space muzzle aim arrow and ground movement range rail for the active player while positioning.</li>
+<li>Projectile physics with gravity and turn-based wind.</li>
+<li>Full-battlefield aiming camera so both teams stay visible before firing.</li>
+<li>Stable full-battlefield projectile view after firing, with camera recentering only if a shot leaves the readable frame.</li>
+<li>Firing commits the turn immediately, so the active vehicle cannot move during projectile flight or impact resolution.</li>
+<li>Swept projectile-edge collision checks so fast shots impact at the first visible terrain or vehicle contact.</li>
+<li>Visible prototype combat hulls define one shared vehicle-only hit zone for all v1 units.</li>
+<li>Runtime gameplay sprites are the default match-view assets for faster hosted playtest loading; full-unit concept preview sprites remain available with <code>?conceptAssets=1</code> for art review.</li>
+<li>Collision art review rules keep pilot poses visually compatible with the vehicle-only hit zone.</li>
+<li>Crater deformation on impact.</li>
+<li>Terrain can be blasted through into a visible void beneath the stage, with a persistent danger layer anchored to the current map's lowest playable terrain.</li>
+<li>Temporary impact rings showing crater size and splash damage range.</li>
+<li>Floating combat markers call out direct hits, splash hits, knockback, HP KOs, and Void Dropped eliminations.</li>
+<li>Round starts now use the playable Ringworks Basin v1 map, with exact four-seat spawns, two readable bridge gaps, a central destructible ring cap, deeper side bowls, and high-lip staging shelves for map-feel testing.</li>
+<li>Prototype Bunger shot behavior: larger/deeper excavation, knockback, slope sliding, and Void Dropped KOs, now tuned toward precise 2-3 shot ring-outs.</li>
+<li>Localized post-impact vehicle settling so distant vehicles are not randomly displaced by unrelated craters.</li>
+<li>Splash/direct damage, HP bars, turn switching, timeout, round win detection, and automatic round reset.</li>
+<li>Layered gameplay sprites: one standalone vehicle sprite plus one standalone playable-character sprite.</li>
+<li>Generated character sprite states for Nova and Vesper: default, KO, and intense shooting.</li>
+<li>Accepted Nova and Vesper full-unit intense runtime test sprites for concept-preview charging.</li>
+<li>Accepted Kaelii and Perlah v1 test runtime unit sprites: default, intense shooting, Defeated KO, vehicle default, and vehicle destroyed.</li>
+<li>Generated destroyed vehicle sprites pair with KO character sprites or full-unit KO sprites when a vehicle is no longer alive.</li>
+<li>Style B 2v2 concept art can be shown as a faint backdrop reference with <code>?styleReference=1</code>.</li>
+<li>High-detail anime vehicle/pilot portraits plus standalone generated gameplay sprites for Nova and Vesper.</li>
+<li>First Colyseus online foundation:</li>
+<li>local multiplayer server,</li>
+<li>private room create/join by room id,</li>
+<li>two player slots,</li>
+<li>ready checks,</li>
+<li>server-owned room/player state,</li>
+<li>placeholder capsule reward and nameplate equip state,</li>
+<li>server-owned combat preview state with round, turn, wind, active vehicle, HP, winner, and validated preview shot actions.</li>
+<li>Browser client uses the vendored Colyseus browser SDK at <code>public/vendor/colyseus.js</code> to keep Vite dev mode stable on Windows.</li>
+<li>The local map-review demo hides the Online Alpha room panel by default; playtest launch mode shows it automatically.</li>
+<li>Playtest launch mode opens a Join Playtest screen for the player's locked room display name, then joins one shared room lobby and launches the Phaser match scene from server-owned setup after all active seats are claimed, unit-selected, and ready.</li>
+<li>The playtest lobby now presents Red Team and Blue Team side by side, lets players claim active seats, keeps unclaimed seats visually empty, locks display names after joining the room, and treats choosing a Unit with a Pilot and Vehicle as a separate step before readying.</li>
+<li>Host-owned room settings now include Duel/Doubles mode, Best of 1/Best of 3 match length, and fixed-pool map select/random, with non-host and gameplay-phase changes rejected by the server.</li>
+<li>The online match start now consumes server-owned setup metadata from claimed seats, character picks, match length, and map choice, including target score, chosen map id/name, turn sequence, and map-spawned vehicles.</li>
+<li>The lobby labels the current Lobby Host, presents the generated playtest URL as a shared playtest room instead of exposing the internal <code>auto-room</code> id, and leaves mode changes host-only.</li>
+<li>Placeholder capsule/nameplate state remains server-side, but those controls are hidden from the focused playtest lobby until the cosmetic loop is ready.</li>
+<li>Public preview mode can serve the built client and Colyseus room server from one local port for internet sharing through a trusted tunnel, while staying localhost-only unless <code>HOST=0.0.0.0</code> is explicitly set.</li>
+<li>Playtest pages show a visible loading status and report the failed asset key if Phaser cannot load a required image.</li>
+</ul>
+<h2>Run</h2>
+<p>This project uses npm scripts as the primary task runner because Gravity Canyon is a Node/TypeScript app and npm is already required for dependencies. On Windows, <code>make</code> is not installed by default, while <code>npm run ...</code> works anywhere Node is available. A Makefile could be added later as a convenience wrapper, but npm scripts remain the source of truth.</p>
+<p>Development server:</p>
+<pre><code class="language-powershell">
+npm install
+
+npm run dev
+
+</code></pre>
+<p>Then open:</p>
+<pre><code class="language-text">
+http://127.0.0.1:5173
+
+</code></pre>
+<p>To preview the current Tiled-authored Idol Canyon draft in the local match scene, open:</p>
+<pre><code class="language-text">
+http://127.0.0.1:5173/?map=idol-canyon-supine-draft
+
+</code></pre>
+<p>Tiled map authoring:</p>
+<pre><code class="language-powershell">
+npm run maps:sync
+
+</code></pre>
+<p>Edit tracked Tiled source maps under <code>content/tiled/</code>, then run <code>npm run maps:sync</code> to regenerate the runtime files under <code>shared/content/maps/</code>. The game imports the generated <code>.tiled.json</code> runtime copies, so avoid hand-editing those unless you are debugging the sync pipeline itself.</p>
+<p>If another Vite server is already using <code>5173</code>, Vite will print the next available port, usually:</p>
+<pre><code class="language-text">
+http://127.0.0.1:5174
+
+</code></pre>
+<p>The multiplayer server runs at:</p>
+<pre><code class="language-text">
+ws://127.0.0.1:2567
+
+</code></pre>
+<p>Client-only development:</p>
+<pre><code class="language-powershell">
+npm run dev:client -- --port 5173
+
+</code></pre>
+<p>Production build:</p>
+<pre><code class="language-powershell">
+npm run build
+
+</code></pre>
+<p>Browser visual smoke check after a local server is running:</p>
+<pre><code class="language-powershell">
+npm run verify:browser-visual -- http://127.0.0.1:5173
+
+</code></pre>
+<p>The command uses installed Chrome/Edge in headless mode and writes a screenshot under <code>work/browser-visual/</code>. This is the default local visual verification path for Codex sessions; use the Codex in-app Browser only when interactive browser control is explicitly needed.</p>
+<p>Generate HTML reading copies for the human-facing markdown docs:</p>
+<pre><code class="language-powershell">
+npm run docs:html
+
+</code></pre>
+<p>Runtime roster asset check:</p>
+<pre><code class="language-powershell">
+npm run verify:runtime-roster
+
+</code></pre>
+<p>Normalize battlefield unit frames after selecting a new default candidate:</p>
+<pre><code class="language-powershell">
+npm run assets:normalize-battlefield
+
+</code></pre>
+<p>Regenerate optimized WebP delivery assets from the PNG runtime sources:</p>
+<pre><code class="language-powershell">
+npm run optimize:assets
+
+</code></pre>
+<p>Public internet playtest from this computer:</p>
+<pre><code class="language-powershell">
+npm run playtest
+
+</code></pre>
+<p>This builds the project, serves the built game and Colyseus server locally, starts a Cloudflare quick tunnel, and prints the public URL to share. The local game is also available at:</p>
+<pre><code class="language-text">
+http://127.0.0.1:2567
+
+</code></pre>
+<p>For a playtest server without a tunnel, run:</p>
+<pre><code class="language-powershell">
+npm run playtest:local
+
+</code></pre>
+<p>This keeps the game server bound to <code>127.0.0.1</code> on your machine; the tunnel is the public entry point when <code>npm run playtest</code> is used.</p>
+<p>Security boundary for public preview:</p>
+<ul>
+<li>Only the built <code>dist</code> game files, <code>/healthz</code>, and the Colyseus room endpoint are served.</li>
+<li>Directory listing is not enabled.</li>
+<li>The server does not expose your source tree, shell, editor, local files outside <code>dist</code>, or machine admin access.</li>
+<li>Stop the terminal running <code>npm run playtest</code> when the playtest is over.</li>
+<li>Do not run the command from an elevated/admin terminal.</li>
+<li>Prefer a tunnel over router port forwarding. If you intentionally need direct network binding, set <code>HOST=0.0.0.0</code> yourself and only forward the single chosen game port.</li>
+</ul>
+<p>Open the built file:</p>
+<pre><code class="language-text">
+dist/index.html
+
+</code></pre>
+<h2>Command Reference</h2>
+<table>
+<thead><tr>
+<th>Command</th>
+<th>Use When</th>
+<th>What It Does</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>npm install</code></td>
+<td>First setup or dependency changes</td>
+<td>Installs project dependencies into <code>node_modules</code>.</td>
+</tr>
+<tr>
+<td><code>npm run dev</code></td>
+<td>Normal local development</td>
+<td>Runs the Colyseus server and Vite client together. Client: <code>http://127.0.0.1:5173</code>; server: <code>ws://127.0.0.1:2567</code>.</td>
+</tr>
+<tr>
+<td><code>npm run dev:client -- --port 5173</code></td>
+<td>Client-only UI work</td>
+<td>Runs only the Vite client on the chosen port. The Colyseus server must be started separately for online panel checks.</td>
+</tr>
+<tr>
+<td><code>npm run dev:server</code></td>
+<td>Server-only room work</td>
+<td>Runs only the Colyseus server in watch mode.</td>
+</tr>
+<tr>
+<td><code>npm run build</code></td>
+<td>Before commits and public preview</td>
+<td>Type-checks and builds both client and server targets.</td>
+</tr>
+<tr>
+<td><code>npm run build:client</code></td>
+<td>Client build debugging</td>
+<td>Type-checks the Phaser/Vite client and writes the built static app to <code>dist</code>.</td>
+</tr>
+<tr>
+<td><code>npm run build:server</code></td>
+<td>Server type-check debugging</td>
+<td>Type-checks the Node/Colyseus server.</td>
+</tr>
+<tr>
+<td><code>npm test</code></td>
+<td>Before commits or after behavior changes</td>
+<td>Runs all server and client unit tests.</td>
+</tr>
+<tr>
+<td><code>npm run docs:html</code></td>
+<td>After markdown doc edits</td>
+<td>Regenerates HTML reading copies and map review pages.</td>
+</tr>
+<tr>
+<td><code>npm run verify:runtime-roster</code></td>
+<td>After runtime asset or roster edits</td>
+<td>Checks stable runtime sprite aliases and roster wiring.</td>
+</tr>
+<tr>
+<td><code>npm run assets:normalize-battlefield</code></td>
+<td>After selecting a new default unit candidate</td>
+<td>Rebuilds default match sprites and their existing charge-linked frames with consistent transparent bounds and bottom anchors for map-scale testing.</td>
+</tr>
+<tr>
+<td><code>npm run optimize:assets</code></td>
+<td>After promoting or editing runtime art</td>
+<td>Regenerates compressed WebP delivery files from the PNG art sources.</td>
+</tr>
+<tr>
+<td><code>npm run maps:sync</code></td>
+<td>After editing tracked Tiled <code>.tmj</code> source maps</td>
+<td>Validates authored Tiled maps and regenerates the runtime <code>.tiled.json</code> files consumed by the local demo.</td>
+</tr>
+<tr>
+<td><code>npm run playtest</code></td>
+<td>Trusted internet playtest from this computer</td>
+<td>Builds the project, serves the built client and Colyseus server from <code>http://127.0.0.1:2567</code>, starts a Cloudflare quick tunnel, and prints the share URL.</td>
+</tr>
+<tr>
+<td><code>npm run playtest:local</code></td>
+<td>Local playtest server without a tunnel</td>
+<td>Builds the project and serves playtest mode locally at <code>http://127.0.0.1:2567</code>.</td>
+</tr>
+<tr>
+<td><code>npm run start:public</code></td>
+<td>Lower-level preview server only</td>
+<td>Serves the built client and Colyseus server from <code>http://127.0.0.1:2567</code>; <code>npm run playtest</code> is preferred for normal sharing.</td>
+</tr>
+<tr>
+<td><code>npm run preview</code></td>
+<td>Local static build preview</td>
+<td>Runs Vite's local preview server for the built client only; it is not the multiplayer preview server.</td>
+</tr>
+</tbody></table>
+<h2>Planning</h2>
+<p>Gravity Canyon uses an HTML-first reading workflow:</p>
+<ul>
+<li>Read and share the generated HTML docs whenever possible.</li>
+<li>Edit the markdown source files for canonical text changes.</li>
+<li>Run <code>npm run docs:html</code> after editing markdown docs; this is a local script pipeline and must not depend on AI/manual conversion.</li>
+<li>Use custom HTML directly for visual, navigational, or review-heavy artifacts such as map previews, module maps, code walkthroughs, PR explanations, and annotated architecture reviews.</li>
+<li>If a markdown document cannot be converted to useful HTML by local scripts, either improve the local converter or make that document an intentional HTML source artifact.</li>
+</ul>
+<p>Primary reading links:</p>
+<ul>
+<li>HTML docs index: <a href="docs/index.html">docs/index.html</a></li>
+<li>Game Design Document: <a href="docs/GDD.html">docs/GDD.html</a> (source: <code>docs/GDD.md</code>)</li>
+<li>Production Plan and current v1 scope authority: <a href="docs/PRODUCTION_PLAN.html">docs/PRODUCTION_PLAN.html</a> (source: <code>docs/PRODUCTION_PLAN.md</code>)</li>
+<li>Technical Design Document: <a href="docs/TECHNICAL_DESIGN.html">docs/TECHNICAL_DESIGN.html</a> (source: <code>docs/TECHNICAL_DESIGN.md</code>)</li>
+<li>Original v1 contract snapshot: <a href="docs/V1_PLAYTEST_ALPHA.html">docs/V1_PLAYTEST_ALPHA.html</a></li>
+<li>Version log: <a href="docs/VERSION_LOG.html">docs/VERSION_LOG.html</a> (source: <code>docs/VERSION_LOG.md</code>)</li>
+<li>Git workflow: <a href="docs/GIT_WORKFLOW.html">docs/GIT_WORKFLOW.html</a> (source: <code>docs/GIT_WORKFLOW.md</code>)</li>
+<li>Sprite asset workflow: <a href="docs/SPRITE_ASSET_WORKFLOW.html">docs/SPRITE_ASSET_WORKFLOW.html</a> (source: <code>docs/SPRITE_ASSET_WORKFLOW.md</code>)</li>
+<li>Sound asset workflow: <a href="docs/SOUND_ASSET_WORKFLOW.html">docs/SOUND_ASSET_WORKFLOW.html</a> (source: <code>docs/SOUND_ASSET_WORKFLOW.md</code>)</li>
+<li>Session handoff: <a href="docs/SESSION_HANDOFF.html">docs/SESSION_HANDOFF.html</a> (source: <code>docs/SESSION_HANDOFF.md</code>)</li>
+</ul>
+<h2>Controls</h2>
+<ul>
+<li>Left/Right arrows: face and move active vehicle.</li>
+<li>Up/Down arrows: raise/lower barrel relative to the vehicle's facing direction, up to vertical 90-degree aim.</li>
+<li>Hold/release Spacebar: charge and fire.</li>
+<li>R: restart round.</li>
+<li>H or the <code>Collision zones</code> checkbox: show/hide prototype vehicle collision zones. Zones are visible by default while collision and map scale are being tuned; add <code>?collisionZones=0</code> to start hidden.</li>
+<li>M: mute/unmute minimal prototype sound effects.</li>
+</ul>
+<h2>Terms</h2>
+<ul>
+<li>Turn: one active vehicle's action window. The turn ends when that vehicle fires, times out, or can no longer act.</li>
+<li>Round: one fresh battlefield from spawn until one team has no alive vehicles left. A falling vehicle becomes Void Dropped only when its vehicle collision hull touches the visible void zone, then it is set to 0 HP and not alive.</li>
+<li>Match: a future multiplayer room/session made of one or more rounds. The local prototype does not track match score yet, so it currently loops into the next round automatically.</li>
+</ul>
+<h2>Notes</h2>
+<ul>
+<li>This is the local feel prototype, not the multiplayer architecture yet.</li>
+<li>The multiplayer architecture is now scaffolded, and online match start now uses the server-owned map, seats, character picks, and turn sequence.</li>
+<li>Phaser projectile/terrain gameplay is still local-only after match start until server-authoritative movement, fire, terrain, damage, and round results are wired into the match scene.</li>
+<li>The online lobby settings are server-owned and locked once gameplay starts; match length and map choice feed the server setup that seeds the Phaser match.</li>
+<li>Terrain uses a heightmap for speed. Pixel-mask terrain can replace it later if needed.</li>
+<li>There is no predicted trajectory line. The muzzle arrow shows current direction, but shot landing is still based on angle, power, wind, and memory.</li>
+<li>Movement treats playable downhill and intentional void falling as allowed traversal; steep uphill or steep non-void downhill faces are blocked by the climb-angle rule, and vehicles without enough supported footing fall instead of perching on cliff edges.</li>
+<li>Vehicle sprites rotate to match the local terrain slope while labels and meters stay horizontal.</li>
+<li>Players can intentionally drive into holes or off the map, which starts falling motion; the vehicle is only eliminated once its vehicle collision hull reaches the visible void zone.</li>
+<li>Every weapon affects terrain. Bunger weapons are tuned to affect terrain the most.</li>
+<li>Nova is currently set up as the prototype Bunger class so terrain knock-off play can be tested.</li>
+<li>Kaelii and Perlah are accepted as v1 runtime test units for local play; their Bouncer and Spark class-specific shot behavior is still future work, so they currently use the baseline non-Bunger projectile behavior.</li>
+<li>Deep enough craters expose the void under the terrain instead of stopping at a safe floor; the visible void band starts below the lowest playable terrain shelf so land does not appear inside the danger zone.</li>
+<li>The current crater, splash, and Bunger knockback radii are intentionally smaller so map KOs require more precision.</li>
+<li>Impact rings are temporary debugging/readability feedback: inner ring is crater/terrain effect, outer ring is splash damage range.</li>
+<li>Direct-hit and splash damage use the vehicle hit zone, not pilot hair, pose, outfit, or cosmetic silhouette.</li>
+<li>After a shot, the turn is committed immediately. There is intentionally no post-shot movement window.</li>
+<li>After a shot or movement creates sliding/falling vehicles, turn flow waits for that vehicle motion to settle or reach the void before advancing.</li>
+<li>A round ends when one team has no alive vehicles left. In this prototype, alive means <code>alive = true</code> and HP above 0.</li>
+<li>Finished rounds show the result briefly, then start a fresh round automatically. R still restarts immediately.</li>
+<li>Wind is global round information shown in a fixed top HUD badge; turn time is shown above the active vehicle.</li>
+<li>Launch power, movement range, active vehicle identity, and aim angle live in a fixed centered command deck.</li>
+<li>Active player also gets a world-space aim arrow, raised turn timer badge, and ground movement range rail so movement decisions can be read without covering the character art.</li>
+<li>Prototype vehicle collision zones are visible by default while collision and terrain scale are being tuned, and can be toggled off with <code>H</code>, the on-screen checkbox, or <code>?collisionZones=0</code>.</li>
+<li>Prototype audio is non-voice and manifest-backed: turn ticks, movement pulses, class-flavored weapon launches, impacts, hit feedback, damage KOs, and Void Dropped cues can be assigned to files in <a href="docs/SOUND_ASSET_WORKFLOW.html">docs/SOUND_ASSET_WORKFLOW.md</a>. Missing manifest entries fall back to procedural sounds. <code>M</code> toggles sound.</li>
+<li>The game camera reserves the playfield above a fixed centered command deck, frames the visible void bottom just above that boundary, and keeps the battlefield centered when the camera view is wider than the map.</li>
+<li>The browser shell is presentation-capped and centered so larger or ultrawide windows improve readability without changing terrain, spawns, collision, void placement, projectile behavior, or the strategic battlefield view.</li>
+<li>Current sprites are first-pass generated assets, not final production sprites.</li>
+<li>Gameplay rendering uses separate layers for vehicle and playable character sprites.</li>
+<li>Active runtime sprites use stable PNG source filenames and optimized WebP delivery filenames in <code>public/assets</code>; versioned experiments live under <code>public/assets/sprite-variants</code>.</li>
+<li>When default runtime unit art changes, run <code>npm run assets:normalize-battlefield</code>, then <code>npm run optimize:assets</code>, then <code>npm run verify:runtime-roster</code> so hosted playtest links serve compressed art with consistent map-scale bounds.</li>
+<li>Each vehicle look currently needs a default gameplay sprite and a destroyed gameplay sprite.</li>
+<li>Each playable character currently needs three generated gameplay states: default, KO, and intense shooting.</li>
+<li>Character states should be integrated artwork, not code-drawn facial overlays on top of default art.</li>
+<li>Match sprites must pass the collision art rule in <a href="docs/COLLISION_ART_RULE.html">docs/COLLISION_ART_RULE.md</a>: pilot poses need to read as protected by or tucked into the vehicle hit zone.</li>
+<li>KO character art should use literal crossed or rolled-up eyes, not spiral/hypnotic eyes.</li>
+<li>Gameplay sprites are separate from portrait art so battlefield readability can be tuned without losing high-detail character art.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

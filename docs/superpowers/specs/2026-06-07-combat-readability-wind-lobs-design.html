@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Combat Readability, Wind, And Lob Play Design</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        HTML reading copy generated from <a href="2026-06-07-combat-readability-wind-lobs-design.md">docs/superpowers/specs/2026-06-07-combat-readability-wind-lobs-design.md</a> on 2026-07-18.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Combat Readability, Wind, And Lob Play Design</h1>
+<h2>Goal</h2>
+<p>Make Gravity Canyon read like a skillful artillery game: shots that visually hit a unit should count, high-angle lobs should be the normal path to winning through terrain, and wind should matter without stalling matches.</p>
+<h2>Current Problem</h2>
+<p>The prototype currently tests direct projectile hits against a small circular anchor around each vehicle. The new unit concept sprites are much larger, so a shot can appear to hit the pilot or vehicle art without dealing direct damage. Wind is present but mild enough that it rarely changes decisions. The current terrain shape can still allow too many simple direct-fire exchanges.</p>
+<h2>Slice 1: Combat Hull</h2>
+<p>Each unit gets a gameplay combat hull that covers the vehicle body plus mounted pilot mass. The hull is not pixel-perfect and does not include every decorative hair, strap, or silhouette edge. It should be visible by default during prototype tuning and toggleable with <code>H</code>.</p>
+<p>The hull becomes the direct-hit collision shape. Splash remains distance-based from the unit anchor for now so the current damage model stays stable.</p>
+<h2>Slice 2: Damage Markers</h2>
+<p>Impacts should produce short-lived world-space markers that explain what happened:</p>
+<ul>
+<li><code>DIRECT -N</code> for hull hits.</li>
+<li><code>SPLASH -N</code> for blast damage without a direct hull hit.</li>
+<li><code>SHOVED</code> for Bunger knockback.</li>
+<li><code>KO</code> for HP defeat.</li>
+<li><code>BUNGED</code> for fall or void defeat.</li>
+</ul>
+<p>The markers are gameplay-readable debug feedback, not final VFX.</p>
+<h2>Slice 3: Wind Bands</h2>
+<p>Wind should be stronger and more meaningful at higher altitude while staying capped and readable. Low direct shots get mild wind influence. High lobs pass through upper-air current and require wind reads.</p>
+<p>The UI should distinguish low wind from high current so misses feel learnable rather than random.</p>
+<h2>Slice 4: Map And Spawn Prototypes</h2>
+<p>Round start should choose from a small pool of terrain and spawn archetypes that reduce flat direct-fire duels and create natural cover. Good archetypes include twin ridges, center walls, shelves, basins, and broken canyon gaps.</p>
+<p>Every archetype must keep both players able to make progress. High-angle shots should be useful because of terrain shape, not because direct shots are artificially banned.</p>
+<h2>Slice 5: Pacing Tuning</h2>
+<p>After hulls, markers, wind, and terrain prototypes are visible, tune combat around these goals:</p>
+<ul>
+<li>A precise hull hit is meaningful.</li>
+<li>Bunker or ring-out wins usually require setup or at least two good shots.</li>
+<li>Wind bends decisions but does not make turns feel hopeless.</li>
+<li>Terrain encourages lobs while preserving progress.</li>
+</ul>
+<h2>Implementation Strategy</h2>
+<p>Implement Slice 1 first because it defines damage truth. Work on map/spawn and damage-marker prototypes can proceed in parallel as sidecar tasks, but high-angle reward rules should wait until combat hull collision reports enough projectile metadata to classify plunge hits.</p>
+    </article>
+  </main>
+</body>
+</html>

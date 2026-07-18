@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Falling And Void Drop Implementation Plan</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        HTML reading copy generated from <a href="2026-06-15-falling-void-drop.md">docs/superpowers/plans/2026-06-15-falling-void-drop.md</a> on 2026-07-18.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Falling And Void Drop Implementation Plan</h1>
+<blockquote>
+<p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (<code>- [x]</code>) syntax for tracking.</p>
+</blockquote>
+<p><strong>Goal:</strong> Make vehicle falling, sliding, and Void Dropped status match the visible gameplay rule: a vehicle becomes Void Dropped only after its vehicle collision hull touches the visible void zone.</p>
+<p><strong>Architecture:</strong> Keep terrain contact rules in shared gameplay code, and keep Phaser-specific presentation in match controllers/renderers. Vehicles can be grounded, sliding, or falling; sliding/falling vehicles are not controllable, but only a void contact changes HP/alive/defeat state.</p>
+<p><strong>Tech Stack:</strong> TypeScript, Node test runner, Phaser scene collaborators.</p>
+<p>---</p>
+<h3>Task 1: Shared Terrain Contact State</h3>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>shared/gameplay/vehicleSettlement.ts</code></li>
+<li>Modify: <code>shared/gameplay/vehicleSettlement.test.ts</code></li>
+</ul>
+<ul>
+<li>[x] <strong>Step 1: Write failing tests</strong></li>
+</ul>
+<p>Add tests proving unsupported terrain returns <code>motion.kind === &quot;falling&quot;</code> without setting <code>voidDropped</code>, and steep supported terrain returns <code>motion.kind === &quot;sliding&quot;</code> with a downhill direction.</p>
+<ul>
+<li>[x] <strong>Step 2: Run focused test</strong></li>
+</ul>
+<p>Run: <code>npm test -- shared/gameplay/vehicleSettlement.test.ts</code></p>
+<p>Expected before implementation: tests fail because <code>motion</code> is missing and unsupported terrain immediately void-drops.</p>
+<ul>
+<li>[x] <strong>Step 3: Implement contact classification</strong></li>
+</ul>
+<p>Extend <code>VehicleSettlementResult</code> with an optional <code>motion</code> state. Return falling for unsupported/no-terrain footing, sliding for too-steep supported terrain, and grounded for stable terrain.</p>
+<ul>
+<li>[x] <strong>Step 4: Run focused test</strong></li>
+</ul>
+<p>Run: <code>npm test -- shared/gameplay/vehicleSettlement.test.ts</code></p>
+<p>Expected after implementation: all settlement tests pass.</p>
+<h3>Task 2: Match Motion Resolution</h3>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>src/match/MatchTypes.ts</code></li>
+<li>Modify: <code>src/match/VehicleSettlementController.ts</code></li>
+<li>Modify: <code>src/match/VehicleSettlementController.test.ts</code></li>
+<li>Modify: <code>src/match/MatchScene.ts</code></li>
+</ul>
+<ul>
+<li>[x] <strong>Step 1: Write failing controller tests</strong></li>
+</ul>
+<p>Add tests proving settlement starts falling without killing the vehicle, falling only void-drops after the visible void top is touched, and sliding can continue until stable ground is found.</p>
+<ul>
+<li>[x] <strong>Step 2: Run focused test</strong></li>
+</ul>
+<p>Run: <code>npm test -- src/match/VehicleSettlementController.test.ts</code></p>
+<p>Expected before implementation: tests fail because motion update does not exist.</p>
+<ul>
+<li>[x] <strong>Step 3: Implement motion state and update loop</strong></li>
+</ul>
+<p>Add <code>VehicleMotionState</code> to <code>VehicleState</code>. Add <code>updateVehicleMotion</code>/<code>hasActiveVehicleMotion</code> behavior to <code>VehicleSettlementController</code>. In <code>MatchScene</code>, update vehicle motion before turn input and wait for motion to resolve before advancing after a shot.</p>
+<ul>
+<li>[x] <strong>Step 4: Run focused test</strong></li>
+</ul>
+<p>Run: <code>npm test -- src/match/VehicleSettlementController.test.ts</code></p>
+<p>Expected after implementation: all controller tests pass.</p>
+<h3>Task 3: Rendering And Documentation Polish</h3>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>src/match/rendering/VehicleRenderer.ts</code></li>
+<li>Modify: <code>src/match/rendering/VehicleOverlayRenderer.ts</code></li>
+<li>Modify: <code>docs/VERSION_LOG.md</code></li>
+</ul>
+<ul>
+<li>[x] <strong>Step 1: Write/update tests if renderer contracts require it</strong></li>
+</ul>
+<p>If existing render tests assert labels or vehicle state assumptions, update them to include falling/sliding labels.</p>
+<ul>
+<li>[x] <strong>Step 2: Render falling/sliding readably</strong></li>
+</ul>
+<p>Keep falling vehicles upright enough to understand, show <code>FALLING</code> or <code>SLIDING</code> as the state label, and continue drawing visible collision hulls while they are still alive.</p>
+<ul>
+<li>[x] <strong>Step 3: Update version log</strong></li>
+</ul>
+<p>Record the gameplay behavior change in <code>docs/VERSION_LOG.md</code>.</p>
+<ul>
+<li>[x] <strong>Step 4: Verify</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+npm test
+
+npm run docs:html
+
+npm run build
+
+</code></pre>
+<p>Expected: test suite passes, docs regenerate, and the production build succeeds.</p>
+    </article>
+  </main>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Adult Playable Sprite Probes Design</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        HTML reading copy generated from <a href="2026-06-07-adult-playable-sprite-probes-design.md">docs/superpowers/specs/2026-06-07-adult-playable-sprite-probes-design.md</a> on 2026-07-18.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Adult Playable Sprite Probes Design</h1>
+<p>Date: 2026-06-07</p>
+<p>Project: Gravity Canyon</p>
+<h2>Goal</h2>
+<p>Run a small visual probe to decide whether Gravity Canyon should move from compact/semi-chibi character gameplay sprites toward adult-anime playable character sprites.</p>
+<p>This is an art-direction probe, not a live asset replacement. The output should help choose the long-term character sprite direction before changing runtime aliases in <code>public/assets</code>.</p>
+<h2>Context</h2>
+<p>Current runtime character sprites have mixed style and scale:</p>
+<ul>
+<li>Nova default is a compact seated gameplay sprite.</li>
+<li>Nova KO is a wide adult-anime prone KO sprite with a carefully tuned pose and eye expression.</li>
+<li>Vesper default is compact/seated.</li>
+<li>Vesper KO still needs a stronger production-quality replacement.</li>
+</ul>
+<p>The risk is that adult-anime master art looks expressive in isolation but becomes too large, too detailed, or too visually noisy in the match screen.</p>
+<h2>Probe Scope</h2>
+<p>Create disposable adult-anime playable sprite probes for:</p>
+<ul>
+<li>Nova default playable pose.</li>
+<li>Nova KO playable pass based on the existing successful KO direction.</li>
+<li>Vesper KO playable pose.</li>
+</ul>
+<p>Do not replace runtime files during this probe. Save probe outputs as candidates under <code>work/</code> or under versioned <code>public/assets/sprite-variants/...</code> only after selection.</p>
+<h2>Nova KO Preservation Rules</h2>
+<p>The existing Nova KO direction is a near-locked reference for pose and expression.</p>
+<p>Preserve:</p>
+<ul>
+<li>Full-body sprawled face-down KO pose.</li>
+<li>Head low, arms slack, legs awkwardly collapsed.</li>
+<li>Goofy defeated adult-anime tone.</li>
+<li>Goggles displaced but not covering the eyes.</li>
+<li>Heavy sleepy eyelids.</li>
+<li>Open mouth with small tongue blep.</li>
+<li>Thin slit-shaped white KO eyes.</li>
+<li>Small oval pupils inside both eye whites.</li>
+<li>Pupils rolled upward and crossed inward.</li>
+</ul>
+<p>Allowed adjustments:</p>
+<ul>
+<li>Simplify tiny costume details for gameplay readability.</li>
+<li>Tighten crop and transparent bounds.</li>
+<li>Improve edge outline thickness.</li>
+<li>Reduce excess illustration density.</li>
+<li>Adjust export/display size so the sprite fits the active unit frame.</li>
+</ul>
+<p>Do not materially change:</p>
+<ul>
+<li>The core pose.</li>
+<li>The eye mechanic.</li>
+<li>The KO expression.</li>
+<li>The adult-anime identity.</li>
+</ul>
+<h2>Adult Playable Style Target</h2>
+<p>Adult-anime playable sprites should not be full collection art pasted into combat.</p>
+<p>They should use:</p>
+<ul>
+<li>Adult anime proportions, but compact battlefield silhouette.</li>
+<li>Tasteful adult-anime fan-service cues where they support character appeal.</li>
+<li>Thick dark outline.</li>
+<li>Clean cel shading.</li>
+<li>Face details large enough to read at match scale.</li>
+<li>Simplified clothing/gear detail compared with high-detail master art.</li>
+<li>Transparent or removable chroma-key background.</li>
+<li>Generous source padding before trimming, then tight final transparent bounds.</li>
+</ul>
+<h2>Fan-Service Boundary</h2>
+<p>Use a tiered art model:</p>
+<ul>
+<li>Playable sprites may be attractive, adult-anime, and lightly suggestive through mature proportions, confident styling, fitted arcade pilot outfits, legs/boots/silhouette, expressive faces, and stylish pose language.</li>
+<li>Stream-safe collection/reward/profile art may carry stronger fan-service or pin-up energy because those surfaces can support larger framing and detail.</li>
+<li>Private mature exploration, if pursued, should remain separate from runtime combat assets and should not drive gameplay readability decisions.</li>
+</ul>
+<p>Combat readability still comes first for match sprites. Gameplay sprites should remain compact, stream-safe, and readable at match scale. KO sprites may keep attractive adult-anime styling, but the playable KO read should stay goofy, defeated, and expressive rather than making the vulnerable combat-loss state the primary erotic focal point.</p>
+<p>Runtime target:</p>
+<ul>
+<li>Upright poses should roughly fit the current character layer footprint, about 120-155 px display height.</li>
+<li>Wide KO poses may be wider, but should stay visually inside the active-unit frame and avoid covering labels, HP bars, aim cues, or terrain impacts.</li>
+</ul>
+<h2>Vesper KO Direction</h2>
+<p>Use <code>public/assets/vesper-character-default.png</code> as the identity/style reference.</p>
+<p>Vesper KO should be distinct from Nova:</p>
+<ul>
+<li>Glitch-overloaded collapse.</li>
+<li>Loose limbs.</li>
+<li>Slightly crooked headset.</li>
+<li>Messy cyan-blue hair.</li>
+<li>Small harmless blue pixel-glitch sparks around gear.</li>
+<li>Same readable KO eye rules: compressed white slit eyes with small oval pupils rolled upward and crossed inward.</li>
+</ul>
+<h2>Comparison Criteria</h2>
+<p>After probes are generated, compare them in a battlefield mockup against the current compact sprites.</p>
+<p>Judge:</p>
+<ul>
+<li>Does the character read instantly at gameplay scale?</li>
+<li>Does the pose fit beside the vehicle without dominating it?</li>
+<li>Are KO face details readable without oversized art?</li>
+<li>Does adult-anime style improve character fantasy enough to justify the added asset discipline?</li>
+<li>Can Nova and Vesper share one export sizing/anchor rule?</li>
+</ul>
+<h2>Non-Goals</h2>
+<ul>
+<li>No live runtime alias replacement yet.</li>
+<li>No final sprite-set commitment yet.</li>
+<li>No vehicle sprite changes.</li>
+<li>No combat stat, hitbox, projectile, wind, matchmaking, or reward changes.</li>
+<li>No prompt drift toward explicit injury, blood, nudity, or platform-risky content.</li>
+</ul>
+<h2>Proposed Next Step</h2>
+<p>Generate rough adult-playable probes for the three scoped states, then place them into the visual companion beside current sprites at approximate runtime scale.</p>
+<p>The first generated pass should be treated as disposable. The decision after viewing should be either:</p>
+<ul>
+<li>stay compact/semi-chibi,</li>
+<li>commit to adult-anime playable with a formal export pipeline,</li>
+<li>or choose a hybrid rule that keeps adult identity but uses compact/chibi-like simplification for readability.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gravity Canyon V1 Map Gameplay Review</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f5ef;
+      --paper: #fffdf8;
+      --ink: #20211d;
+      --muted: #5f665d;
+      --line: #cfd7c9;
+      --terrain: #867450;
+      --terrain-line: #302a21;
+      --safe: #287f5b;
+      --danger: #c33d32;
+      --focus: #7a4fb3;
+      --move: #246bbd;
+      --shot: #b86622;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+    main { max-width: 1180px; margin: 0 auto; padding: 28px 18px 64px; }
+    body > main > header { margin-bottom: 20px; }
+    h1 { font-size: clamp(2rem, 4vw, 3rem); line-height: 1.08; margin: 0 0 10px; }
+    h2, h3 { line-height: 1.15; }
+    h2 { margin: 0 0 8px; }
+    h3 { margin: 0 0 8px; font-size: 1rem; }
+    p { color: var(--muted); }
+    .review-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 18px;
+      margin-bottom: 22px;
+      box-shadow: 0 10px 24px rgba(36, 45, 35, 0.08);
+    }
+    .review-card > header p {
+      margin: 0 0 3px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+    }
+    .review-card > header strong {
+      display: block;
+      color: #405b41;
+      margin-bottom: 14px;
+    }
+    svg {
+      display: block;
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #e8f3f8;
+      margin-bottom: 16px;
+    }
+    .sky { fill: #e8f3f8; }
+    .terrain-fill { fill: var(--terrain); opacity: 0.92; }
+    .terrain-line { fill: none; stroke: var(--terrain-line); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .safe-zone rect { fill: rgba(40, 127, 91, 0.16); stroke: var(--safe); stroke-width: 2; }
+    .safe-zone text { fill: var(--safe); font-size: 12px; font-weight: 900; }
+    .danger-zone rect { fill: rgba(195, 61, 50, 0.16); stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6 4; }
+    .danger-zone text { fill: var(--danger); font-size: 12px; font-weight: 900; }
+    .destructible-focus circle { fill: rgba(122, 79, 179, 0.12); stroke: var(--focus); stroke-width: 2; }
+    .destructible-focus text { fill: var(--focus); font-size: 11px; font-weight: 900; }
+    .movement-route path { fill: none; stroke: var(--move); stroke-width: 3; stroke-dasharray: 7 5; }
+    .movement-route text { fill: var(--move); font-size: 11px; font-weight: 900; }
+    .opening-read path { fill: none; stroke: var(--shot); stroke-width: 3; }
+    .opening-read text { fill: var(--shot); font-size: 11px; font-weight: 900; paint-order: stroke; stroke: var(--paper); stroke-width: 4px; }
+    marker#move-arrow path { fill: var(--move); }
+    marker#shot-arrow path { fill: var(--shot); }
+    .notes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .notes-grid > div {
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+    }
+    ul { margin: 0; padding-left: 20px; }
+    li { margin-bottom: 7px; }
+    code {
+      background: #e8eee2;
+      border-radius: 4px;
+      padding: 0.12em 0.3em;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <p>Generated from <code>server/v1/mapGameplayReview.ts</code> on 2026-07-18</p>
+      <h1>V1 Map Gameplay Review</h1>
+      <p>This page reviews gameplay intent for the two novel V1 map concepts. It is about decisions, risk, and readability, not final art.</p>
+    </header>
+
+    <article class="review-card">
+      <header>
+        <p>ring-basin</p>
+        <h2>Ringworks Basin Gameplay Review</h2>
+        <strong>A weapon-readable canyon map where side bowls fight around a destructible broken ring bridge and two readable void gaps.</strong>
+      </header>
+      <svg viewBox="0 0 720 286" role="img" aria-label="Ringworks Basin gameplay review diagram">
+        <defs>
+          <marker id="move-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z"></path>
+          </marker>
+          <marker id="shot-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z"></path>
+          </marker>
+        </defs>
+        <rect class="sky" x="0" y="0" width="720" height="286" rx="8"></rect>
+
+        <path class="terrain-fill" d="M 30.0 194.5 L 74.0 173.2 L 112.5 143.7 L 134.5 125.0 L 148.3 117.5 L 167.5 119.6 L 184.0 135.7 L 195.0 147.5 L 207.4 134.6 L 219.7 59.7 L 230.7 50.1 L 240.4 50.1 L 248.6 76.8 L 251.4 157.1 L 251.4 232.0 L 30.0 232.0 Z"></path>
+        <path class="terrain-line" d="M 30.0 194.5 L 74.0 173.2 L 112.5 143.7 L 134.5 125.0 L 148.3 117.5 L 167.5 119.6 L 184.0 135.7 L 195.0 147.5 L 207.4 134.6 L 219.7 59.7 L 230.7 50.1 L 240.4 50.1 L 248.6 76.8 L 251.4 157.1"></path>
+
+        <path class="terrain-fill" d="M 342.1 111.1 L 350.4 76.8 L 358.6 55.4 L 360.0 50.1 L 369.6 63.5 L 377.9 111.1 L 377.9 232.0 L 342.1 232.0 Z"></path>
+        <path class="terrain-line" d="M 342.1 111.1 L 350.4 76.8 L 358.6 55.4 L 360.0 50.1 L 369.6 63.5 L 377.9 111.1"></path>
+
+        <path class="terrain-fill" d="M 468.6 157.1 L 476.9 66.2 L 486.5 50.1 L 501.6 50.1 L 515.4 55.4 L 527.8 109.0 L 536.0 147.5 L 548.4 135.7 L 563.5 119.6 L 571.8 117.5 L 591.0 119.6 L 610.3 138.4 L 646.0 173.2 L 690.0 194.5 L 690.0 232.0 L 468.6 232.0 Z"></path>
+        <path class="terrain-line" d="M 468.6 157.1 L 476.9 66.2 L 486.5 50.1 L 501.6 50.1 L 515.4 55.4 L 527.8 109.0 L 536.0 147.5 L 548.4 135.7 L 563.5 119.6 L 571.8 117.5 L 591.0 119.6 L 610.3 138.4 L 646.0 173.2 L 690.0 194.5"></path>
+
+        <g class="danger-zone">
+          <rect x="251.4" y="198.0" width="90.8" height="28" rx="6"></rect>
+          <text x="296.8" y="192.0" text-anchor="middle">left bridge gap</text>
+        </g>
+
+        <g class="danger-zone">
+          <rect x="377.9" y="198.0" width="90.8" height="28" rx="6"></rect>
+          <text x="423.3" y="192.0" text-anchor="middle">right bridge gap</text>
+        </g>
+
+        <g class="destructible-focus">
+          <circle cx="232.1" cy="50.1" r="24.8"></circle>
+          <text x="232.1" y="18.4" text-anchor="middle">red high lip</text>
+        </g>
+
+        <g class="destructible-focus">
+          <circle cx="360.0" cy="50.1" r="28.9"></circle>
+          <text x="360.0" y="14.2" text-anchor="middle">ring bridge cap</text>
+        </g>
+
+        <g class="destructible-focus">
+          <circle cx="501.6" cy="50.1" r="24.8"></circle>
+          <text x="501.6" y="18.4" text-anchor="middle">blue high lip</text>
+        </g>
+
+        <g class="movement-route">
+          <path marker-end="url(#move-arrow)" d="M 223.9 65.4 C 235.6 93.4 235.6 105.4 247.3 77.4"></path>
+          <text x="235.6" y="119.4" text-anchor="middle">red bowl to high lip</text>
+        </g>
+
+        <g class="movement-route">
+          <path marker-end="url(#move-arrow)" d="M 501.6 60.1 C 487.2 88.1 487.2 100.1 472.7 72.1"></path>
+          <text x="487.2" y="114.1" text-anchor="middle">blue bowl to high lip</text>
+        </g>
+
+        <g class="opening-read">
+          <path marker-end="url(#shot-arrow)" d="M 148.3 99.5 Q 324.9 -1.9 501.6 32.1"></path>
+          <text x="324.9" y="-9.9" text-anchor="middle">low red shoots up</text>
+        </g>
+
+        <g class="opening-read">
+          <path marker-end="url(#shot-arrow)" d="M 223.9 37.4 Q 397.8 3.4 571.8 99.5"></path>
+          <text x="397.8" y="-4.6" text-anchor="middle">high red shoots down</text>
+        </g>
+
+        <g class="safe-zone">
+          <rect x="114.3" y="89.5" width="68" height="40" rx="7"></rect>
+          <text x="148.3" y="81.5" text-anchor="middle">red-1</text>
+        </g>
+
+        <g class="safe-zone">
+          <rect x="537.8" y="89.5" width="68" height="40" rx="7"></rect>
+          <text x="571.8" y="81.5" text-anchor="middle">blue-1</text>
+        </g>
+
+        <g class="safe-zone">
+          <rect x="189.9" y="27.4" width="68" height="40" rx="7"></rect>
+          <text x="223.9" y="19.4" text-anchor="middle">red-2</text>
+        </g>
+
+        <g class="safe-zone">
+          <rect x="467.6" y="22.1" width="68" height="40" rx="7"></rect>
+          <text x="501.6" y="14.1" text-anchor="middle">blue-2</text>
+        </g>
+      </svg>
+      <section class="notes-grid">
+        <div><h3>Movement</h3><ul><li><strong>red bowl to high lip:</strong> High red can stage near the ring gap for pressure while the lower red bowl remains a playable pocket.</li><li><strong>blue bowl to high lip:</strong> High blue mirrors the ring-gap pressure while the lower blue bowl gives the side a second tactical height.</li></ul></div>
+        <div><h3>Danger</h3><ul><li><strong>left bridge gap:</strong> Readable air gap for Void Drop pressure without tiny-slot confusion.</li><li><strong>right bridge gap:</strong> Mirrors the left gap so pulls, craters, and knockback matter on both sides.</li></ul></div>
+        <div><h3>Destructible Focus</h3><ul><li><strong>red high lip:</strong> Nova can carve the shelf edge to create Void Drop pressure without deleting the lower spawn instantly.</li><li><strong>ring bridge cap:</strong> Repeated hits can open the middle target or give Perlah cluster shots a compact objective.</li><li><strong>blue high lip:</strong> Mirrors the red lip and gives Vesper pull shots a clear edge target.</li></ul></div>
+        <div><h3>Opening Reads</h3><ul><li><strong>low red shoots up:</strong> Shows whether a lower player can threaten a high balcony.</li><li><strong>high red shoots down:</strong> Tests whether high ground feels powerful but not automatic.</li></ul></div>
+        <div><h3>Why It Could Be Fun</h3><ul><li>The center ring cap gives the map a memorable structure while still using ordinary destructible terrain.</li><li>Kaelii-style rolling shots, Vesper pull shots, Nova craters, and Perlah clusters each have natural terrain targets.</li><li>Deep side bowls plus high staging lips create more interesting decisions than a plain slope duel.</li><li>Two readable void gaps create bunge pressure without relying on tiny slots that look unfair with large sprites.</li></ul></div>
+        <div><h3>Risks To Watch</h3><ul><li>The current heightmap cannot make true over-under bridges, so the ring should read as a raised cap plus visual landmark.</li><li>If the high lips are too dominant, players may ignore the lower bowls and only fish for knockoffs.</li><li>The ring cap should invite shots and lane changes, not become a confusing permanent wall.</li></ul></div>
+      </section>
+    </article>
+
+    <article class="review-card">
+      <header>
+        <p>bridgeworks</p>
+        <h2>Bridgeworks Gameplay Review</h2>
+        <strong>A broken-span map where players fight over bridge lanes while spawns remain on wider, safer ledges.</strong>
+      </header>
+      <svg viewBox="0 0 720 286" role="img" aria-label="Bridgeworks gameplay review diagram">
+        <defs>
+          <marker id="move-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z"></path>
+          </marker>
+          <marker id="shot-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z"></path>
+          </marker>
+        </defs>
+        <rect class="sky" x="0" y="0" width="720" height="286" rx="8"></rect>
+
+        <path class="terrain-fill" d="M 30.0 167.8 L 76.8 117.5 L 131.8 64.0 L 173.0 71.5 L 173.0 232.0 L 30.0 232.0 Z"></path>
+        <path class="terrain-line" d="M 30.0 167.8 L 76.8 117.5 L 131.8 64.0 L 173.0 71.5"></path>
+
+        <path class="terrain-fill" d="M 195.0 147.5 L 239.0 137.8 L 285.8 127.1 L 285.8 232.0 L 195.0 232.0 Z"></path>
+        <path class="terrain-line" d="M 195.0 147.5 L 239.0 137.8 L 285.8 127.1"></path>
+
+        <path class="terrain-fill" d="M 302.3 76.8 L 338.0 57.6 L 371.0 57.6 L 406.8 76.8 L 406.8 232.0 L 302.3 232.0 Z"></path>
+        <path class="terrain-line" d="M 302.3 76.8 L 338.0 57.6 L 371.0 57.6 L 406.8 76.8"></path>
+
+        <path class="terrain-fill" d="M 428.8 127.1 L 475.5 137.8 L 519.5 147.5 L 519.5 232.0 L 428.8 232.0 Z"></path>
+        <path class="terrain-line" d="M 428.8 127.1 L 475.5 137.8 L 519.5 147.5"></path>
+
+        <path class="terrain-fill" d="M 547.0 71.5 L 588.3 64.0 L 643.3 117.5 L 690.0 167.8 L 690.0 232.0 L 547.0 232.0 Z"></path>
+        <path class="terrain-line" d="M 547.0 71.5 L 588.3 64.0 L 643.3 117.5 L 690.0 167.8"></path>
+
+        <g class="danger-zone">
+          <rect x="277.5" y="198.0" width="165.0" height="28" rx="6"></rect>
+          <text x="360.0" y="192.0" text-anchor="middle">low broken span</text>
+        </g>
+
+        <g class="danger-zone">
+          <rect x="313.3" y="198.0" width="93.5" height="28" rx="6"></rect>
+          <text x="360.0" y="192.0" text-anchor="middle">center air gap</text>
+        </g>
+
+        <g class="destructible-focus">
+          <circle cx="360.0" cy="57.6" r="26.1"></circle>
+          <text x="360.0" y="24.5" text-anchor="middle">high center bridge</text>
+        </g>
+
+        <g class="destructible-focus">
+          <circle cx="239.0" cy="127.1" r="22.0"></circle>
+          <text x="239.0" y="98.1" text-anchor="middle">left low bridge</text>
+        </g>
+
+        <g class="destructible-focus">
+          <circle cx="475.5" cy="127.1" r="22.0"></circle>
+          <text x="475.5" y="98.1" text-anchor="middle">right low bridge</text>
+        </g>
+
+        <g class="movement-route">
+          <path marker-end="url(#move-arrow)" d="M 206.0 155.3 C 222.5 183.3 222.5 195.3 239.0 167.3"></path>
+          <text x="222.5" y="209.3" text-anchor="middle">red low seat to low bridge</text>
+        </g>
+
+        <g class="movement-route">
+          <path marker-end="url(#move-arrow)" d="M 514.0 155.3 C 494.8 183.3 494.8 195.3 475.5 167.3"></path>
+          <text x="494.8" y="209.3" text-anchor="middle">blue low seat to low bridge</text>
+        </g>
+
+        <g class="opening-read">
+          <path marker-end="url(#shot-arrow)" d="M 206.0 127.3 Q 397.1 12.0 588.3 46.0"></path>
+          <text x="397.1" y="4.0" text-anchor="middle">low red shoots up</text>
+        </g>
+
+        <g class="opening-read">
+          <path marker-end="url(#shot-arrow)" d="M 131.8 46.0 Q 322.9 12.0 514.0 127.3"></path>
+          <text x="322.9" y="4.0" text-anchor="middle">high red shoots down</text>
+        </g>
+
+        <g class="safe-zone">
+          <rect x="97.8" y="36.0" width="68" height="40" rx="7"></rect>
+          <text x="131.8" y="28.0" text-anchor="middle">red-1</text>
+        </g>
+
+        <g class="safe-zone">
+          <rect x="554.3" y="36.0" width="68" height="40" rx="7"></rect>
+          <text x="588.3" y="28.0" text-anchor="middle">blue-1</text>
+        </g>
+
+        <g class="safe-zone">
+          <rect x="172.0" y="117.3" width="68" height="40" rx="7"></rect>
+          <text x="206.0" y="109.3" text-anchor="middle">red-2</text>
+        </g>
+
+        <g class="safe-zone">
+          <rect x="480.0" y="117.3" width="68" height="40" rx="7"></rect>
+          <text x="514.0" y="109.3" text-anchor="middle">blue-2</text>
+        </g>
+      </svg>
+      <section class="notes-grid">
+        <div><h3>Movement</h3><ul><li><strong>red low seat to low bridge:</strong> A player can contest the bridge, but does not spawn on it.</li><li><strong>blue low seat to low bridge:</strong> Mirrored low bridge access supports 2v2 pressure from both sides.</li></ul></div>
+        <div><h3>Danger</h3><ul><li><strong>low broken span:</strong> The lower bridge should invite bunge plays without forcing everyone onto narrow land.</li><li><strong>center air gap:</strong> The central gap makes wind and vertical aiming matter.</li></ul></div>
+        <div><h3>Destructible Focus</h3><ul><li><strong>high center bridge:</strong> Damage here can open a new vertical lane without instantly ending the match.</li><li><strong>left low bridge:</strong> Breaking the bridge lip creates a bunge setup against low-seat movement.</li><li><strong>right low bridge:</strong> The mirrored low bridge keeps the tactical puzzle fair.</li></ul></div>
+        <div><h3>Opening Reads</h3><ul><li><strong>low red shoots up:</strong> Tests a steep lob through the bridge lattice.</li><li><strong>high red shoots down:</strong> Tests whether high-side ledges can threaten bridge contesters.</li></ul></div>
+        <div><h3>Why It Could Be Fun</h3><ul><li>Many spans create more target choices than a single central bridge.</li><li>Destroying bridge lips changes movement and bunge pressure in a way playtesters can understand immediately.</li><li>The map has strong identity while still using normal v1 terrain rules.</li></ul></div>
+        <div><h3>Risks To Watch</h3><ul><li>If bridge spans are too thin, normal splash damage will make the map feel random and brittle.</li><li>Players should not spawn on the narrowest bridges; the bridges are objectives, not starting traps.</li><li>Too many overlapping spans can make projectile paths hard to read, so the visual style must preserve clear air lanes.</li></ul></div>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

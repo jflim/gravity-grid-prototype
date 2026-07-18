@@ -1,15 +1,217 @@
-# Gravity Grid Version Log
+# Gravity Canyon Version Log
 
 Use this as the human-readable checkpoint history. Every meaningful commit should add an entry.
 
 ## Unreleased
 
 Highlights:
+- Added a repository-linked GitHub Project for the locked V1 Playtest Alpha contract, seeded it with eight acceptance-driven delivery issues and execution fields, and documented the agent workflow for keeping issue status and verification evidence current.
+- Adopted one dedicated `codex/issue-<number>-<short-slug>` branch per feature ticket so future agent work stays isolated and reviewable.
+- Checkpoint audit note: `npm run audit:fallow:changed` reports no introduced dead-code, complexity, or duplication findings, but its all-findings verdict still flags inherited complexity and a seven-line alpha-bounds clone in `scripts/verify-runtime-roster.mjs`; that unrelated verifier refactor is intentionally deferred from the online-foundation checkpoint.
+- Added a network-feel pilot for the online Phaser match: room snapshots now carry server time, remote vehicles interpolate between server snapshots, the local predicted vehicle softly corrects toward server truth, and new shot replays fast-forward to the server event age instead of starting late from frame zero.
+- Smoothed Duel playtest movement replication by batching rapid client movement frames into elapsed-time move intents, and made the server publish turn countdown ticks without waiting for player input so connected clients stay roughly in sync after shots.
+- Auto-seated joining playtest players into balanced open lobby seats, so the first player lands on Red, the next on Blue, and players can focus on choosing Units instead of pressing Claim Seat.
+- Replaced the online preview shot placeholder with shared projectile collision/impact resolution, so multiplayer shots no longer auto-damage the first enemy and clients can replay the shot with a visible impact/crater using the recorded shot wind.
+- Fixed Duel lobby Unit visibility so a server-ready seat still shows its selected Unit, Pilot, Vehicle chips, and Ready badge to other clients even if the selected flag arrives stale.
+- Renamed the lobby ready strip to Ready Status and hides it until the local player owns an active seat, so unseated players no longer see a disabled Ready button.
+- Added a Join Playtest entry screen in the Canyon Dusk lobby style, so players choose a locked room display name before connecting and the seat cards stay focused on seats, Units, readiness, and status.
+- Standardized playtest lobby terminology around Unit, Pilot, and Vehicle: visible Choose/Change copy, ready helper text, picker vehicle labels, and living docs now use the combined playable identity consistently.
+- Removed the redundant top-bar Map Pool counter from the playtest lobby so selected-map information lives in the larger visual map preview and rail.
+- Made lobby unit selection server-confirmed instead of local-only, and fixed lobby/picker unit art facing so picker cards normalize left while red seats face right and blue seats face left.
+- Replaced the lobby seat's plain Host/Ready text with compact color-coded status chips so other players can immediately see who is host and which claimed seats are ready.
+- Made lobby unit art face inward with a subtle divider between team columns.
+- Renamed the lobby Host Console to Room Settings, moved the Ready control into the player-facing lobby area, and fixed desktop seat cards to reserve matching rows for selected and open seats.
+- Cleaned up the online lobby seat affordances: open seats no longer render a disabled Open Seat action for already-seated players, and picked units now show immediately on the owning player's seat while waiting for server confirmation.
+- Quieted the online lobby empty-seat state: unclaimed seats no longer show unit-missing text, already-seated players no longer see extra Claim Seat buttons, and choosing a unit remains available while Ready stays locked until a unit is selected.
+- Split online lobby seat ownership from unit selection: unclaimed seats no longer show default characters, claiming a seat no longer opens the picker automatically, and ready/start validation now requires an explicit unit choice.
+- Fixed host-console hover states so Duel, Doubles, round, ready, and map-rail controls keep readable text instead of inheriting the generic pale button hover.
+- Changed the seat HOST badge from a light gold pill to a dark readable tag so the label stays legible in compact lobby cards.
+- Lifted the lobby palette from Canyon Night toward Canyon Dusk so the readable map-selector and lobby controls keep contrast without making the whole playtest UI feel too dark.
+- Softened the Canyon Night lobby text palette and fixed map-selector cards so their button styling stays dark and readable instead of reverting to pale blue with harsh white/gray labels.
+- Added a first Gravity Canyon UI color kit and rethemed the online playtest lobby toward a darker Canyon Night palette, replacing the bright orange/cyan lobby language with readable dark panels, mineral selections, copper accents, and muted team markers.
+- Added an asset-backed sound manifest and workflow doc so v1 non-voice SFX can be swapped through `src/match/audio/MatchSoundAssets.ts` and files under `public/assets/sfx/`, while future voice experiments stay organized under `public/assets/voice/` outside default v1 scope.
+- Added minimal procedural non-voice match SFX for turn ticks, movement, class-flavored weapon fire, impacts, hits, damage KOs, and Void Dropped cues, with `M` to mute/unmute prototype sound.
+- Made terrain sliding less eager by treating slopes up to 45 degrees as stable footing, so vehicles only slide when the sampled ground is steeper than that cutoff.
+- Fixed Perlah's live runtime sprite facing metadata so her default and intense full-unit sprites face the correct direction during movement, and removed the resolved bug-list item.
+- Added a tracked Tiled map authoring workflow with `npm run maps:sync`, spawn-separation validation, and a revised Idol Canyon Supine Skeleton draft that keeps four spawns on distinct named callouts outside the locked v1 map pool.
+- Added a first Tiled map import spike: the Supine Idol Canyon draft can be converted from Tiled object layers into the local playable terrain contract and previewed with `?map=idol-canyon-supine-draft` without adding it to the locked v1 map pool.
+- Adopted Gravity Canyon as the working product title.
+- Added Colyseus, Express, and TypeScript server tooling.
+- Added the Colyseus browser SDK as a vendored static browser bundle for stable local Vite development.
+- Added Gravity Canyon room state with two player slots, guest display names, ready checks, and placeholder nameplate rewards.
+- Added an online alpha panel to create/join private rooms from the browser client.
+- Added server-owned online combat preview state for round number, turn number, wind, active vehicle, HP, winner, and validated preview shots.
+- Added an online panel combat snapshot with active turn, wind, vehicle HP rows, server-shot action, and next-round action.
+- Replaced the online ready handoff with a shared server-owned gameplay preview screen so remote testers see the same selected characters, active turn, HP, wind, and round result instead of entering separate local Phaser matches.
+- Rebuilt the playtest lobby as a real host/seat flow: players claim Red/Blue seats, the host picks Duel or Doubles, each seat owner chooses a Unit with a Pilot and Vehicle, and ready checks start the shared server-owned gameplay preview.
+- Clarified the playtest lobby ownership UI with a visible Lobby Host label, friendly shared playtest room naming instead of the internal `auto-room` id, and host-only mode control affordances.
+- Added server-owned playtest room settings for Best of 1/Best of 3 and map select/random, exposed them as host-only lobby controls, reset readiness when settings change, and locked forged settings messages after gameplay starts.
+- Added server-owned preview match setup metadata from claimed seats, selected characters, match length, and map choice, including target score, chosen map id/name, turn sequence, and preview vehicles placed at the selected map spawns.
+- Wired online ready into the Phaser match start from server-owned setup metadata, so the real match scene opens on the selected map with claimed seats, selected characters, and server turn order instead of local demo defaults.
+- Added the first server turn-authority skeleton: preview turns now publish a server-owned clock/revision, accept generic active-player turn intents, reject non-active intent forgery, expose remaining time through the online snapshot/preview, and include the server active turn in the Phaser round-start status.
+- Added the first server-owned movement/fire-origin contract: active-player move intents now update server vehicle position/move units, fire intents record a server-owned shot origin/result snapshot, and the visual design doc explains how client prediction reconciles with server truth.
+- Wired the Phaser online match to push movement/fire `submitTurnIntent` messages through an intent bridge, gate non-owner turn controls, and added `ONLINE_COMBAT_FLOW.html` as a visual game-design reference for movement sync before instant-feel firing.
+- Added the first live Colyseus-to-Phaser state bridge: online room snapshots now update visible match vehicle position, HP, alive state, movement units, facing, and aim on every browser instead of stopping at the lobby handoff.
+- Added online Phaser shot replay from server snapshots, owner-only turn countdown ticks, and a local `YOUR TURN` arrow/label so remote playtest clients see movement and shots while only the active player hears urgency cues.
+- Added a bug feedback template for quick reports, multiplayer reproduction details, and subjective feel feedback during playtests.
+- Implemented the approved map-first online lobby direction: host seats now show a HOST badge, the blue lobby side emphasizes team slots plus a selected-map preview and scrollable map rail, and the orange Host Console groups Match Mode, Rounds To Win, private room access, and ready/start state.
+- Tightened the playtest lobby seat cards around the combined unit identity: the main slot now shows the mounted unit once, with compact Pilot/Vehicle chips instead of repeated Pilot and Vehicle panels.
+- Added unit-context cards to the Choose Unit picker, showing each unit's role, playstyle summary, strengths, and implementation status without implying unimplemented numeric stats.
+- Added a headless Chrome/Edge browser visual smoke command as the default Codex visual verification path, reserving the Codex in-app Browser for explicit interactive-browser requests.
+- Hardened the browser visual smoke command for managed Windows shells by launching Chrome/Edge with an isolated profile, `--no-sandbox`, and in-process GPU handling.
+- Added server-authority regression coverage for disabled playtest actions, including forged non-host mode changes, occupied/inactive seat claims, gameplay-phase ready changes, non-owner character edits, non-active preview shots, and non-host next-round requests.
+- Saved the next online v1 implementation path: keep the server-owned setup handoff, then move turn order, movement, aim/fire intent, projectile resolution, terrain changes, damage, KOs, and round results to server authority.
+- Replaced Nova's active KO runtime sprite with the selected prone v16 KO asset.
+- Added a sprite-variant folder convention and workflow doc for frequent sprite iteration.
+- Added a session handoff document with current repo state, active branch, sprite status, Vesper KO generation prompt, next steps, and verification notes.
+- Added repo-level Codex project guidance in `AGENTS.md` so new local Codex chats inherit setup, commands, docs, and working rules.
+- Added adult-playable sprite probe design and implementation planning for deciding whether Nova and Vesper gameplay sprites should move beyond compact/semi-chibi style.
+- Added cosmetic set/loadout direction: themed sets can unlock matching character outfits and vehicle skins, while characters remain identity/presentation and vehicles carry gameplay mechanics.
+- Added mounted gameplay asset direction: current assets stay as the v0 baseline while future probes explore characters riding, kneeling on, leaning on, or otherwise interacting with vehicles.
+- Preserved selected paired-unit concept candidates for Nova's head-over-heels Defeated KO direction and Vesper's tech-shorts default/Defeated KO direction.
+- Added playable roster sprite direction for 10 signature pilot-plus-vehicle units, plus Kaelii and Perlah gameplay sprite prompt packs for the first new-unit generation pass.
+- Added a living character roster document with selected visual probe links, tight generation anchors, and Kaelii's tri-tone hair reference lock.
+- Added Kaelii v2 compact vehicle and mounted default sprite candidates using the tri-tone hair lock.
+- Added Perlah v2 compact vehicle and mounted default sprite candidates for comparison against the first Spark-unit probes.
+- Added Kaelii v3/v5 selected gap-fill sprite candidates: corrected real-wheel Flashkick Skip-Rig, mounted default pupil fix, animation-linked intense state, destroyed vehicle, and Defeated KO with user-marked pupil placement.
+- Recorded an open art-review note that Kaelii Defeated KO v5 still needs a future pupil-placement pass, especially the right eye.
+- Added Perlah selected gap-fill sprite candidates for intense, destroyed vehicle, and Defeated KO with user-marked pupil placement.
+- Promoted Kaelii and Perlah selected candidates to stable v1 runtime test aliases and integrated them into the local playable roster as red/blue support units.
+- Added a runtime-roster verification script to check runtime unit aliases, preload keys, class IDs, and local turn order.
+- Generated Nova and Vesper full-unit intense sprite probes, promoted them to `nova-unit-intense.png` and `vesper-unit-intense.png`, and wired concept-preview charging to use them.
+- Expanded runtime-roster verification to check Nova and Vesper full-unit intense aliases.
+- Replaced Vesper's first full-unit intense alias with a compact v3 power-hold candidate, trimmed transparent padding so it no longer shrinks at runtime, and documented the selected prompt.
+- Reduced full-unit concept-preview display sizes, active frames, combat-marker offsets, HP/label offsets, and prototype combat hulls to give the local four-unit roster more playable battlefield space.
+- Replaced Vesper and Perlah intense runtime aliases with footprint-locked variants so default and intense states keep identical apparent unit size while showing compact power-hold reactions.
+- Iterated Vesper intense to the v6 cool glitch-control candidate, preserving the default visible footprint while adding a stronger joystick/deck-control charge action, cannon reticle, headset glow, and compact glitch UI.
+- Superseded Vesper intense v6 with v8 subtle tension scale-stable after visual review showed that same alpha footprint alone was not enough; v8 allows small pilot/rover motion while reducing the apparent power-shot size pop.
+- Expanded runtime-roster verification to compare default/intense visible alpha footprints for Vesper and Perlah, preventing future intense sprites from silently growing, shrinking, or widening.
+- Clarified that character-intense sprites should usually be animation-linked keyframes from default poses, preserving the main contact anchors instead of becoming unrelated action poses.
+- Corrected Kaelii prompt guidance so her sneakers remain character clothing only; the Flashkick Skip-Rig uses real wheels, mechanical rim covers, rails, springs, and bounce pads.
+- Clarified the sprite workflow: green chroma-key images are workshop sources, approved candidates and runtime sprites should be transparent PNGs, and the current recommendation is green for exploration plus transparent PNG bases for refinement.
+- Added a required unit asset checklist and roster generation status table so missing intense, destroyed, and KO sprites are visible.
+- Added a combat readability design and Slice 1 implementation plan for combat hulls, damage markers, wind bands, and lob-focused map prototypes.
+- Added a locked v1 playtest-alpha HTML contract for hosted private-room 2v2 scope, with change-control rules, V2 parking lot boundaries, and acceptance gates.
+- Added generated HTML reading copies for human-facing markdown docs via `npm run docs:html`, plus an HTML docs index.
+- Recorded the first v1 scoping pass in `docs/V1_PLAYTEST_ALPHA.html` and kept broader product vision separate from current milestone scope.
+- Added v1 rule-contract tests and constants for locked roster, modes, seats, room settings, turn timing, reconnect grace, and preset phrase cooldown.
+- Added the v1 map pool contract with five map ids, deterministic random selection, spawn layouts, death planes, wind scales, and drawable preview surfaces.
+- Added generated v1 map previews at `docs/V1_MAP_PREVIEWS.html`, linked from the HTML docs index.
+- Redesigned the v1 map pool around more interesting canyon silhouettes: multi-tier terrain, broken land segments, central gaps, spires, shelves, arches, and stronger tactical identities.
+- Added explicit uphill/downhill shot-lane examples to every v1 map preview so multi-tier play reads as "shoot up" and "shoot down" at a glance.
+- Replaced Basin Stack and Arch Crossing with Ring Basin and Bridgeworks, adding circular ring forms and many natural bridge spans to the v1 map-preview contract.
+- Added a generated v1 map gameplay review page for Ring Basin and Bridgeworks, covering safe spawns, danger zones, movement routes, destructible focus areas, opening reads, fun factors, and risks.
+- Made Ring Basin the local playable demo default by converting the fixed v1 map surface into destructible heightmap terrain, using exact four-seat spawns and visual ring landmarks.
+- Reworked Ring Basin from one continuous terrain strip with circle overlays into separated playable spans with real air gaps and subtler embedded ring arcs.
+- Hid the Online Alpha room panel by default for local map-review play while keeping it available with `?onlinePanel=1`.
+- Added explicit demo layout rules and tests so the bottom command deck remains visible and battlefield framing stays more consistent across common desktop viewport widths.
+- Added a desktop viewport contract: 1600 x 900 design canvas cap, 1366 x 768 minimum supported visible viewport, centered larger-window presentation, and resize guard for undersized windows.
+- Revised the viewport contract so larger displays can use up to a 2400 x 1350 presentation canvas and world-space labels counter-scale against camera zoom for readability without expanding the strategic battlefield view.
+- Synchronized Phaser and CSS sizing against the smallest reliable visible browser viewport measurement so fullscreen browser chrome/layout mismatches do not push the command deck below the visible screen.
+- Kept the command deck fixed in screen space, reserved the playfield above it, and added layout coverage so map/void rendering cannot intersect the controls.
+- Increased the command deck bottom safety gutter and framed the visible void bottom just above the command deck boundary to avoid clipped controls and stray gap bands.
+- Made the command deck content scale from the available browser dock width, with tested child-control geometry so the portrait, launch meter, movement meter, and aim dial stay inside the visible panel across supported desktop sizes.
+- Added an opt-in public preview startup path that serves the built client and Colyseus room server from one local port for tunnel-based internet sharing, while keeping default and preview hosting localhost-bound unless `HOST=0.0.0.0` is explicitly set.
+- Kept localhost map-review URLs clean by default while allowing explicit `?onlinePanel=1` debugging and playtest-mode runtime config to show the Online Alpha panel.
+- Added a README command reference explaining the current npm scripts, the manual Cloudflare tunnel flow, and why npm scripts are the project task-runner source of truth on Windows.
+- Added a one-terminal `npm run playtest` launcher that builds, starts playtest mode, starts a Cloudflare quick tunnel, prints the share URL, and shuts server/tunnel down together with Ctrl+C.
+- Fixed the `npm run playtest` launcher on Windows by avoiding direct `.cmd` child-process spawning for its nested build step.
+- Made hosted/default playtest loads lighter and more diagnosable by defaulting to runtime match assets, making heavy concept/backdrop art explicit opt-in, and showing Phaser loading/failure status.
+- Added optimized WebP delivery assets and `npm run optimize:assets` so the normal hosted playtest serves the accepted runtime game art at much smaller transfer sizes while keeping PNG sources in the repo.
+- Added runtime config so playtest launch mode controls the Online Alpha panel instead of inferring it from the public URL hostname.
+- Reorganized the primary documentation around standard game-development roles: `README.md` as runbook, `docs/GDD.md` as the living Game Design Document, and `docs/PRODUCTION_PLAN.md` as the current v1 milestone scope authority.
+- Added `docs/TECHNICAL_DESIGN.md` as the implementer-facing Technical Design Document for server-authoritative online v1, and recorded the long-term mature presentation direction as future GDD scope.
+- Added the first top-level shared Phaser-free modules for v1 constants and terrain gameplay, wired client/server type checks plus tests to include `shared/`, and added a Unity/Godot-adjacent technical glossary to the TDD.
+- Extracted v1 unit content, shared game model types, vehicle-only collision profile data, and local match tuning constants out of `src/main.ts` into `shared/content`, `shared/model`, and `shared/v1` so human edits can start from data and tested concepts instead of the Phaser scene.
+- Extracted aiming, facing, movement-step, and charge/release behavior into `shared/gameplay/movement.ts`, and added `src/match/MatchInputController.ts` so keyboard sampling is separated from gameplay rules.
+- Extracted projectile launch, wind/gravity stepping, and out-of-bounds checks into `shared/gameplay/projectile.ts` while keeping Phaser responsible for drawing trails and resolving visible collision feedback.
+- Extracted projectile impact damage, self-damage/friendly-fire filtering, crater radius selection, and Bunger knockback into `shared/gameplay/impact.ts` while keeping Phaser responsible for combat markers, terrain drawing, and round flow.
+- Moved swept projectile collision and vehicle-body hit-zone geometry into `shared/gameplay/projectileCollision.ts` and `shared/gameplay/vehicleHitZone.ts`, removing the old client-local helper modules.
+- Extracted vehicle terrain placement, localized post-impact slope nudging, and Void Dropped truth resolution into `shared/gameplay/vehicleSettlement.ts`, leaving the visual fall target and suspension animation in Phaser.
+- Extracted alive checks, alive-team/winner calculation, and round-over decisions into `shared/match/rounds.ts`, plus next-turn selection into `shared/match/turns.ts`, leaving Phaser responsible for timers and drawing.
+- Split the local Phaser client into bootstrap, match scene, match controller, camera controller, command deck UI, and focused terrain/vehicle/projectile/effects renderers so human development no longer starts from a monolithic `src/main.ts`.
+- Extracted `src/match/MatchView.ts` as a pure presentation facade and `src/match/MatchViewFactory.ts` as the Phaser-specific construction boundary, reducing `MatchScene` to lifecycle and match-flow orchestration.
+- Extracted match view-state building, player action handling, shot-flow orchestration, command-deck HUD helpers, and vehicle sprite/overlay helpers so manual contributions can target smaller, named modules instead of editing a broad scene or renderer.
+- Extracted floating combat marker presentation into `src/match/rendering/CombatMarkerRenderer.ts` so direct/splash/shove/KO/Void Dropped text feedback is no longer owned by `MatchScene`.
+- Extracted visible void-zone geometry and Void Dropped presentation timing into `src/match/VoidZoneController.ts`, setting up a cleaner future fix for gravity-driven falling before final void collision.
+- Extracted local round setup into `src/match/RoundBuilder.ts` so map terrain copying, spawn flattening, initial unit state, turn order, and round-start text are testable without reading `MatchScene`.
+- Extracted facing-aware combat hull and projectile hit-zone conversion into `src/match/VehicleGeometry.ts` so scene collision checks and vehicle overlay rendering share one interpretation.
+- Recorded a gameplay-correctness bug that falling and Void Dropped must become separate states: unsupported vehicles should fall under gravity first, then become Void Dropped only when their collision zone reaches the visible void/death zone.
+- Fixed movement traversal so vehicles no longer drive down near-vertical non-void terrain faces, while intentional movement into void holes still triggers falling/void-drop behavior.
+- Promoted the accepted mounted Nova and Vesper default/KO unit sprites to stable normal-runtime aliases so `npm run dev` shows the updated gameplay art without concept-preview mode.
+- Added vehicle footing support checks during terrain settlement so units fall from under-supported cliff edges instead of balancing on a center-point terrain sample.
+- Fixed Kaelii's Ringworks Basin spawn-left movement so steep playable footing causes sliding/settling instead of a false fall-through-floor state.
+- Reduced battlefield unit display scale so playable vehicle/character sprites cover less terrain, and preserved movement units when an attempted move immediately turns into falling or sliding instead of controlled travel.
+- Routed visible collision-zone overlays through the same scaled vehicle-only combat-hull bounds used by projectile collision so the debug box stays matched to vehicle size.
+- Applied battlefield scaling to normal runtime unit sprites and rotated visible collision-zone overlays with the same terrain angle as the vehicle body.
+- Locked Nova's current combat art direction to a duo-identity Bunger Rig candidate with warmer human contrast, preserving it as a sprite variant while leaving runtime aliases unchanged.
+- Promoted Nova's normalized duo-identity default into the runtime default alias and normalized battlefield default plus charge-linked runtime frames for consistent map-scale testing.
+- Added a default battle-sprite readability pass for Vesper, Kaelii, and Perlah so all four v1 units read more clearly by face, hair, and color at map-testing scale.
+- Replaced Vesper, Kaelii, and Perlah default runtime sprites with face-first v2 battlefield variants that keep current unit scale while improving pilot face, hair, skin, and clothing separation from same-color vehicles; v2 darkens Perlah's cart, softens Vesper's neon/body read, and gives Kaelii a flirtier stunt-idol pose.
+- Replaced Perlah's intense runtime source with a face-first v4 footprint-matched candidate so her charge state preserves the darker cart, clearer pilot contrast, and the same apparent gameplay footprint as her default state.
+- Added a TDD naming rule that `v1` remains a product milestone/profile label, while new permanent code modules should use generic names and select milestone behavior through ruleset/content ids.
+- Renamed the current demo unit content exports away from milestone-prefixed symbols so new code consumes `DemoUnitDefinition` and `DEMO_UNIT_DEFINITIONS`.
+- Extracted local projectile launch, flight stepping, trail tracking, swept collision lookup, and out-of-bounds orchestration into `src/match/ProjectileController.ts`.
+- Extracted local impact application into `src/match/ImpactController.ts`, covering crater callback wiring, vehicle damage/knockback mutation, settlement callback wiring, combat marker requests, and shot-result text.
+- Moved text-backed combat marker render state into `src/match/rendering/RenderingTypes.ts` so `src/match/MatchTypes.ts` stays free of Phaser rendering objects.
+- Extracted local turn order/index, turn timer, wind, charge state, and committed state into `src/match/TurnController.ts`.
+- Extracted local mutable terrain ownership into `src/match/TerrainController.ts`, keeping active map/heightmap state, crater application, visible void top, and terrain slope reads out of `MatchScene` while deterministic terrain math remains in `shared/gameplay/terrain.ts`.
+- Extracted local vehicle placement application into `src/match/VehicleSettlementController.ts`, keeping shared settlement truth separate from mutable local vehicle updates, Void Dropped presentation assignment, and fall event text.
+- Split vehicle instability from Void Dropped resolution: unsupported vehicles now enter sliding or falling motion first, turns wait for that motion to resolve, and Void Dropped is applied only when the vehicle collision hull reaches the visible void zone.
+- Extracted match preload planning, asset queueing, loading progress, and load-failure status into `src/match/MatchAssetLoader.ts`.
+- Extracted delayed local turn/round event scheduling into `src/match/RoundEventScheduler.ts` so post-shot misses, impacts, and round result transitions no longer store Phaser timer ownership directly in `MatchScene`.
+- Extracted the prototype collision-zone checkbox DOM into `src/match/ui/CollisionZonesToggle.ts`, keeping browser UI setup out of `MatchScene`.
+- Adopted an HTML-first documentation workflow: markdown remains the canonical editable source, generated HTML is the preferred reading/review surface, local scripts must generate markdown reading copies without AI/manual conversion, and custom HTML is reserved for rich visual/review artifacts.
+- Added the initial auto-room lobby design for the next online playtest slice: one generated playtest URL maps to one shared room, with two remote testers able to validate 1v1 and 2v2 flow.
+- Added the implementation plan for the initial auto-room lobby slice, covering pure lobby rules, Colyseus schema/room state, auto-join browser UI, documentation, and verification.
+- Added horizontal camera side bounds so the battlefield remains centered when the visible camera frame is wider than the world instead of leaving all extra space on one side.
+- Reworked Ring Basin again around a full-unit-readable center chasm and faint background ring landmarks so fall gaps match the large unit sprite/combat-hull scale.
+- Changed projectile camera behavior to keep the battlefield stable while shots are readable, recentering only when a projectile leaves the readable frame.
+- Converted the default `ring-basin` demo pass into Ringworks Basin: a B+C weapon-readable novelty map with side bowls/high lips, two readable bridge gaps, and a central destructible ring bridge island.
+- Tuned Ringworks Basin map feel with deeper side bowl troughs, broader high-lip staging shelves, updated four-seat spawns, and a central destructible ring cap so the default map has clearer bunge/positioning targets without adding new mechanics.
+- Added a combat scale and void readability pass: smaller match-view full-unit art, scaled combat hulls/frames/labels, active contact cue, persistent void danger layer, and distinct HP KO versus Void Dropped presentation.
+- Removed non-gameplay character frames, made combat hull overlays visible by default for collision tuning, widened Ringworks Basin bridge gaps against the scaled sprite footprint, and moved Void Dropped display into wide nearby void runs.
+- Allowed self-damage from weapon effects while preserving allied friendly-fire immunity.
+- Switched prototype combat collision to one shared rectangular vehicle-only hit zone, with splash measuring to vehicle-zone edges and projectile impact resolving at first swept edge contact.
+- Added collision art review enforcement so standing/high pilot poses require a vehicle protection cue and v1 units cannot silently get custom hitboxes.
+- Enlarged the visible void band and added a short slow-start Void Dropped fall presentation so fallen units are readable before becoming suspended eye candy.
+- Anchored the visible void band to each round's lowest playable terrain surface and slowed Void Dropped fall presentation for a more dramatic, readable drop.
+- Added an on-screen `Collision zones` checkbox and clearer vehicle-zone overlays for demo/playtest toggling.
+- Moved collision-zone overlays to a translucent foreground hue layer so vehicle-only hit zones stay readable over playable unit art.
+- Added visible prototype combat hulls, toggleable with `H`, so vehicle-only collision truth can be tuned against larger unit art.
+- Added floating combat markers for direct damage, splash damage, knockback, HP KOs, and terrain/fall Void Dropped defeats.
+- Raised world-space unit labels, team/HP bars, and active timer badges above playable unit art, and moved wind into a fixed top-safe HUD badge.
+- Added randomized terrain/spawn archetypes for local rounds to reduce flat direct-fire duels and encourage high-angle lob play.
 - Clarified Git workflow with branch strategy, quality gates, commit cadence, and push cadence.
 - Updated GitHub management notes now that the private remote and GitHub CLI are configured.
 - Added canonical game design spec with 95% confidence direction for the next build milestone.
 - Updated build plan so Phase 1 is online 1v1 plus a lightweight cosmetic unlock sandbox.
 - Clarified art tone: premium anime arcade with a decent amount of tasteful adult fan service.
+- Fixed turn commitment so firing immediately ends the active vehicle's movement window.
+- Added swept projectile collision checks, tighter splash radii, and localized post-impact vehicle settling.
+- Added temporary impact rings for crater and splash damage readability.
+- Added fainted/KO visual feedback for destroyed vehicles.
+- Changed terrain movement so downhill/falling is allowed, while steep uphill movement is blocked by a climb-angle rule.
+- Allowed vehicles to intentionally drive into holes or off the map and self-KO.
+- Allowed deep crater cuts to punch through into a visible void beneath the terrain.
+- Replaced the generic KO face with character-specific KO feedback.
+- Replaced KO expression overlays with dedicated Nova and Vesper KO sprite variants.
+- Removed the global floating turn timer; turn time now only appears above the active vehicle.
+- Added terrain-slope tilt to vehicle sprites.
+- Raised the command panel with a bottom safe margin for better viewport visibility.
+- Updated the void background treatment so exposed holes read as empty air beneath the terrain.
+- Reduced crater, splash, and Bunger knockback radii so knock-off KOs require more precise setup.
+- Reworked gameplay assets into separate vehicle and playable-character sprite layers.
+- Generated standalone Nova and Vesper vehicle sprites.
+- Generated standalone Nova and Vesper character sprites for default, KO, and intense shooting states.
+- Regenerated Nova and Vesper KO sprites with crossed/rolled-up eyes instead of spiral eyes.
+- Added destroyed vehicle sprites for Nova and Vesper and paired them with KO character rendering.
+- Lowered character seating offsets so riders sit closer to the vehicle chassis.
+- Removed the old combined gameplay sprites and derived KO sprites from the active asset set.
+
+Verification:
+- `npm run build` passed.
+- Two-client Colyseus smoke test reached `round-over`, set the losing vehicle to 0 HP, and granted the preview token reward.
 
 ## v0.4.0 - Planning, Git, And Readability Checkpoint
 
@@ -20,7 +222,7 @@ Highlights:
 - Added version log for committed playable checkpoints.
 - Added Git workflow and GitHub remote setup notes.
 - Added Git ignore rules for generated dependencies and build output.
-- Current prototype includes tight gameplay sprites, separated portrait art, round logic, improved command panel, visual aim arrow, movement range meter, launch-power meter, wind, timer, and terrain destruction.
+- Current prototype includes layered vehicle/character gameplay sprites, separated portrait art, round logic, improved command panel, visual aim arrow, movement range meter, launch-power meter, wind, timer, and terrain destruction.
 
 Verification:
 - `npm run build` should pass before this version is committed.

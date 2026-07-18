@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AGENTS.md</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        HTML reading copy generated from <a href="AGENTS.md">AGENTS.md</a> on 2026-07-18.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>AGENTS.md</h1>
+<h2>Project</h2>
+<ul>
+<li>Gravity Canyon is a browser-based TypeScript/Phaser artillery game with a Node.js/Colyseus multiplayer foundation.</li>
+<li>Treat this repository as the active project root. The GitHub remote is <code>https://github.com/jflim/gravity-grid-prototype.git</code>.</li>
+<li>Current working branch is usually <code>feature/gravity-canyon-online-foundation</code>; check <code>git status --short --branch</code> before editing.</li>
+</ul>
+<h2>Start Here</h2>
+<ul>
+<li>Read <code>README.md</code> for the current runnable state and controls.</li>
+<li>Read <code>docs/SESSION_HANDOFF.md</code> for the latest handoff, next best step, known environment notes, and verification already run.</li>
+<li>Read <code>docs/PRODUCTION_PLAN.md</code> for current v1 scope, acceptance tests, out-of-scope list, build order, and change-control rules.</li>
+<li>Read <code>docs/GDD.md</code> for broader product direction and design context.</li>
+<li>Read <code>docs/TECHNICAL_DESIGN.md</code> before changing networking, server-authoritative combat, shared simulation, deployment, or data-model boundaries.</li>
+<li>Read <code>docs/V1_PLAYTEST_ALPHA.html</code> as the original v1 contract snapshot if historical context is needed.</li>
+<li>Follow <code>docs/GIT_WORKFLOW.md</code> for commit cadence, branch strategy, and quality gates.</li>
+</ul>
+<h2>Commands</h2>
+<ul>
+<li>Install dependencies: <code>npm install</code></li>
+<li>Run both local services: <code>npm run dev</code></li>
+<li>Run only the client: <code>npm run dev:client -- --port 5173</code></li>
+<li>Run only the Colyseus server: <code>npm run dev:server</code></li>
+<li>Production build and type check: <code>npm run build</code></li>
+<li>Run all tests: <code>npm test</code></li>
+<li>Capture a headless Chrome visual smoke screenshot: <code>npm run verify:browser-visual -- &lt;url&gt;</code></li>
+<li>Regenerate HTML docs: <code>npm run docs:html</code></li>
+<li>Verify runtime roster assets: <code>npm run verify:runtime-roster</code></li>
+<li>Start one-terminal internet playtest through a Cloudflare quick tunnel: <code>npm run playtest</code></li>
+<li>Start playtest mode locally without a tunnel: <code>npm run playtest:local</code></li>
+</ul>
+<p>Expected local endpoints:</p>
+<ul>
+<li>Client: <code>http://127.0.0.1:5173</code></li>
+<li>Colyseus server: <code>ws://127.0.0.1:2567</code></li>
+<li>Playtest origin after <code>npm run playtest</code> or <code>npm run playtest:local</code>: <code>http://127.0.0.1:2567</code></li>
+</ul>
+<p>On Windows inside managed Codex shells, detached watch-mode startup can exit silently. If that happens, run <code>npm run dev</code> in the Codex integrated terminal or a normal PowerShell window and keep that terminal open.</p>
+<p>For visual verification, default to <code>npm run verify:browser-visual -- &lt;url&gt;</code> after starting the relevant local server; it launches installed Chrome/Edge headlessly and writes a screenshot under <code>work/browser-visual/</code>. Use the Codex in-app Browser only when the user explicitly asks for interactive in-app Browser control or when a task truly requires live clicking/typing that the screenshot smoke command cannot cover.</p>
+<h2>Working Rules</h2>
+<ul>
+<li>Keep the prototype playable after each coherent iteration.</li>
+<li>Keep every code change organized for human contribution: prefer clear ownership boundaries, focused modules, readable names, and small commits that a human developer can review, extend, or replace without untangling agent-specific shortcuts.</li>
+<li>Run <code>npm run build</code> before committing gameplay, UI, networking, or asset integration changes.</li>
+<li>Run <code>npm run audit:fallow:changed</code> before committing code changes. If it fails, fix the introduced findings or document the intentional deferral in the commit context before pushing.</li>
+<li>Run <code>npm run docs:html</code> after editing markdown docs that have generated HTML reading copies.</li>
+<li>Update <code>docs/VERSION_LOG.md</code> for meaningful playable checkpoints or project-management changes.</li>
+<li>Update docs when controls, terminology, rules, assets, setup, or planning change.</li>
+<li>Do not commit <code>node_modules/</code>, <code>dist/</code>, <code>.vite/</code>, logs, or throwaway files under <code>work/</code>.</li>
+<li>Preserve user or prior-session changes; do not revert unrelated local modifications.</li>
+</ul>
+<h2>GitHub Project Workflow</h2>
+<ul>
+<li>The live delivery board is <a href="https://github.com/users/jflim/projects/1">Gravity Canyon — V1 Playtest Alpha</a>. <code>docs/PRODUCTION_PLAN.md</code> remains the scope authority; the board tracks execution and evidence but cannot change the v1 contract.</li>
+<li>Use one dedicated branch per feature ticket. Before implementation, checkpoint or otherwise preserve any existing work, then create a branch named <code>codex/issue-&lt;number&gt;-&lt;short-slug&gt;</code> unless the user requests another name. Do not mix separate tickets on one branch.</li>
+<li>At the start of implementation, review the board and the linked issue. If no issue covers the requested in-scope work, create or identify one before making a substantial code change.</li>
+<li>Move the issue to <code>In Progress</code> when work begins. Keep exactly one primary delivery issue in progress per agent unless the user explicitly requests parallel work.</li>
+<li>Add a short issue comment when scope, assumptions, or blockers materially change. Do not create status-noise comments for routine investigation.</li>
+<li>Before declaring work complete, record verification evidence in the issue (tests, build, screenshots, or playtest outcome), link the PR or commit when available, and move it to <code>Done</code> only when its acceptance criteria pass.</li>
+<li>Human-network validation issues stay open until the named 1v1, 2v2, or four-human session has actually completed; automated tests do not substitute for those acceptance checks.</li>
+<li>Agents need authenticated GitHub CLI access with <code>repo</code> and <code>project</code> scopes to update the board. If access is unavailable, report that clearly and continue tracking against the linked issue locally rather than pretending the board was updated.</li>
+</ul>
+<h2>V1 Scope Lock</h2>
+<ul>
+<li><code>docs/PRODUCTION_PLAN.md</code> is the authority for current v1 scope.</li>
+<li><code>docs/GDD.md</code> is broader multi-version product vision and does not override the current Production Plan.</li>
+<li><code>docs/V1_PLAYTEST_ALPHA.html</code> is the original v1 contract snapshot and should not override newer Production Plan decisions.</li>
+<li>Before accepting new gameplay, roster, asset, UI, economy, social, or polish work as v1, classify it against <code>docs/PRODUCTION_PLAN.md</code>.</li>
+<li>If a request is not required for v1 acceptance, add it to the V2 parking lot or context notes instead of changing v1.</li>
+<li>To change locked v1 scope, the user must explicitly say: &quot;I am requesting a v1 contract change.&quot;</li>
+<li>When that phrase is used, push back, identify which v1 acceptance test fails without the change, require a tradeoff or deferral, then update the v1 contract and decision log if the change is accepted.</li>
+</ul>
+<h2>Product Constraints</h2>
+<ul>
+<li>Combat readability comes before cosmetic spectacle inside the match screen.</li>
+<li>Cosmetics must remain cosmetic only. They must not affect combat stats, hitboxes, projectile behavior, wind, movement, matchmaking, or rewards.</li>
+<li>Default public/playtest assets stay streamer-safe; mature/adult-only variants are future opt-in presentation scope and must not affect combat truth.</li>
+<li>Current v1 target is hosted private-room online 2v2 playtest alpha, with 1v1 supported for easier testing.</li>
+<li>Live matches should move toward server-authoritative combat.</li>
+<li>Gameplay sprites use stable runtime filenames in <code>public/assets</code>; variant/history sprites live under <code>public/assets/sprite-variants</code>.</li>
+</ul>
+<h2>graphify</h2>
+<p>This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.</p>
+<p>Graphify is intentionally repo-local. Prefer the committed npm wrapper so agents use <code>work/graphify-venv</code> even when Python or Graphify are not on the ambient PATH:</p>
+<ul>
+<li>Generic Graphify CLI: <code>npm run graphify -- &lt;args&gt;</code></li>
+<li>Update the code graph: <code>npm run graphify:update</code></li>
+<li>Query the graph: <code>npm run graphify -- query &quot;&lt;question&gt;&quot;</code></li>
+<li>Explain a concept: <code>npm run graphify -- explain &quot;&lt;concept&gt;&quot;</code></li>
+<li>Path between concepts: <code>npm run graphify -- path &quot;&lt;A&gt;&quot; &quot;&lt;B&gt;&quot;</code></li>
+</ul>
+<p>The wrapper resolves <code>work/graphify-venv/Scripts/graphify.exe</code> on Windows or <code>work/graphify-venv/bin/graphify</code> on Unix, falls back to <code>graphify</code> only if the repo-local venv is absent, and writes <code>graphify-out/.graphify_python</code> to the venv Python when available.</p>
+<p>The <code>npm run graphify:update</code> shortcut passes <code>--force</code> so legitimate node-count decreases after refactors do not block the graph refresh.</p>
+<p>When the user types <code>/graphify</code>, invoke the <code>skill</code> tool with <code>skill: &quot;graphify&quot;</code> before doing anything else.</p>
+<p>Rules:</p>
+<ul>
+<li>For codebase questions, first run <code>npm run graphify -- query &quot;&lt;question&gt;&quot;</code> when graphify-out/graph.json exists. Use <code>npm run graphify -- path &quot;&lt;A&gt;&quot; &quot;&lt;B&gt;&quot;</code> for relationships and <code>npm run graphify -- explain &quot;&lt;concept&gt;&quot;</code> for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.</li>
+<li>Dirty graphify-out/ files are expected after hooks or incremental updates; dirty graph files are not a reason to skip graphify. Only skip graphify if the task is about stale or incorrect graph output, or the user explicitly says not to use it.</li>
+<li>If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.</li>
+<li>Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.</li>
+<li>After modifying code, run <code>npm run graphify:update</code> to keep the graph current (AST-only, no API cost).</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

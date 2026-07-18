@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MatchView Refactor Implementation Plan</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        HTML reading copy generated from <a href="2026-06-15-match-view-refactor.md">docs/superpowers/plans/2026-06-15-match-view-refactor.md</a> on 2026-07-18.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>MatchView Refactor Implementation Plan</h1>
+<blockquote>
+<p><strong>For agentic workers:</strong> REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (<code>- [ ]</code>) syntax for tracking.</p>
+</blockquote>
+<p><strong>Goal:</strong> Extract match presentation coordination from <code>src/match/MatchScene.ts</code> while preserving the current playable behavior.</p>
+<p><strong>Architecture:</strong> <code>MatchScene</code> remains the Phaser lifecycle and match-flow coordinator. <code>MatchView</code> is a pure presentation facade that receives match state and delegates to renderers/UI collaborators. <code>MatchViewFactory</code> owns Phaser-specific object construction so the facade can be unit tested in Node without loading Phaser.</p>
+<p><strong>Tech Stack:</strong> TypeScript, Phaser 3, Vite, Node test runner, existing match renderer/UI modules.</p>
+<p>---</p>
+<h2>Target File Responsibilities</h2>
+<ul>
+<li><code>src/match/MatchScene.ts</code>: Phaser lifecycle, input sampling, local match state, gameplay controller orchestration, turn/round/projectile/impact flow, and camera calls.</li>
+<li><code>src/match/MatchView.ts</code>: Pure facade for background creation delegation, world/HUD draw coordination, combat-marker lifecycle forwarding, and collision-zone checked-state synchronization.</li>
+<li><code>src/match/MatchViewFactory.ts</code>: Phaser construction boundary for graphics layers, text/image HUD targets, renderers, command deck, combat marker renderer, collision-zone toggle, and background collaborator.</li>
+<li><code>src/match/MatchView.test.ts</code>: Node-safe public API tests using fake collaborators.</li>
+<li><code>src/match/architecture.test.ts</code>: Boundary tests preventing renderer/UI construction and draw helper ownership from drifting back into <code>MatchScene</code>.</li>
+<li><code>docs/TECHNICAL_DESIGN.md</code>: TDD module map and human editing map.</li>
+<li><code>docs/VERSION_LOG.md</code>: Human-readable checkpoint entry.</li>
+</ul>
+<h2>Task 1: Add Boundary Tests</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>src/match/architecture.test.ts</code></li>
+</ul>
+<ul>
+<li>[x] <strong>Step 1: Add expected files and exports</strong></li>
+</ul>
+<pre><code class="language-ts">
+&quot;src/match/MatchView.ts&quot;,
+
+&quot;src/match/MatchViewFactory.ts&quot;,
+
+</code></pre>
+<pre><code class="language-ts">
+[&quot;src/match/MatchView.ts&quot;, &quot;export class MatchView&quot;],
+
+[&quot;src/match/MatchViewFactory.ts&quot;, &quot;export function createMatchViewCollaborators&quot;],
+
+</code></pre>
+<ul>
+<li>[x] <strong>Step 2: Guard the <code>MatchScene</code> boundary</strong></li>
+</ul>
+<pre><code class="language-ts">
+test(&quot;match scene delegates presentation object setup and drawing to MatchView&quot;, () =&gt; {
+
+  const matchScene = readFileSync(&quot;src/match/MatchScene.ts&quot;, &quot;utf8&quot;);
+
+
+
+  assert.match(matchScene, /new MatchView/);
+
+  assert.doesNotMatch(matchScene, /new TerrainRenderer/);
+
+  assert.doesNotMatch(matchScene, /new VehicleRenderer/);
+
+  assert.doesNotMatch(matchScene, /new ProjectileRenderer/);
+
+  assert.doesNotMatch(matchScene, /new EffectsRenderer/);
+
+  assert.doesNotMatch(matchScene, /new CombatMarkerRenderer/);
+
+  assert.doesNotMatch(matchScene, /new CommandDeck/);
+
+  assert.doesNotMatch(matchScene, /new CollisionZonesToggle/);
+
+  assert.doesNotMatch(matchScene, /this\.add\.graphics\(/);
+
+  assert.doesNotMatch(matchScene, /this\.add\.text\(/);
+
+  assert.doesNotMatch(matchScene, /this\.add\.image\(/);
+
+  assert.doesNotMatch(matchScene, /private drawTerrain/);
+
+  assert.doesNotMatch(matchScene, /private drawAim/);
+
+  assert.doesNotMatch(matchScene, /private drawImpactPreview/);
+
+  assert.doesNotMatch(matchScene, /private drawVehicles/);
+
+  assert.doesNotMatch(matchScene, /private drawProjectile/);
+
+  assert.doesNotMatch(matchScene, /private drawHud/);
+
+});
+
+</code></pre>
+<ul>
+<li>[x] <strong>Step 3: Verify the test failed before implementation</strong></li>
+</ul>
+<p>Run: <code>npm test -- src/match/architecture.test.ts</code></p>
+<p>Expected initial result: FAIL because <code>MatchView</code> did not exist and <code>MatchScene</code> still owned renderer/UI construction.</p>
+<h2>Task 2: Add Pure MatchView Facade</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/match/MatchView.ts</code></li>
+<li>Create: <code>src/match/MatchView.test.ts</code></li>
+</ul>
+<ul>
+<li>[x] <strong>Step 1: Add the facade API</strong></li>
+</ul>
+<pre><code class="language-ts">
+export interface MatchViewOptions {
+
+  collaborators: MatchViewCollaborators;
+
+  worldWidth: number;
+
+  terrainStep: number;
+
+  surfaceAt: (x: number) =&gt; number;
+
+  isMovable: (vehicle: VehicleState) =&gt; boolean;
+
+}
+
+
+
+export class MatchView {
+
+  createBackground(): void;
+
+  update(deltaSeconds: number): void;
+
+  clearCombatMarkers(): void;
+
+  addCombatMarkerForVehicle(vehicle: VehicleState, kind: CombatMarkerKind, label: string, slot?: number): void;
+
+  setCollisionZonesVisible(visible: boolean): void;
+
+  draw(state: MatchViewState): void;
+
+}
+
+</code></pre>
+<ul>
+<li>[x] <strong>Step 2: Add Node-safe collaborator tests</strong></li>
+</ul>
+<p>Use fake collaborators to assert draw order, terrain inputs, aim eligibility, command-deck active state, marker forwarding, collision-zone checked-state forwarding, and background delegation.</p>
+<ul>
+<li>[x] <strong>Step 3: Run facade tests</strong></li>
+</ul>
+<p>Run: <code>npm test -- src/match/MatchView.test.ts</code></p>
+<p>Expected final result: PASS.</p>
+<h2>Task 3: Add Phaser MatchView Factory</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Create: <code>src/match/MatchViewFactory.ts</code></li>
+</ul>
+<ul>
+<li>[x] <strong>Step 1: Move Phaser construction into the factory</strong></li>
+</ul>
+<p>The factory exports:</p>
+<pre><code class="language-ts">
+export interface MatchViewFactoryOptions {
+
+  scene: Phaser.Scene;
+
+  document: Document;
+
+  mountTarget: HTMLElement;
+
+  worldWidth: number;
+
+  worldHeight: number;
+
+  worldRenderHeight: number;
+
+  projectileRadius: number;
+
+  showCombatHulls: boolean;
+
+  useUnitConceptPreview: boolean;
+
+  useStyleReferenceBackground: boolean;
+
+  moveMinX: number;
+
+  moveMaxX: number;
+
+  movePixelsPerUnit: number;
+
+  impactPreviewSeconds: number;
+
+  combatMarkerSeconds: number;
+
+  surfaceAt: (x: number) =&gt; number;
+
+  onCollisionZonesVisibleChange: (visible: boolean) =&gt; void;
+
+}
+
+
+
+export function createMatchViewCollaborators(options: MatchViewFactoryOptions): MatchViewCollaborators;
+
+</code></pre>
+<ul>
+<li>[x] <strong>Step 2: Preserve background layering</strong></li>
+</ul>
+<p>Set background objects to explicit negative depths so the extraction does not depend on Phaser add order:</p>
+<pre><code class="language-ts">
+.setDepth(-100)
+
+.setDepth(-99)
+
+.setDepth(-98)
+
+.setDepth(-97)
+
+</code></pre>
+<h2>Task 4: Wire MatchScene To MatchView</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>src/match/MatchScene.ts</code></li>
+</ul>
+<ul>
+<li>[x] <strong>Step 1: Replace renderer/UI imports and fields</strong></li>
+</ul>
+<p><code>MatchScene</code> imports only:</p>
+<pre><code class="language-ts">
+import { MatchView } from &quot;./MatchView&quot;;
+
+import { createMatchViewCollaborators } from &quot;./MatchViewFactory&quot;;
+
+</code></pre>
+<p>The scene owns:</p>
+<pre><code class="language-ts">
+private matchView?: MatchView;
+
+</code></pre>
+<ul>
+<li>[x] <strong>Step 2: Replace presentation setup in <code>create()</code></strong></li>
+</ul>
+<pre><code class="language-ts">
+this.matchView = new MatchView({
+
+  collaborators: createMatchViewCollaborators({
+
+    scene: this,
+
+    document,
+
+    mountTarget: document.body,
+
+    worldWidth: WORLD_WIDTH,
+
+    worldHeight: WORLD_HEIGHT,
+
+    worldRenderHeight: WORLD_RENDER_HEIGHT,
+
+    projectileRadius: PROJECTILE_RADIUS,
+
+    showCombatHulls: this.showCombatHulls,
+
+    useUnitConceptPreview: USE_UNIT_CONCEPT_PREVIEW,
+
+    useStyleReferenceBackground: USE_STYLE_REFERENCE_BACKGROUND,
+
+    moveMinX: MOVE_MIN_X,
+
+    moveMaxX: MOVE_MAX_X,
+
+    movePixelsPerUnit: MOVE_PIXELS_PER_UNIT,
+
+    impactPreviewSeconds: IMPACT_PREVIEW_SECONDS,
+
+    combatMarkerSeconds: COMBAT_MARKER_SECONDS,
+
+    surfaceAt: (x) =&gt; this.surfaceAt(x),
+
+    onCollisionZonesVisibleChange: (visible) =&gt; this.setCollisionZonesVisible(visible),
+
+  }),
+
+  worldWidth: WORLD_WIDTH,
+
+  terrainStep: TERRAIN_STEP,
+
+  surfaceAt: (x) =&gt; this.surfaceAt(x),
+
+  isMovable: (vehicle) =&gt; this.isMovable(vehicle),
+
+});
+
+this.matchView.createBackground();
+
+</code></pre>
+<ul>
+<li>[x] <strong>Step 3: Replace old draw helpers with one state handoff</strong></li>
+</ul>
+<pre><code class="language-ts">
+private drawWorld(): void {
+
+  this.matchView?.draw({
+
+    vehicles: this.vehicles,
+
+    activeVehicle: this.activeVehicle(),
+
+    projectile: this.projectile,
+
+    impactPreview: this.impactPreview,
+
+    currentMap: this.terrainController.currentMap,
+
+    visibleVoidTopY: this.terrainController.visibleVoidTopY,
+
+    visibleVoidBottomY: this.visibleVoidBottomY(),
+
+    terrainPlatformBottomY: this.terrainPlatformBottomY(),
+
+    terrainBreakthroughY: this.terrainBreakthroughY(),
+
+    showCombatHulls: this.showCombatHulls,
+
+    roundOver: this.roundOver,
+
+    turnCommitted: this.turnController.isCommitted,
+
+    charging: this.turnController.isCharging,
+
+    charge: this.turnController.charge,
+
+    turnTime: this.turnController.turnTime,
+
+    cameraZoom: this.cameras.main.zoom,
+
+    shotResult: this.shotResult,
+
+    roundComplete: this.roundOver || this.aliveTeams().size &lt;= 1 || Boolean(this.winningTeam()),
+
+    windLabel: this.windLabel(),
+
+  });
+
+}
+
+</code></pre>
+<ul>
+<li>[x] <strong>Step 4: Verify line-count reduction</strong></li>
+</ul>
+<p>Run: <code>(Get-Content src\match\MatchScene.ts).Count</code></p>
+<p>Expected final result: below 700 lines.</p>
+<h2>Task 5: Update Documentation And Verify</h2>
+<p><strong>Files:</strong></p>
+<ul>
+<li>Modify: <code>docs/TECHNICAL_DESIGN.md</code></li>
+<li>Modify: <code>docs/VERSION_LOG.md</code></li>
+<li>Generated: HTML docs via <code>npm run docs:html</code></li>
+</ul>
+<ul>
+<li>[x] <strong>Step 1: Update TDD and version log</strong></li>
+</ul>
+<p>Document <code>MatchView</code> as the pure facade and <code>MatchViewFactory</code> as the Phaser construction boundary.</p>
+<ul>
+<li>[ ] <strong>Step 2: Regenerate HTML docs</strong></li>
+</ul>
+<p>Run: <code>npm run docs:html</code></p>
+<p>Expected: generated HTML docs complete without errors.</p>
+<ul>
+<li>[ ] <strong>Step 3: Run final verification</strong></li>
+</ul>
+<p>Run:</p>
+<pre><code class="language-powershell">
+npm test
+
+npm run verify:runtime-roster
+
+npm run build
+
+</code></pre>
+<p>Expected: all pass.</p>
+<h2>Self-Review</h2>
+<ul>
+<li>Spec coverage: The plan implements the approved view-facade direction while keeping <code>MatchCameraController</code> separate and preserving gameplay ownership in <code>MatchScene</code>.</li>
+<li>Testability correction: The final implementation uses a separate <code>MatchViewFactory</code> because importing Phaser directly in a Node unit test pulls browser/WebGL assumptions into the test runner.</li>
+<li>Placeholder scan: No unresolved placeholder language. The plan includes exact files, API shape, verification commands, and expected results.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

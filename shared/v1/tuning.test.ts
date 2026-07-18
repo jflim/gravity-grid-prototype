@@ -1,0 +1,55 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import {
+  MAX_ELEVATION_DEG,
+  MAX_HP,
+  MAX_POWER,
+  MIN_ELEVATION_DEG,
+  MOVE_SPEED_PIXELS_PER_SECOND,
+  PROJECTILE_REPLAY_TIME_SCALE,
+  SETTLEMENT_MAX_SLOPE_ITERATIONS,
+  SETTLEMENT_SLIDE_START_ANGLE_DEG,
+  SETTLEMENT_SLOPE_SAMPLE_DISTANCE,
+  SETTLEMENT_SLOPE_STEP,
+  SETTLEMENT_SLOPE_THRESHOLD,
+  TERRAIN_CHANGE_SETTLE_PADDING,
+  TURN_SECONDS,
+  VEHICLE_FALL_GRAVITY_PIXELS_PER_SECOND_SQUARED,
+  VEHICLE_HALF_WIDTH,
+  VEHICLE_MAX_FALL_SPEED_PIXELS_PER_SECOND,
+  VEHICLE_SLIDE_SPEED_PIXELS_PER_SECOND,
+  V1_WORLD_HEIGHT,
+  V1_WORLD_WIDTH,
+} from "./tuning.js";
+
+test("v1 tuning exports the current local match scale and turn constants", () => {
+  assert.equal(TURN_SECONDS, 20);
+  assert.equal(V1_WORLD_WIDTH, 2400);
+  assert.equal(V1_WORLD_HEIGHT, 900);
+  assert.equal(MAX_HP, 100);
+  assert.equal(MAX_POWER, 100);
+});
+
+test("v1 tuning names the current vehicle settlement constants", () => {
+  assert.equal(VEHICLE_HALF_WIDTH, 82);
+  assert.equal(TERRAIN_CHANGE_SETTLE_PADDING, 42);
+  assert.equal(SETTLEMENT_SLIDE_START_ANGLE_DEG, 45);
+  assert.equal(SETTLEMENT_SLOPE_SAMPLE_DISTANCE, 18);
+  assert.equal(SETTLEMENT_SLOPE_THRESHOLD, SETTLEMENT_SLOPE_SAMPLE_DISTANCE * 2);
+  assert.equal(SETTLEMENT_SLOPE_STEP, 7);
+  assert.equal(SETTLEMENT_MAX_SLOPE_ITERATIONS, 14);
+  assert.equal(VEHICLE_SLIDE_SPEED_PIXELS_PER_SECOND, 80);
+  assert.equal(VEHICLE_FALL_GRAVITY_PIXELS_PER_SECOND_SQUARED, 360);
+  assert.equal(VEHICLE_MAX_FALL_SPEED_PIXELS_PER_SECOND, 520);
+});
+
+test("v1 aiming tuning keeps a broad upper artillery arc", () => {
+  assert.equal(MIN_ELEVATION_DEG, 5);
+  assert.equal(MAX_ELEVATION_DEG, 90);
+  assert.ok(MAX_ELEVATION_DEG > MIN_ELEVATION_DEG);
+});
+
+test("v1 action pacing keeps movement and projectile replay responsive", () => {
+  assert.equal(MOVE_SPEED_PIXELS_PER_SECOND, 150);
+  assert.equal(PROJECTILE_REPLAY_TIME_SCALE, 1.5);
+});

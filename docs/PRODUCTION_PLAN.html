@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gravity Canyon Production Plan</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        HTML reading copy generated from <a href="PRODUCTION_PLAN.md">docs/PRODUCTION_PLAN.md</a> on 2026-07-18.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Gravity Canyon Production Plan</h1>
+<p>Status: current milestone authority</p>
+<p>Last updated: 2026-06-18</p>
+<p>Design reference: <a href="GDD.html">GDD.md</a></p>
+<p>Runbook: <a href="../README.html">../README.md</a></p>
+<h2>1. Document Purpose</h2>
+<p>This Production Plan defines the current milestone, accepted scope, next build order, acceptance criteria, out-of-scope boundaries, and change-control rules for Gravity Canyon.</p>
+<p>Use this document when asking:</p>
+<ul>
+<li>What are we building next?</li>
+<li>Is this v1 scope?</li>
+<li>What is accepted, deferred, or blocked?</li>
+<li>What tests and checks prove a milestone is ready?</li>
+</ul>
+<p>The GDD can describe the broader product vision. This Production Plan controls current milestone scope.</p>
+<h2>2. Current Milestone</h2>
+<p>Current milestone: V1 Playtest Alpha - Hosted Private-Room 2v2.</p>
+<p>Goal: prove reliable hosted private-room online 2v2 artillery combat with the existing four-character roster. 1v1 is supported as a practical testing mode, but 2v2 is the v1 promise.</p>
+<p>The immediate technical bottleneck is online parity: the local Phaser match is playable, and the Colyseus room foundation exists, but the full Phaser combat loop is not yet server-authoritative online play.</p>
+<h2>3. V1 Scope Authority</h2>
+<p>This Production Plan is the current v1 scope authority.</p>
+<p>Supporting reference:</p>
+<ul>
+<li><a href="V1_PLAYTEST_ALPHA.html">V1_PLAYTEST_ALPHA.html</a> remains a readable contract snapshot from the original v1 scoping pass.</li>
+<li>If this Production Plan and the older v1 HTML snapshot disagree, this Production Plan wins after this restructuring.</li>
+</ul>
+<h2>4. V1 Promise</h2>
+<p>Gravity Canyon v1 is a hosted private-room playtest alpha. The core promise is reliable online 2v2 artillery combat with real people.</p>
+<p>V1 must support:</p>
+<ul>
+<li>Hosted URL play without local installation.</li>
+<li>Private room creation.</li>
+<li>Join by invite link or room code.</li>
+<li>Guest display name chosen before joining a room.</li>
+<li>Seat selection.</li>
+<li>Unit selection for the four existing v1 Pilot/Vehicle pairs.</li>
+<li>1v1 and 2v2 room modes.</li>
+<li>Best-of-1 and best-of-3 match length settings.</li>
+<li>Server-owned room, round, turn, movement, aim, firing, projectile, terrain, HP, KOs, Void Dropped eliminations, and round/match result.</li>
+<li>Four-human 2v2 validation on separate connections.</li>
+</ul>
+<p>V1 is not a public launch. It is a playable alpha for invited friends and feedback.</p>
+<h2>5. V1 Roster</h2>
+<p>V1 uses exactly four existing characters:</p>
+<ul>
+<li>Nova.</li>
+<li>Vesper.</li>
+<li>Kaelii.</li>
+<li>Perlah.</li>
+</ul>
+<p>Each v1 character has one primary weapon/action.</p>
+<p>No additional playable characters are v1 unless the v1 contract is explicitly changed.</p>
+<h2>6. V1 Room Flow</h2>
+<p>Required room flow:</p>
+<ol>
+<li>Player opens hosted URL.</li>
+<li>Player enters display name before joining a room.</li>
+<li>Player creates or joins a private room.</li>
+<li>Player picks a seat.</li>
+<li>Player picks a Unit.</li>
+<li>Player readies.</li>
+<li>Host starts match when ready conditions are met.</li>
+<li>Match completes.</li>
+<li>Players return to the same room while at least one player remains.</li>
+</ol>
+<p>Room rules:</p>
+<ul>
+<li>Anyone with the room invite/link/code can join.</li>
+<li>No account required.</li>
+<li>No database persistence required.</li>
+<li>First connected player is host.</li>
+<li>If host leaves, host passes to the next earliest connected player.</li>
+<li>Host can change settings before the match starts.</li>
+<li>Settings cannot change mid-match.</li>
+<li>Unseated room members may observe only if this is implemented safely without expanding scope.</li>
+</ul>
+<h2>7. V1 Match Rules</h2>
+<p>Required match rules:</p>
+<ul>
+<li>Team elimination win condition.</li>
+<li>1v1 and 2v2 modes.</li>
+<li>Best-of-1 and best-of-3 match settings.</li>
+<li>One shot per active turn.</li>
+<li>Firing commits the turn immediately.</li>
+<li>Turn timer uses the shared v1 rules constant, currently 20 seconds.</li>
+<li>Equal baseline HP per vehicle.</li>
+<li>Limited movement range per turn.</li>
+<li>Downhill movement and falling are allowed.</li>
+<li>Steep uphill movement is blocked by climb-angle rule.</li>
+<li>Wind is visible and meaningful.</li>
+<li>Full turn order is visible enough to understand upcoming turns.</li>
+<li>HP KO and Void Dropped both remove a unit from play.</li>
+<li>HP KO and Void Dropped should have distinct visual presentation.</li>
+</ul>
+<h2>8. V1 Combat Requirements</h2>
+<p>Required combat systems:</p>
+<ul>
+<li>Server-authoritative movement validation.</li>
+<li>Server-authoritative aim/fire input.</li>
+<li>Server-authoritative projectile simulation.</li>
+<li>Server-authoritative terrain deformation.</li>
+<li>Server-authoritative damage, knockback, KOs, and Void Dropped eliminations.</li>
+<li>Vehicle-only hit zones.</li>
+<li>Splash measured from impact point to vehicle hit-zone edge.</li>
+<li>Terrain destruction from all weapons.</li>
+<li>Larger terrain impact/knockback behavior for Nova's terrain-breaker weapon.</li>
+<li>Self-damage allowed.</li>
+<li>Allied friendly-fire damage blocked by default.</li>
+</ul>
+<p>The client can render and present feedback, but the server must own combat results.</p>
+<h2>9. V1 Maps</h2>
+<p>V1 uses a fixed map pool with known spawn points for 1v1 and 2v2.</p>
+<p>Required map behavior:</p>
+<ul>
+<li>Host can select a map.</li>
+<li>Host can select random map.</li>
+<li>Random means the server chooses from the fixed v1 map list.</li>
+<li>Maps include multi-tier terrain, gaps, and canyon landmarks.</li>
+<li>Valid platform terrain lives above the visible void area.</li>
+<li>Spawn layouts avoid unfair immediate one-shot void drops.</li>
+</ul>
+<p>Map art polish can improve readability, but new map count or major map scope expansion is not v1 unless explicitly traded against other work.</p>
+<h2>10. V1 UI And UX Requirements</h2>
+<p>V1 match UI must show:</p>
+<ul>
+<li>Active player.</li>
+<li>Turn timer.</li>
+<li>Team/HP bars.</li>
+<li>Wind.</li>
+<li>Aim angle.</li>
+<li>Launch power.</li>
+<li>Movement range.</li>
+<li>Turn order.</li>
+<li>Weapon info.</li>
+<li>Round/match score.</li>
+<li>Round/match result.</li>
+</ul>
+<p>V1 room UI must show:</p>
+<ul>
+<li>Room code/link.</li>
+<li>Display names.</li>
+<li>Seats.</li>
+<li>Teams.</li>
+<li>Selected characters.</li>
+<li>Ready state.</li>
+<li>Host controls.</li>
+<li>Mode, match length, and map settings before match start.</li>
+</ul>
+<p>Preset phrase bubbles are v1 scope. Free-text chat is not v1.</p>
+<h2>11. V1 Art And Audio Requirements</h2>
+<p>V1 art requirements:</p>
+<ul>
+<li>Four existing characters only.</li>
+<li>Runtime gameplay sprites for each v1 unit.</li>
+<li>Vehicle-only collision art must read correctly.</li>
+<li>Combat readability comes before cosmetic spectacle inside the match screen.</li>
+<li>Default playtest art should be stream-safe, platform-safe, and fanservice-forward without becoming explicit.</li>
+</ul>
+<p>V1 audio requirements:</p>
+<ul>
+<li>One readable non-voice weapon SFX per v1 character.</li>
+<li>Minimal impact/UI sounds if low-risk.</li>
+<li>Character voice, KO shouts, and broader music identity are future scope.</li>
+</ul>
+<h2>12. V1 Deployment Requirements</h2>
+<p>V1 must be hostable so friends can play without installing the project.</p>
+<p>Current accepted playtest path:</p>
+<ul>
+<li><code>npm run playtest</code> builds the project.</li>
+<li>It serves the built client and Colyseus server from one local port.</li>
+<li>It starts a Cloudflare quick tunnel.</li>
+<li>It prints the share URL.</li>
+</ul>
+<p>Reliability requirement:</p>
+<ul>
+<li>Cloudflare Tunnel should use the more reliable HTTP/2 protocol if QUIC errors appear.</li>
+<li>Runtime art should use optimized WebP delivery assets.</li>
+<li>The app should show loading/failure status instead of a blank screen if required art fails.</li>
+</ul>
+<p>Longer-term deployment options such as AWS, Lightsail, S3, CloudFront, Fly.io, Render, or DigitalOcean are not v1 gameplay scope. They are production/infrastructure decisions.</p>
+<h2>13. V1 Acceptance Criteria</h2>
+<p>V1 is accepted when:</p>
+<ul>
+<li>Four remote humans can join the same private room from separate connections.</li>
+<li>Players can occupy two teams in a 2v2 match.</li>
+<li>Players can complete a full match without desync.</li>
+<li>Server owns combat results.</li>
+<li>One 1v1 playtest completes successfully.</li>
+<li>One 2v2-format playtest completes successfully.</li>
+<li>One four-human gold network validation completes successfully.</li>
+<li>A tester can understand whose turn it is, what they can do, why damage happened, and why the round/match ended.</li>
+</ul>
+<h2>14. Explicitly Out Of Scope For V1</h2>
+<p>Not v1:</p>
+<ul>
+<li>Additional playable characters.</li>
+<li>Second weapons.</li>
+<li>Special shots or ultimates.</li>
+<li>Full public room list.</li>
+<li>Public matchmaking.</li>
+<li>Ranked matchmaking.</li>
+<li>Public lobby chat.</li>
+<li>Free-text room chat.</li>
+<li>Accounts.</li>
+<li>Persistent profiles.</li>
+<li>Persistent match history.</li>
+<li>Persistent inventory.</li>
+<li>Full gacha/capsule system.</li>
+<li>Real-money purchases.</li>
+<li>Full collection shelf.</li>
+<li>Mobile support.</li>
+<li>Full voice/KO shout set.</li>
+<li>Mature/adult-only asset pack.</li>
+<li>Public launch polish.</li>
+</ul>
+<p>These may stay in the GDD as future direction, but they do not enter v1 without change control.</p>
+<h2>15. Change Control</h2>
+<p>To change locked v1 scope, the user must explicitly say:</p>
+<pre><code class="language-text">
+I am requesting a v1 contract change.
+
+</code></pre>
+<p>When that phrase is used, the assistant must:</p>
+<ol>
+<li>Push back.</li>
+<li>Identify which v1 acceptance criterion fails without the change.</li>
+<li>Identify what work must be traded out, deferred, or narrowed.</li>
+<li>Update this Production Plan if the change is accepted.</li>
+<li>Update the decision log or version log.</li>
+</ol>
+<p>If the phrase is not used, new ideas should be classified as V1, Future, Context, or Open Question. Future ideas go in the GDD parking lot or a supporting reference, not into v1 work.</p>
+<h2>16. Current Implementation State</h2>
+<p>Done:</p>
+<ul>
+<li>Local Phaser artillery prototype.</li>
+<li>Local four-unit 2v2-style test roster.</li>
+<li>Destructible terrain and void drop presentation.</li>
+<li>Vehicle-only hit zone prototype.</li>
+<li>Command deck and readable match HUD direction.</li>
+<li>Optimized WebP runtime art delivery.</li>
+<li>Colyseus room create/join.</li>
+<li>Pre-room guest display names.</li>
+<li>Ready checks.</li>
+<li>Placeholder reward/nameplate state.</li>
+<li>Server-owned combat preview state.</li>
+<li>Auto-room host/seat lobby with Duel/Doubles mode, visual character selection, ready checks, and server-owned match setup handoff into Phaser.</li>
+<li>Server-owned room settings for Duel/Doubles mode, Best of 1/Best of 3 match length, and map select/random, with host-only lobby/ready edits and gameplay-phase locking.</li>
+<li>Server-owned preview match setup metadata from claimed seats, selected characters, match length, and selected map, including target score, chosen map id/name, turn sequence, and map-spawned preview vehicles.</li>
+<li>Phaser match start from server-owned setup metadata, so online ready uses the selected map, claimed seats, selected characters, and turn sequence instead of local demo defaults.</li>
+<li>Initial server-owned turn authority skeleton: preview turns publish a server clock, active vehicle, authority revision, and last accepted turn intent; forged turn intents from non-active owners are rejected server-side.</li>
+<li>One-terminal public playtest launcher.</li>
+</ul>
+<p>Not done:</p>
+<ul>
+<li>Full online match scoring beyond the preview target-score metadata.</li>
+<li>Phaser match driven by Colyseus room state.</li>
+<li>Server-authoritative movement/projectile/terrain/damage beyond the current turn-clock and intent-validation skeleton.</li>
+<li>Full round/match scoring online.</li>
+<li>Four-human 2v2 validation.</li>
+</ul>
+<h2>17. Next Build Order</h2>
+<p>Recommended next sequence:</p>
+<ol>
+<li>Smoke-test playtest tunnel reliability and force Cloudflare Tunnel HTTP/2 if QUIC errors appear.</li>
+<li>Extend server turn authority from the current intent skeleton into movement, aim/fire payloads, projectile, terrain, damage, KO, and round result authority.</li>
+<li>Add online match scoring beyond the current target-score setup metadata.</li>
+<li>Validate 1v1 online.</li>
+<li>Validate 2v2 format online.</li>
+<li>Run four-human 2v2 gold validation.</li>
+</ol>
+<h2>18. Quality Gates</h2>
+<p>Before committing gameplay, UI, networking, asset integration, or deployment changes:</p>
+<pre><code class="language-powershell">
+npm test
+
+npm run build
+
+npm run verify:runtime-roster
+
+</code></pre>
+<p>After markdown doc edits:</p>
+<pre><code class="language-powershell">
+npm run docs:html
+
+</code></pre>
+<p>After runtime art changes:</p>
+<pre><code class="language-powershell">
+npm run optimize:assets
+
+npm run verify:runtime-roster
+
+</code></pre>
+<p>For public playtest validation:</p>
+<pre><code class="language-powershell">
+npm run playtest
+
+</code></pre>
+<p>Then verify that the printed URL loads the app, runtime config, and WebP art.</p>
+<h2>19. Production Cadence</h2>
+<p>Recommended loop:</p>
+<ol>
+<li>Pick one version goal.</li>
+<li>Confirm whether it is v1 or future scope.</li>
+<li>Implement only that goal.</li>
+<li>Run the relevant quality gates.</li>
+<li>Update docs if rules, setup, controls, terminology, assets, or scope changed.</li>
+<li>Update <a href="VERSION_LOG.html">VERSION_LOG.md</a> for meaningful checkpoints.</li>
+<li>Commit with a descriptive message.</li>
+<li>Decide the next goal.</li>
+</ol>
+<h2>20. Supporting References</h2>
+<ul>
+<li><a href="GDD.html">GDD.md</a>: living game design reference.</li>
+<li><a href="TECHNICAL_DESIGN.html">TECHNICAL_DESIGN.md</a>: implementer-facing architecture and server-authoritative v1 plan.</li>
+<li><a href="V1_PLAYTEST_ALPHA.html">V1_PLAYTEST_ALPHA.html</a>: original v1 contract snapshot.</li>
+<li><a href="CHARACTER_ROSTER.html">CHARACTER_ROSTER.md</a>: roster/art notes.</li>
+<li><a href="COLLISION_ART_RULE.html">COLLISION_ART_RULE.md</a>: vehicle-only hit-zone art rule.</li>
+<li><a href="SPRITE_ASSET_WORKFLOW.html">SPRITE_ASSET_WORKFLOW.md</a>: art source/delivery workflow.</li>
+<li><a href="VERSION_LOG.html">VERSION_LOG.md</a>: checkpoint history.</li>
+<li><a href="GIT_WORKFLOW.html">GIT_WORKFLOW.md</a>: repo process.</li>
+</ul>
+    </article>
+  </main>
+</body>
+</html>

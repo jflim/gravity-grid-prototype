@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Collision Art Rule</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f4ef;
+      --paper: #fffdf8;
+      --ink: #211d1a;
+      --muted: #625b52;
+      --line: #ddd2c3;
+      --code: #2a2723;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 70px;
+    }
+    article {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(45, 35, 20, 0.08);
+    }
+    .generated {
+      border-left: 5px solid #2866a8;
+      background: #eef5fb;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      color: var(--muted);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.2;
+      margin: 1.35em 0 0.5em;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 4vw, 3rem); }
+    h2 { border-bottom: 2px solid var(--line); padding-bottom: 0.3em; }
+    p { margin: 0 0 1em; }
+    a { color: #245d96; }
+    code, pre { font-family: "Cascadia Code", Consolas, Monaco, "Courier New", monospace; }
+    code { background: #eee7dc; border-radius: 4px; padding: 0.12em 0.3em; }
+    pre {
+      overflow-x: auto;
+      color: var(--paper);
+      background: var(--code);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #efe7dc; }
+    blockquote {
+      margin: 1em 0;
+      border-left: 5px solid #c57d1c;
+      background: #fbf3e6;
+      padding: 10px 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <div class="generated">
+        HTML reading copy generated from <a href="COLLISION_ART_RULE.md">docs/COLLISION_ART_RULE.md</a> on 2026-07-18.
+        Read and share this page; edit the markdown source, then run <code>npm run docs:html</code>.
+      </div>
+<h1>Collision Art Rule</h1>
+<p>Gravity Canyon v1 uses vehicle-only combat collision.</p>
+<p>The playable damage object is the rig, rover, cart, or vehicle chassis. Pilot art is identity and animation, not a custom damage shape. This keeps cosmetics, pose changes, hair, outfits, and future art revisions from changing combat fairness.</p>
+<h2>V1 Rule</h2>
+<ul>
+<li>Direct-hit collision uses one shared vehicle hit zone for all v1 units.</li>
+<li>Splash damage blooms from the projectile impact point, then measures distance to the nearest edge of each vehicle hit zone.</li>
+<li>Pilot art and cosmetic detail do not define damageable pixels.</li>
+<li>A projectile that visually hits exposed pilot art but misses the vehicle hit zone is treated as an art-readability problem, not a hitbox change.</li>
+</ul>
+<h2>Art Acceptance</h2>
+<p>A v1 match sprite is acceptable only when the vehicle-only hit zone feels believable on top of the art.</p>
+<p>Standing, crouched, leaning, or high-riding pilot poses need an obvious protection cue:</p>
+<ul>
+<li>cockpit,</li>
+<li>guard rail,</li>
+<li>roll cage,</li>
+<li>armored platform,</li>
+<li>harness.</li>
+</ul>
+<p>If the pilot visually reads as an exposed separate target, the sprite is not match-ready until the pose, crop, scale, vehicle frame, or protective structure is adjusted.</p>
+<h2>Enforcement</h2>
+<p>The code keeps this from becoming subjective drift:</p>
+<ul>
+<li><code>src/v1CollisionProfiles.ts</code> stores the shared vehicle hit zone and v1 art-review notes.</li>
+<li><code>src/collisionArtRule.ts</code> evaluates whether each sprite profile has reasonable size ratios and required pilot-protection cues.</li>
+<li><code>src/collisionArtRule.test.ts</code> fails if a v1 unit gets a custom hit zone, lacks required review metadata, or becomes too visually large for the shared vehicle hit zone.</li>
+</ul>
+<p>The automated rule is a guardrail, not a replacement for visual review. If the debug hit zone looks dishonest on a sprite, the next action is to revise the art or presentation profile.</p>
+    </article>
+  </main>
+</body>
+</html>

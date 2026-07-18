@@ -7,6 +7,7 @@ This repo should be treated as a sequence of playable checkpoints, not a forever
 - Commit after each coherent iteration or reviewable documentation update.
 - Keep commits descriptive and scoped.
 - Run `npm run build` before committing gameplay/code changes.
+- Run `npm run audit:fallow:changed` before committing code changes. This is the changed-files gate; it uses Fallow's `--gate all` mode so every finding in changed files must be cleaned up, intentionally suppressed, or documented before the commit is considered human-ready.
 - Keep generated folders out of Git: `node_modules/` and `dist/` are ignored.
 - Prefer one focused purpose per commit.
 - Do not commit exploratory throwaway changes unless they have become the chosen direction.
@@ -43,12 +44,16 @@ For tiny docs-only changes, committing directly to `main` is acceptable.
 Before pushing code changes:
 
 - Run `npm run build`.
+- Run `npm run audit:fallow:changed`.
 - Refresh/play the local prototype when the change is visual or gameplay-facing.
 - Update docs when terminology, controls, rules, assets, or planning changed.
 - Update `docs/VERSION_LOG.md` for playable checkpoints or meaningful project-management changes.
 - Check `git status --short` so only intended files are included.
 
 Docs-only commits do not require `npm run build`, but should still be reviewed for accuracy.
+If markdown docs changed, run `npm run docs:html` so generated HTML reading copies stay current.
+
+Use `npm run audit:fallow` for broad evidence reports and `npm run audit:debt` for the generated technical-debt audit page. Those commands are diagnostic. `npm run audit:fallow:changed` is the commit gate and writes `work/audits/fallow-audit.json`.
 
 ## How Often To Commit
 
@@ -94,7 +99,7 @@ chore: tag v0.5.0 checkpoint
 
 ## Version Checkpoint Loop
 
-1. Pick one version goal from `docs/BUILD_PLAN.md`.
+1. Pick one version goal from `docs/PRODUCTION_PLAN.md`.
 2. Implement only that goal.
 3. Run `npm run build`.
 4. Update `docs/VERSION_LOG.md`.
@@ -123,6 +128,18 @@ Use GitHub CLI for repo checks when helpful:
 gh repo view jflim/gravity-grid-prototype
 gh pr status
 ```
+
+The live v1 delivery board is [Gravity Canyon — V1 Playtest Alpha](https://github.com/users/jflim/projects/1). Use linked repository issues as the unit of delivery so code, review, and verification evidence remain connected. The board is an execution view; `PRODUCTION_PLAN.md` remains the v1 scope authority.
+
+Agent workflow:
+
+1. Review the board and linked issue before substantial implementation.
+2. Checkpoint or preserve existing work, then create one dedicated branch per ticket using `codex/issue-<number>-<short-slug>` unless the user requests another name.
+3. Set the issue to `In Progress` when work starts.
+4. Comment only when scope, assumptions, blockers, or evidence materially change.
+5. Link the resulting commit or pull request.
+6. Record quality-gate and playtest evidence before setting the issue to `Done`.
+7. Keep human validation issues open until the named network session actually succeeds.
 
 ## Current Local Repo
 
