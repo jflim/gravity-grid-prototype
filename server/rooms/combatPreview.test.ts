@@ -130,6 +130,30 @@ test("previewFireForClient persists the authoritative crater in room terrain", (
   assert.ok((state.terrainCraters[0]?.radius ?? 0) > 0);
 });
 
+test("a complete authoritative 1v1 round ends from server-owned damage", () => {
+  const state = readyState();
+  startCombatPreview(state, { nowMs: 1_000 });
+  const red = state.vehicles[0];
+  const blue = state.vehicles[1];
+  assert.ok(red && blue);
+  red.x = 500;
+  red.y = 500;
+  blue.x = 565;
+  blue.y = 500;
+  blue.hp = 1;
+  state.wind = 0;
+
+  previewFireForClient(state, "red-session", { nowMs: 3_000 }, { angle: 5, power: 10, facing: 1 });
+
+  assert.equal(blue.alive, false);
+  assert.equal(blue.defeatReason, "damage");
+  assert.equal(state.phase, "round-over");
+  assert.equal(state.winnerTeam, "red");
+  assert.equal(state.roundEndReason, "team-eliminated");
+  assert.equal(state.activeVehicleId, "");
+  assert.equal(state.turnStartedAtMs, 0);
+});
+
 test("previewFireForClient keeps the next player timer full until the shot replay window ends", () => {
   const state = readyState();
   startCombatPreview(state, { nowMs: 1_000 });
@@ -161,6 +185,23 @@ test("advanceTimedOutPreviewTurn advances the server-owned turn when the clock e
   assert.equal(state.turnSecondsRemaining, TURN_SECONDS);
   assert.match(state.status, /timed out/i);
   assert.match(state.status, /Blue \/ Perlah is up/);
+});
+
+test("server turn advancement skips defeated units in synchronized 2v2 order", () => {
+  const state = ready2v2State();
+  startCombatPreview(state, { nowMs: 1_000 });
+  const defeated = state.vehicles.find((vehicle) => vehicle.vehicleId === "blue-1");
+  assert.ok(defeated);
+  defeated.hp = 0;
+  defeated.alive = false;
+  defeated.defeatReason = "damage";
+
+  const advanced = advanceTimedOutPreviewTurn(state, { nowMs: 21_001 });
+
+  assert.equal(advanced, true);
+  assert.deepEqual(Array.from(state.turnSequence), ["red-1", "blue-1", "red-2", "blue-2"]);
+  assert.equal(state.activeVehicleId, "red-2");
+  assert.equal(state.turnNumber, 2);
 });
 
 test("previewFireForClient does not damage far enemies when the projectile lands away from them", () => {
@@ -297,6 +338,16 @@ function readyState(): GravityCanyonState {
   state.players.set("blue-session", playerState("blue-session", "Blue"));
   state.slots.set("red-1", slotState("red-1", "red-session", "kaelii"));
   state.slots.set("blue-1", slotState("blue-1", "blue-session", "perlah"));
+  return state;
+}
+
+function ready2v2State(): GravityCanyonState {
+  const state = readyState();
+  state.mode = "2v2";
+  state.players.set("red-two", playerState("red-two", "Red Two"));
+  state.players.set("blue-two", playerState("blue-two", "Blue Two"));
+  state.slots.set("red-2", slotState("red-2", "red-two", "nova"));
+  state.slots.set("blue-2", slotState("blue-2", "blue-two", "vesper"));
   return state;
 }
 

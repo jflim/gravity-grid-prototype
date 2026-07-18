@@ -287,6 +287,7 @@ Done:
 - Initial server-owned turn authority skeleton: preview turns publish a server clock, active vehicle, authority revision, and last accepted turn intent; forged turn intents from non-active owners are rejected server-side.
 - Server-authoritative online projectile launch, stepped flight, wind/gravity simulation, first terrain-or-vehicle-hull collision, and replicated shot/impact snapshots, with stale, duplicate, and malformed fire intents rejected.
 - Server-authoritative crater persistence, shared damage/self-damage/friendly-fire rules, Nova knockback, vehicle settlement, HP KO and Void Dropped outcomes, replicated through compact terrain events and vehicle state.
+- Complete server-owned turn and round flow: fire/timeout advance exactly once, defeated units are skipped in the published 1v1/2v2 order, and team elimination publishes the round winner and reason.
 - One-terminal public playtest launcher.
 
 Not done:
@@ -301,8 +302,8 @@ Not done:
 Recommended next sequence:
 
 1. Smoke-test playtest tunnel reliability and force Cloudflare Tunnel HTTP/2 if QUIC errors appear.
-2. Complete server-owned turn advancement and round-result authority.
-3. Add online match scoring beyond the current target-score setup metadata.
+2. Add online match scoring beyond the current target-score setup metadata.
+3. Complete same-room Best-of-1/Best-of-3 reset and result flow.
 4. Validate 1v1 online.
 5. Validate 2v2 format online.
 6. Run four-human 2v2 gold validation.

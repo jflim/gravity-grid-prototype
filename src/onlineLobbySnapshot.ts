@@ -92,6 +92,7 @@ export type RoomSnapshot = LastShotSnapshot & {
   wind: number;
   activeVehicleId: string;
   winnerTeam: string;
+  roundEndReason: string;
   lastRewardLog: string;
   players: PlayerSnapshot[];
   slots: LobbySlotView[];
@@ -160,6 +161,7 @@ const DEFAULT_ROOM_SCALARS: RoomSnapshotScalars = {
   wind: 0,
   activeVehicleId: "",
   winnerTeam: "",
+  roundEndReason: "",
   lastRewardLog: "",
 };
 
