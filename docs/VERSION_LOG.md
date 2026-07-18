@@ -5,6 +5,7 @@ Use this as the human-readable checkpoint history. Every meaningful commit shoul
 ## Unreleased
 
 Highlights:
+- Issue #1 match-lifecycle checkpoint: replicated red/blue round scores now drive Best-of-1/Best-of-3 target completion, fresh rounds reset terrain/units/wind/turn state, match results name the winner and reason, and the host can ready the same participants and seats for a same-room rematch.
 - Issue #3 round-flow checkpoint: server fire and timeout paths advance once, defeated 2v2 units are skipped without changing the published order, team elimination records an explicit round-end reason, and an automated authoritative 1v1 round reaches `round-over` without Phaser combat truth.
 - Issue #6 authoritative impact checkpoint: Colyseus now persists compact crater events, rebuilds projectile collision against changed terrain, applies shared direct/splash/self/friendly-fire/Nova knockback rules, settles vehicles, and replicates distinct HP KO and Void Dropped outcomes to Phaser clients.
 - Completed the server-authoritative projectile slice for online play: the server now rejects stale, duplicate, and malformed fire intents, keeps one stable authority version per turn with monotonic input sequencing, simulates launch/flight/collision from server truth, and publishes identical shot/impact snapshots to connected clients.

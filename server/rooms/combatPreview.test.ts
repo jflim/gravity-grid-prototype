@@ -7,6 +7,7 @@ import {
   previewAimForClient,
   previewFireForClient,
   previewMoveForClient,
+  resetMatchForRematch,
   startCombatPreview,
 } from "./combatPreview.js";
 import { GravityCanyonState, LobbySlotState, PlayerState } from "../schema/GravityCanyonState.js";
@@ -133,25 +134,67 @@ test("previewFireForClient persists the authoritative crater in room terrain", (
 test("a complete authoritative 1v1 round ends from server-owned damage", () => {
   const state = readyState();
   startCombatPreview(state, { nowMs: 1_000 });
-  const red = state.vehicles[0];
   const blue = state.vehicles[1];
-  assert.ok(red && blue);
-  red.x = 500;
-  red.y = 500;
-  blue.x = 565;
-  blue.y = 500;
-  blue.hp = 1;
-  state.wind = 0;
+  assert.ok(blue);
+  configureFinishingShot(state);
 
   previewFireForClient(state, "red-session", { nowMs: 3_000 }, { angle: 5, power: 10, facing: 1 });
 
   assert.equal(blue.alive, false);
   assert.equal(blue.defeatReason, "damage");
-  assert.equal(state.phase, "round-over");
+  assert.equal(state.phase, "match-over");
   assert.equal(state.winnerTeam, "red");
   assert.equal(state.roundEndReason, "team-eliminated");
+  assert.equal(state.redRoundWins, 1);
+  assert.equal(state.matchWinnerTeam, "red");
+  assert.equal(state.matchEndReason, "target-score-reached");
   assert.equal(state.activeVehicleId, "");
   assert.equal(state.turnStartedAtMs, 0);
+});
+
+test("best-of-3 scoring resets the round and ends when a team reaches two wins", () => {
+  const state = readyState();
+  state.matchLength = "best-of-3";
+  startCombatPreview(state, { nowMs: 1_000 });
+  configureFinishingShot(state);
+
+  previewFireForClient(state, "red-session", { nowMs: 3_000 }, { angle: 5, power: 10, facing: 1 });
+  assert.equal(state.phase, "round-over");
+  assert.equal(state.redRoundWins, 1);
+  assert.equal(state.blueRoundWins, 0);
+  assert.equal(state.matchWinnerTeam, "");
+
+  state.roundNumber += 1;
+  startCombatPreview(state, { nowMs: 5_000 });
+  configureFinishingShot(state);
+  previewFireForClient(state, "red-session", { nowMs: 7_000 }, { angle: 5, power: 10, facing: 1 });
+
+  assert.equal(state.phase, "match-over");
+  assert.equal(state.roundNumber, 2);
+  assert.equal(state.redRoundWins, 2);
+  assert.equal(state.matchWinnerTeam, "red");
+  assert.equal(state.matchEndReason, "target-score-reached");
+  assert.match(state.status, /wins the match 2-0/i);
+});
+
+test("same-room rematch resets match truth while preserving participants and seats", () => {
+  const state = readyState();
+  state.phase = "match-over";
+  state.roundNumber = 3;
+  state.redRoundWins = 2;
+  state.blueRoundWins = 1;
+  state.matchWinnerTeam = "red";
+  state.matchEndReason = "target-score-reached";
+  setPlayersReady(state, true);
+
+  resetMatchForRematch(state);
+
+  assert.equal(state.phase, "ready");
+  assert.equal(state.roundNumber, 1);
+  assert.equal(state.redRoundWins, 0);
+  assert.equal(state.blueRoundWins, 0);
+  assert.equal(state.players.size, 2);
+  assertRematchParticipantsPreserved(state);
 });
 
 test("previewFireForClient keeps the next player timer full until the shot replay window ends", () => {
@@ -349,6 +392,34 @@ function ready2v2State(): GravityCanyonState {
   state.slots.set("red-2", slotState("red-2", "red-two", "nova"));
   state.slots.set("blue-2", slotState("blue-2", "blue-two", "vesper"));
   return state;
+}
+
+function configureFinishingShot(state: GravityCanyonState): void {
+  const red = state.vehicles[0];
+  const blue = state.vehicles[1];
+  assert.ok(red && blue);
+  red.x = 500;
+  red.y = 500;
+  blue.x = 565;
+  blue.y = 500;
+  blue.hp = 1;
+  state.wind = 0;
+}
+
+function setPlayersReady(state: GravityCanyonState, ready: boolean): void {
+  for (const player of state.players.values()) player.ready = ready;
+}
+
+function assertRematchParticipantsPreserved(state: GravityCanyonState): void {
+  const redSlot = state.slots.get("red-1");
+  const blueSlot = state.slots.get("blue-1");
+  const redPlayer = state.players.get("red-session");
+  const bluePlayer = state.players.get("blue-session");
+  assert.ok(redSlot && blueSlot && redPlayer && bluePlayer);
+  assert.equal(redSlot.ownerSessionId, "red-session");
+  assert.equal(blueSlot.ownerSessionId, "blue-session");
+  assert.equal(redPlayer.ready, false);
+  assert.equal(bluePlayer.ready, false);
 }
 
 function playerState(sessionId: string, displayName: string): PlayerState {

@@ -76,6 +76,21 @@ test("renderGameplayPreview shows the latest server-owned shot result", () => {
   ]);
 });
 
+test("renderGameplayPreview shows match score and same-room rematch for the host", () => {
+  const html = renderRedPreview({
+    phase: "match-over",
+    redRoundWins: 2,
+    blueRoundWins: 1,
+    matchWinnerTeam: "red",
+    matchEndReason: "target-score-reached",
+    status: "Red team wins the match 2-1.",
+  });
+
+  assert.match(html, /Score 2-1/);
+  assert.match(html, /Red team wins the match 2-1/);
+  assert.doesNotMatch(html, /data-start-rematch[^>]*disabled/);
+});
+
 function renderRedPreview(overrides: Partial<RoomSnapshot> = {}): string {
   return renderGameplayPreview(previewRoomSnapshot(overrides), "red-session");
 }

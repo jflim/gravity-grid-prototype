@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  canStartRematch,
   activeVehicleFor,
   canFireActiveVehicle,
   canStartNextPreviewRound,
@@ -33,6 +34,12 @@ test("canStartNextPreviewRound allows the host after a round-over state", () => 
 
   assert.equal(canStartNextPreviewRound(snapshot, "red-session"), true);
   assert.equal(canStartNextPreviewRound(snapshot, "blue-session"), false);
+});
+
+test("canStartRematch allows only the host after match completion", () => {
+  const snapshot = previewRoomSnapshot({ phase: "match-over", hostSessionId: "red-session" });
+  assert.equal(canStartRematch(snapshot, "red-session"), true);
+  assert.equal(canStartRematch(snapshot, "blue-session"), false);
 });
 
 test("gameplayPreviewBadge names shared preview phases", () => {

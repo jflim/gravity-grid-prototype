@@ -872,12 +872,25 @@ function winningTeamForState(state: GravityCanyonState): TeamId | undefined {
 }
 
 function finishRound(state: GravityCanyonState, winnerTeam: TeamId): void {
-  state.phase = "round-over";
+  incrementRoundScore(state, winnerTeam);
+  const matchWon = roundScoreForTeam(state, winnerTeam) >= state.targetScore;
+  applyRoundResultState(state, winnerTeam, matchWon);
+  rewardWinningPlayers(state, winnerTeam);
+  state.status = roundResultStatus(state, winnerTeam, matchWon);
+  state.lastRewardLog = `${capitalize(winnerTeam)} team earned 1 preview token.`;
+}
+
+function applyRoundResultState(state: GravityCanyonState, winnerTeam: TeamId, matchWon: boolean): void {
+  state.phase = matchWon ? "match-over" : "round-over";
   state.winnerTeam = winnerTeam;
   state.roundEndReason = "team-eliminated";
+  state.matchWinnerTeam = matchWon ? winnerTeam : "";
+  state.matchEndReason = matchWon ? "target-score-reached" : "";
   state.activeVehicleId = "";
   clearServerTurnAuthority(state);
+}
 
+function rewardWinningPlayers(state: GravityCanyonState, winnerTeam: TeamId): void {
   const rewardedSessionIds = new Set<string>();
   const winners = state.vehicles.filter((vehicle) => vehicle.team === winnerTeam);
   for (const vehicle of winners) {
@@ -887,9 +900,32 @@ function finishRound(state: GravityCanyonState, winnerTeam: TeamId): void {
       rewardedSessionIds.add(player.sessionId);
     }
   }
+}
 
-  state.status = `${capitalize(winnerTeam)} team wins round ${state.roundNumber}.`;
-  state.lastRewardLog = `${capitalize(winnerTeam)} team earned 1 preview token.`;
+function roundResultStatus(state: GravityCanyonState, winnerTeam: TeamId, matchWon: boolean): string {
+  return matchWon
+    ? `${capitalize(winnerTeam)} team wins the match ${state.redRoundWins}-${state.blueRoundWins}.`
+    : `${capitalize(winnerTeam)} team wins round ${state.roundNumber}.`;
+}
+
+export function resetMatchForRematch(state: GravityCanyonState): void {
+  state.roundNumber = 1;
+  state.redRoundWins = 0;
+  state.blueRoundWins = 0;
+  state.matchWinnerTeam = "";
+  state.matchEndReason = "";
+  for (const player of state.players.values()) player.ready = false;
+  clearCombatPreview(state);
+  state.phase = "ready";
+}
+
+function incrementRoundScore(state: GravityCanyonState, winnerTeam: TeamId): void {
+  if (winnerTeam === "red") state.redRoundWins += 1;
+  else state.blueRoundWins += 1;
+}
+
+function roundScoreForTeam(state: GravityCanyonState, team: TeamId): number {
+  return team === "red" ? state.redRoundWins : state.blueRoundWins;
 }
 
 function rollWind(): number {

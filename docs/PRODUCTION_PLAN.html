@@ -343,21 +343,18 @@ I am requesting a v1 contract change.
 <li>Server-authoritative online projectile launch, stepped flight, wind/gravity simulation, first terrain-or-vehicle-hull collision, and replicated shot/impact snapshots, with stale, duplicate, and malformed fire intents rejected.</li>
 <li>Server-authoritative crater persistence, shared damage/self-damage/friendly-fire rules, Nova knockback, vehicle settlement, HP KO and Void Dropped outcomes, replicated through compact terrain events and vehicle state.</li>
 <li>Complete server-owned turn and round flow: fire/timeout advance exactly once, defeated units are skipped in the published 1v1/2v2 order, and team elimination publishes the round winner and reason.</li>
+<li>Complete online Best-of-1/Best-of-3 lifecycle: replicated red/blue scores, target-score match completion, deterministic fresh rounds, explicit match result, and same-room host rematch with participants and seats preserved.</li>
 <li>One-terminal public playtest launcher.</li>
 </ul>
 <p>Not done:</p>
 <ul>
-<li>Full online match scoring beyond the preview target-score metadata.</li>
 <li>Phaser match driven by Colyseus room state.</li>
-<li>Full round/match scoring online.</li>
 <li>Four-human 2v2 validation.</li>
 </ul>
 <h2>17. Next Build Order</h2>
 <p>Recommended next sequence:</p>
 <ol>
 <li>Smoke-test playtest tunnel reliability and force Cloudflare Tunnel HTTP/2 if QUIC errors appear.</li>
-<li>Add online match scoring beyond the current target-score setup metadata.</li>
-<li>Complete same-room Best-of-1/Best-of-3 reset and result flow.</li>
 <li>Validate 1v1 online.</li>
 <li>Validate 2v2 format online.</li>
 <li>Run four-human 2v2 gold validation.</li>

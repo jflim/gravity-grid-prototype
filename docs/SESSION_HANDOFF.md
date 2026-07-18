@@ -126,7 +126,7 @@ For v1 scope discipline, use `docs/PRODUCTION_PLAN.md` as the authority before a
 
 For combat feel, keep tuning visible combat hulls and playable v1 map terrain only where they support v1 readability. Advanced wind bands and high-angle/plunge reward rules are future ideas unless the v1 contract is explicitly changed.
 
-For online v1, server-owned turn/round flow now advances once, skips defeated units, and ends on team elimination. The next saved path is Best-of-1/Best-of-3 scoring and same-room match reset.
+For online v1, the authoritative combat, round, and Best-of-1/Best-of-3 match loop is connected through same-room rematch. The next saved path is automated/browser smoke followed by deliberate 1v1, 2v2-format, and four-human validation rather than more feature expansion.
 
 Keep forged client messages from mutating disabled, non-host, or gameplay-locked room actions while moving from setup handoff toward server-owned combat results wired into the Phaser match scene.
 
