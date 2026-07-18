@@ -45,6 +45,8 @@ test("startCombatPreview creates active vehicles from room slots", () => {
   assert.equal(state.vehicles[0]?.vehicleId, "red-1");
   assert.equal(state.vehicles[1]?.vehicleId, "blue-1");
   assert.equal(state.activeVehicleId, "red-1");
+  assert.equal(state.terrainRevision, 1);
+  assert.equal(state.terrainCraters.length, 0);
   assert.match(state.status, /Round 1 started/);
 });
 
@@ -113,6 +115,19 @@ test("previewFireForClient advances the turn after resolving a projectile impact
   assert.equal(state.turnSecondsRemaining, TURN_SECONDS);
   assert.equal(state.turnAuthorityVersion, 2);
   assert.match(state.status, /server shot/);
+});
+
+test("previewFireForClient persists the authoritative crater in room terrain", () => {
+  const state = readyState();
+  startCombatPreview(state, { nowMs: 1_000 });
+  state.wind = 0;
+
+  previewFireForClient(state, "red-session", { nowMs: 3_000 }, { angle: 60, power: 55, facing: 1 });
+
+  assert.equal(state.terrainRevision, 2);
+  assert.equal(state.terrainCraters.length, 1);
+  assert.equal(state.terrainCraters[0]?.x, state.lastShotImpactX);
+  assert.ok((state.terrainCraters[0]?.radius ?? 0) > 0);
 });
 
 test("previewFireForClient keeps the next player timer full until the shot replay window ends", () => {

@@ -15,8 +15,10 @@ import {
 } from "../../shared/gameplay/projectileCollision.js";
 import {
   buildTerrainHeightmap,
+  craterTerrain,
   surfaceAt as terrainSurfaceAt,
 } from "../../shared/gameplay/terrain.js";
+import { settleVehicleOnTerrain } from "../../shared/gameplay/vehicleSettlement.js";
 import type { CharacterId, Facing, TeamId, VehicleId } from "../../shared/model/gameTypes.js";
 import { MAPS, pickMap, type SpawnPoint, type V1Map } from "../v1/maps.js";
 import type { MatchLength } from "../v1/rules.js";
@@ -26,6 +28,8 @@ import {
   BUNGER_DAMAGE_RADIUS,
   BUNGER_KNOCKBACK,
   CRATER_RADIUS,
+  DEFAULT_TERRAIN_BREAKTHROUGH_Y,
+  DEATH_SURFACE_Y,
   DAMAGE_RADIUS,
   GRAVITY,
   MOVE_MAX_X,
@@ -39,6 +43,12 @@ import {
   MAX_POWER,
   PROJECTILE_REPLAY_TIME_SCALE,
   VEHICLE_HALF_HEIGHT,
+  VEHICLE_HALF_WIDTH,
+  TERRAIN_CHANGE_SETTLE_PADDING,
+  SETTLEMENT_SLOPE_SAMPLE_DISTANCE,
+  SETTLEMENT_SLOPE_THRESHOLD,
+  SETTLEMENT_SLOPE_STEP,
+  SETTLEMENT_MAX_SLOPE_ITERATIONS,
   PROJECTILE_MUZZLE_DISTANCE,
   PROJECTILE_MUZZLE_Y_OFFSET,
   PROJECTILE_OUT_OF_BOUNDS_LOWER_Y_MARGIN,
@@ -56,6 +66,7 @@ import {
   CombatVehicleState,
   GravityCanyonState,
   PlayerState,
+  TerrainCraterState,
 } from "../schema/GravityCanyonState.js";
 import {
   activeOwnedVehicleForClient,
@@ -165,6 +176,8 @@ function resetCombatPreviewRound(state: GravityCanyonState, setup: CombatPreview
   state.selectedMapName = setup.selectedMap.name;
   state.mapSeed = setup.mapSeed;
   state.targetScore = targetScoreForMatchLength(state.matchLength);
+  state.terrainCraters.clear();
+  state.terrainRevision += 1;
   state.vehicles.splice(0, state.vehicles.length);
   clearLastShot(state);
   replaceTurnSequence(state, setup.previewSlots.map((slot) => slot.slotId));
@@ -479,8 +492,18 @@ function applyPreviewShotResolution(state: GravityCanyonState, resolution: Previ
   }
 
   const selectedMap = selectedMapForState(state);
-  const terrain = terrainForMap(selectedMap);
-  for (const update of resolution.impact.vehicleUpdates) {
+  const terrain = terrainAfterImpact(state, selectedMap, resolution);
+  appendTerrainCrater(state, resolution);
+  state.terrainRevision += 1;
+  applyPreviewVehicleUpdates(state, resolution.impact.vehicleUpdates);
+  settlePreviewVehicles(state, selectedMap, terrain, resolution);
+}
+
+function applyPreviewVehicleUpdates(
+  state: GravityCanyonState,
+  updates: ProjectileImpactResolution["vehicleUpdates"],
+): void {
+  for (const update of updates) {
     const vehicle = state.vehicles.find((candidate) => candidate.vehicleId === update.vehicleId);
     if (!vehicle) {
       continue;
@@ -489,11 +512,80 @@ function applyPreviewShotResolution(state: GravityCanyonState, resolution: Previ
     vehicle.hp = update.hp;
     vehicle.alive = update.alive;
     vehicle.x = update.x;
-    vehicle.y = vehicleYOnSurface(terrainSurfaceAt(terrain, update.x, {
-      worldWidth: selectedMap.worldWidth,
-      voidSurfaceY: VOID_SURFACE_Y,
-    }));
+    vehicle.defeatReason = update.defeatReason ?? "";
   }
+}
+
+function terrainAfterImpact(
+  state: GravityCanyonState,
+  selectedMap: V1Map,
+  resolution: Extract<PreviewShotResolution, { kind: "impact" }>,
+): number[] {
+  return craterTerrain({
+    terrain: currentTerrainForState(state, selectedMap),
+    impactX: resolution.x,
+    impactY: resolution.y,
+    radius: resolution.impact.craterRadius,
+    depth: resolution.impact.craterRadius * resolution.impact.craterDepthFactor,
+    voidSurfaceY: VOID_SURFACE_Y,
+    breakthroughY: DEFAULT_TERRAIN_BREAKTHROUGH_Y,
+  });
+}
+
+function settlePreviewVehicles(
+  state: GravityCanyonState,
+  selectedMap: V1Map,
+  terrain: readonly number[],
+  resolution: Extract<PreviewShotResolution, { kind: "impact" }>,
+): void {
+  for (const vehicle of state.vehicles) {
+    if (!vehicle.alive) continue;
+    settlePreviewVehicle(vehicle, selectedMap, terrain, resolution);
+  }
+}
+
+function settlePreviewVehicle(
+  vehicle: CombatVehicleState,
+  selectedMap: V1Map,
+  terrain: readonly number[],
+  resolution: Extract<PreviewShotResolution, { kind: "impact" }>,
+): void {
+  const surfaceAt = (x: number) => terrainSurfaceAt(terrain, x, {
+    worldWidth: selectedMap.worldWidth,
+    voidSurfaceY: VOID_SURFACE_Y,
+  });
+  const settled = settleVehicleOnTerrain({
+    vehicle: { id: vehicle.vehicleId, x: vehicle.x, y: vehicle.y, hp: vehicle.hp, alive: vehicle.alive },
+    tuning: serverSettlementTuning(),
+    fallbackFallStartY: vehicle.y,
+    changedX: resolution.x,
+    changedRadius: resolution.impact.changedRadius,
+    forceSettle: true,
+    surfaceAt,
+  });
+  vehicle.x = settled.x;
+  vehicle.y = settled.y;
+  if (settled.motion?.kind === "falling") {
+    vehicle.hp = 0;
+    vehicle.alive = false;
+    vehicle.defeatReason = "void";
+    vehicle.y = DEATH_SURFACE_Y;
+  }
+}
+
+function serverSettlementTuning() {
+  return {
+    vehicleHalfWidth: VEHICLE_HALF_WIDTH,
+    vehicleHalfHeight: VEHICLE_HALF_HEIGHT,
+    moveMinX: MOVE_MIN_X,
+    moveMaxX: MOVE_MAX_X,
+    deathSurfaceY: DEATH_SURFACE_Y,
+    terrainChangePadding: TERRAIN_CHANGE_SETTLE_PADDING,
+    slopeSampleDistance: SETTLEMENT_SLOPE_SAMPLE_DISTANCE,
+    slopeThreshold: SETTLEMENT_SLOPE_THRESHOLD,
+    slopeStep: SETTLEMENT_SLOPE_STEP,
+    maxSlopeIterations: SETTLEMENT_MAX_SLOPE_ITERATIONS,
+  };
 }
 
 function resolvePreviewShot(state: GravityCanyonState, shot: PreviewShot, options: TurnAuthorityOptions): void {
@@ -512,7 +604,7 @@ function resolvePreviewProjectile(
   fire: { angle: number; power: number; facing: Facing },
 ): PreviewShotResolution {
   const selectedMap = selectedMapForState(state);
-  const terrain = terrainForMap(selectedMap);
+  const terrain = currentTerrainForState(state, selectedMap);
   let projectile = launchProjectile({
     shooterX: activeVehicle.x,
     shooterY: activeVehicle.y,
@@ -741,6 +833,7 @@ export function createPreviewVehicle(
   vehicle.hp = VEHICLE_MAX_HP;
   vehicle.maxHp = VEHICLE_MAX_HP;
   vehicle.alive = true;
+  vehicle.defeatReason = "";
   vehicle.x = spawn.x;
   vehicle.y = vehicleYOnSurface(spawn.y);
   vehicle.moveUnits = MAX_MOVE_UNITS;
@@ -811,6 +904,34 @@ function terrainForMap(map: V1Map): number[] {
     voidSurfaceY: VOID_SURFACE_Y,
     segments: map.previewSegments,
   });
+}
+
+function currentTerrainForState(state: GravityCanyonState, map: V1Map): number[] {
+  let terrain = terrainForMap(map);
+  for (const crater of state.terrainCraters) {
+    terrain = craterTerrain({
+      terrain,
+      impactX: crater.x,
+      impactY: crater.y,
+      radius: crater.radius,
+      depth: crater.radius * crater.depthFactor,
+      voidSurfaceY: VOID_SURFACE_Y,
+      breakthroughY: DEFAULT_TERRAIN_BREAKTHROUGH_Y,
+    });
+  }
+  return terrain;
+}
+
+function appendTerrainCrater(
+  state: GravityCanyonState,
+  resolution: Extract<PreviewShotResolution, { kind: "impact" }>,
+): void {
+  const crater = new TerrainCraterState();
+  crater.x = resolution.x;
+  crater.y = resolution.y;
+  crater.radius = resolution.impact.craterRadius;
+  crater.depthFactor = resolution.impact.craterDepthFactor;
+  state.terrainCraters.push(crater);
 }
 
 function movementDirectionFromMessage(message: PreviewMoveInput | null | undefined): MovementDirection {

@@ -163,6 +163,7 @@ export class MatchScene extends Phaser.Scene {
     this.onlineVehicleSync = new MatchSceneOnlineVehicleSync({
       localSessionId: options.onlineLocalSessionId,
       clientTimeMs: () => (Number.isFinite(this.time.now) ? this.time.now : performance.now()),
+      applyCrater: (crater) => this.terrainController.makeCrater({ ...crater, breakthroughY: this.terrainAdapter.terrainBreakthroughY() }),
     });
     this.onlineStateSubscriber = options.onlineStateSubscriber;
     this.shotFlow = new MatchSceneShotFlow({
