@@ -2,6 +2,7 @@ import type { CombatVehicleSnapshot, RoomSnapshot } from "./onlineLobbySnapshot"
 import { escapeHtml } from "./onlineLobbyMarkup";
 import {
   activeVehicleFor,
+  canStartRematch,
   canFireActiveVehicle,
   canStartNextPreviewRound,
   gameplayPreviewBadge,
@@ -33,6 +34,7 @@ export function renderGameplayPreview(snapshot: RoomSnapshot, localSessionId: st
       <span>${escapeHtml(snapshot.mode)}</span>
       <span>${escapeHtml(selectedMapLabel(snapshot))}</span>
       <span>First to ${snapshot.targetScore}</span>
+      <span>Score ${snapshot.redRoundWins}-${snapshot.blueRoundWins}</span>
       <span>Round ${snapshot.roundNumber}</span>
       <span>Turn ${snapshot.turnNumber}</span>
       <span>Time ${snapshot.turnSecondsRemaining}s</span>
@@ -50,6 +52,7 @@ export function renderGameplayPreview(snapshot: RoomSnapshot, localSessionId: st
     <div class="online-panel__actions online-gameplay-actions">
       <button type="button" data-preview-fire${disabledUnless(canFireActiveVehicle(snapshot, localSessionId))}>Fire Test Shot</button>
       <button type="button" data-next-preview-round${disabledUnless(canStartNextPreviewRound(snapshot, localSessionId))}>Next Round</button>
+      <button type="button" data-start-rematch${disabledUnless(canStartRematch(snapshot, localSessionId))}>Rematch</button>
     </div>
   `;
 }

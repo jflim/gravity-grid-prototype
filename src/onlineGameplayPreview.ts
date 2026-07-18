@@ -19,17 +19,7 @@ export function mountOnlineGameplayPreview(
 
   stage.addEventListener("click", (event) => {
     const target = event.target;
-    if (!(target instanceof HTMLElement)) {
-      return;
-    }
-
-    if (target.dataset.previewFire !== undefined) {
-      session.room.send("previewFire");
-    }
-
-    if (target.dataset.nextPreviewRound !== undefined) {
-      session.room.send("startNextRound");
-    }
+    if (target instanceof HTMLElement) handlePreviewAction(session, target);
   });
 
   documentRef.body.appendChild(stage);
@@ -56,6 +46,12 @@ export function mountOnlineGameplayPreview(
   function render(snapshot = getRoomSnapshot(session.room.state)): void {
     previewRoot.innerHTML = renderGameplayPreview(snapshot, session.room.sessionId);
   }
+}
+
+function handlePreviewAction(session: OnlineGameplaySession, target: HTMLElement): void {
+  if (target.dataset.previewFire !== undefined) session.room.send("previewFire");
+  if (target.dataset.nextPreviewRound !== undefined) session.room.send("startNextRound");
+  if (target.dataset.startRematch !== undefined) session.room.send("startRematch");
 }
 
 function createGameplayPreviewStage(documentRef: Document): HTMLElement {

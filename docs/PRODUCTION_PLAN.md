@@ -288,13 +288,12 @@ Done:
 - Server-authoritative online projectile launch, stepped flight, wind/gravity simulation, first terrain-or-vehicle-hull collision, and replicated shot/impact snapshots, with stale, duplicate, and malformed fire intents rejected.
 - Server-authoritative crater persistence, shared damage/self-damage/friendly-fire rules, Nova knockback, vehicle settlement, HP KO and Void Dropped outcomes, replicated through compact terrain events and vehicle state.
 - Complete server-owned turn and round flow: fire/timeout advance exactly once, defeated units are skipped in the published 1v1/2v2 order, and team elimination publishes the round winner and reason.
+- Complete online Best-of-1/Best-of-3 lifecycle: replicated red/blue scores, target-score match completion, deterministic fresh rounds, explicit match result, and same-room host rematch with participants and seats preserved.
 - One-terminal public playtest launcher.
 
 Not done:
 
-- Full online match scoring beyond the preview target-score metadata.
 - Phaser match driven by Colyseus room state.
-- Full round/match scoring online.
 - Four-human 2v2 validation.
 
 ## 17. Next Build Order
@@ -302,11 +301,9 @@ Not done:
 Recommended next sequence:
 
 1. Smoke-test playtest tunnel reliability and force Cloudflare Tunnel HTTP/2 if QUIC errors appear.
-2. Add online match scoring beyond the current target-score setup metadata.
-3. Complete same-room Best-of-1/Best-of-3 reset and result flow.
-4. Validate 1v1 online.
-5. Validate 2v2 format online.
-6. Run four-human 2v2 gold validation.
+2. Validate 1v1 online.
+3. Validate 2v2 format online.
+4. Run four-human 2v2 gold validation.
 
 ## 18. Quality Gates
 

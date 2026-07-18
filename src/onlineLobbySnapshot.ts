@@ -70,6 +70,10 @@ export type RoomSnapshot = LastShotSnapshot & {
   selectedMapName: string;
   mapSeed: number;
   targetScore: number;
+  redRoundWins: number;
+  blueRoundWins: number;
+  matchWinnerTeam: string;
+  matchEndReason: string;
   terrainRevision: number;
   terrainCraters: TerrainCraterSnapshot[];
   turnSequence: string[];
@@ -123,6 +127,10 @@ const DEFAULT_ROOM_SCALARS: RoomSnapshotScalars = {
   selectedMapName: "",
   mapSeed: 0,
   targetScore: 1,
+  redRoundWins: 0,
+  blueRoundWins: 0,
+  matchWinnerTeam: "",
+  matchEndReason: "",
   terrainRevision: 0,
   turnDurationSeconds: 20,
   turnStartedAtMs: 0,

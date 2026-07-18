@@ -9,7 +9,7 @@ import {
 import { TURN_SECONDS } from "../../shared/v1/tuning.js";
 import { MAX_MOVE_UNITS } from "../../shared/v1/tuning.js";
 
-export type RoomPhase = "lobby" | "ready" | "combat-preview" | "round-over";
+export type RoomPhase = "lobby" | "ready" | "combat-preview" | "round-over" | "match-over";
 export type TeamId = "red" | "blue";
 export type PlayerRole = "host" | "player" | "spectator";
 
@@ -125,6 +125,10 @@ export class GravityCanyonState extends Schema {
   declare selectedMapName: string;
   declare mapSeed: number;
   declare targetScore: number;
+  declare redRoundWins: number;
+  declare blueRoundWins: number;
+  declare matchWinnerTeam: string;
+  declare matchEndReason: string;
   declare terrainRevision: number;
   declare terrainCraters: ArraySchema<TerrainCraterState>;
   declare turnSequence: ArraySchema<string>;
@@ -186,6 +190,10 @@ export class GravityCanyonState extends Schema {
     this.selectedMapName = "";
     this.mapSeed = 0;
     this.targetScore = 1;
+    this.redRoundWins = 0;
+    this.blueRoundWins = 0;
+    this.matchWinnerTeam = "";
+    this.matchEndReason = "";
     this.terrainRevision = 0;
     this.terrainCraters = new ArraySchema<TerrainCraterState>();
     this.turnSequence = new ArraySchema<string>();
@@ -295,6 +303,10 @@ defineTypes(GravityCanyonState, {
   selectedMapName: "string",
   mapSeed: "number",
   targetScore: "number",
+  redRoundWins: "number",
+  blueRoundWins: "number",
+  matchWinnerTeam: "string",
+  matchEndReason: "string",
   terrainRevision: "number",
   terrainCraters: { array: TerrainCraterState },
   turnSequence: { array: "string" },

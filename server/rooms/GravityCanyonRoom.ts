@@ -28,6 +28,7 @@ import {
   previewAimForClient,
   previewFireForClient,
   previewMoveForClient,
+  resetMatchForRematch,
   startCombatPreview,
   teamForSlot,
 } from "./combatPreview.js";
@@ -139,6 +140,7 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
     );
     this.onMessage("previewFire", (client) => previewFireForClient(this.state, client.sessionId));
     this.onMessage("startNextRound", (client) => this.handleStartNextRound(client));
+    this.onMessage("startRematch", (client) => this.handleStartRematch(client));
 
     this.refreshStatus();
   }
@@ -160,7 +162,7 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
     this.state.players.delete(client.sessionId);
     this.releaseSeatsForSession(client.sessionId);
 
-    if (this.state.phase === "combat-preview" || this.state.phase === "round-over") {
+    if (this.isGameplayPhase()) {
       this.state.phase = "lobby";
     }
 
@@ -261,6 +263,12 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
 
     this.state.roundNumber += 1;
     startCombatPreview(this.state);
+  }
+
+  private handleStartRematch(client: Client): void {
+    if (this.state.phase !== "match-over" || client.sessionId !== this.state.hostSessionId) return;
+    resetMatchForRematch(this.state);
+    this.refreshStatus();
   }
 
   private handleTurnIntent(client: Client, message: SubmitTurnIntentMessage): void {
@@ -528,7 +536,7 @@ export class GravityCanyonRoom extends Room<{ state: GravityCanyonState }> {
   }
 
   private isGameplayPhase(): boolean {
-    return this.state.phase === "combat-preview" || this.state.phase === "round-over";
+    return this.state.phase === "combat-preview" || this.state.phase === "round-over" || this.state.phase === "match-over";
   }
 
   private applyLobbyStatusRules(): boolean {

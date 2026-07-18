@@ -59,6 +59,7 @@ test("stageForRoomPhase separates lobby and gameplay scenes", () => {
   assert.equal(stageForRoomPhase("ready"), "lobby");
   assert.equal(stageForRoomPhase("combat-preview"), "gameplay");
   assert.equal(stageForRoomPhase("round-over"), "gameplay");
+  assert.equal(stageForRoomPhase("match-over"), "gameplay");
 });
 
 test("modeLabel and slotLabel keep lobby wording short", () => {

@@ -75,7 +75,7 @@ export function canLocalPlayerChangeRoomSettings(isHost: boolean, phase: string)
 }
 
 export function stageForRoomPhase(phase: string): "lobby" | "gameplay" {
-  return phase === "combat-preview" || phase === "round-over" ? "gameplay" : "lobby";
+  return phase === "combat-preview" || phase === "round-over" || phase === "match-over" ? "gameplay" : "lobby";
 }
 
 export function modeLabel(mode: string): string {

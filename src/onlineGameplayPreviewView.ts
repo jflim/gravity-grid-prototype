@@ -22,6 +22,10 @@ export function canStartNextPreviewRound(snapshot: RoomSnapshot, localSessionId:
   return snapshot.phase === "round-over" && snapshot.hostSessionId === localSessionId;
 }
 
+export function canStartRematch(snapshot: RoomSnapshot, localSessionId: string): boolean {
+  return snapshot.phase === "match-over" && snapshot.hostSessionId === localSessionId;
+}
+
 export function gameplayPreviewBadge(snapshot: RoomSnapshot): string {
   if (snapshot.phase === "combat-preview") {
     return "Live";
@@ -30,6 +34,8 @@ export function gameplayPreviewBadge(snapshot: RoomSnapshot): string {
   if (snapshot.phase === "round-over") {
     return "Round Over";
   }
+
+  if (snapshot.phase === "match-over") return "Match Over";
 
   return "Lobby";
 }
